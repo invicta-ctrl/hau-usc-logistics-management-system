@@ -63,14 +63,15 @@ Never remove a working feature, and never fabricate an unsupported one.
 
 ## 3. The packet
 
-| Document                                                                               | Answers                                                                                             |
-| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| [FRONTEND_BACKEND_CONTRACT_MATRIX.md](FRONTEND_BACKEND_CONTRACT_MATRIX.md)             | Every frontend-consumed route, surface, operation, capability, state, and data class on frozen main |
-| [FRONTEND_SOURCE_DISPOSITION.md](FRONTEND_SOURCE_DISPOSITION.md)                       | What to adopt, port, reconcile, archive, and never migrate                                          |
-| [FIGMA_MAKE_SOURCE_REGISTER.md](FIGMA_MAKE_SOURCE_REGISTER.md)                         | Where the v39 Make source lives in Git, with hashes, so no Figma call is needed                     |
-| [FRONTEND_INTEGRATION_EXECUTION_PLAN.md](FRONTEND_INTEGRATION_EXECUTION_PLAN.md)       | FI-00 to FI-16 slice order, owned paths, invalidators, stop conditions                              |
-| [FRONTEND_INTEGRATION_ACCEPTANCE_MATRIX.md](FRONTEND_INTEGRATION_ACCEPTANCE_MATRIX.md) | The reusable Playground and Production verification matrix                                          |
-| [CODEX_FRONTEND_INTEGRATION_HANDOFF.md](CODEX_FRONTEND_INTEGRATION_HANDOFF.md)         | The exact resume packet and first action                                                            |
+| Document                                                                                                       | Answers                                                                                             |
+| -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| [FRONTEND_BACKEND_CONTRACT_MATRIX.md](FRONTEND_BACKEND_CONTRACT_MATRIX.md)                                     | Every frontend-consumed route, surface, operation, capability, state, and data class on frozen main |
+| [FRONTEND_SOURCE_DISPOSITION.md](FRONTEND_SOURCE_DISPOSITION.md)                                               | What to adopt, port, reconcile, archive, and never migrate                                          |
+| [FIGMA_MAKE_SOURCE_REGISTER.md](FIGMA_MAKE_SOURCE_REGISTER.md)                                                 | Where the v39 Make source lives in Git, with hashes, so no Figma call is needed                     |
+| [FRONTEND_INTEGRATION_EXECUTION_PLAN.md](FRONTEND_INTEGRATION_EXECUTION_PLAN.md)                               | FI-00 to FI-16 slice order, owned paths, invalidators, stop conditions                              |
+| [FRONTEND_INTEGRATION_ACCEPTANCE_MATRIX.md](FRONTEND_INTEGRATION_ACCEPTANCE_MATRIX.md)                         | The reusable Playground and Production verification matrix                                          |
+| [CODEX_FRONTEND_INTEGRATION_HANDOFF.md](CODEX_FRONTEND_INTEGRATION_HANDOFF.md)                                 | The exact resume packet and first action                                                            |
+| [FI-LIVE-PREVIEW-01 amendment](../../.codex/specs/active/frontend-integration-live-local-preview-amendment.md) | Guarded local loopback preview workflow for accepted FI-01 through FI-12 slices                     |
 
 The Phase 9 intake records remain valid as classification and guardrail
 evidence: [V083_FRONTEND_DESIGN_ADOPTION_INTAKE.md](V083_FRONTEND_DESIGN_ADOPTION_INTAKE.md)
@@ -88,14 +89,21 @@ FI-02 (Public Landing & Portal Shell) is next, with D-08 explicitly
 1. .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md
 2. docs/design/FRONTEND_INTEGRATION_START_HERE.md                     this file
 3. docs/design/FRONTEND_FI01_DESIGN_FOUNDATION_RECEIPT.md             FI-01 evidence
-4. docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md                 FI-02 section
-5. src/index.html and src/v5/styles/tokens.css                        active shared authority
-6. docs/design/DESIGN_AUTHORITY.md                                    D08 only for FI-02
+4. .codex/specs/active/frontend-integration-live-local-preview-amendment.md local preview workflow
+5. docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md                 FI-02 section
+6. src/index.html and src/v5/styles/tokens.css                        active shared authority
+7. docs/design/DESIGN_AUTHORITY.md                                    D08 only for FI-02
 9. docs/design/FRONTEND_BACKEND_CONTRACT_MATRIX.md section 7          cross-cutting UI contracts
 ```
 
 Do not reopen FI-01's resolved D-04/D-02 decisions. D-08 remains the only
 named design decision that gates FI-02's landing-hero work.
+
+For every later accepted FI-01 through FI-12 implementation slice, first apply
+FI-LIVE-PREVIEW-01: verify authority/lock/no-Production-crossover, then start
+or reuse the single loopback preview and let HMR support Earl's observation.
+It does not authorize FI-02, a browser launch, or a preview while no FI slice
+is active.
 
 ## 5. Do not read by default
 

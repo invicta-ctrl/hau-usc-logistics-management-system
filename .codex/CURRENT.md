@@ -4,24 +4,25 @@ PROGRAM: HAU-USC Logistics
 MILESTONE: FRONTEND_INTEGRATION_FI01_SHARED_DESIGN_FOUNDATION
 RELEASE: v0.8.3_FINAL_FUNCTIONAL_BASELINE
 RELEASE_STATE: FRONTEND_INTEGRATION_FI01_SHARED_FOUNDATION_ACCEPTED
-STATUS: FI01_SHARED_DESIGN_FOUNDATION_COMPLETE
+STATUS: FI_LIVE_PREVIEW_01_AMENDMENT_IN_PROGRESS
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: NONE
-TERRA_WRITER: NONE
-LOCK_HOLDER: NONE
-WRITER_LOCK: RELEASED
-LOCK_STATUS: RELEASED
-LOCK_CONTINUITY: CLOSED
-HANDOFF_STATUS: READY_FOR_FI02
+ACTIVE_WRITER: TERRA_MAX:/root/fi01_integration_writer
+TERRA_WRITER: TERRA_MAX:/root/fi01_integration_writer
+LOCK_HOLDER: TERRA_MAX:/root/fi01_integration_writer
+WRITER_LOCK: HELD
+LOCK_STATUS: HELD
+LOCK_CONTINUITY: OPEN
+HANDOFF_STATUS: FI_LIVE_PREVIEW_01_AMENDMENT_IN_PROGRESS
 REQUIRED_MODEL: One Terra-class sole branch writer per accepted FI slice, unless Earl issues another explicit task-specific override. FI-00 was executed by Claude Code / Claude Opus 5 under such an override, which has now expired.
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi01-shared-design-foundation.md
 CONTROLLING_OWNER_TASK: 2026-08-21_FI01_SHARED_DESIGN_FOUNDATION_V2
+ACCEPTED_AMENDMENT: .codex/specs/active/frontend-integration-live-local-preview-amendment.md;FI-LIVE-PREVIEW-01
 FUNCTIONAL_BASELINE: CURRENT_FROZEN_V083_MAIN
 FINAL_FUNCTIONAL_AUTHORITY: origin/main@86553349f5c2ebefaa637c30828c560a301f99ba;tree=db95ebaafb7de421d02b12f0158bc1a93953edde;Production=v0.8.3;FROZEN_CANDIDATE=f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;BACKEND_API_AUTH_DATA_CONTRACTS_WIN
 RUNTIME_PARITY_TO_MAIN: FI00_BASELINE_PASS; FI-01 intentionally changes the bounded shared CSS/build-output scope only; no backend/API/auth/data/migration/runtime-contract path changed
@@ -41,9 +42,9 @@ FIGMA_SOURCE_REGISTER: docs/design/FIGMA_MAKE_SOURCE_REGISTER.md
 EXECUTION_PLAN: docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md
 ACCEPTANCE_MATRIX: docs/design/FRONTEND_INTEGRATION_ACCEPTANCE_MATRIX.md
 CODEX_HANDOFF: docs/design/CODEX_FRONTEND_INTEGRATION_HANDOFF.md
-BLOCKER: FALSE; FI-01 D02/D04 PASS and final handoff-parity correction 053ea8c996ceab7b6f6ef5e1385c34cddc850a5c is pushed/read back. D-08 remains OPEN_FOR_FI02.
+BLOCKER: FALSE; documentation-only FI-LIVE-PREVIEW-01 amendment is in progress. FI-01 remains closed and D-08 remains OPEN_FOR_FI02.
 VALIDATION: FI-01 repair PASS: npm run build + verify:dist; focused npx eslint src/v5; build-make-theme --check, verify-make-theme, verify-make-landing-theme, theme-source --check; D41 contrast; governance/handoff/continuation; Prettier; diff check; secret scan; current-app Playwright visual matrix 320/390/768/1024/1440 with manual 390/768/1440 review; focused current-app reduced-motion/focus test. Full npm lint remains only the pre-existing unrelated prototypes/public-portals-r3 browser-global configuration failure (plus its existing server warning).
-NEXT_EXACT_ACTION: FI-02_PUBLIC_LANDING_AND_PORTAL_SHELL
+NEXT_EXACT_ACTION: FI_LIVE_PREVIEW_01_DOCUMENTATION_CLOSEOUT
 
 ## What FI-00 settled
 

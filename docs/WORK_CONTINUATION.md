@@ -7,6 +7,7 @@
 - **Branch/HEAD/upstream:** `frontend-design-integration`; start `eacdfcc951c687cfca5731ede245130266b1c3da` / `30b2ae1d15731d42fa668f48fe6a0064869ff655`; `origin/frontend-design-integration` push/readback parity is verified at current `GIT_HEAD`/`GIT_TREE`.
 - **Current phase/stage:** FI-01 implementation commit `6c013c643b81ed57f5d6a1ec7557a51212ca1eee`, closeout, normal push, and remote readback are complete; stop ready for FI-02.
 - **Accepted scope:** `.codex/specs/active/frontend-integration-fi01-shared-design-foundation.md`.
+- **Workflow amendment:** FI-LIVE-PREVIEW-01 is recorded at `.codex/specs/active/frontend-integration-live-local-preview-amendment.md`. For an accepted FI-01 through FI-12 slice only: verify the sole writer lock, worktree, and no-Production-crossover; then start or reuse one loopback-only guarded preview and use HMR. Do not start one while FI-01 is closed or FI-02 lacks accepted authority.
 - **Completed work:** One live `tokens.css` authority now supplies semantic light/dark colors, local D04 typography, spacing, elevation, D02 glass/blur, motion, and focus; V3/V4/V5 root declarations are inactive consumer-era layers.
 - **Files changed by purpose:** Runtime CSS tokens/primitive focus; retained CSS consumer layers; FI-01 specification/current-chain/receipt/design authority; generated `dist/index.html` and shareable build outputs from the repository build.
 - **Tests verified at current SHA:** build PASS; `npx eslint src/v5` PASS; four design/theme checks PASS; D41 contrast audit PASS; current V5 Playwright visual matrix PASS at 320/390/768/1024/1440; check:agents/handoff PASS; Prettier and diff check PASS.
@@ -14,6 +15,6 @@
 - **External actions:** Local `npm ci --ignore-scripts` tooling restoration and local Git working-tree writes only; no Figma, provider, Playground, Production, database, migration, or recovery mutation.
 - **Rollback:** Normal revert of FI-01 commits restores the FI-00 baseline without external mutation.
 - **Blocker:** No active blocker. Repository-wide `npm run lint` retains a pre-existing browser-global configuration failure in `prototypes/public-portals-r3/app.js`; focused `src/v5` lint is green.
-- **Next three actions:** Rehydrate the FI-02 authority chain; take a new sole-writer lock only under FI-02 authority; implement no FI-02 work until that separate acceptance gate is satisfied.
+- **Next three actions:** Rehydrate the FI-02 authority chain; take a new sole-writer lock only under FI-02 authority; after its no-Production-crossover verification, start or reuse the guarded loopback preview; implement no FI-02 work until that separate acceptance gate is satisfied.
 - **Resume commands:** `git status --short`; `git fetch origin`; `git rev-list --left-right --count HEAD...origin/frontend-design-integration`; `npm run handoff:verify`; `npm run check:continuation`.
 - **Prohibited actions:** No FI-02, landing-hero/D08 work, dependency change, backend/API/auth/data/schema/migration/provider/Figma/Playground/Production write, rebase/reset/force-push/history rewrite, or normal branch-to-main merge.

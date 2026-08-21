@@ -59,6 +59,33 @@ WRITER_LOCK:               RELEASED
 HANDOFF_STATUS:            READY_FOR_CODEX_FRONTEND_INTEGRATION
 ```
 
+## FI-LIVE-PREVIEW-01 handoff template — FI-01 through FI-12
+
+The accepted local-preview amendment is
+`.codex/specs/active/frontend-integration-live-local-preview-amendment.md`.
+Only an accepted active FI slice with the sole writer lock may start or reuse the
+preview. It uses the existing guarded command with an approved private manifest;
+never put that path, any resource identifier, or credential in this packet.
+
+```text
+LOCAL_PREVIEW:
+LOCAL_PREVIEW_COMMAND: npm run dev:v5:playground -- <ABS_PRIVATE_PLAYGROUND_MANIFEST>
+LOCAL_PREVIEW_HOST: 127.0.0.1
+LOCAL_PREVIEW_PORT: 4173
+LOCAL_PREVIEW_WORKTREE:
+PLAYGROUND_PROXY_VERIFIED:
+PREVIEW_PRODUCTION_CROSSOVER:
+PREVIEW_BACKEND_WRITES:
+PREVIEW_REUSED_OR_RESTARTED:
+VISUAL_CHECKPOINTS_PERFORMED:
+PREVIEW_STOPPED_AT_HANDOFF:
+```
+
+Start once or reuse only the matching worktree/configuration; HMR carries normal
+iteration. Browser inspection is checkpoint-only, not a continuous AI watching
+loop. On lock release, branch/worktree change, session close, or staleness,
+terminate the preview cleanly and record the listener check.
+
 ## What Codex starts from
 
 ```text

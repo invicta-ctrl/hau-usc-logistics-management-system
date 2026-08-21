@@ -3,24 +3,25 @@
 FROM: TERRA_MAX:/root/fi01_integration_writer
 TO: FI-02 Public Landing & Portal Shell — next accepted branch writer
 PROGRAM: HAU-USC Logistics — frozen v0.8.3 frontend design integration
-STATUS: READY_FOR_FI02
+STATUS: FI_LIVE_PREVIEW_01_AMENDMENT_IN_PROGRESS
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 TREE: GIT_TREE
 UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_READBACK_PARITY_0_0
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: NONE
-TERRA_WRITER: NONE
-LOCK_HOLDER: NONE
-WRITER_LOCK: RELEASED
-LOCK_STATUS: RELEASED
-LOCK_CONTINUITY: CLOSED
-HANDOFF_STATUS: READY_FOR_FI02
+ACTIVE_WRITER: TERRA_MAX:/root/fi01_integration_writer
+TERRA_WRITER: TERRA_MAX:/root/fi01_integration_writer
+LOCK_HOLDER: TERRA_MAX:/root/fi01_integration_writer
+WRITER_LOCK: HELD
+LOCK_STATUS: HELD
+LOCK_CONTINUITY: OPEN
+HANDOFF_STATUS: FI_LIVE_PREVIEW_01_AMENDMENT_IN_PROGRESS
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi01-shared-design-foundation.md
 CONTROLLING_OWNER_TASK: 2026-08-21_FI01_SHARED_DESIGN_FOUNDATION_V2
+ACCEPTED_AMENDMENT: .codex/specs/active/frontend-integration-live-local-preview-amendment.md;FI-LIVE-PREVIEW-01
 
 PRE_FI01_ROLLBACK_SHA: eacdfcc951c687cfca5731ede245130266b1c3da
 PRE_FI01_ROLLBACK_TREE: 30b2ae1d15731d42fa668f48fe6a0064869ff655
@@ -46,11 +47,23 @@ MERGES_INTO_MAIN: 0
 HISTORY_REWRITES: 0
 LIVE_PRODUCTION_CHANGED: NO
 
+LOCAL_PREVIEW: NOT_RUNNING/FI01_ALREADY_CLOSED
+LOCAL_PREVIEW_COMMAND: npm run dev:v5:playground -- <ABS_PRIVATE_PLAYGROUND_MANIFEST>
+LOCAL_PREVIEW_HOST: 127.0.0.1
+LOCAL_PREVIEW_PORT: 4173
+LOCAL_PREVIEW_WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
+PLAYGROUND_PROXY_VERIFIED: NOT_RUN_FOR_CLOSED_FI01; required at next accepted slice startup
+PREVIEW_PRODUCTION_CROSSOVER: NONE
+PREVIEW_BACKEND_WRITES: 0
+PREVIEW_REUSED_OR_RESTARTED: NOT_STARTED
+VISUAL_CHECKPOINTS_PERFORMED: FI01 existing accepted matrix; do not rerun for this documentation-only amendment
+PREVIEW_STOPPED_AT_HANDOFF: YES; no listener observed on 127.0.0.1:4173 at closed-FI01 amendment closeout
+
 VALIDATION: npm run build + verify:dist PASS; npx eslint src/v5 PASS; build-make-theme --check, verify-make-theme, verify-make-landing-theme, theme-source --check PASS; D41 contrast PASS; current-app visual PASS at 320/390/768/1024/1440 and focused reduced-motion/focus PASS; check:agents, handoff:verify, continuation, Prettier, diff check, and secret scan PASS. Full npm lint retains only the existing unrelated prototype browser-global failure plus existing server warning.
 EXTERNAL_ACTIONS: Normal Git commit/push/readback only; no Figma, provider, database, recovery, deployment, Playground, or Production write.
 
 NEXT_SLICE: FI-02 — Public Landing & Portal Shell; D08 remains OPEN_FOR_FI02
 BLOCKER: FALSE; FI-01 is accepted and closed. D08 remains OPEN_FOR_FI02; do not begin without an accepted FI-02 task.
-NEXT_EXACT_ACTION: FI-02_PUBLIC_LANDING_AND_PORTAL_SHELL
-RESUME_COMMANDS: Rehydrate governance/current records and verify remote 0/0 parity before beginning the separately accepted FI-02 task.
+NEXT_EXACT_ACTION: FI_LIVE_PREVIEW_01_DOCUMENTATION_CLOSEOUT
+RESUME_COMMANDS: Persist and validate the FI-LIVE-PREVIEW-01 documentation amendment, confirm no loopback listener remains, normal-push/readback, release the writer lock, then rehydrate before FI-02.
 PROHIBITED_ACTIONS: No FI-02 implementation before its accepted task. No rebase, reset, clean, force-push, history rewrite, main merge, tag, deployment, migration, provider/Figma/Playground/Production action, or hand edit of a generated artifact. Do not add a dependency or alter backend/API/auth/data contracts. Do not reopen D04/D02; D08 is FI-02-only.

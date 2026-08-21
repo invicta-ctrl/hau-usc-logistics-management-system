@@ -33,6 +33,32 @@ Each slice records: objective, owned paths, excluded paths, backend contracts,
 visual reference, reused components, new components, data-privacy boundary,
 acceptance tests, visual acceptance, rollback, invalidators, stop condition.
 
+## FI-LIVE-PREVIEW-01 — local observation workflow for FI-01 through FI-12
+
+The accepted [FI-LIVE-PREVIEW-01 amendment](../../.codex/specs/active/frontend-integration-live-local-preview-amendment.md)
+adds a local developer-observation loop without changing any slice scope,
+contract, release gate, or acceptance requirement. It is subordinate to the
+active FI specification and never authorizes work by itself.
+
+For an accepted FI-01 through FI-12 implementation session, prepend this after
+the normal authority and Git handshake:
+
+```text
+1. Verify the active FI specification, branch/worktree, sole writer lock, and no Production crossover.
+2. Start or reuse exactly one guarded local V5 Playground preview for that worktree.
+3. Use: npm run dev:v5:playground -- <ABS_PRIVATE_PLAYGROUND_MANIFEST>
+4. Confirm only loopback 127.0.0.1:4173 and the existing verified isolated-Playground proxy.
+5. Report http://127.0.0.1:4173 once; Earl may keep that browser open while HMR updates it.
+6. Implement the accepted slice. Do not screenshot, poll, inspect logs, or restart Vite as an ordinary edit loop.
+7. Use targeted browser evidence only at a meaningful diagnostic, responsive/accessibility, or explicit acceptance checkpoint.
+8. Run the slice-specific deterministic verification, review the complete diff, and update all handoff fields.
+9. Stop the preview when the writer lock releases, the worktree/branch changes, the session ends, or it becomes stale.
+```
+
+Never record a private manifest path, resource identifier, credential, or secret.
+If the approved private manifest or isolated Playground origin cannot be verified,
+stop the local preview rather than substituting a Production configuration.
+
 ---
 
 ## FI-00 — Integration baseline and branch reconciliation · COMPLETE 2026-08-21
