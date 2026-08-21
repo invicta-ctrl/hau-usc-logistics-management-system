@@ -29,7 +29,7 @@ FAST_CLOSE=ACTIVE. Minimum necessary verification applies: reuse unchanged candi
 
 Password visibility and password-browser evidence are both PASS.
 
-ID-D is reconciled to the unchanged active-access and no-inferred-privilege evidence. The former ID_D=0 live source-projection bookkeeping is historical only. The unchanged candidate-bound live check is SOURCE_RECONCILIATION_PLAYGROUND_GATE=PENDING; it is not ID-D and no tested code or API is renamed.
+ID-D is reconciled to the unchanged active-access and no-inferred-privilege evidence. The former ID_D=0 live source-projection bookkeeping is historical only. The candidate-bound live check is SOURCE_RECONCILIATION_PLAYGROUND_GATE=COMPLETED_NONPASS; it is not ID-D and no tested code or API is renamed.
 
 ## ID-G accepted integration evidence
 
@@ -83,7 +83,7 @@ Safe read-only and post-deploy facts are limited to allowlisted public identity 
 | Production          | 0.8.2              | c316e047c845fa182e82156c95945c4a5e5de2ff | 30 / 0030_production_access_and_operations.sql | true  |
 | Isolated Playground | 0.8.3-playground.1 | f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 | 32 / 0032_staff_account_activity_history.sql   | true  |
 
-No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground remains the exact frozen v0.8.3 candidate after its second accepted reset, terminally reconciled 0031 reapply, and one terminally reconciled atomic 0032 import. The import checkpoint was CLEAN at schema32/0032; the final provider-free schema32 automated acceptance is PASS_WITH_P3_ADVISORY. SOURCE_RECONCILIATION_PLAYGROUND_GATE is UNINVOKED/BLOCKED by the current unknown DIRTY active-session state; ID_H_PLAYGROUND_DELIVERY_GATE remains pending.
+No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground remains the exact frozen v0.8.3 candidate after its second accepted reset, terminally reconciled 0031 reapply, and one terminally reconciled atomic 0032 import. The import checkpoint was CLEAN at schema32/0032; the final provider-free schema32 automated acceptance is PASS_WITH_P3_ADVISORY. The owner-authorized probe-binding deployment preserved candidate identity and isolation; SOURCE_RECONCILIATION_PLAYGROUND_GATE is now COMPLETED_NONPASS with no retry, and ID_H_PLAYGROUND_DELIVERY_GATE remains pending.
 
 ## Owner-authorized Playground reset receipt
 
@@ -120,14 +120,14 @@ No endpoint URL, credential, provider identifier, recipient, database value, or 
 
 ## Historical former next gate
 
-V83_ISOLATED_PLAYGROUND_SCHEMA32_AUTOMATED_ACCEPTANCE: from the terminally reconciled CLEAN schema32/0032 state, run only the final deterministic provider-free automated acceptance against exact frozen f8 runtime/artifact/bindings. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain later candidate-bound Playground gates.
+V83_ISOLATED_PLAYGROUND_SCHEMA32_AUTOMATED_ACCEPTANCE: this historical gate completed PASS_WITH_P3_ADVISORY from the terminally reconciled CLEAN schema32/0032 state. The subsequent candidate-bound SOURCE_RECONCILIATION_PLAYGROUND_GATE completed NONPASS; ID_H_PLAYGROUND_DELIVERY_GATE remains pending.
 
 Do not request a routine owner pause until the later Playground manual-test and explicit Production-GO gate. Do not change source, dependencies, build/workflow/repository runtime config, Production, recovery pointers, AGENTS/project policy, or v0.8.4 in this step.
 
-## Active fast-close stop checkpoint
+## Active source-reconciliation nonpass checkpoint
 
 - Automated acceptance: PASS_WITH_P3_ADVISORY. Exact f8/version/schema32/readiness, safe public routes, and unauthenticated deny passed. The sole P3 is a same-origin image-suffix HTML fallback, retained only for later visual confirmation.
-- Current sealed-state blocker: DIRTY plus active test session of unknown concurrent-writer provenance. No pending operation exists; the active session predates the DIRTY marker; no audit/evidence/idempotency/Activity History delta follows the marker or prior evidence checkpoint.
-- Integrity: schema32, one 0032 ledger entry, foreign keys, exact three Activity History tables/two indexes/twenty-one triggers, and empty new Activity History rows remain PASS.
-- No new external mutation: binding deploy 0; source probe 0; provider/email 0; Production 0; this writer did not reset or create/revoke a session.
-- Exact next action: Stop. Earl must direct the isolated Playground DIRTY active-session disposition before any reset, binding activation, source probe, provider/email action, browser/manual acceptance, or Production gate.
+- Owner session / binding activation: Earl reclassified the retained DIRTY active session as `OWNER_AUTHORIZED_PLAYGROUND_SESSION`. One isolated Playground-only probe-binding deployment passed bounded pre/post reconciliation: exact f8/tree/prebuilt artifact, candidate-bound authorized SHA, isolated D1/R2, provider-disabled state, and Production zero remained intact. Two owner-authorized session bootstraps occurred (the first local-validator discard plus one replacement); no reset or revoke occurred.
+- Source gate: the candidate-bound source probe was invoked exactly once and is `COMPLETED_NONPASS`, no retry. Its private receipt retains aggregate `safeFlags=false`; raw response material and safe HTTP/status/component/quarantine classification are intentionally not retained, and no local response-shape-validator failure is retained. The source reconciliation gate is not accepted.
+- Integrity: schema32, one 0032 ledger entry, foreign keys, exact three Activity History tables/two indexes/twenty-one triggers, and empty new Activity History rows were PASS before the source invocation. Post-NONPASS reconciliation is not claimed.
+- Exact next action: Stop. Do not retry the probe or call an external endpoint; Earl must direct the material source-gate NONPASS disposition before provider/email, browser/manual acceptance, or Production.

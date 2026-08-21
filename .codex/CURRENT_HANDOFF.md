@@ -1,7 +1,7 @@
 # Current Environment Handoff
 
 FROM: TERRA_MAX:/root/v83_completion_terra_writer
-TO: TERRA_MAX:/root/v83_completion_terra_writer — V83_FAST_CLOSE_PLAYGROUND_CONCURRENT_WRITER_STOP
+TO: TERRA_MAX:/root/v83_completion_terra_writer — V83_FAST_CLOSE_SOURCE_RECONCILIATION_NONPASS_STOP
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 TREE: GIT_TREE
@@ -27,26 +27,30 @@ VALIDATION: Candidate detached handshake and live branch parity PASS. Section 16
 P3_ADVISORY: NONBLOCKING_UNREPAIRED;tests/e2e/v072-account-access.spec.js hard-codes the committed harness port 4173; no scope expansion is authorized.
 PRIVACY_INCIDENT: METADATA_ONLY_LOCAL_FILENAMES_NO_CONTENT_NO_MUTATION;RECONCILED_BY_ROOT;NO_FILENAMES_RECORDED.
 CANONICAL_WORKTREE_RELEASE_BOUNDARY: KNOWN_CONCURRENT_EXTERNAL_GOVERNANCE_SYNC_PRESERVED_UNREAD_UNSTAGED;CANONICAL_CLEANLINESS_NOT_CLAIMED;FROZEN_DETACHED_CANDIDATE_CHECKOUT_CLEAN.
-EXTERNAL_ACTIONS: CANDIDATE_FREEZE=1;WORKFLOW_DISPATCH=1;PLAYGROUND_WORKER_DEPLOYMENT=1;PLAYGROUND_RESET=2;PLAYGROUND_D1_MIGRATION_0031=2_TOTAL_FIRST_HISTORICAL_RESTORED_SECOND_CURRENT_REAPPLY=1;PLAYGROUND_D1_MIGRATION_0032=1_ROOT_AUTHORIZED_ATOMIC_FILE_IMPORT_EXIT_0_NO_RETRY;PROVIDER_EMAIL_DELIVERY=0;PRODUCTION_MUTATION=0. All external identifiers, URLs, credentials, resource IDs, bookmarks, recipients, and private values remain redacted.
+EXTERNAL_ACTIONS: CANDIDATE_FREEZE=1;WORKFLOW_DISPATCH=1;PLAYGROUND_WORKER_DEPLOYMENT=1;PLAYGROUND_PROBE_BINDING_DEPLOYMENT=1;PLAYGROUND_RESET=2;PLAYGROUND_D1_MIGRATION_0031=2_TOTAL_FIRST_HISTORICAL_RESTORED_SECOND_CURRENT_REAPPLY=1;PLAYGROUND_D1_MIGRATION_0032=1_ROOT_AUTHORIZED_ATOMIC_FILE_IMPORT_EXIT_0_NO_RETRY;OWNER_AUTHORIZED_PLAYGROUND_SESSION_BOOTSTRAP=2_TOTAL;SOURCE_PROBE=1_NO_RETRY;PROVIDER_EMAIL_DELIVERY=0;PRODUCTION_MUTATION=0. All external identifiers, URLs, credentials, resource IDs, bookmarks, recipients, and private values remain redacted.
 FAST_CLOSE: ACTIVE;MINIMUM_NECESSARY_VERIFICATION;NO_NEW_REVIEW_OR_BROAD_SUITE
 PLAYGROUND_SCHEMA32_AUTOMATED_ACCEPTANCE: PASS_WITH_P3_ADVISORY;EXACT_F8_VERSION_SCHEMA32_READINESS_PUBLIC_ROUTES_AND_UNAUTH_DENY=PASS;P3=IMAGE_SUFFIX_HTML_FALLBACK_FOR_LATER_VISUAL_CONFIRMATION
-PLAYGROUND_PROVENANCE_STOP: DIRTY;ACTIVE_TEST_SESSION=TRUE;UNKNOWN_CONCURRENT_WRITER_BLOCKER;PENDING_OPERATION=ABSENT;ACTIVE_SESSION_PREDATES_DIRTY_MARKER;NO_POST_CHECKPOINT_AUDIT_EVIDENCE_IDEMPOTENCY_OR_ACTIVITY_HISTORY_DELTA
-PLAYGROUND_INTEGRITY_AT_STOP: SCHEMA32_SINGLE_LEDGER0032_FOREIGN_KEYS_EXACT_ACTIVITY_HISTORY_OBJECTS_AND_EMPTY_NEW_ROWS=PASS;CANDIDATE_F8_UNCHANGED=PASS
-POST_ACCEPTANCE_EXTERNAL_ACTIONS: BINDING_DEPLOY=0;SOURCE_PROBE=0;PROVIDER_EMAIL_DELIVERY=0;RESET=0;SESSION_MUTATION=0;PRODUCTION_MUTATION=0
+PLAYGROUND_PROVENANCE_STOP: LAST_PRE_PROBE_STATE=DIRTY;ACTIVE_TEST_SESSION=TRUE;OWNER_AUTHORIZED_PLAYGROUND_SESSION;PENDING_OPERATION=ABSENT_AT_PREPROBE_RECEIPT;OWNER_AUTHORIZED_SESSION_BOOTSTRAP=2_TOTAL_INITIAL_AND_ONE_REPLACEMENT;NO_RESET_OR_REVOKE
+PLAYGROUND_INTEGRITY_AT_STOP: PRE_SOURCE_GATE_SCHEMA32_SINGLE_LEDGER0032_FOREIGN_KEYS_EXACT_ACTIVITY_HISTORY_OBJECTS_AND_EMPTY_NEW_ROWS=PASS;CANDIDATE_F8_UNCHANGED=PASS;POST_NONPASS_RECONCILIATION_NOT_CLAIMED
+POST_ACCEPTANCE_EXTERNAL_ACTIONS: PROBE_BINDING_DEPLOY=1;SOURCE_PROBE=1_NO_RETRY;OWNER_AUTHORIZED_SESSION_BOOTSTRAP=2_TOTAL;PROVIDER_EMAIL_DELIVERY=0;RESET=0;SESSION_REVOKE=0;PRODUCTION_MUTATION=0
 FROZEN_RECEIPT: SHA=f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;TREE=5788251d483f23ec5e19048e1a946b3a00450436;PACKAGE_VERSION=0.8.3;LOCKFILE_SHA256=28c8436fa65cefacb1b7d5ac0ad95ae136af10a765e928efb53c5b23f85967cd;STAGING_APPLICATION_ARTIFACT_SHA256=60dd9c63a99d347dfa4f7a4315639cc2fb9725578bf6e194e0d84cc8f5415a99;WORKER_SOURCE_SHA256=5b37974f449b659e89ddb480a6fa09ea403c1329d303623932f38240738a44ca;MIGRATION_ORDER=0031_THEN_0032
 RECOVERY_RECEIPT: PLAYGROUND_D1_TIME_TRAVEL_BOOKMARK_PRESENT=TRUE;WORKER_ROLLBACK_HISTORY_PRESENT=TRUE;R2_CONFIG_IDENTITY=VERIFIED_REDACTED;D1_R2_PRODUCTION_CROSSOVER=FALSE;SECOND_OWNER_AUTHORIZED_PRE_AND_POST_RESET_RECEIPTS=CAPTURED_PRIVATE;SECOND_RESET_RECONCILIATION=CLEAN_SCHEMA30_0030_FK_R2_PASS;SECOND_RESET_0031_REAPPLY_PRE_AND_POST_RECOVERY=CAPTURED_PRIVATE;ATOMIC_0032_PRE_AND_POST_IMPORT_RECOVERY=CAPTURED_PRIVATE
-BLOCKER: TRUE;UNKNOWN_CONCURRENT_WRITER_DIRTY_ACTIVE_SESSION_PREVENTS_PROOF_OF_RELEASE_CRITICAL_SEALED_STATE
-NEXT_ACTION_SCOPE: AWAIT_EARL_DIRECTION_FOR_PLAYGROUND_DIRTY_ACTIVE_SESSION
-NEXT_EXACT_ACTION: Stop. Earl must direct the isolated Playground DIRTY active-session disposition before any reset, binding activation, source probe, provider/email action, browser/manual acceptance, or Production gate.
+BLOCKER: TRUE;SOURCE_RECONCILIATION_PLAYGROUND_GATE_COMPLETED_NONPASS_PREVENTS_RELEASE_CRITICAL_ACCEPTANCE
+NEXT_ACTION_SCOPE: AWAIT_EARL_DIRECTION_FOR_SOURCE_RECONCILIATION_NONPASS_DISPOSITION
+NEXT_EXACT_ACTION: Stop. Do not retry the source probe or call an external endpoint; Earl must direct the material source-gate NONPASS disposition before any further Playground or Production action.
 RESUME_COMMANDS: Do not run a command. Rehydrate this receipt and act only on Earl direction without printing private values.
-PROHIBITED_ACTIONS: No source/dependency/build/workflow/repository-runtime-config, binding/deploy/reset/session, source-probe/provider/email/browser/manual, Production, recovery rotation, fabricated backfill, branch cleanup, AGENTS/project-policy sync, new audit loop, or v0.8.4 action.
+PROHIBITED_ACTIONS: No source/dependency/build/workflow/repository-runtime-config, binding/deploy/reset/session, source-probe retry/provider/email/browser/manual, Production, recovery rotation, fabricated backfill, branch cleanup, AGENTS/project-policy sync, new audit loop, or v0.8.4 action.
 
 ## Continuity and release state
 
 A7-R2 is controlling under Earl's explicit current instruction, adopted at 2026-08-20T23:33:37+08:00. The exact owner mapping is ID-A auth/session/security preservation, ID-B canonical person and assignment domain, ID-C email/provenance and explicit account linkage, ID-D existing active-access preservation, ID-E two-stage approval, ID-F Staff Directory, ID-G staff/account operational activity history, and ID-H secure eight-digit verification lifecycle.
 
-The product matrix is ID-A VERIFIED_NO_OP, ID-B PASS, ID-C PASS, ID-D PASS, ID-E VERIFIED_NO_OP, ID-F PASS, ID-G PASS, ID-H_IMPLEMENTATION PASS, ID-H_PLAYGROUND_DELIVERY_GATE PENDING, password visibility PASS, and password browser evidence PASS. ID-D's old zero/probe bookkeeping is historical: the live candidate-bound check is SOURCE_RECONCILIATION_PLAYGROUND_GATE=PENDING and has no code/API rename.
+The product matrix is ID-A VERIFIED_NO_OP, ID-B PASS, ID-C PASS, ID-D PASS, ID-E VERIFIED_NO_OP, ID-F PASS, ID-G PASS, ID-H_IMPLEMENTATION PASS, ID-H_PLAYGROUND_DELIVERY_GATE PENDING, password visibility PASS, and password browser evidence PASS. ID-D's old zero/probe bookkeeping is historical: the live candidate-bound check is SOURCE_RECONCILIATION_PLAYGROUND_GATE=COMPLETED_NONPASS and has no code/API rename.
 
-Schema target is 32. The atomic-import checkpoint was CLEAN at schema32/0032 under exact f8, and the final deterministic automated acceptance is now PASS_WITH_P3_ADVISORY. A later bounded read-only handshake found DIRTY plus active test session of unknown concurrent-writer provenance. Schema32/ledger/FK/Activity History invariants remain green, but source reconciliation is uninvoked and blocked until Earl directs the disposition. The ID-H Luna review ACCEPTED with P0=0, P1=0, and P2=0; no plan/audit loop is reopened.
+Schema target is 32. The atomic-import checkpoint was CLEAN at schema32/0032 under exact f8, and the final deterministic automated acceptance is PASS_WITH_P3_ADVISORY. Earl then authorized the active Playground session, one bounded replacement session bootstrap, and one candidate-bound source probe. The probe-binding deployment retained exact f8/tree/artifact and isolation, but the single source probe completed NONPASS; its private sanitized receipt retains aggregate `safeFlags=false` only, not a safe component classification or local response-shape-validator failure. Pre-source schema32/ledger/FK/Activity History evidence remains green; post-NONPASS reconciliation is not claimed. The ID-H Luna review ACCEPTED with P0=0, P1=0, and P2=0; no plan/audit loop is reopened.
 
-This is a material owner-direction pause before any further Playground write or source gate. No v0.8.4 work is authorized in this session. Context Vault synchronization remains blocked by its registered active-writer/dirty-work gate; do not synchronize AGENTS.md or project policy.
+This is a material owner-direction pause after one source-gate NONPASS. Do not retry the probe or call further external endpoints, and do not activate provider/email, run browser/manual acceptance, access Production, reset, or revoke. No v0.8.4 work is authorized in this session. Context Vault synchronization remains blocked by its registered active-writer/dirty-work gate; do not synchronize AGENTS.md or project policy.
+
+## Active source-reconciliation nonpass checkpoint
+
+Earl's explicit `AUTHORIZED PLAYGROUND SESSION — CONTINUE FAST-CLOSE` reclassified the retained DIRTY active session as `OWNER_AUTHORIZED_PLAYGROUND_SESSION`. The initial bootstrap succeeded but its ephemeral local response material was discarded before the probe; one explicitly authorized replacement bootstrap passed. The source probe was then invoked exactly once with no retry. Its private receipt is `COMPLETED_NONPASS` with aggregate `safeFlags=false`; raw result material, HTTP/status/component/quarantine classification, and any local response-shape-validator failure are not retained. The gate is not accepted. No provider/email, browser/manual, Production, reset, or revoke action followed.
