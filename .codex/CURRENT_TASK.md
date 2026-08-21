@@ -1,30 +1,30 @@
-# Current Task — V0.8.3 Owner Fast-Close Production/S17 Closure (Complete)
+# Current Task — V0.8.4 Branch-Local Preservation Refresh
 
-INTENT: RELEASE_CLOSEOUT_RECOVERY_ROTATION_LOSSLESS_REPOSITORY_HYGIENE_AND_FRONTEND_ADOPTION_PREPARATION
-MODE: EXECUTE_OWNER_FAST_CLOSE
-OBJECTIVE: Complete v0.8.3 Production/S17 closure under Earl's explicit fast-close override; preserve and refresh v0.8.4 without implementation; retain frontend-design integration and prepare its adoption intake without runtime/design/provider mutation.
-TARGET: Exact frozen candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580, protected main, Production schema32/0032, retained recovery refs, v0.8.4 branch, and frontend-design-integration branch.
+INTENT: BRANCH_PRESERVATION_AND_CONTINUITY_RECONCILIATION
+MODE: EXECUTE_OWNER_AUTHORIZED_PHASE8
+OBJECTIVE: Preserve existing v0.8.4 branch history and refresh it from final v0.8.3 main without implementation; record final-v0.8.3 baseline, Production, protected-ref, and readiness facts; release the separate branch-local lock.
+TARGET: release/v0.8.4-live-operations-performance, final v0.8.3 main 86553349f5c2ebefaa637c30828c560a301f99ba, frozen product candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580, and retained recovery refs.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md
-CONTROLLING_AMENDMENT: .codex/specs/active/v0.8.3-v1r7-a7-r2-final-acceleration-s17-closure-amendment.md#23-production-preflight
-AUTHORITY: Earl explicit 2026-08-21 owner Production fast-close instruction -> V1R7-A7-R2 as amended by that override -> accepted v0.8.3 A5 specification -> checked-in AGENTS.md -> current continuity chain.
-REQUIRED_MODEL: Terra MAX canonical writer; do not reopen an ID-G/ID-H audit loop or run broad suites.
-ACTIVE_WRITER: NONE
-TERRA_WRITER: NONE
-LOCK_HOLDER: NONE
-WRITER_LOCK: RELEASED
-LOCK_STATUS: RELEASED
-HANDOFF_STATUS: READY_FOR_HANDOFF
+CONTROLLING_AMENDMENT: .codex/specs/active/v0.8.3-v1r7-a7-r2-final-acceleration-s17-closure-amendment.md#27-v083-release-hygiene-only
+AUTHORITY: Earl explicit 2026-08-21 owner fast-close closeout instruction -> completed v0.8.3 S17 -> explicit Phase 8 separate branch-local v0.8.4 preservation/refresh authorization -> checked-in governance and current continuity chain.
+REQUIRED_MODEL: Terra MAX sole branch-local writer; no v0.8.4 implementation, audit loop, or broad suite.
+ACTIVE_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+TERRA_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+LOCK_HOLDER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+WRITER_LOCK: HELD
+LOCK_STATUS: ACTIVE
+HANDOFF_STATUS: IN_PROGRESS
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
-UPSTREAM: origin/main@GIT_HEAD;PUSH_PARITY_VERIFIED
+UPSTREAM: origin/release/v0.8.4-live-operations-performance@GIT_HEAD;PUSH_PARITY_REQUIRED
 WORKTREE: D:/Documents/Codex/_verification/v83-final-gate-f8e6337
 WORKTREE_STATE: GIT_STATUS
-RISK: CRITICAL;PRODUCTION_IDENTITY_SCHEMA_RECOVERY_PRIVACY_PROTECTED_REFS_AND_LOSSLESS_HISTORY_PRESERVATION
-ACTIVE_SCOPE_OVERRIDE: FAST_CLOSE=ACTIVE;OWNER_PRODUCTION_GO=EXPLICIT_FAST_CLOSE_OVERRIDE_CONSUMED;PLAYGROUND_SOURCE_GATE=COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE_NOT_PASS;ID_H_LIVE_DELIVERY=OWNER_WAIVED_OR_UNRUN_NEVER_PASS;PRODUCTION_SMOKE=HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED_NOT_HTTP_PASS;V084_IMPLEMENTATION=PROHIBITED;FRONTEND_IMPLEMENTATION_AND_DEPLOY=PROHIBITED
-SCOPE: Record the completed bounded Production reconciliation and accepted smoke fallback truthfully; integrate the verified governance-only main lineage without executable product changes; tag/rotate recovery refs only after proof; close branches/worktrees losslessly; refresh v0.8.4 from final main without implementation; then prepare frontend-design adoption documents on the retained frontend branch.
-OUT_OF_SCOPE: Any source, dependency, build, workflow, release-runtime-config, migration, D1/R2/Google/provider write, email send, new session/domain-data mutation, broad suite/review, AGENTS/project-policy synchronization, v0.8.4 implementation, frontend runtime/backend/design mutation, or deploy beyond already-verified Production state.
+RISK: HIGH;LOSSLESS_BRANCH_HISTORY_CONTINUITY_TRUTHFUL_FINAL_V083_BASELINE_AND_PROTECTED_REF_PRESERVATION
+ACTIVE_SCOPE_OVERRIDE: FAST_CLOSE=ACTIVE;V83_S17_CLOSED;OWNER_PRODUCTION_GO=CONSUMED;V084_IMPLEMENTATION=PROHIBITED;FRONTEND_PHASE9_SEPARATE;NO_PROVIDER_OR_PRODUCTION_MUTATION
+SCOPE: Maintain only v0.8.4 branch-local continuity records after the normal final-v0.8.3-main merge; preserve final production schema32/recovery/smoke-fallback and frozen-candidate facts; verify product-path non-change, focused document integrity, normal push/readback, and lock release.
+OUT_OF_SCOPE: Any v0.8.4 source, dependency, build, workflow, release-runtime-config, migration, D1/R2/Google/provider write, email send, session/domain-data mutation, broad suite/review, AGENTS/project-policy sync, frontend implementation/design mutation, deploy, Production action, recovery rotation, or v0.8.3 reopening.
 ID_G_INTEGRATION_SCOPE: HISTORICAL_ACCEPTED_26_PATHS;OUTSIDE_AUTHORIZED_PATHS=0;HISTORICAL_TASK_WORKTREE_CLOSED_LOSSLESSLY
 ID_G_IMPLEMENTATION_IDENTITY: IMPLEMENTATION=2aa73aeaf965d4eb55449e87c3cbda675730ba97;REPAIR_CURRENT=c13bbdadf7fa46829a3a78dece66f08bfe111013;REPAIR_TREE=9fd68d4e8c4b4d19e9e23793834365d35467b499;MERGE=45bbc1caf661d64a1abfdf1f775878ec89d88853;MERGE_TREE=4baebecc466b258d1b3729cff376bfafb2640ef6;OWNED_PATHS=26;CANONICAL_FAST_FORWARD=PASS
 ID_G_PRIOR_REVIEW: LUNA_ACCEPT_WITH_REQUIRED_REPAIRS;P1_REQUIRED_REAL_MINIFLARE_PRODUCER_EXECUTION_AND_V5_NAVIGATION_RACE;REPAIR_COMPLETE;FOCUSED_LUNA_REREVIEW=ACCEPT;P0=0;P1=0;P2=0
@@ -51,8 +51,10 @@ STOP_CONDITIONS: Stop the affected operation on wrong Production target, candida
 PHASE_3_4_CHECKPOINT: PASS;PR_25_NORMAL_MERGE=07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e;CI_VERIFY_CODEQL_BROWSER_SMOKE=PASS;CODEQL_99_FALSE_POSITIVE_DISMISSED;P2_PAGINATION_THREADS_DEFERRED_WITHOUT_PRODUCT_CHANGE;F8_APPLICATION_PATH_PARITY=PASS;V083_TAG=PASS;RECOVERY_POINTERS_ROTATED_AND_READBACK=PASS
 PHASE_5_CHECKPOINT: PASS_WITH_PRESERVATION_EXCEPTION;temporary remote refs closed losslessly after unique-history proof; research audit retained by immutable archive tag; primary main checkout clean; v082 product-dirty worktree retained untouched; unregistered generated-only node_modules residual is a tooling-blocked P3 with no Git history or ref loss.
 S17_CLOSEOUT: PASS;Production/main/f8 identity/recovery rotation/lossless hygiene/retained future refs/pushed readback pass; ACTIVE_WRITER=NONE; WRITER_LOCK=RELEASED; HANDOFF_STATUS=READY_FOR_HANDOFF.
-NEXT_ACTION_SCOPE: V83_CLOSED;SEPARATE_BRANCH_LOCAL_PREPARATION_ONLY
-NEXT_EXACT_ACTION: Do not reopen v0.8.3. Take and release a separate branch-local v0.8.4 preparation lock only under the owner-authorized Phase 8 scope.
+V084_BRANCH_LOCAL_BASELINE: FINAL_V083_MAIN=86553349f5c2ebefaa637c30828c560a301f99ba;FROZEN_F8_APPLICATION_PARITY=PASS;PRODUCTION=v0.8.3_SCHEMA32_0031_0032_SINGLE0032_LEDGER_FK0_PRIVATE_RECOVERY_REUSED_VERIFIED;PROTECTED_MAIN_AND_RECOVERY_REFS=RETAINED
+V084_IMPLEMENTATION: NOT_STARTED;NO_RUNTIME_OR_PROVIDER_MUTATION
+NEXT_ACTION_SCOPE: V084_BRANCH_LOCAL_PRESERVATION_REFRESH
+NEXT_EXACT_ACTION: Complete the owner-authorized Phase 8 branch-local final-main merge reconciliation, validate and push the continuity checkpoint, release the v0.8.4 preparation lock, then stop before Phase 9 frontend-branch preparation.
 
 ## Historical source-gate diagnostic record
 
