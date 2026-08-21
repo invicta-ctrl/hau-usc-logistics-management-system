@@ -1,25 +1,25 @@
-# Current Bounded Task — FI-00 Frontend Branch Reconciliation (complete)
+# Current Bounded Task — FI-01 Shared Design Foundation
 
-INTENT: BRANCH_RECONCILIATION_AND_FRONTEND_INTEGRATION_BASELINE
-MODE: VERIFY_PRESERVE_MERGE_RECONCILE_CONTAIN_HANDOFF
-OBJECTIVE: Make `frontend-design-integration` safe to use as the temporary frontend-integration implementation branch by merging current `origin/main` into it losslessly, making current main authoritative for every product, runtime, security, data, build, and governance contract, preserving the approved frontend and Figma evidence, containing obsolete historical artifacts after proving recoverability, and leaving a clean handoff for FI-01 without implementing any frontend.
-TARGET: frontend-design-integration reconciled against origin/main 86553349f5c2ebefaa637c30828c560a301f99ba, with the pre-FI-00 head f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970 immutably preserved.
+INTENT: SOFTWARE_FEATURE
+MODE: REHYDRATE_VERIFY_IMPLEMENT_VERIFY_HANDOFF
+OBJECTIVE: Establish one canonical shared runtime design foundation for the reconciled v0.8.3 frontend, resolving D-04 typography and D-02 glass/blur without changing product behavior or starting FI-02.
+TARGET: frontend-design-integration at FI-00 identity eacdfcc951c687cfca5731ede245130266b1c3da, against functional baseline origin/main@86553349f5c2ebefaa637c30828c560a301f99ba.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi00-branch-reconciliation.md
-AUTHORITY: Earl explicit 2026-08-21 FI-00 instruction -> registered canonical governance -> origin/main current v0.8.3 state -> the Claude preparation packet -> frozen v0.8.3 code, tests, migrations, contracts -> Figma and Figma Make as visual reference only -> historical branch material as preservation evidence only.
-REQUIRED_MODEL: Claude Code / Claude Opus 5, High reasoning, as sole branch-local FI-00 writer under Earl explicit 2026-08-21 task-specific override. The override covered FI-00 only and has expired. FI-01 returns to the repository's normal writer routing unless Earl issues a new override.
-RISK: HIGH;BRANCH_HISTORY_RECONCILIATION_AND_LOSSLESS_PRESERVATION
-SCOPE: Persist the accepted FI-00 specification; take and release the branch-local lock; immutably preserve the pre-FI-00 head; normal non-rebase merge of current origin/main; conflict resolution under the main-wins rule; proof of zero current-main product loss and runtime parity; governance convergence until check:agents passes; classification-driven containment of historical artifacts; the clean-lineage promotion rule; carrying D-08, D-04 and D-02 forward; updating the preparation packet and branch-local continuity; coherent commits and a normal push.
-OUT_OF_SCOPE: Implementing FI-01 or any frontend component; altering current main product behavior; adding or rerunning a migration; changing authentication, session, CSRF, or authorization; changing Worker or API contracts; changing D1, R2, Google, or provider resources; deploying Playground or Production; mutating Figma; merging this branch into main; opening the Production PR; rotating recovery refs; deleting the branch or unrelated worktrees; cleaning the orphan spec-v073-frontend-design-integration directory; history rewriting; filtering large objects from history; removing unique design evidence; Hallmark or Impeccable redesign work; fixing D-08, D-04, or D-02.
-VERIFICATION: Exact branch, head, tree, and upstream readback; exact origin/main identity; archive tag identity and remote readback; normal merge parentage; zero main-file loss; zero runtime diff across every scope in the specification's section 5A; check:agents, handoff:verify, check:continuation; Prettier formatting on touched documents; git diff --check; intra-document reference checks; source-register path checks; secret and private-data scan; containment recoverability proof; complete logical diff review; push and readback parity.
-STOP_CONDITIONS: Current main moves in a way that changes the accepted frozen functional baseline; unknown dirty or unpushed work; a conflicting writer; pre-FI-00 history cannot be preserved; the merge requires force, rebase, or history rewrite; a runtime conflict cannot be resolved by the main-wins rule without losing accepted design evidence; check:agents cannot be made green by convergence; a supposedly historical artifact is the only copy of required Make or design source and cannot be safely preserved; private data or secrets appear in preservation or design evidence; the branch needs a new migration, backend, or API behavior to become reconcilable; Figma, provider, Playground, or Production mutation becomes necessary; any load-bearing item remains UNVERIFIED at closeout.
-ACTIVE_WRITER: NONE
-TERRA_WRITER: NONE
-LOCK_HOLDER: NONE
-WRITER_LOCK: RELEASED
-LOCK_STATUS: RELEASED
-HANDOFF_STATUS: READY_FOR_FI01
+ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi01-shared-design-foundation.md
+AUTHORITY: Earl FI-01 V2 prompt -> canonical governance -> project policy/current chain -> FI-00 PASS functional baseline -> DESIGN.md and DESIGN_AUTHORITY D08/D09/D12/D41 -> retained Make v39 source -> exact active CSS/import graph.
+REQUIRED_MODEL: gpt-5.6-terra sole branch writer, recorded as TERRA_MAX:/root/fi01_integration_writer.
+RISK: MEDIUM_HIGH;SHARED_RUNTIME_DESIGN_FOUNDATION
+SCOPE: Persist FI-01 authority and lock; consolidate the live shared token/theme/font/glass/motion/focus layer; update only directly coupled shared primitive presentation and evidence; resolve D-04 and D-02; verify, push, and hand off ready for FI-02.
+OUT_OF_SCOPE: FI-02/route redesign including landing hero D-08; API/backend/auth/session/CSRF/authorization/data/schema/migration/provider changes; dependency additions; Figma/Playground/Production/recovery writes; historical verifier esbuild; generated-artifact edits; rebase/reset/force/history rewrite or main merge.
+VERIFICATION: Governance/current records, formatter, diff check, lint, production Vite build, authoritative theme/contrast/motion checks, focused shared-runtime tests, bounded existing browser visual smoke at 390/768/1440, secret/private scan, complete diff review, normal push/readback parity.
+STOP_CONDITIONS: Baseline drift, dirty/conflicting writer state, material D-04/D-02 contradiction, missing approved local font, dependency/scope expansion, external mutation need, functional/security regression, private data, second runtime token system, unresolved P0/P1, or load-bearing unverified fact.
+ACTIVE_WRITER: TERRA_MAX:/root/fi01_integration_writer
+TERRA_WRITER: TERRA_MAX:/root/fi01_integration_writer
+LOCK_HOLDER: TERRA_MAX:/root/fi01_integration_writer
+WRITER_LOCK: HELD
+LOCK_STATUS: HELD
+HANDOFF_STATUS: FI01_IN_PROGRESS
 GIT_UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
 FI00_START_SHA: f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970
 FI00_START_TREE: 1d20843c07bc407ec0fac757ec49dfb2d11c796c
@@ -27,13 +27,13 @@ PRE_FI00_ARCHIVE_REF: archive/frontend-design-pre-fi00-2026-08-21
 ORIGIN_MAIN_SHA: 86553349f5c2ebefaa637c30828c560a301f99ba
 ORIGIN_MAIN_TREE: db95ebaafb7de421d02b12f0158bc1a93953edde
 ROLLBACK_POINT: f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970
-STATUS: FI00_BRANCH_RECONCILIATION_COMPLETE
+STATUS: FI01_SHARED_DESIGN_FOUNDATION_IN_PROGRESS
 RUNTIME_PARITY_TO_MAIN: PASS
 GOVERNANCE: PASS
 HISTORICAL_ARTIFACTS: CONTAINED_AND_PRESERVED
-FRONTEND_IMPLEMENTATION: NOT_STARTED
+FRONTEND_IMPLEMENTATION: FI01_SHARED_FOUNDATION_IN_PROGRESS
 DEPLOY: NOT_AUTHORIZED
-NEXT_EXACT_ACTION: FI-01_SHARED_DESIGN_FOUNDATION
+NEXT_EXACT_ACTION: FI01_IMPLEMENT_CANONICAL_RUNTIME_FOUNDATION
 
 ## Delivered
 

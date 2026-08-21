@@ -13,7 +13,7 @@
      theme crossfade  280-420ms
    Transform and opacity only. No bounce. No width/height animation. */
 
-:root {
+:root:not(*) {
   /* ---- Glass system ---- */
   --glass-blur: 18px;
   --glass-saturation: 150%;
@@ -56,7 +56,7 @@
   --t-crossfade: 360ms;
 }
 
-[data-theme="dark"] {
+[data-theme='dark']:not(*) {
   --glass-base: rgba(38, 30, 33, 0.56);
   --glass-raised: rgba(46, 36, 40, 0.68);
   --glass-overlay: rgba(52, 40, 45, 0.82);
@@ -111,7 +111,7 @@
   z-index: -1;
   border-radius: inherit;
   background: var(--glass-specular);
-  content: "";
+  content: '';
   pointer-events: none;
 }
 
@@ -145,7 +145,7 @@
   overflow: hidden;
 }
 
-[data-theme="dark"] .celestial__capsule {
+[data-theme='dark'] .celestial__capsule {
   border-color: rgba(242, 220, 166, 0.18);
   background: linear-gradient(180deg, #241b1e, #100b0c);
 }
@@ -154,12 +154,7 @@
 .celestial__sheen {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    100deg,
-    transparent 34%,
-    rgba(255, 255, 255, 0.22) 50%,
-    transparent 66%
-  );
+  background: linear-gradient(100deg, transparent 34%, rgba(255, 255, 255, 0.22) 50%, transparent 66%);
   opacity: 0;
   pointer-events: none;
   transform: translateX(-70%);
@@ -191,8 +186,7 @@
   width: var(--celestial-plate);
   height: var(--celestial-plate);
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 34% 26%, #ffffff 0%, #f7f2e8 52%, #e6dccb 100%);
+  background: radial-gradient(circle at 34% 26%, #ffffff 0%, #f7f2e8 52%, #e6dccb 100%);
   box-shadow:
     0 1px 1px rgba(0, 0, 0, 0.42),
     0 4px 10px rgba(0, 0, 0, 0.4),
@@ -201,7 +195,7 @@
   transition: transform var(--t-travel) var(--ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
-[data-theme="dark"] .celestial__plate {
+[data-theme='dark'] .celestial__plate {
   transform: translateX(var(--celestial-travel)) scale(1);
 }
 
@@ -211,7 +205,7 @@
   transition-duration: var(--t-press);
 }
 
-[data-theme="dark"] .celestial:active .celestial__plate {
+[data-theme='dark'] .celestial:active .celestial__plate {
   transform: translateX(var(--celestial-travel)) scale(0.9);
 }
 
@@ -255,13 +249,13 @@
 }
 
 /* DARK: the plate has travelled right, so the moon inverts to dark ink. */
-[data-theme="dark"] .celestial__slot--sun {
+[data-theme='dark'] .celestial__slot--sun {
   color: rgba(246, 231, 196, 0.5);
   opacity: 0.75;
   transform: rotate(-42deg) scale(0.86);
 }
 
-[data-theme="dark"] .celestial__slot--moon {
+[data-theme='dark'] .celestial__slot--moon {
   color: #17100f;
   opacity: 1;
   transform: rotate(0deg) scale(1);
@@ -270,11 +264,12 @@
 /* Rays contract when the sun goes inactive. */
 .celestial__rays {
   transform-origin: 12px 12px;
-  transition: transform var(--t-choreo) var(--ease, cubic-bezier(0.22, 1, 0.36, 1)),
+  transition:
+    transform var(--t-choreo) var(--ease, cubic-bezier(0.22, 1, 0.36, 1)),
     opacity var(--t-choreo) var(--ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
-[data-theme="dark"] .celestial__rays {
+[data-theme='dark'] .celestial__rays {
   opacity: 0.5;
   transform: rotate(38deg) scale(0.62);
 }
@@ -335,24 +330,22 @@
    aria-expanded reports whether the rail is expanded, so keying the X off it
    would show "close" whenever the rail is simply open. data-drawer-open is
    true only when the narrow off-canvas drawer is actually covering content. */
-.menu-control[data-drawer-open="true"] .menu-control__glyph i:nth-child(1) {
+.menu-control[data-drawer-open='true'] .menu-control__glyph i:nth-child(1) {
   transform: translateY(5px) rotate(45deg);
 }
 
-.menu-control[data-drawer-open="true"] .menu-control__glyph i:nth-child(2) {
+.menu-control[data-drawer-open='true'] .menu-control__glyph i:nth-child(2) {
   opacity: 0;
   transform: scaleX(0.2);
 }
 
-.menu-control[data-drawer-open="true"] .menu-control__glyph i:nth-child(3) {
+.menu-control[data-drawer-open='true'] .menu-control__glyph i:nth-child(3) {
   transform: translateY(-5px) rotate(-45deg);
 }
 
 /* On desktop the collapsed rail nudges the rules toward a compact mark
    instead — a state change without a false "close" signal. */
-.menu-control[aria-expanded="false"]:not([data-drawer-open="true"])
-  .menu-control__glyph
-  i:nth-child(2) {
+.menu-control[aria-expanded='false']:not([data-drawer-open='true']) .menu-control__glyph i:nth-child(2) {
   transform: scaleX(0.44);
 }
 
@@ -404,7 +397,7 @@
   transition: transform 200ms var(--ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
-[data-theme="dark"] .back-control__glyph {
+[data-theme='dark'] .back-control__glyph {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
@@ -447,11 +440,11 @@
   }
 
   .celestial__slot--moon,
-  [data-theme="dark"] .celestial__slot--sun {
+  [data-theme='dark'] .celestial__slot--sun {
     transform: none;
   }
 
-  [data-theme="dark"] .celestial__rays {
+  [data-theme='dark'] .celestial__rays {
     transform: none;
   }
 
@@ -460,7 +453,7 @@
     transform: none;
   }
 
-  [data-theme="dark"] .celestial:active .celestial__plate {
+  [data-theme='dark'] .celestial:active .celestial__plate {
     transform: translateX(var(--celestial-travel));
   }
 }

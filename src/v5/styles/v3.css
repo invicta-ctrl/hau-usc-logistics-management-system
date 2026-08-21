@@ -8,7 +8,7 @@
    FINISH: Restrained gold, crisp rules, purposeful motion, and no generic spinners.
    PRE-EMIT CRITIQUE: P5 H5 E4 S5 R5 V4 */
 
-:root {
+:root:not(*) {
   --ox-900: #35070a;
   --ox-800: #5b0b10;
   --ox-700: #74141b;
@@ -49,9 +49,9 @@
   --rail-ink-dim: #ddc9c5;
   --rail-line: rgb(227 199 125 / 24%);
 
-  --font-body: "Aptos", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
-  --font-display: "Bahnschrift", "Aptos Display", "Segoe UI Variable", system-ui, sans-serif;
-  --font-wordmark: "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --font-body: 'Aptos', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Bahnschrift', 'Aptos Display', 'Segoe UI Variable', system-ui, sans-serif;
+  --font-wordmark: 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
   --font-mono: var(--font-body);
 
   --t-2xs: 10px;
@@ -109,7 +109,7 @@
   --gold-rule: 2px;
 }
 
-[data-theme="dark"] {
+[data-theme='dark']:not(*) {
   --ox-900: #35090d;
   --ox-800: #60171d;
   --ox-700: #7d272f;
@@ -163,7 +163,7 @@ body::before {
   background:
     radial-gradient(circle at 82% 4%, var(--accent-wash), transparent 28%),
     linear-gradient(var(--canvas), var(--canvas));
-  content: "";
+  content: '';
   inset: 0;
   pointer-events: none;
   position: fixed;
@@ -260,13 +260,13 @@ h3,
   position: relative;
 }
 
-.rail__nav [aria-current="page"] {
+.rail__nav [aria-current='page'] {
   background: color-mix(in srgb, var(--white) 12%, transparent);
   box-shadow: inset var(--gold-rule) 0 0 var(--gold-400);
   color: var(--rail-ink);
 }
 
-.rail__nav [aria-current="page"] .icon {
+.rail__nav [aria-current='page'] .icon {
   color: var(--gold-300);
 }
 
@@ -307,8 +307,12 @@ h3,
 }
 
 @keyframes route-arrive {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .menu-control {
@@ -341,19 +345,21 @@ h3,
   display: block;
   height: var(--gold-rule);
   transform-origin: center;
-  transition: transform var(--m-small) var(--ease), opacity var(--m-instant) ease;
+  transition:
+    transform var(--m-small) var(--ease),
+    opacity var(--m-instant) ease;
 }
 
-.shell[data-drawer="open"] .menu-control__glyph i:first-child {
+.shell[data-drawer='open'] .menu-control__glyph i:first-child {
   transform: translateY(6px) rotate(45deg);
 }
 
-.shell[data-drawer="open"] .menu-control__glyph i:nth-child(2) {
+.shell[data-drawer='open'] .menu-control__glyph i:nth-child(2) {
   opacity: 0;
   transform: scaleX(0);
 }
 
-.shell[data-drawer="open"] .menu-control__glyph i:last-child {
+.shell[data-drawer='open'] .menu-control__glyph i:last-child {
   transform: translateY(-6px) rotate(-45deg);
 }
 
@@ -406,7 +412,9 @@ h3,
   height: 34px;
   overflow: hidden;
   position: relative;
-  transition: background var(--m-small) ease, border-color var(--m-small) ease;
+  transition:
+    background var(--m-small) ease,
+    border-color var(--m-small) ease;
   width: 62px;
 }
 
@@ -438,11 +446,13 @@ h3,
   position: absolute;
   top: 2px;
   transform: translateX(0);
-  transition: transform var(--m-surface) var(--ease), background var(--m-small) ease;
+  transition:
+    transform var(--m-surface) var(--ease),
+    background var(--m-small) ease;
   width: 28px;
 }
 
-[data-theme="dark"] .theme-toggle__thumb {
+[data-theme='dark'] .theme-toggle__thumb {
   background: var(--anchor);
   transform: translateX(28px);
 }
@@ -459,7 +469,9 @@ h3,
   color: var(--gold-600);
   grid-area: 1 / 1;
   height: 18px;
-  transition: opacity var(--m-small) ease, transform var(--m-surface) var(--ease);
+  transition:
+    opacity var(--m-small) ease,
+    transform var(--m-surface) var(--ease);
   width: 18px;
 }
 
@@ -468,12 +480,12 @@ h3,
   transform: rotate(-80deg) scale(0.5);
 }
 
-[data-theme="dark"] .theme-toggle__sun {
+[data-theme='dark'] .theme-toggle__sun {
   opacity: 0;
   transform: rotate(80deg) scale(0.5);
 }
 
-[data-theme="dark"] .theme-toggle__moon {
+[data-theme='dark'] .theme-toggle__moon {
   color: var(--gold-300);
   opacity: 1;
   transform: rotate(0) scale(1);
@@ -557,9 +569,9 @@ h3,
   color: var(--white);
 }
 
-.attention__item[data-urgent="true"]::after {
+.attention__item[data-urgent='true']::after {
   background: var(--gold-500);
-  content: "";
+  content: '';
   height: var(--gold-rule);
   inset: auto var(--s-6) var(--s-4);
   position: absolute;
@@ -613,7 +625,7 @@ h3,
   background: var(--anchor-soft);
 }
 
-.q tbody tr[aria-selected="true"] {
+.q tbody tr[aria-selected='true'] {
   background: var(--accent-wash);
   box-shadow: inset var(--gold-rule) 0 0 var(--gold-600);
 }
@@ -657,7 +669,7 @@ h3,
   border-color: var(--line-strong);
 }
 
-.timeline li[data-current="true"] .timeline__dot {
+.timeline li[data-current='true'] .timeline__dot {
   background: var(--accent);
   border-color: var(--accent);
   box-shadow: 0 0 0 5px var(--accent-wash);
@@ -713,7 +725,9 @@ h3,
 }
 
 @keyframes load-bars {
-  to { transform: scaleY(0.4); }
+  to {
+    transform: scaleY(0.4);
+  }
 }
 
 .preview-loading__progress {
@@ -732,8 +746,12 @@ h3,
 }
 
 @keyframes load-progress {
-  from { transform: scaleX(0.12); }
-  to { transform: scaleX(0.92); }
+  from {
+    transform: scaleX(0.12);
+  }
+  to {
+    transform: scaleX(0.92);
+  }
 }
 
 .preview-loading__row {
@@ -771,9 +789,7 @@ h3,
 }
 
 .public {
-  background:
-    radial-gradient(circle at 12% 6%, var(--accent-wash), transparent 24%),
-    var(--canvas);
+  background: radial-gradient(circle at 12% 6%, var(--accent-wash), transparent 24%), var(--canvas);
 }
 
 .public__bar {
@@ -964,7 +980,7 @@ textarea {
   min-height: var(--control-h);
 }
 
-.field input:not([type="checkbox"]):not([type="radio"]),
+.field input:not([type='checkbox']):not([type='radio']),
 .field select,
 .q__link {
   min-height: var(--control-h);

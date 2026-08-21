@@ -56,13 +56,14 @@ a {
 }
 
 /* Oxblood on a near-black ground measures ~2.7:1. Links re-tone to gold. */
-[data-theme="dark"] a {
+[data-theme='dark'] a {
   color: var(--gold-300);
 }
 
 :focus-visible {
   outline: var(--focus-ring);
   outline-offset: 3px;
+  box-shadow: var(--focus-glow);
   border-radius: 3px;
 }
 
