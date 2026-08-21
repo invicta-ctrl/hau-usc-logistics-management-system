@@ -15,7 +15,6 @@ import {
   normalizeScopedRevisionPayload,
   revisionChanged,
 } from '../../app/revision-sync.js';
-import landingMediaUrl from '../assets/images/usc-facebook-cover-youth-development-day-2026.jpg?url';
 
 const MODULE_BY_ROUTE = Object.freeze({
   'admin.overview': 'overview',
@@ -261,11 +260,18 @@ const ROUTE_STATES = Object.freeze({
   'admin.directory': new Set(['populated', 'empty', 'denied']),
   'owner.health': new Set(['populated', 'denied']),
   'public.signin': new Set(['populated', 'loading', 'error', 'unavailable']),
+  'public.landing': new Set(['populated', 'loading', 'empty', 'error', 'media-failure']),
   'public.request-intake': new Set(['populated', 'error']),
 });
 
 export function resolveV5RouteState(currentRoute, wanted, fallback = 'populated') {
   return ROUTE_STATES[currentRoute]?.has(wanted) ? wanted : fallback;
+}
+
+export function projectPublicAdvertisementState(advertisements, dynamicMedia = 'NOT_PRESENT') {
+  const items = Array.isArray(advertisements) ? advertisements : [];
+  if (!items.length) return 'empty';
+  return dynamicMedia === 'FAIL' ? 'media-failure' : 'populated';
 }
 
 const ROUTES_WITHOUT_DATA_SLOT = new Set(['public.register']);
@@ -1051,7 +1057,32 @@ export function createV5Runtime({ backend, app }) {
     integration.advertisements = advertisements;
     integration.dynamicMedia = dynamicMedia;
     integration.connectedRoutes.add('public.landing');
-    return true;
+    integration.failedRoutes.delete('public.landing');
+    return projectPublicAdvertisementState(advertisements, dynamicMedia);
+  }
+
+  function waitForPublicLandingSurface(canCommit) {
+    if (!canCommit() || app.integrationState?.surface === 'public.landing') {
+      return Promise.resolve(canCommit());
+    }
+    return new Promise((resolve) => {
+      const settle = () => {
+        document.removeEventListener('hau:v5-rendered', onRendered);
+        window.removeEventListener('hashchange', onHashChange);
+        resolve(canCommit() && app.integrationState?.surface === 'public.landing');
+      };
+      const onRendered = (event) => {
+        if (!canCommit() || event.detail?.surface === 'public.landing') settle();
+      };
+      const onHashChange = () => {
+        if (!canCommit()) settle();
+      };
+      document.addEventListener('hau:v5-rendered', onRendered);
+      window.addEventListener('hashchange', onHashChange);
+      queueMicrotask(() => {
+        if (!canCommit() || app.integrationState?.surface === 'public.landing') settle();
+      });
+    });
   }
 
   async function verifyPlaygroundContext({ canCommit = () => true } = {}) {
@@ -1137,9 +1168,19 @@ export function createV5Runtime({ backend, app }) {
     try {
       if (!canCommit()) return false;
       if (PUBLIC_ROUTES.has(currentRoute)) {
+        if (currentRoute === 'public.landing' && !(await waitForPublicLandingSurface(canCommit))) {
+          return false;
+        }
+        const loading = resolveV5RouteState(currentRoute, 'loading', 'populated');
+        if (currentRoute === 'public.landing' && loading === 'loading' && !expectedRevision) {
+          integration.advertisements = [];
+          integration.dynamicMedia = 'NOT_PRESENT';
+          render('loading');
+        }
         const committed = await loadPublic(currentRoute, { canCommit });
         if (committed === false || !canCommit()) return false;
-        afterRender();
+        if (currentRoute === 'public.landing') render(committed);
+        else afterRender();
         return true;
       }
       const authenticated = await ensureAuthenticated({ canCommit });
@@ -1202,13 +1243,18 @@ export function createV5Runtime({ backend, app }) {
     const heroSummary = hero?.querySelector('.landing-hero__content > p');
     const heroLink = hero?.querySelector('.landing-link');
     const heading = section?.querySelector('h2');
-    const summary = section?.querySelector('p:not(.eyebrow)');
+    const summary = section?.querySelector('.landing-updates__summary');
     const link = section?.querySelector('a');
     const title = text(item.title);
     const description = text(item.description, item.summary, item.body);
     const target = text(item.destinationUrl, item.url, item.targetUrl);
     const callToAction = text(item.callToAction, 'View official page');
-    if (hero) hero.dataset.eventActive = 'true';
+    const mediaUrl = text(item.mediaUrl, item.imageUrl);
+    const mediaState = integration.dynamicMedia === 'FAIL' ? 'failure' : mediaUrl ? 'ready' : 'not-present';
+    if (hero) {
+      hero.dataset.eventActive = 'true';
+      hero.dataset.eventMediaState = mediaState;
+    }
     if (heroTitle && title) heroTitle.textContent = title;
     if (heroSummary && description) heroSummary.textContent = description;
     if (heroLink) {
@@ -1221,11 +1267,23 @@ export function createV5Runtime({ backend, app }) {
       link.firstChild.textContent = callToAction;
       if (/^https:\/\//u.test(target)) link.href = target;
     }
-    const mediaUrl = text(item.mediaUrl, item.imageUrl);
-    const media = document.querySelector('.landing-hero__media');
-    if (media && mediaUrl && (/^\//u.test(mediaUrl) || /^https:\/\//u.test(mediaUrl))) {
-      media.src = mediaUrl;
-      media.alt = text(item.altText, item.title);
+    const mediaSlot = document.querySelector('.landing-hero__media-slot');
+    if (mediaSlot) {
+      mediaSlot.replaceChildren();
+      if (
+        mediaUrl &&
+        integration.dynamicMedia !== 'FAIL' &&
+        (/^\//u.test(mediaUrl) || /^https:\/\//u.test(mediaUrl))
+      ) {
+        const media = document.createElement('img');
+        media.className = 'landing-hero__media';
+        media.width = 960;
+        media.height = 356;
+        media.decoding = 'async';
+        media.src = mediaUrl;
+        media.alt = text(item.altText, item.title);
+        mediaSlot.append(media);
+      }
     }
   }
 
@@ -1776,11 +1834,6 @@ export function createV5Runtime({ backend, app }) {
     const currentRoute = route();
     if (currentRoute === 'index') bindPlaygroundIndex();
     if (currentRoute === 'public.landing') {
-      const media = document.querySelector('.landing-hero__media');
-      if (media) {
-        media.src = landingMediaUrl;
-        media.alt = 'USC Youth Development Day 2026 official cover';
-      }
       bindAnnouncement();
     }
     if (

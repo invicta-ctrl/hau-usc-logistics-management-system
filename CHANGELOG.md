@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### FI-02 Public Landing & Portal Shell
+
+- Completed the real FI-02 public landing and portal shell with only verified public routes, an approved official USC destination, truthful existing-advertisement loading/populated/empty/request-error/media-failure states, conditional real-media rendering, and no self-service registration.
+- Applied the accepted D-08 accessibility decision: FI-01 semantic foregrounds preserve the Figma hierarchy while meeting WCAG AA in both authored themes; keyboard focus, reduced motion, responsive widths, and 200% zoom were accepted.
+
+### FI-02 verification boundary
+
+- FI-02 changes frontend presentation, accepted continuity evidence, focused tests, and canonically regenerated artifacts only. No backend/API/auth/data contract, migration, dependency, provider, Figma, Playground, Production, deployment, main merge, or history rewrite occurred.
+- Current V5 unit/browser/build/dist evidence passes. Repository-wide `npm run lint` keeps only its owner-recorded unrelated prototype browser-global baseline and one existing server warning; generic legacy `npm run test:e2e` is intentionally not FI-02 evidence against the dedicated guarded V5 preview, while the full V5 E2E and visual suites pass.
+
 ### v0.8.3 owner-fast-close checkpoint
 
 - Reconciled the already-live owner-authorized Production v0.8.3 runtime to the exact frozen f8 candidate, 100% Worker traffic, schema32/migrations 0031+0032/single 0032 ledger/FK0, three Activity History tables, protected roster configuration/secret presence, private recovery evidence, and isolated Playground bindings.

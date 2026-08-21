@@ -54,7 +54,13 @@ export const V5_ROUTE_CLASSIFICATIONS = Object.freeze({
 
 export const SURFACES = [
   /* Public and pre-authentication */
-  S('public.landing', 'Portal landing', 'Public', 'solid', 'public', pub.landing),
+  S('public.landing', 'Portal landing', 'Public', 'solid', 'public', pub.landing, [
+    'populated',
+    'loading',
+    'empty',
+    'error',
+    'media-failure',
+  ]),
   S('public.signin', 'Staff sign in', 'Public', 'deep', 'public', pub.signin, [
     'populated',
     'loading',
@@ -82,16 +88,27 @@ export const SURFACES = [
   S('public.policy', 'Privacy and acceptable use', 'Public', 'solid', 'public', pub.policy),
 
   /* Role overviews */
-  S('admin.overview', 'Administrator overview', 'Overviews', 'deep', 'internal', (c) => ops.overview('admin.overview', c), [
-    'populated',
-    'loading',
-    'empty',
-    'unavailable',
-  ]),
-  S('director.overview', 'Director overview', 'Overviews', 'solid', 'internal', (c) => ops.overview('director.overview', c)),
-  S('food.overview', 'Food committee', 'Overviews', 'solid', 'internal', (c) => ops.overview('food.overview', c)),
-  S('inventory.overview', 'Inventory committee', 'Overviews', 'solid', 'internal', (c) => ops.overview('inventory.overview', c)),
-  S('materials.overview', 'Materials committee', 'Overviews', 'solid', 'internal', (c) => ops.overview('materials.overview', c)),
+  S(
+    'admin.overview',
+    'Administrator overview',
+    'Overviews',
+    'deep',
+    'internal',
+    (c) => ops.overview('admin.overview', c),
+    ['populated', 'loading', 'empty', 'unavailable'],
+  ),
+  S('director.overview', 'Director overview', 'Overviews', 'solid', 'internal', (c) =>
+    ops.overview('director.overview', c),
+  ),
+  S('food.overview', 'Food committee', 'Overviews', 'solid', 'internal', (c) =>
+    ops.overview('food.overview', c),
+  ),
+  S('inventory.overview', 'Inventory committee', 'Overviews', 'solid', 'internal', (c) =>
+    ops.overview('inventory.overview', c),
+  ),
+  S('materials.overview', 'Materials committee', 'Overviews', 'solid', 'internal', (c) =>
+    ops.overview('materials.overview', c),
+  ),
 
   /* Core operations */
   S('request.queue', 'Request review queue', 'Operations', 'deep', 'internal', ops.requestQueue, [
@@ -101,14 +118,20 @@ export const SURFACES = [
     'stale',
     'denied',
   ]),
-  S('lending.queue', 'Lending hub', 'Operations', 'deep', 'internal', ops.lendingQueue, ['populated', 'empty']),
+  S('lending.queue', 'Lending hub', 'Operations', 'deep', 'internal', ops.lendingQueue, [
+    'populated',
+    'empty',
+  ]),
   S('lending.detail', 'Loan detail', 'Operations', 'deep', 'internal', ops.lendingDetail),
   S('release.desk', 'Release Desk', 'Operations', 'deep', 'internal', ops.releaseDesk, [
     'populated',
     'success',
     'unavailable',
   ]),
-  S('inventory.catalog', 'Inventory', 'Operations', 'deep', 'internal', ops.inventoryCatalog, ['populated', 'loading']),
+  S('inventory.catalog', 'Inventory', 'Operations', 'deep', 'internal', ops.inventoryCatalog, [
+    'populated',
+    'loading',
+  ]),
   S('inventory.item', 'Item and movement history', 'Operations', 'deep', 'internal', ops.inventoryItem),
   S('restocking.queue', 'Restocking and receiving', 'Operations', 'solid', 'internal', ops.restockingQueue, [
     'populated',
@@ -119,13 +142,19 @@ export const SURFACES = [
   S('audit.activity', 'Recent activity', 'Operations', 'solid', 'internal', ops.auditActivity),
 
   /* Administration */
-  S('admin.access', 'Accounts and access', 'Administration', 'solid', 'internal', adm.access, ['populated', 'denied']),
+  S('admin.access', 'Accounts and access', 'Administration', 'solid', 'internal', adm.access, [
+    'populated',
+    'denied',
+  ]),
   S('admin.directory', 'Staff directory', 'Administration', 'solid', 'internal', adm.directory),
   S('admin.reference', 'Reference administration', 'Administration', 'solid', 'internal', adm.reference),
   S('admin.links', 'Link registry', 'Administration', 'solid', 'internal', adm.links),
   S('admin.brand', 'Brand and media', 'Administration', 'solid', 'internal', adm.brand),
   S('account.profile', 'My profile', 'Administration', 'solid', 'internal', adm.profile),
-  S('owner.health', 'System status', 'Administration', 'solid', 'internal', ops.ownerHealth, ['populated', 'denied']),
+  S('owner.health', 'System status', 'Administration', 'solid', 'internal', ops.ownerHealth, [
+    'populated',
+    'denied',
+  ]),
 ];
 
 export const byId = (id) => SURFACES.find((s) => s.id === id);

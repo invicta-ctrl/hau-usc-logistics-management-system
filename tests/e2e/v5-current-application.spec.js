@@ -164,7 +164,9 @@ test('published public announcement drives the major-event landing content witho
 
   await page.goto('/#/public.landing');
   await waitForV5(page);
+  await expect(page.locator('.landing-updates')).toHaveAttribute('data-advertisement-state', 'populated');
   await expect(page.locator('.landing-hero')).toHaveAttribute('data-event-active', 'true');
+  await expect(page.locator('.landing-hero')).toHaveAttribute('data-event-media-state', 'ready');
   await expect(page.locator('.landing-hero h1')).toHaveText('Youth Development Day 2026');
   await expect(page.locator('.landing-hero__content > p')).toContainText('Sibulahi');
   await expect(page.locator('.landing-link')).toHaveText(/View event details/u);
@@ -177,6 +179,82 @@ test('published public announcement drives the major-event landing content witho
     'alt',
     'Youth Development Day 2026 official event cover',
   );
+});
+
+test('public landing truthfully projects loading, empty, request-error, and media-failure states', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The public advertisement lifecycle runs once.');
+  const delayed = deferred();
+  await installV5ApiFixture(page, { environment: STAGING });
+  await page.route('**/api/public/advertisements', async (route) => {
+    await delayed.promise;
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items: [] }),
+    });
+  });
+
+  await page.goto('/#/public.landing');
+  await waitForV5(page);
+  const updates = page.locator('.landing-updates');
+  const heroMedia = page.locator('.landing-hero__media');
+  await expect(updates).toHaveAttribute('data-advertisement-state', 'loading');
+  await expect(updates).toHaveAttribute('aria-busy', 'true');
+  await expect(updates.getByRole('heading')).toHaveText('Loading official updates');
+  await expect(page.locator('[href="#/public.request-intake"]')).toBeVisible();
+  await expect(heroMedia).not.toBeVisible();
+
+  delayed.resolve();
+  await expect(updates).toHaveAttribute('data-advertisement-state', 'empty');
+  await expect(updates).toHaveAttribute('aria-busy', 'false');
+  await expect(updates).toContainText('No published updates are currently available.');
+  await expect(heroMedia).not.toBeVisible();
+  await expect(page.locator('[data-v5-admin-parity="advertisement-projection"]')).toBeHidden();
+
+  await page.unroute('**/api/public/advertisements');
+  await page.route('**/api/public/advertisements', (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 'PUBLIC_ADVERTISEMENT_UNAVAILABLE' }),
+    }),
+  );
+  await page.goto('/#/public.signin');
+  await expect(page.locator('.auth-card--signin')).toBeVisible();
+  await page.goto('/#/public.landing');
+  await expect(updates).toHaveAttribute('data-advertisement-state', 'error');
+  await expect(updates.getByRole('heading')).toHaveText('Updates are temporarily unavailable');
+  await expect(page.locator('[href="#/public.request-intake"]')).toBeVisible();
+  await expect(heroMedia).not.toBeVisible();
+
+  await page.unroute('**/api/public/advertisements');
+  await page.route('**/api/public/advertisements', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        items: [
+          {
+            title: 'Published public update',
+            description: 'Published content is supplied only through the public endpoint.',
+            mediaUrl: '/media/advertisements/published-public-update',
+          },
+        ],
+      }),
+    }),
+  );
+  await page.route('**/media/advertisements/**', (route) => route.fulfill({ status: 503 }));
+  await page.goto('/#/public.signin');
+  await expect(page.locator('.auth-card--signin')).toBeVisible();
+  await page.goto('/#/public.landing');
+  await expect(updates).toHaveAttribute('data-advertisement-state', 'media-failure');
+  await expect(updates).toContainText('The published media could not be loaded.');
+  await expect(updates).toContainText('Core public destinations are unaffected.');
+  await expect(page.locator('[href="#/public.request-intake"]')).toBeVisible();
+  await expect(heroMedia).not.toBeVisible();
+  await expectNoHorizontalOverflow(page);
 });
 
 test('verification confirmation accepts only an eight-digit one-time code shape', async ({
@@ -1507,13 +1585,13 @@ test('light and dark V5 themes remain usable at the configured responsive width'
     "As the University's highest student governing body, the Council represents the tertiary student community through leadership, service, and shared responsibility.",
   );
   const heroMedia = page.locator('.landing-hero__media');
-  await expect(heroMedia).toBeVisible();
-  await expect.poll(() => heroMedia.evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
+  await expect(page.locator('.landing-updates')).toHaveAttribute('data-advertisement-state', 'empty');
+  await expect(heroMedia).not.toBeVisible();
   await expect(page.locator('.landing-hero__actions .btn--primary')).toHaveText(/Staff sign in/u);
   await expect(page.locator('.landing-hero__monogram img')).toHaveAttribute('alt', 'USC');
   await expect(page.locator('.public__marks img')).toHaveCount(2);
   await expect(page.locator('.public__wordmark b')).toHaveText('Holy Angel University Student Council');
-  await expect(page.locator('.public__foot-meta')).toContainText('HAU-USC · 2026-2027');
+  await expect(page.locator('.public__foot-meta')).toContainText('HAU-USC · © 2026–2027');
   if (testInfo.project.name === 'v5-chromium-1280') {
     for (const selector of [
       '.landing-hero h1',

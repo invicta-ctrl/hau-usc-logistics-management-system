@@ -51,7 +51,7 @@
   letter-spacing: 0.05em;
 }
 
-[data-theme="dark"] .public__mark {
+[data-theme='dark'] .public__mark {
   background: rgba(255, 255, 255, 0.1);
   color: var(--gold-300);
 }
@@ -79,6 +79,112 @@
 
 .public__main--wide {
   max-width: 1000px;
+}
+
+/* ---------- FI-02 public landing and portal shell ---------- */
+
+/* The integration layer reveals this element only after the existing public
+   advertisement adapter has accepted a published item. Keeping the image out
+   of the empty/error composition prevents a previous cover from becoming a
+   fabricated current announcement. */
+.public--landing .landing-hero:not([data-event-active='true']) .landing-hero__media {
+  display: none;
+}
+
+.public--landing .landing-hero[data-event-active='true'] .landing-hero__media {
+  display: block;
+}
+
+.public--landing .landing-hero[data-event-media-state='failure'] .landing-hero__media,
+.public--landing .landing-hero[data-event-media-state='not-present'] .landing-hero__media {
+  display: none;
+}
+
+/* ACCESSIBILITY_CORRECTION (D-08): Page 15's dark-on-dark ink does not meet
+   AA. The existing FI-01 high-contrast semantic foreground remains readable
+   over both the published-media and no-media hero states. */
+.public--landing .landing-hero__content {
+  background: linear-gradient(
+    90deg,
+    var(--ox-900) 0%,
+    color-mix(in srgb, var(--ox-900) 97%, transparent) 78%,
+    transparent 100%
+  );
+  color: var(--anchor-ink);
+}
+
+.public--landing .landing-hero h1,
+.public--landing .landing-hero__content > p {
+  color: var(--anchor-ink);
+}
+
+/* Secondary hero action stays quieter than the primary button while retaining
+   AA contrast against an opaque FI-01 anchor surface. */
+.public--landing .landing-hero .landing-link {
+  background: var(--ox-900);
+  border-color: var(--gold-300);
+  color: var(--gold-300);
+}
+
+.public--landing .landing-hero .landing-link:hover {
+  background: var(--ox-800);
+  border-color: var(--gold-200);
+  color: var(--gold-100);
+}
+
+/* The portal's active path uses the accepted semantic anchor pair in both
+   authored themes instead of an inaccessible dark-ink-on-dark-card pair. */
+.public--landing .portal-action--primary {
+  background: var(--anchor);
+  color: var(--anchor-ink);
+}
+
+.public--landing .portal-action--primary .portal-action__mark {
+  background: var(--gold-400);
+  color: var(--ox-900);
+}
+
+.public--landing .portal-action--primary small {
+  color: var(--gold-200);
+}
+
+/* Inactive portal descriptions and the institutional footer remain secondary,
+   but use FI-01's AA-safe semantic foreground rather than the lighter muted
+   token on warm light surfaces. */
+.public--landing .portal-action:not(.portal-action--primary) small,
+.public--landing .public__foot-meta > span {
+  color: var(--ink-2);
+}
+
+.public--landing .landing-updates .eyebrow {
+  color: var(--anchor);
+}
+
+[data-theme='dark'] .public--landing .landing-updates .eyebrow {
+  color: var(--gold-300);
+}
+
+.public--landing .landing-updates__status {
+  color: var(--tone-alert-fg);
+  font-size: var(--t-sm);
+  font-weight: 700;
+}
+
+/* The existing admin-parity diagnostic is useful to its protected owner
+   surface, but duplicates public-feed status on this signed-out landing. */
+.public--landing [data-v5-admin-parity='advertisement-projection'] {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .public--landing .landing-hero__content {
+    background: linear-gradient(
+      0deg,
+      var(--ox-900) 0%,
+      color-mix(in srgb, var(--ox-900) 98%, transparent) 82%,
+      transparent 100%
+    );
+  }
 }
 
 .public__head {
@@ -128,8 +234,8 @@
   grid-column: 1 / -1;
   grid-template-columns: 56px minmax(0, 1fr);
   grid-template-areas:
-    "mark title"
-    "mark sub";
+    'mark title'
+    'mark sub';
   align-items: center;
   column-gap: var(--s-5);
   row-gap: 4px;
@@ -173,7 +279,7 @@
   /* Back to a stacked card so the mark and title do not crush at 320px. */
   .portal-grid > :first-child {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "mark" "title" "sub";
+    grid-template-areas: 'mark' 'title' 'sub';
     align-items: start;
     row-gap: var(--s-2);
     padding: var(--s-5);
@@ -192,7 +298,8 @@
   color: var(--ink);
   text-decoration: none;
   text-align: left;
-  transition: border-color var(--dur-state) var(--ease),
+  transition:
+    border-color var(--dur-state) var(--ease),
     background var(--dur-state) var(--ease);
 }
 
@@ -201,7 +308,7 @@
   background: var(--cream);
 }
 
-[data-theme="dark"] .portal-card:hover {
+[data-theme='dark'] .portal-card:hover {
   background: var(--paper-2);
 }
 
@@ -317,7 +424,8 @@
   color: var(--ink);
   text-decoration: none;
   text-align: left;
-  transition: border-color var(--dur-state) var(--ease),
+  transition:
+    border-color var(--dur-state) var(--ease),
     background var(--dur-state) var(--ease);
 }
 
@@ -326,7 +434,7 @@
   background: var(--cream);
 }
 
-[data-theme="dark"] .index-item:hover {
+[data-theme='dark'] .index-item:hover {
   background: var(--paper-2);
 }
 
@@ -353,12 +461,12 @@
   text-transform: uppercase;
 }
 
-.index-tier[data-tier="deep"] {
+.index-tier[data-tier='deep'] {
   border-color: var(--gold-600);
   color: var(--gold-700);
 }
 
-[data-theme="dark"] .index-tier[data-tier="deep"] {
+[data-theme='dark'] .index-tier[data-tier='deep'] {
   color: var(--gold-300);
 }
 

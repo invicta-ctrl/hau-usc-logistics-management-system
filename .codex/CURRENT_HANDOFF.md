@@ -1,13 +1,18 @@
-# Current Environment Handoff
+# Current Environment Handoff — FI-02 Closeout / Ready for FI-03
 
-FROM: TERRA_MAX:/root/fi01_integration_writer
-TO: FI-02 Public Landing & Portal Shell — next accepted branch writer
+FROM: TERRA_MAX:/root/fi02_integration_writer
+TO: FI03_UNASSIGNED; a newly accepted FI-03 task must acquire its own sole-writer lock
 PROGRAM: HAU-USC Logistics — frozen v0.8.3 frontend design integration
-STATUS: READY_FOR_FI02
-BRANCH: GIT_BRANCH
+SLICE: FI-02 Public Landing & Portal Shell
+STATUS: FI02_STATUS_PASS
+BRANCH: frontend-design-integration
+STARTING_SHA: 70e1d80070b7751f23abdf8f3ffe66e66be6906c
+STARTING_TREE: 72148164028cfba5f93e478b8fdc5385ab19e35e
+ENDING_SHA: GIT_HEAD; resulting one coherent self-containing FI-02 closeout commit, resolved by final Git readback
+ENDING_TREE: GIT_TREE; resulting FI-02 tree, resolved by final Git readback
 HEAD: GIT_HEAD
 TREE: GIT_TREE
-UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_READBACK_PARITY_0_0
+UPSTREAM: origin/frontend-design-integration@GIT_HEAD;NORMAL_FI02_PUSH_READBACK_0_0
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: NONE
@@ -16,28 +21,44 @@ LOCK_HOLDER: NONE
 WRITER_LOCK: RELEASED
 LOCK_STATUS: RELEASED
 LOCK_CONTINUITY: CLOSED
-HANDOFF_STATUS: READY_FOR_FI02
+HANDOFF_STATUS: READY_FOR_FI03
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
-ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi01-shared-design-foundation.md
-CONTROLLING_OWNER_TASK: 2026-08-21_FI01_SHARED_DESIGN_FOUNDATION_V2
+ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi02-public-landing-portal-shell.md
+CONTROLLING_OWNER_TASK: 2026-08-21_FI02_PUBLIC_LANDING_AND_PORTAL_SHELL
 ACCEPTED_AMENDMENT: .codex/specs/active/frontend-integration-live-local-preview-amendment.md;FI-LIVE-PREVIEW-01
 
-PRE_FI01_ROLLBACK_SHA: eacdfcc951c687cfca5731ede245130266b1c3da
-PRE_FI01_ROLLBACK_TREE: 30b2ae1d15731d42fa668f48fe6a0064869ff655
+PRE_FI02_ROLLBACK_SHA: 70e1d80070b7751f23abdf8f3ffe66e66be6906c
+PRE_FI02_ROLLBACK_TREE: 72148164028cfba5f93e478b8fdc5385ab19e35e
+ROLLBACK: Normal Git revert of the one coherent FI-02 commit restores the FI-01 baseline without any external mutation.
 ORIGIN_MAIN_SHA: 86553349f5c2ebefaa637c30828c560a301f99ba
 ORIGIN_MAIN_TREE: db95ebaafb7de421d02b12f0158bc1a93953edde
-FUNCTIONAL_BASELINE: CURRENT_FROZEN_V083_MAIN; backend/API/auth/capability/data contracts win over visual evidence
+FUNCTIONAL_BASELINE: CURRENT_FROZEN_V083_MAIN; backend/API/auth/capability/data contracts won over visual evidence
 RUNTIME_TOKEN_AUTHORITY: src/v5/styles/tokens.css
-FRONTEND_IMPLEMENTATION: FI01_SHARED_FOUNDATION;D04=PASS;D02=PASS;D08=OPEN_FOR_FI02
+PREDECESSOR_FI01: ACCEPTED;D04=PASS;D02=PASS
+D08_STATUS: PASS
+D08_DECISION: Accessibility overrides literal low-contrast Figma ink. Preserve the Figma layout and visual hierarchy, but automatically use the closest approved FI-01 semantic foreground token that meets WCAG AA. Active/emphasized elements use the high-contrast foreground; inactive/secondary elements remain visually muted but must still pass the required contrast ratio.
+OWNER_AMENDMENT: 2026-08-21 accepted state projection — Permit changes to src/v5/integration/runtime.js and src/v5/src/registry.js solely to project the existing advertisement API into truthful loading, populated, empty, request-error, and media-failure UI states. No backend/API/auth/data contract, dependency, provider, Playground, or Production changes are authorized.
+AMENDMENT_BOUNDARY: only `runtime.js` public.landing presentation-state projection and `registry.js` public.landing state registration; the existing endpoint, adapter, payload, authorization/privacy, data, provider, Playground, and Production behavior stays frozen.
+VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F + Figma Make v39 accepted Git mirror; Figma connector reauthentication is known and no live Figma access is claimed.
 
-COMPLETED: FI-01 implementation and acceptance repair PASS in 4c04105b85f47f1b1a40e66266f27484942b53a2, with final-head parity correction 053ea8c996ceab7b6f6ef5e1385c34cddc850a5c. FI-LIVE-PREVIEW-01 is accepted in bc87642b54fd0dcad30d29b04c0aa8591d85d078: one active token/theme authority; local D04 typography; D02 G1-G4 glass/blur with canonical fallbacks and consumers; a guarded, token-efficient local-preview workflow for FI-01 through FI-12. No preview was started for this closed FI-01 amendment; the lock is released.
+COMPLETED: FI02_STATUS PASS. The real `public.landing` and portal shell now preserve only supported public destinations/approved official HTTPS links, omit unsupported `public.register`, and consume existing public advertisement/media output through the existing adapter. Loading, populated, empty, request-error, and media-failure UI states are truthful presentation projections; no fake record, static media fallback, direct browser fetch, D1/R2 access, private identifier, unpublished data, or new public-data contract was introduced.
+ROUTE_PARITY: PASS — Staff sign in `#/public.signin`; Request Center `#/public.request-intake`; Office Lending `#/public.lending-intake`; policy `#/public.policy`; approved official USC HTTPS link; existing client-side authored-theme control. All other candidate controls were omitted, including self-service registration.
+MEDIA_PRIVACY: PASS — runtime maps existing `backend.publicAdvertisements()` results only; public failure preserves safe navigation/official link behavior; media is hidden on no-media/media-failure; no returned publication is fabricated or widened.
+ACCESSIBILITY: PASS — semantic landmarks/headings, visible keyboard focus, reduced-motion reduction, AA-compliant FI-01 semantic foregrounds in light/dark themes, and responsive layout at 320/390/768/1024/1440 plus 200% zoom. Axe found zero violations in final light and dark checkpoints; only gradient-node color-contrast items were marked incomplete and were manually measured against their effective backgrounds.
+LOCAL_PREVIEW: CLOSED — one guarded loopback preview bound to `127.0.0.1:4173`; launcher verified the isolated Playground proxy/HMR and no Production crossover; browser proved the real current API empty state; listener was stopped before handoff and `NO_LISTENER_4173` was verified. No private manifest path/content or protected identifier is recorded.
+VISUAL_CHECKPOINTS: Desktop dark and mobile light screenshots inspected; no overflow at 320/390/768/1024/1440; 200% page scale retained normal layout bounds; Tab reached visible Staff sign-in focus; reduced-motion computed 0.001s animation/transition durations; real guarded-preview advertisement state was `empty` with `aria-busy=false`, hidden hero media, hidden duplicate parity projection, and zero `#/public.register` links.
 
-FRONTEND_RUNTIME_CHANGES: Shared CSS runtime only — tokens.css active theme/token/local-font authority; base.css semantic typography roles; V3/V4/V5 primitive consumers; V4 public bar/theme toggle/back-control canonical glass consumption; canonical build artifacts regenerated by the build pipeline.
+VALIDATION: PASS — `npx eslint src/v5`; changed-test ESLint; `npm test -- tests/unit/v5-public-landing-state.test.js` (7/7); focused lifecycle Playwright (1 passed/8 skipped); combined public Playwright (12 passed/24 skipped); `npm test` (149 files/1100 tests); `npm run build`; `npm run verify:dist`; `npm run test:e2e:v5` (133 passed/200 skipped); `npm run test:e2e:v5:visual` (5 passed); final Prettier/diff/governance/continuation/handoff checks; final normal Git push/readback.
+LINT_BASELINE: `npm run lint` remains the recorded nonblocking pre-existing baseline only: 26 browser-global errors in untouched `prototypes/public-portals-r3/app.js` and one existing `_clientRequestId` warning in `src/server/public-request-service.js`; no owned-file lint failure. The generic legacy `npm run test:e2e` was not accepted as FI-02 evidence because its legacy/Apps-Script suite reuses port 4173 and is incompatible with the dedicated guarded V5 preview; it was interrupted after unrelated failures. The scoped full V5 suites above passed.
+EXTERNAL_ACTIONS: Local Git working-tree/normal branch push only and guarded local loopback preview. No Figma, provider, Playground, Production, database, migration, recovery, or deployment write.
+DIFF_REVIEW: PASS — owned frontend/runtime projection, registry, landing/CSS, focused tests, accepted documentation records, and canonically generated artifacts only. No backend/service/auth/data/domain/worker/server/migration/provider/Cloudflare/D1/R2/Playground/Production/dependency diff.
 BACKEND_CHANGES: 0
 SERVICE_CONTRACT_CHANGES: 0
 AUTH_MODEL_CHANGES: 0
+DATA_CONTRACT_CHANGES: 0
 MIGRATIONS: 0
+DEPENDENCIES_ADDED: 0
 PROVIDER_WRITES: 0
 FIGMA_WRITES: 0
 PLAYGROUND_WRITES: 0
@@ -46,24 +67,9 @@ RECOVERY_POINTER_CHANGES: 0
 MERGES_INTO_MAIN: 0
 HISTORY_REWRITES: 0
 LIVE_PRODUCTION_CHANGED: NO
+BLOCKER: FALSE; FI-02 is complete. The only retained broad-lint non-pass is the pre-existing owner-recorded unrelated baseline described above.
 
-LOCAL_PREVIEW: NOT_RUNNING/FI01_ALREADY_CLOSED
-LOCAL_PREVIEW_COMMAND: npm run dev:v5:playground -- <ABS_PRIVATE_PLAYGROUND_MANIFEST>
-LOCAL_PREVIEW_HOST: 127.0.0.1
-LOCAL_PREVIEW_PORT: 4173
-LOCAL_PREVIEW_WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-PLAYGROUND_PROXY_VERIFIED: NOT_RUN_FOR_CLOSED_FI01; required at next accepted slice startup
-PREVIEW_PRODUCTION_CROSSOVER: NONE
-PREVIEW_BACKEND_WRITES: 0
-PREVIEW_REUSED_OR_RESTARTED: NOT_STARTED
-VISUAL_CHECKPOINTS_PERFORMED: FI01 existing accepted matrix; do not rerun for this documentation-only amendment
-PREVIEW_STOPPED_AT_HANDOFF: YES; no listener observed on 127.0.0.1:4173 at closed-FI01 amendment closeout
-
-VALIDATION: npm run build + verify:dist PASS; npx eslint src/v5 PASS; build-make-theme --check, verify-make-theme, verify-make-landing-theme, theme-source --check PASS; D41 contrast PASS; current-app visual PASS at 320/390/768/1024/1440 and focused reduced-motion/focus PASS; check:agents, handoff:verify, continuation, Prettier, diff check, and secret scan PASS. Full npm lint retains only the existing unrelated prototype browser-global failure plus existing server warning.
-EXTERNAL_ACTIONS: Normal Git commit/push/readback only; no Figma, provider, database, recovery, deployment, Playground, or Production write.
-
-NEXT_SLICE: FI-02 — Public Landing & Portal Shell; D08 remains OPEN_FOR_FI02
-BLOCKER: FALSE; FI-01 is accepted and closed. D08 remains OPEN_FOR_FI02; do not begin without an accepted FI-02 task.
-NEXT_EXACT_ACTION: FI-02_PUBLIC_LANDING_AND_PORTAL_SHELL
-RESUME_COMMANDS: Rehydrate governance/current records; require an accepted FI-02 specification, correct branch/worktree, and sole writer lock; verify no Production crossover; only then start or reuse the guarded loopback preview and report its local URL once. Do not start a preview before those gates.
-PROHIBITED_ACTIONS: No FI-02 implementation before its accepted task. No rebase, reset, clean, force-push, history rewrite, main merge, tag, deployment, migration, provider/Figma/Playground/Production action, or hand edit of a generated artifact. Do not add a dependency or alter backend/API/auth/data contracts. Do not reopen D04/D02; D08 is FI-02-only.
+NO_REPEAT_FACTS: Do not retry live Figma while the connector requires reauthentication; use the accepted hashed Git mirror unless a new accepted authority says otherwise. Do not hand edit `dist/index.html` or `HAU-USC_Logistics-Prototype-Shareable.html`; regenerate only through `npm run build`. Do not use the stale retained design scripts that target the retired prototype preview as current-app acceptance. Do not use generic legacy `test:e2e` against the guarded V5 preview; use the V5 configs. Do not reopen D02/D04/D08 without new owner authority.
+NEXT_EXACT_ACTION: FI-03_SIGNIN_VERIFICATION_APPLICATION_STATUS
+RESUME_COMMANDS: Rehydrate this current chain; verify `git status --short`, branch/upstream/head parity, and no active writer; locate an accepted FI-03 specification; acquire a new FI-03 writer lock before any source or preview mutation.
+PROHIBITED_ACTIONS: No FI-03 implementation without accepted FI-03 authority/lock; no backend/API/auth/data/schema/migration/provider/Figma/Playground/Production mutation; no dependency; no unsupported route or registration; no rebase/reset/clean/force-push/history rewrite/main merge/tag/deploy; no hand edit of generated artifacts.

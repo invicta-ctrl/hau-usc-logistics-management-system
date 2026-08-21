@@ -42,7 +42,7 @@ EXECUTION_PLAN:            docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md
 ACCEPTANCE_MATRIX:         docs/design/FRONTEND_INTEGRATION_ACCEPTANCE_MATRIX.md
 START_HERE:                docs/design/FRONTEND_INTEGRATION_START_HERE.md
 
-FRONTEND_RUNTIME_CHANGES:  FI-01 shared CSS foundation: tokens.css active token/theme and local fonts; base.css font roles; V3/V4/V5 primitive consumers; canonical build outputs regenerated
+FRONTEND_RUNTIME_CHANGES:  FI-01 shared CSS foundation plus FI-02 real public landing/portal shell, truthful existing advertisement/media state projection, D-08 AA foreground correction, coupled tests, and canonical build outputs
 BACKEND_CHANGES:           0
 MIGRATIONS:                0
 PROVIDER_WRITES:           0
@@ -51,12 +51,26 @@ PLAYGROUND_WRITES:         0
 PRODUCTION_WRITES:         0
 
 FIRST_CODEX_SLICE:         Historical FI-00 reconciliation (complete 2026-08-21)
-CURRENT_SLICE_STATUS:      FI-01 PASS; D-04 PASS; D-02 PASS; D-08 OPEN_FOR_FI02
+CURRENT_SLICE_STATUS:      FI-02 PASS; D-04 PASS; D-02 PASS; D-08 PASS
 RUNTIME_TOKEN_AUTHORITY:   src/v5/styles/tokens.css
-NEXT_SLICE:                FI-02 Public Landing & Portal Shell
+NEXT_SLICE:                FI-03 Sign-In, Verification, Application, and Application Status
 ACTIVE_WRITER:             NONE
 WRITER_LOCK:               RELEASED
-HANDOFF_STATUS:            READY_FOR_CODEX_FRONTEND_INTEGRATION
+HANDOFF_STATUS:            READY_FOR_FI03
+```
+
+## FI-02 closeout overlay — 2026-08-21
+
+```text
+FI02_STATUS:                PASS
+ENDING_IDENTITY:            GIT_HEAD/GIT_TREE of the one coherent self-containing FI-02 closeout commit; exact remote identity is confirmed by normal push/readback
+ROUTE_PARITY:               PASS; only existing public routes, approved official HTTPS link, and authored-theme control are delivered; public.register remains absent
+ADVERTISEMENT_STATES:       PASS; existing adapter only, truthful loading/populated/empty/request-error/media-failure, no fabricated fallback
+D08_STATUS:                 PASS; closest approved FI-01 semantic foregrounds meet AA while preserving hierarchy
+LOCAL_PREVIEW:              guarded isolated-Playground loopback verified, then stopped; no Production crossover or listener retained
+VALIDATION:                 scoped ESLint; 7 FI-02 unit tests; npm test 149/1100; build/dist; V5 E2E 133 passed; V5 visual 5 passed; browser responsive/theme/a11y matrix; final governance/diff/readback
+PROHIBITED_DIFFS:           backend/API/auth/data/migration/provider/Cloudflare/D1/R2/Playground/Production/dependency = 0
+ROLLBACK:                   normal revert of the one FI-02 commit
 ```
 
 ## FI-LIVE-PREVIEW-01 handoff template — FI-01 through FI-12
@@ -207,11 +221,11 @@ historical-branch merge is forbidden.
 
 ### B3 — FI-01 design defects resolved; D-08 remains open for FI-02
 
-| Id     | Severity | Blocks | Decision needed                                                                                                                                                                                     |
-| ------ | -------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `D-08` | HIGH     | FI-02  | 17 landing-hero text nodes fail WCAG 2.2 AA at 1.01:1 to 1.84:1. The cards may encode an intentional active/inactive distinction, so this is a state-semantics decision, not a mechanical recolour. |
-| `D-04` | —        | —      | **PASS in FI-01.** Local Bricolage/Plex/Newsreader roles are the active runtime typography authority.                                                                                               |
-| `D-02` | —        | —      | **PASS in FI-01.** `tokens.css` supplies the sole active D41 G1–G4 glass/blur ladder and fallback recipe.                                                                                           |
+| Id     | Severity | Blocks | Decision needed                                                                                                                                                      |
+| ------ | -------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `D-08` | —        | —      | **PASS in FI-02.** Owner accepted accessibility over literal low-contrast ink: closest approved FI-01 semantic foregrounds preserve hierarchy while meeting WCAG AA. |
+| `D-04` | —        | —      | **PASS in FI-01.** Local Bricolage/Plex/Newsreader roles are the active runtime typography authority.                                                                |
+| `D-02` | —        | —      | **PASS in FI-01.** `tokens.css` supplies the sole active D41 G1–G4 glass/blur ladder and fallback recipe.                                                            |
 
 ## UNVERIFIED_ITEMS
 
@@ -247,7 +261,7 @@ Field-level literals per surface
 1. Confirm the branch strategy that supersedes the Phase 9 "fresh branch off
    main" recommendation.                                                    (B1)
 2. Design-evidence promotion disposition, per group.                        (B2)
-3. Landing hero ink and active/inactive state semantics.                    (D-08)
+3. Landing hero ink and active/inactive state semantics.                    (D-08 — resolved by FI-02)
 4. Whether scripts/design/** becomes part of the work branch toolchain, since
    the design audit and cascade verifiers depend on it.
 5. Any dependency, generated-artifact, browser-verification, or visual

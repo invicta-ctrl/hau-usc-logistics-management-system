@@ -49,7 +49,7 @@ export function publicShell(
     <footer class="public__foot">
       <p class="public__foot-line">Every item moves with a record.</p>
       <div class="public__foot-meta">
-        <span>HAU-USC <span aria-hidden="true">·</span> 2026-2027</span>
+        <span>HAU-USC <span aria-hidden="true">·</span> © 2026–2027</span>
         <a href="#/public.policy">Privacy Notice and Acceptable Use</a>
       </div>
     </footer>
@@ -58,11 +58,48 @@ export function publicShell(
 
 /* ---------- 1. Portal landing ---------- */
 
-export const landing = () =>
-  publicShell(
+function landingAnnouncementPresentation(state) {
+  if (state === 'loading') {
+    return {
+      title: 'Loading official updates',
+      summary: 'Please wait while published USC updates are retrieved.',
+    };
+  }
+  if (state === 'error') {
+    return {
+      title: 'Updates are temporarily unavailable',
+      summary: 'Core public destinations remain available. Please check the official USC page for updates.',
+    };
+  }
+  if (state === 'media-failure') {
+    return {
+      title: 'Official USC updates',
+      summary: 'The published update is available, but its media could not be loaded.',
+      status:
+        'The published media could not be loaded. The update remains available through its official link. Core public destinations are unaffected.',
+    };
+  }
+  if (state === 'populated') {
+    return {
+      title: 'Official USC updates',
+      summary: 'Authorized announcements appear here only after the official service publishes them.',
+    };
+  }
+  return {
+    title: 'Official USC updates',
+    summary:
+      'No published updates are currently available. Announcements appear here only after the official service publishes them.',
+  };
+}
+
+export function landing({ state } = {}) {
+  const advertisementState = ['loading', 'populated', 'empty', 'error', 'media-failure'].includes(state)
+    ? state
+    : 'loading';
+  const announcement = landingAnnouncementPresentation(advertisementState);
+  return publicShell(
     `<section class="landing-hero" aria-labelledby="landing-title">
-      <img class="landing-hero__media" src="assets/images/hau-campus-login-background.jpg"
-        alt="USC current major event" width="960" height="356" decoding="async" fetchpriority="high" />
+      <div class="landing-hero__media-slot"></div>
       <div class="landing-hero__content">
         <h1 id="landing-title">Holy Angel University Student Council</h1>
         <p>As the University's highest student governing body, the Council represents the tertiary student community through leadership, service, and shared responsibility.</p>
@@ -97,13 +134,19 @@ export const landing = () =>
       </a>
     </nav>
 
-    <section class="landing-updates" aria-labelledby="landing-updates-title">
-      <div><p class="eyebrow">Published announcements</p><h2 id="landing-updates-title">Official USC updates</h2>
-        <p>Authorized announcements appear through the official council channels. No announcement is shown unless the service publishes it.</p></div>
+    <section class="landing-updates" data-advertisement-state="${advertisementState}" aria-busy="${advertisementState === 'loading'}" aria-labelledby="landing-updates-title">
+      <div><p class="eyebrow">Published announcements</p><h2 id="landing-updates-title">${announcement.title}</h2>
+        <p class="landing-updates__summary" aria-live="polite">${announcement.summary}</p>${
+          announcement.status
+            ? `
+        <p class="landing-updates__status" role="status">${announcement.status}</p>`
+            : ''
+        }</div>
       <a class="btn" href="https://www.facebook.com/holyangeluniversitysc" target="_blank" rel="noopener noreferrer">View official page${icon('arrow-right', 'icon--sm')}</a>
     </section>`,
     { back: false, wide: true, landing: true, dataLabel: false },
   );
+}
 
 /* ---------- 2. Sign in ---------- */
 
