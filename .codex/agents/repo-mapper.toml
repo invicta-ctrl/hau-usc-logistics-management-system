@@ -1,7 +1,7 @@
 name = "repo_mapper"
-description = "Read-only Luna MAX auditor for bounded repository exploration and call-path mapping."
+description = "Read-only Luna auditor for bounded repository exploration and call-path mapping."
 model = "gpt-5.6-luna"
-model_reasoning_effort = "max"
+model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 
 developer_instructions = '''
