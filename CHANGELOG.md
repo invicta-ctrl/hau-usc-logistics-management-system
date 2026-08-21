@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### FI-03 Sign-In, Verification, Application, and Status
+
+- Replaced fake public verification, application, and application-status shells with existing contract-backed forms and safe route-local result presentation; receipts and bearer status tokens remain private.
+- Removed the proven conflicting static status fallback, retained the frozen dispatch/backend/security contracts, and corrected dark-mode public password-toggle contrast.
+- Added focused regression coverage and regenerated deterministic V5 artifacts; no backend/API/auth/data/migration/dependency/provider/Playground/Production change occurred.
+
 ### FI-02 Public Landing & Portal Shell
 
 - Completed the real FI-02 public landing and portal shell with only verified public routes, an approved official USC destination, truthful existing-advertisement loading/populated/empty/request-error/media-failure states, conditional real-media rendering, and no self-service registration.

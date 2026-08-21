@@ -1,58 +1,56 @@
-# Current Bounded Task — FI-02 Public Landing and Portal Shell (Complete)
+# Current Bounded Task — FI-03 Sign-In, Verification, Application, and Application Status
 
-INTENT: SOFTWARE_FEATURE
-SECONDARY_INTENTS: FRONTEND_IMPLEMENTATION;VISUAL_INTEGRATION;ACCESSIBILITY
-MODE: EXECUTE_COMPLETE
-OBJECTIVE: Complete the accepted FI-02 real public landing and portal shell on frozen v0.8.3 behavior while preserving real routes, public advertisement/media contracts, privacy, accessibility, responsive behavior, and environment isolation.
-TARGET: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration at `GIT_HEAD` / `GIT_TREE`; FI-02 began at `70e1d80070b7751f23abdf8f3ffe66e66be6906c` / tree `72148164028cfba5f93e478b8fdc5385ab19e35e`.
+INTENT: SOFTWARE_FEATURE; FRONTEND_INTEGRATION; AUTHENTICATION_UI; ACCOUNT_APPLICATION_UI; ACCESSIBILITY
+MODE: COMPLETE
+OBJECTIVE: Implement FI-03 frontend presentation only on frozen v0.8.3 behavior: real sign-in, email verification, account application, application status, and directly coupled supported activation/recovery presentation.
+TARGET: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration at starting SHA 095fa2531d7cd898a57032573acc7809e0cd7b9d / tree a1b1bf9bd56aae666eec469a0dd78003e4e4829c.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi02-public-landing-portal-shell.md
-AUTHORITY: Earl FI-02 owner task -> accepted D-08 decision -> accepted 2026-08-21 advertisement-state projection amendment -> canonical/project governance -> current chain -> accepted FI-01/FI-LIVE-PREVIEW-01 -> frozen v0.8.3 functional contracts -> DESIGN_BASELINE_2026-08-20-F/Figma Make v39 Git mirror.
-RISK: MEDIUM; completed bounded reversible frontend implementation with public-data/privacy and accessibility acceptance.
-SCOPE: FI-02 public landing/public portal shell, existing advertisement/media presentation-state projection only, owned current-chain/receipt/continuation/changelog records, directly coupled frontend tests, and canonical generated artifacts.
-OUT_OF_SCOPE: FI-03 and later surfaces; backend/API/auth/data/service/domain/worker/server/migration/provider/Cloudflare/D1/R2 changes; dependency, Playground/Production/Figma write, deploy, main merge, history rewrite, or unsupported registration/route.
-DELIVERABLE: FI02_STATUS PASS; real accessible public landing and portal shell; zero mocks/fabricated content; route parity; truthful existing advertisement/media states; zero backend/auth/data/migration/provider/Production diff; one coherent normal FI-02 commit/push/readback; READY_FOR_FI03 handoff.
-VERIFICATION: PASS after focused source/test lint; 7 FI-02 unit tests; complete `npm test` (149 files/1100 tests); build/verify:dist; V5 E2E (133 passed); V5 visual matrix (5 widths); browser matrix at 320/390/768/1024/1440, 200% zoom, keyboard/focus/reduced-motion/light/dark; contrast and route/privacy/media evidence; final formatting/diff/governance/continuation checks; normal push/readback.
-STOP_CONDITIONS: A separate FI-03 task must stop for any dirty/conflicting writer, branch/upstream/baseline drift, missing accepted authority, contract gap, unsupported route, required backend/provider/Production mutation, private-data concern, or verification failure.
+ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi03-auth-application-shell.md
+AUTHORITY: Earl FI-03 task -> FI-LIVE-PREVIEW-02 persistent-preview amendment -> canonical/project governance -> FI-02 PASS receipt/handoff -> accepted FI-03 spec -> FI-LIVE-PREVIEW-01/02 -> frozen v0.8.3 auth/application contracts -> DESIGN_BASELINE_2026-08-20-F/Figma Make v39 accepted Git mirror.
+RISK: HIGH; auth/security-adjacent UI.
+SCOPE: public.js signin/verify/application/applicationStatus and directly coupled supported activation/recovery; live accepted auth stylesheet after path proof; direct frontend tests/generated build outputs; current-chain/receipt/continuation/changelog closeout records.
+OUT_OF_SCOPE: all backend/auth/session/CSRF/rate-limit/verification/approval/provider behavior and src/server/auth/**, src/server/account-application/**, src/auth/http-contract.js, all src/v5/integration/** except the accepted FI-03 `admin-parity.js` publicPanels/afterRender/onSubmit result projection and proven `runtime.js` afterRender static-fallback removal; worker/server/services/domain/migrations/apps-script/wrangler/dependencies/Cloudflare/D1/R2/Google/secrets/permissions; public.register; Figma/Playground/Production writes/deploy; main merge/rebase/reset/clean/force-push/history rewrite.
+DELIVERABLE: FI03_STATUS PASS; real accessible responsive UI preserving current contracts; zero mock Production behavior, backend/auth-contract/migration/dependency/provider/Production changes; one coherent commit/push/readback; READY_FOR_FI04.
+VERIFICATION: scoped governance/lint/format; targeted auth/account-application/password-visibility/public-current-app/backend-integration tests; build and verify:dist; four bounded browser milestones over guarded loopback preview at 320/390/768/1024/1440, 200% zoom, keyboard/focus/reduced-motion/light/dark/no overflow; full check only once if required by repository closeout policy.
+STOP_CONDITIONS: branch/upstream/dirty/lock/predecessor conflict; missing/contradictory authority; any required excluded-path, security, privacy/enumeration, provider, real mutation, Production, registration, migration/dependency, or verification change/failure.
 
-REQUIRED_MODEL: FI-02 was completed by one Terra-class sole branch writer; no FI-03 writer is active.
-ORCHESTRATOR_MODEL: GPT-5.6 SOL
-ORCHESTRATOR_WRITES: FORBIDDEN
-WRITER_MODEL: TERRA MAX
-READER_MODEL: LUNA MAX
-MAX_SOL_SUBAGENTS: 0
-MAX_TERRA_SUBAGENTS: 16
-MAX_LUNA_SUBAGENTS: 16
-DELEGATION_DEPTH: 1
-SUBAGENT_SPAWNER: SOL_ONLY
-MODEL_SUBSTITUTION: FORBIDDEN_UNLESS_EARL_EXPLICITLY_AMENDS_TASK
-
+REQUIRED_MODEL: TERRA_INTEGRATION_WRITER
+ORCHESTRATOR_MODEL: GPT-5.6 SOL; ORCHESTRATOR_WRITES: FORBIDDEN
 ACTIVE_WRITER: NONE
 TERRA_WRITER: NONE
 WRITER_LOCK: RELEASED
 LOCK_STATUS: RELEASED
-HANDOFF_STATUS: READY_FOR_FI03
-STATUS: FI02_STATUS_PASS
-GIT_UPSTREAM: origin/frontend-design-integration@GIT_HEAD;NORMAL_FI02_PUSH_READBACK_0_0
-ORIGIN_MAIN_SHA: 86553349f5c2ebefaa637c30828c560a301f99ba
-ORIGIN_MAIN_TREE: db95ebaafb7de421d02b12f0158bc1a93953edde
-PRE_FI02_ROLLBACK_SHA: 70e1d80070b7751f23abdf8f3ffe66e66be6906c
-PRE_FI02_ROLLBACK_TREE: 72148164028cfba5f93e478b8fdc5385ab19e35e
-PREDECESSOR_FI01: ACCEPTED;D02=PASS;D04=PASS
-D08_STATUS: PASS
-D08_DECISION: Accessibility overrides literal low-contrast Figma ink. Preserve the Figma layout and visual hierarchy, but automatically use the closest approved FI-01 semantic foreground token that meets WCAG AA. Active/emphasized elements use the high-contrast foreground; inactive/secondary elements remain visually muted but must still pass the required contrast ratio.
-OWNER_AMENDMENT: Permit changes to src/v5/integration/runtime.js and src/v5/src/registry.js solely to project the existing advertisement API into truthful loading, populated, empty, request-error, and media-failure UI states. No backend/API/auth/data contract, dependency, provider, Playground, or Production changes are authorized.
-AMENDMENT_BOUNDARY: exact `runtime.js` public.landing state projection plus exact `registry.js` public.landing state registration; no endpoint, payload, adapter, authorization, data, provider, Playground, or Production behavior change.
-VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F + FIGMA_MAKE_V39; live connector requires reauthentication and was not retried; accepted Git mirror/hash was used.
+HANDOFF_STATUS: READY_FOR_FI04
+STATUS: FI03_STATUS_PASS
+GIT_UPSTREAM: origin/frontend-design-integration@095fa2531d7cd898a57032573acc7809e0cd7b9d;NORMAL_FI02_PUSH_READBACK_0_0
+FI02_END_SHA: 095fa2531d7cd898a57032573acc7809e0cd7b9d
+FI02_SCOPE_AUDIT: PASS; only explicit FI-02 advertisement presentation exception in runtime.js/registry.js; no unauthorized backend/auth/migration diff.
+VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F + FIGMA_MAKE_V39; FIGMA_MCP: BLOCKED_REAUTHENTICATION; WEB_FETCH: NOT_USED; FALLBACK: REPOSITORY_PRESERVED_EXPORTS.
 FUNCTIONAL_BASELINE: CURRENT_FROZEN_V083_MAIN; backend/API/auth/data contracts win.
-ACCEPTED_AMENDMENT: .codex/specs/active/frontend-integration-live-local-preview-amendment.md;FI-LIVE-PREVIEW-01
-COMPLETED: Real `public.landing` projects loading, populated, empty, request-error, and media-failure from the existing public adapter without a new fetch or contract; landing shell links only to verified existing public routes/approved external destination; static/fabricated advertisement fallback is absent; D-08 approved semantic foreground correction meets AA.
+ACCEPTED_AMENDMENT: FI-LIVE-PREVIEW-01/02; FI03 bounded result projection (OWNER_ACCEPTED_2026-08-22); FI02 contract-projection correction.
+LOCAL_PREVIEW: RUNNING_PERSISTENT
+LOCAL_PREVIEW_URL: http://127.0.0.1:4173
+LOCAL_PREVIEW_HOST: 127.0.0.1
+LOCAL_PREVIEW_PORT: 4173
+LOCAL_PREVIEW_WORKTREE: frontend-design-integration worktree
+LOCAL_PREVIEW_MODE: GUARDED_PLAYGROUND_PROXY
+PLAYGROUND_PROXY_VERIFIED: PASS
+PREVIEW_PRODUCTION_CROSSOVER: NONE
+PREVIEW_REUSED_OR_RESTARTED: RESTARTED_AFTER_SAFE_STARTUP_ARGUMENT_REPAIR
+PREVIEW_TEMPORARILY_PAUSED_FOR_TEST: NO
+PREVIEW_HMR_STATUS: HEALTHY
+PREVIEW_BACKEND_WRITES: 0
+VISUAL_CHECKPOINTS_PERFORMED: 4
+PREVIEW_STOPPED_AT_HANDOFF: NO
 
 ## Delegation ledger
 
-| Agent ID                        | Model         | Role                     | Mode    | Scope      | Worktree                                       | Owned paths                                                                                                                                                                                                  | Excluded paths                                                                                                                      | Status | Output evidence                                                                                             |
-| ------------------------------- | ------------- | ------------------------ | ------- | ---------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------- |
-| `/root/fi02_integration_writer` | gpt-5.6-terra | TERRA_INTEGRATION_WRITER | execute | FI-02 only | canonical frontend-design-integration worktree | FI-02 spec/current-chain/receipt records; `public.js`; `surfaces.css`; owner-amended `runtime.js` public.landing projection; owner-amended `registry.js` state registration; coupled tests/generated outputs | backend/API/auth/data/service/domain/worker/server/migration/provider/Cloudflare/D1/R2/Playground/Production/Figma-write and FI-03+ | CLOSED | preflight baseline/lock; complete implementation; browser, source, build, test, diff, and closeout evidence |
+| Agent ID                        | Model         | Role                     | Mode    | Scope      | Worktree                                       | Owned paths                                                         | Excluded paths              | Status |
+| ------------------------------- | ------------- | ------------------------ | ------- | ---------- | ---------------------------------------------- | ------------------------------------------------------------------- | --------------------------- | ------ |
+| `/root/fi03_integration_writer` | gpt-5.6-terra | TERRA_INTEGRATION_WRITER | execute | FI-03 only | canonical frontend-design-integration worktree | FI-03 records, owned frontend surface/style, direct tests/artifacts | all listed FI-03 exclusions | ACTIVE |
 
-NEXT_EXACT_ACTION: FI-03_SIGNIN_VERIFICATION_APPLICATION_STATUS
+CONTRACT_REALIZATION_GATE: signin=REALIZED; verify/application/application-status=RESPONSE_DISCARDED; static-status=STATIC_FALLBACK_CONFLICT; unsupported backend contracts=NONE.
+CONDITIONAL_PROJECTION_SCOPE: admin-parity publicPanels/afterRender/onSubmit for FI03 public verify/application/status; runtime afterRender only if fallback conflict requires it; dispatch/backend/security frozen.
+BLOCKER: FALSE; owner amendment accepted and persisted.
+NEXT_EXACT_ACTION: FI-04_AUTHENTICATED_SHELL_NAVIGATION_PROFILE after accepted handoff.

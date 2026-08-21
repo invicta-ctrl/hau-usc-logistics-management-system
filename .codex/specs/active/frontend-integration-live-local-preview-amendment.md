@@ -19,12 +19,12 @@ The local preview is a **developer observation surface only**.
 
 It must not become:
 
-* a new deployment environment;
-* a substitute for the Isolated Staging Playground;
-* a substitute for FI acceptance testing;
-* a reason to modify backend contracts;
-* a continuous AI browser-monitoring loop;
-* a source of unnecessary Codex token consumption.
+- a new deployment environment;
+- a substitute for the Isolated Staging Playground;
+- a substitute for FI acceptance testing;
+- a reason to modify backend contracts;
+- a continuous AI browser-monitoring loop;
+- a source of unnecessary Codex token consumption.
 
 ---
 
@@ -91,11 +91,11 @@ Use the repository's existing private-path and Playground configuration mechanis
 
 Do not:
 
-* invent a manifest;
-* copy a Production manifest;
-* print private manifest contents;
-* expose secrets or resource IDs;
-* substitute Production when Playground configuration is unavailable.
+- invent a manifest;
+- copy a Production manifest;
+- print private manifest contents;
+- expose secrets or resource IDs;
+- substitute Production when Playground configuration is unavailable.
 
 If the required private Playground manifest cannot be resolved safely:
 
@@ -144,12 +144,12 @@ Vite Hot Module Replacement should handle normal source updates.
 
 Restart only when required by:
 
-* dev-server failure;
-* dependency changes;
-* Vite configuration changes;
-* environment/configuration changes that Vite cannot reload;
-* branch/worktree change;
-* an accepted slice explicitly requiring a clean restart.
+- dev-server failure;
+- dependency changes;
+- Vite configuration changes;
+- environment/configuration changes that Vite cannot reload;
+- branch/worktree change;
+- an accepted slice explicitly requiring a clean restart.
 
 If the correct local preview is already running against the same worktree/configuration:
 
@@ -186,15 +186,15 @@ The purpose of this amendment is to improve owner visibility **without turning v
 
 ## Codex must NOT
 
-* take a screenshot after every source edit;
-* continuously inspect the DOM;
-* continuously poll the browser;
-* continuously read browser console output;
-* repeatedly dump network activity;
-* repeatedly restart Vite;
-* repeatedly rebuild the full Production artifact;
-* repeatedly rerun unchanged visual tests;
-* run an autonomous browser-watching loop while Earl is already watching the page.
+- take a screenshot after every source edit;
+- continuously inspect the DOM;
+- continuously poll the browser;
+- continuously read browser console output;
+- repeatedly dump network activity;
+- repeatedly restart Vite;
+- repeatedly rebuild the full Production artifact;
+- repeatedly rerun unchanged visual tests;
+- run an autonomous browser-watching loop while Earl is already watching the page.
 
 Those behaviors add token/context/tool overhead without improving implementation quality.
 
@@ -251,11 +251,11 @@ Ignore normal repetitive Vite/HMR output.
 
 Inspect logs only when:
 
-* the build fails;
-* HMR fails;
-* the page fails to load;
-* a network/API request fails unexpectedly;
-* an acceptance test requires the evidence.
+- the build fails;
+- HMR fails;
+- the page fails to load;
+- a network/API request fails unexpectedly;
+- an acceptance test requires the evidence.
 
 ---
 
@@ -369,11 +369,11 @@ If the same worktree/session will continue immediately, the local preview may re
 
 If:
 
-* writer lock is released;
-* branch/worktree changes;
-* Codex session closes;
-* a different FI worktree will be used;
-* the preview becomes stale;
+- writer lock is released;
+- branch/worktree changes;
+- Codex session closes;
+- a different FI worktree will be used;
+- the preview becomes stale;
 
 terminate the development server cleanly.
 
@@ -385,17 +385,17 @@ Do not leave multiple stale Vite processes competing for port `4173`.
 
 This amendment is functioning correctly when:
 
-* [ ] Earl can open one localhost URL and watch frontend changes update during implementation.
-* [ ] Vite HMR handles normal updates without server restart.
-* [ ] Only one local preview instance exists for the active frontend worktree.
-* [ ] Preview binds to loopback only.
-* [ ] The approved isolated Playground proxy is used when backend data is required.
-* [ ] Production resources are never substituted.
-* [ ] Normal visual observation produces no Playground mutation.
-* [ ] Codex does not continuously screenshot, inspect, or poll the browser.
-* [ ] Browser inspection occurs only at meaningful implementation/acceptance checkpoints.
-* [ ] No FI scope, backend contract, migration, security, data, or release rule is weakened.
-* [ ] Local preview remains supplementary to formal Playground acceptance.
+- [ ] Earl can open one localhost URL and watch frontend changes update during implementation.
+- [ ] Vite HMR handles normal updates without server restart.
+- [ ] Only one local preview instance exists for the active frontend worktree.
+- [ ] Preview binds to loopback only.
+- [ ] The approved isolated Playground proxy is used when backend data is required.
+- [ ] Production resources are never substituted.
+- [ ] Normal visual observation produces no Playground mutation.
+- [ ] Codex does not continuously screenshot, inspect, or poll the browser.
+- [ ] Browser inspection occurs only at meaningful implementation/acceptance checkpoints.
+- [ ] No FI scope, backend contract, migration, security, data, or release rule is weakened.
+- [ ] Local preview remains supplementary to formal Playground acceptance.
 
 ---
 
@@ -424,10 +424,10 @@ Do not spend reasoning tokens narrating ordinary HMR updates.
 
 Only report something when:
 
-* a meaningful frontend milestone is visible;
-* Codex needs Earl's decision;
-* the local preview fails;
-* the FI slice reaches its acceptance gate.
+- a meaningful frontend milestone is visible;
+- Codex needs Earl's decision;
+- the local preview fails;
+- the FI slice reaches its acceptance gate.
 
 ---
 
@@ -457,16 +457,16 @@ Do not record private manifest paths, resource identifiers, credentials or secre
 
 Stop the preview or affected operation on:
 
-* Production resource crossover;
-* unverified Playground origin;
-* required private manifest missing;
-* unexpected backend mutation;
-* wrong branch/worktree;
-* competing writer;
-* stale FI specification;
-* Vite running against another worktree on the same port;
-* private information appearing in logs;
-* need for backend/API/migration changes outside the active FI specification.
+- Production resource crossover;
+- unverified Playground origin;
+- required private manifest missing;
+- unexpected backend mutation;
+- wrong branch/worktree;
+- competing writer;
+- stale FI specification;
+- Vite running against another worktree on the same port;
+- private information appearing in logs;
+- need for backend/API/migration changes outside the active FI specification.
 
 ---
 
@@ -485,3 +485,25 @@ not
 
 CODING -> AI SCREENSHOT LOOP -> MORE TOKENS -> CODING
 ```
+
+---
+
+# FI-LIVE-PREVIEW-02 — Persistent Cross-Slice Preview
+
+**STATUS:** OWNER-DIRECTED; adopted in-place on 2026-08-21 for FI-03 through FI-12.
+**SCOPE:** preview lifecycle only; it does not broaden any FI slice, backend/auth/API contract, data/provider/deploy/migration authority, or writer-lock rules.
+
+After the active FI authority, worktree, sole writer lock, and guarded proxy isolation are reverified, start or safely reuse exactly one local preview at `http://127.0.0.1:4173`. It must bind only `127.0.0.1`, serve the current `frontend-design-integration` V5 entry from this worktree, use the existing guarded isolated Playground proxy, and show no Production crossover. Do not record the private manifest path, identifiers, bindings, secrets, credentials, session material, or protected data.
+
+For normal FI-03 through FI-12 closeout the preview remains alive independently of the writer lock:
+
+```text
+LOCAL_PREVIEW: RUNNING_PERSISTENT
+PREVIEW_STOPPED_AT_HANDOFF: NO
+```
+
+Use Vite HMR for ordinary source changes. Never continuously poll, inspect, screenshot, or stream logs. Health checks are limited to startup/takeover, configuration/HMR failure, required restart, and immediately before a slice handoff. Do not start a duplicate listener. If port 4173 belongs to an unknown or ambiguous process, binds outside loopback, serves the wrong worktree/source, lacks isolated-proxy proof, or crosses to Production, stop only the preview operation and report the blocker without discarding valid FI work.
+
+Restart only after listener/source/proxy failure, relevant configuration/manifest change, required exclusive-port test, or Earl's explicit request. When an accepted test requires port 4173, record the pause, stop the preview temporarily, run the test, then restart and reverify source/proxy/isolation. No new repository script, dependency, service, deployment, or architecture is authorized for persistence.
+
+Each FI-03 through FI-12 current record and handoff must keep these safe fields current: `LOCAL_PREVIEW`, `LOCAL_PREVIEW_URL`, `LOCAL_PREVIEW_HOST`, `LOCAL_PREVIEW_PORT`, `LOCAL_PREVIEW_WORKTREE`, `LOCAL_PREVIEW_MODE`, `PLAYGROUND_PROXY_VERIFIED`, `PREVIEW_PRODUCTION_CROSSOVER`, `PREVIEW_REUSED_OR_RESTARTED`, `PREVIEW_TEMPORARILY_PAUSED_FOR_TEST`, `PREVIEW_HMR_STATUS`, `PREVIEW_BACKEND_WRITES`, `VISUAL_CHECKPOINTS_PERFORMED`, and `PREVIEW_STOPPED_AT_HANDOFF`.

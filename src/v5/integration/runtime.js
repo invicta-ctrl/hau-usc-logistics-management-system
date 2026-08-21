@@ -1863,18 +1863,6 @@ export function createV5Runtime({ backend, app }) {
     if (currentRoute === 'account.profile') bindProfile();
     if (currentRoute === 'public.request-tracking') bindPublicTracking();
     if (currentRoute === 'public.lending-tracking') bindPublicLendingTracking();
-    if (currentRoute === 'public.application-status') {
-      const root = document.getElementById('surface-main');
-      const summary = root?.querySelector('.public__head > p');
-      if (summary) summary.textContent = 'A private status token is required to load an application.';
-      setTimeline(root, [
-        {
-          title: 'Application not loaded',
-          meta: 'Use the protected status link issued after submission',
-          current: true,
-        },
-      ]);
-    }
     adminParity.afterRender();
     if (app.integrationState.variant !== 'denied') operationsParity.afterRender();
     bindRouteSearch(currentRoute);

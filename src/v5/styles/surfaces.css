@@ -370,6 +370,71 @@
   text-align: center;
 }
 
+/* FI-03 uses the existing public/auth shell and parity forms. Results are
+   route-local, status-token-safe projections of existing adapter responses. */
+.public__main > [data-v5-admin-parity] {
+  width: 100%;
+  max-width: 760px;
+}
+
+.auth-card + [data-v5-admin-parity] {
+  max-width: 420px;
+  margin-inline: auto;
+}
+
+/* The shared toggle uses oxblood by default; the public auth shell needs its
+   dark-mode semantic foreground so the control remains AA-legible. */
+[data-theme='dark'] .public .field__password-toggle {
+  color: var(--gold-300);
+}
+
+.fi03-result {
+  margin-top: var(--s-5);
+}
+
+.fi03-result[hidden] {
+  display: none;
+}
+
+.fi03-result__body,
+.fi03-flow-note {
+  padding: var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--paper-2);
+  color: var(--ink);
+}
+
+.fi03-result__body {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.fi03-result__body h2 {
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  font-weight: 400;
+}
+
+.fi03-result__body p,
+.fi03-flow-note {
+  color: var(--muted);
+}
+
+.fi03-result__body a {
+  width: fit-content;
+  color: var(--maroon-700);
+  font-weight: 700;
+}
+
+[data-theme='dark'] .fi03-result__body a {
+  color: var(--gold-300);
+}
+
+.fi03-flow-note {
+  margin-top: var(--s-4);
+}
+
 /* ---------- Surface index ---------- */
 
 .index-wrap {

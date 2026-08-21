@@ -273,6 +273,71 @@ test('verification confirmation accepts only an eight-digit one-time code shape'
   await expect(code).toHaveAttribute('autocomplete', 'one-time-code');
 });
 
+test('FI-03 application status leaves protected-token presentation to its route-local controller', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The FI-03 route contract runs once.');
+  await installV5ApiFixture(page, { environment: STAGING });
+  await page.goto('/#/public.application-status');
+  await waitForV5(page);
+
+  await expect(page.getByRole('heading', { name: 'Application status' })).toBeVisible();
+  await expect(
+    page.getByText('Use the private status token issued after submission. It is never placed in a URL.'),
+  ).toBeVisible();
+  await expect(page.getByText('Application not loaded')).toHaveCount(0);
+  await expect(page.getByLabel('Status token')).toHaveAttribute('type', 'password');
+});
+
+test('FI-03 projects verification and protected-token results without rendering credentials', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The FI-03 result projection runs once.');
+  await installV5ApiFixture(page, { environment: STAGING });
+  await page.route('**/api/account-applications/email/confirm', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, verificationReceipt: 'private-verification-receipt' }),
+    }),
+  );
+  await page.route('**/api/account-applications/status', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        applicationCode: 'AAP-SYNTHETIC-004',
+        state: 'CHANGES_REQUESTED',
+        revision: 6,
+        submittedAt: '2026-08-22T01:00:00.000Z',
+        updatedAt: '2026-08-22T02:00:00.000Z',
+        nextStep: 'COMPLETE_AND_SUBMIT_APPLICATION',
+        changeRequestSummary: 'Correct the governed affiliation selection.',
+      }),
+    }),
+  );
+
+  await page.goto('/#/public.verify');
+  await waitForV5(page);
+  await page.getByLabel('Action').selectOption('CONFIRM');
+  await page.getByLabel('Institutional email').fill('eligible@example.test');
+  await page.getByLabel('Verification code').fill('01234567');
+  await page.getByRole('button', { name: 'Continue verification' }).click();
+  await expect(page.locator('[data-fi03-result]')).toContainText('Email verification complete');
+  await expect(page.locator('[data-fi03-result]')).not.toContainText('private-verification-receipt');
+
+  await page.goto('/#/public.application-status');
+  await page.getByLabel('Status token').fill('private-status-token');
+  await page.getByRole('button', { name: 'Run application action' }).click();
+  const result = page.locator('[data-fi03-result]');
+  await expect(result).toContainText('AAP-SYNTHETIC-004');
+  await expect(result).toContainText('Changes Requested');
+  await expect(result).toContainText('Correct the governed affiliation selection.');
+  await expect(result).not.toContainText('private-status-token');
+  await expectNoHorizontalOverflow(page);
+});
+
 test('public intake stays public while an internal route receives the guarded playground owner session', async ({
   page,
 }) => {

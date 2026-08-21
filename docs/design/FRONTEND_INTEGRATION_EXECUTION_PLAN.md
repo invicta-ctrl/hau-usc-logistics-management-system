@@ -1,4 +1,22 @@
-# Frontend Integration Execution Plan — FI-00 to FI-16
+# Frontend Integration Execution Plan V2 — FI-00 to FI-16
+
+> **OWNER-ACCEPTED V2 CORRECTION — 2026-08-22 Asia/Manila.** No backend
+> behavior change does not mean no frontend integration/projection change. A
+> FI-01..FI-12 slice may change a narrowly named Layer-B composition path only
+> when an accepted spec/amendment proves an existing server result is discarded
+> or masked by static fallback before an owned surface can render it.
+> `src/v5/integration/backend.js` remains transport-restricted and Layer C
+> (worker, server, services, domain, auth, migrations, Apps Script,
+> Wrangler/provider/data resources) remains frozen. This supersedes only prior
+> categorical Layer-B exclusion, never endpoint/payload/response, session/CSRF,
+> verification lifecycle, status-token, approval/activation, authorization,
+> provider, D1/R2, migration, or deployment rules.
+>
+> Every slice performs the Contract Realization Gate: `REALIZED`,
+> `RESPONSE_DISCARDED`, `STATIC_FALLBACK_CONFLICT`,
+> `UNSUPPORTED_BACKEND_CONTRACT`, or `UNVERIFIED`. Results needed by the UI are
+> preserved only through safe route-local projection; unsupported/unverified
+> contracts remain stop conditions. Git preserves the superseded plan history.
 
 Dependency-ordered slices for adopting the accepted visual design into the
 frozen v0.8.3 frontend on `frontend-design-integration`.

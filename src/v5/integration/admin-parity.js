@@ -31,6 +31,147 @@ function safeMessage(error) {
   return reference ? `${message} Reference: ${reference}.` : message;
 }
 
+const FI03_APPLICATION_STATES = new Set([
+  'EMAIL_UNVERIFIED',
+  'DRAFT',
+  'PENDING_ADMIN_REVIEW',
+  'CHANGES_REQUESTED',
+  'PENDING_DIRECTOR_APPROVAL',
+  'APPROVED_ACTIVATION_REQUIRED',
+  'ACTIVE',
+  'REJECTED',
+  'WITHDRAWN',
+  'EXPIRED',
+  'ARCHIVED',
+]);
+
+const FI03_NEXT_STEPS = new Set([
+  'VERIFY_APPROVED_EMAIL',
+  'COMPLETE_AND_SUBMIT_APPLICATION',
+  'AWAIT_ADMINISTRATOR_REVIEW',
+  'AWAIT_DIRECTOR_APPROVAL',
+  'COMPLETE_STARTER_ACCOUNT_ACTIVATION',
+  'ACCOUNT_ACTIVE',
+  'APPLICATION_REJECTED',
+  'APPLICATION_WITHDRAWN',
+  'APPLICATION_EXPIRED',
+  'APPLICATION_ARCHIVED',
+]);
+
+function boundedText(value, max = 500) {
+  const valueText = text(value);
+  return valueText && valueText.length <= max ? valueText : '';
+}
+
+function safeFi03Status(result, { kind }) {
+  const projection = {
+    route: 'public.application-status',
+    kind,
+    applicationCode: boundedText(result?.applicationCode, 128),
+    state: FI03_APPLICATION_STATES.has(result?.state) ? result.state : '',
+    nextStep: FI03_NEXT_STEPS.has(result?.nextStep) ? result.nextStep : '',
+  };
+  if (Number.isSafeInteger(result?.revision)) projection.revision = result.revision;
+  for (const key of ['submittedAt', 'updatedAt']) {
+    const value = boundedText(result?.[key], 64);
+    if (value) projection[key] = value;
+  }
+  const summary = boundedText(result?.changeRequestSummary);
+  if (summary) projection.changeRequestSummary = summary;
+  return projection;
+}
+
+function fi03ResultProjection(action, values, result) {
+  if (action === 'application-email') {
+    return values.operation === 'START'
+      ? { route: 'public.verify', kind: 'verification-started' }
+      : { route: 'public.verify', kind: result?.verificationReceipt ? 'verified' : 'verification-complete' };
+  }
+  if (action === 'application-submit') {
+    return {
+      route: 'public.application',
+      kind: 'submitted',
+      applicationCode: boundedText(result?.applicationCode, 128),
+      state: FI03_APPLICATION_STATES.has(result?.state) ? result.state : '',
+      nextStep: FI03_NEXT_STEPS.has(result?.nextStep) ? result.nextStep : '',
+    };
+  }
+  if (action === 'application-status') {
+    return safeFi03Status(result, { kind: values.operation === 'WITHDRAW' ? 'withdrawn' : 'status' });
+  }
+  return null;
+}
+
+function readableFi03Value(value) {
+  return text(value)
+    .replaceAll('_', ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function fi03ProjectionCopy(projection) {
+  if (projection.kind === 'verification-started') {
+    return {
+      title: 'Check your email',
+      body: 'If the address can receive a verification message, enter its eight-digit code to continue.',
+    };
+  }
+  if (projection.kind === 'verified' || projection.kind === 'verification-complete') {
+    return {
+      title: 'Email verification complete',
+      body: 'Continue to the application. Email verification does not approve or activate an account.',
+    };
+  }
+  if (projection.kind === 'submitted') {
+    return {
+      title: 'Application submitted',
+      body: 'Keep the private status token in a secure password manager. Administrator review, Director approval, and activation remain separate steps.',
+    };
+  }
+  return {
+    title: projection.kind === 'withdrawn' ? 'Application withdrawal recorded' : 'Application status',
+    body: 'This status reflects only the protected-token result returned by the existing application service.',
+  };
+}
+
+function projectFi03Result(integration) {
+  const target = globalThis.document?.querySelector?.('[data-fi03-result]');
+  const projection = integration?.fi03PublicResult;
+  if (!target) return;
+  target.replaceChildren();
+  if (!projection) {
+    target.hidden = true;
+    return;
+  }
+  target.hidden = false;
+  const copy = fi03ProjectionCopy(projection);
+  const body = element('div', { className: 'fi03-result__body' });
+  body.append(element('h2', { textContent: copy.title }), element('p', { textContent: copy.body }));
+  if (projection.applicationCode) {
+    body.append(element('p', { textContent: `Application reference: ${projection.applicationCode}` }));
+  }
+  if (projection.state)
+    body.append(element('p', { textContent: `Current status: ${readableFi03Value(projection.state)}` }));
+  if (projection.nextStep)
+    body.append(element('p', { textContent: `Next step: ${readableFi03Value(projection.nextStep)}` }));
+  if (projection.changeRequestSummary)
+    body.append(element('p', { textContent: projection.changeRequestSummary }));
+  if (projection.kind === 'verified' || projection.kind === 'verification-complete') {
+    body.append(
+      element('a', { textContent: 'Continue to application', attrs: { href: '#/public.application' } }),
+    );
+  }
+  if (projection.kind === 'submitted') {
+    body.append(
+      element('a', {
+        textContent: 'Check application status',
+        attrs: { href: '#/public.application-status' },
+      }),
+    );
+  }
+  target.append(body);
+}
+
 function routeFrom(getState) {
   const stateRoute = text(getState?.()?.surface);
   if (stateRoute) return stateRoute;
@@ -956,6 +1097,12 @@ export function createAdminParityController({
       else panels.push(deniedPanel(CAPABILITY.DIAGNOSTICS));
     }
     panels.forEach((panel) => root.append(panel));
+    if (
+      currentRoute === 'public.verify' ||
+      currentRoute === 'public.application' ||
+      currentRoute === 'public.application-status'
+    )
+      projectFi03Result(integration);
   }
 
   async function runApplicationReview(values) {
@@ -1319,11 +1466,20 @@ export function createAdminParityController({
     const button = form.querySelector?.('[type="submit"]');
     if (button) button.disabled = true;
     if (status) status.textContent = 'Working…';
-    void dispatch(action, readForm(form))
-      .then(async () => {
+    const values = readForm(form);
+    void dispatch(action, values)
+      .then(async (result) => {
+        const projection = fi03ResultProjection(action, values, result);
+        if (projection) {
+          const integration = getIntegration();
+          integration.fi03PublicResult = projection;
+          projectFi03Result(integration);
+        }
         if (status)
-          status.textContent = 'Action completed. Refresh authoritative data before the next mutation.';
-        toast('Action completed.');
+          status.textContent = projection
+            ? fi03ProjectionCopy(projection).title
+            : 'Action completed. Refresh authoritative data before the next mutation.';
+        toast(projection ? fi03ProjectionCopy(projection).title : 'Action completed.');
         await refresh();
       })
       .catch((error) => {

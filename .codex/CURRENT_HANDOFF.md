@@ -1,32 +1,44 @@
-# Current Environment Handoff — FI-02 Closeout / Ready for FI-03
+# Current Environment Handoff — FI-03 Active
 
-FROM: TERRA_MAX:/root/fi02_integration_writer
-TO: FI03_UNASSIGNED; a newly accepted FI-03 task must acquire its own sole-writer lock
+FROM: TERRA_HIGH:/root/fi03_integration_writer
+TO: TERRA_HIGH:/root/fi03_integration_writer
 PROGRAM: HAU-USC Logistics — frozen v0.8.3 frontend design integration
-SLICE: FI-02 Public Landing & Portal Shell
-STATUS: FI02_STATUS_PASS
+SLICE: FI-03 Sign-In, Verification, Account Application, and Application Status
+STATUS: FI03_STATUS_PASS
 BRANCH: frontend-design-integration
-STARTING_SHA: 70e1d80070b7751f23abdf8f3ffe66e66be6906c
-STARTING_TREE: 72148164028cfba5f93e478b8fdc5385ab19e35e
-ENDING_SHA: GIT_HEAD; resulting one coherent self-containing FI-02 closeout commit, resolved by final Git readback
-ENDING_TREE: GIT_TREE; resulting FI-02 tree, resolved by final Git readback
-HEAD: GIT_HEAD
-TREE: GIT_TREE
-UPSTREAM: origin/frontend-design-integration@GIT_HEAD;NORMAL_FI02_PUSH_READBACK_0_0
+STARTING_SHA: 095fa2531d7cd898a57032573acc7809e0cd7b9d
+STARTING_TREE: a1b1bf9bd56aae666eec469a0dd78003e4e4829c
+HEAD: 095fa2531d7cd898a57032573acc7809e0cd7b9d
+TREE: a1b1bf9bd56aae666eec469a0dd78003e4e4829c
+UPSTREAM: origin/frontend-design-integration@095fa2531d7cd898a57032573acc7809e0cd7b9d;NORMAL_FI02_PUSH_READBACK_0_0
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: GIT_STATUS
+WORKTREE_STATE: DIRTY_FI03_CLOSEOUT_COMMIT_PENDING
 ACTIVE_WRITER: NONE
 TERRA_WRITER: NONE
 LOCK_HOLDER: NONE
 WRITER_LOCK: RELEASED
 LOCK_STATUS: RELEASED
 LOCK_CONTINUITY: CLOSED
-HANDOFF_STATUS: READY_FOR_FI03
+HANDOFF_STATUS: READY_FOR_FI04
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
-ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi02-public-landing-portal-shell.md
-CONTROLLING_OWNER_TASK: 2026-08-21_FI02_PUBLIC_LANDING_AND_PORTAL_SHELL
-ACCEPTED_AMENDMENT: .codex/specs/active/frontend-integration-live-local-preview-amendment.md;FI-LIVE-PREVIEW-01
+ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi03-auth-application-shell.md
+CONTROLLING_OWNER_TASK: 2026-08-21_FI03_SIGNIN_VERIFICATION_APPLICATION_STATUS
+ACCEPTED_AMENDMENT: FI-LIVE-PREVIEW-01/02; FI03 bounded result projection (OWNER_ACCEPTED_2026-08-22); FI02 contract-projection correction.
+LOCAL_PREVIEW: RUNNING_PERSISTENT
+LOCAL_PREVIEW_URL: http://127.0.0.1:4173
+LOCAL_PREVIEW_HOST: 127.0.0.1
+LOCAL_PREVIEW_PORT: 4173
+LOCAL_PREVIEW_WORKTREE: frontend-design-integration worktree
+LOCAL_PREVIEW_MODE: GUARDED_PLAYGROUND_PROXY
+PLAYGROUND_PROXY_VERIFIED: PASS
+PREVIEW_PRODUCTION_CROSSOVER: NONE
+PREVIEW_REUSED_OR_RESTARTED: RESTARTED_AFTER_SAFE_STARTUP_ARGUMENT_REPAIR
+PREVIEW_TEMPORARILY_PAUSED_FOR_TEST: NO
+PREVIEW_HMR_STATUS: HEALTHY
+PREVIEW_BACKEND_WRITES: 0
+VISUAL_CHECKPOINTS_PERFORMED: 4
+PREVIEW_STOPPED_AT_HANDOFF: NO
 
 PRE_FI02_ROLLBACK_SHA: 70e1d80070b7751f23abdf8f3ffe66e66be6906c
 PRE_FI02_ROLLBACK_TREE: 72148164028cfba5f93e478b8fdc5385ab19e35e
@@ -40,13 +52,13 @@ D08_STATUS: PASS
 D08_DECISION: Accessibility overrides literal low-contrast Figma ink. Preserve the Figma layout and visual hierarchy, but automatically use the closest approved FI-01 semantic foreground token that meets WCAG AA. Active/emphasized elements use the high-contrast foreground; inactive/secondary elements remain visually muted but must still pass the required contrast ratio.
 OWNER_AMENDMENT: 2026-08-21 accepted state projection — Permit changes to src/v5/integration/runtime.js and src/v5/src/registry.js solely to project the existing advertisement API into truthful loading, populated, empty, request-error, and media-failure UI states. No backend/API/auth/data contract, dependency, provider, Playground, or Production changes are authorized.
 AMENDMENT_BOUNDARY: only `runtime.js` public.landing presentation-state projection and `registry.js` public.landing state registration; the existing endpoint, adapter, payload, authorization/privacy, data, provider, Playground, and Production behavior stays frozen.
-VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F + Figma Make v39 accepted Git mirror; Figma connector reauthentication is known and no live Figma access is claimed.
+VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F + Figma Make v39 accepted Git mirror; FIGMA_MCP: BLOCKED_REAUTHENTICATION; WEB_FETCH: NOT_USED; FALLBACK: REPOSITORY_PRESERVED_EXPORTS.
 
 COMPLETED: FI02_STATUS PASS. The real `public.landing` and portal shell now preserve only supported public destinations/approved official HTTPS links, omit unsupported `public.register`, and consume existing public advertisement/media output through the existing adapter. Loading, populated, empty, request-error, and media-failure UI states are truthful presentation projections; no fake record, static media fallback, direct browser fetch, D1/R2 access, private identifier, unpublished data, or new public-data contract was introduced.
 ROUTE_PARITY: PASS — Staff sign in `#/public.signin`; Request Center `#/public.request-intake`; Office Lending `#/public.lending-intake`; policy `#/public.policy`; approved official USC HTTPS link; existing client-side authored-theme control. All other candidate controls were omitted, including self-service registration.
 MEDIA_PRIVACY: PASS — runtime maps existing `backend.publicAdvertisements()` results only; public failure preserves safe navigation/official link behavior; media is hidden on no-media/media-failure; no returned publication is fabricated or widened.
 ACCESSIBILITY: PASS — semantic landmarks/headings, visible keyboard focus, reduced-motion reduction, AA-compliant FI-01 semantic foregrounds in light/dark themes, and responsive layout at 320/390/768/1024/1440 plus 200% zoom. Axe found zero violations in final light and dark checkpoints; only gradient-node color-contrast items were marked incomplete and were manually measured against their effective backgrounds.
-LOCAL_PREVIEW: CLOSED — one guarded loopback preview bound to `127.0.0.1:4173`; launcher verified the isolated Playground proxy/HMR and no Production crossover; browser proved the real current API empty state; listener was stopped before handoff and `NO_LISTENER_4173` was verified. No private manifest path/content or protected identifier is recorded.
+FI02_PREVIEW_HISTORY: CLOSED — one guarded loopback preview bound to `127.0.0.1:4173`; launcher verified the isolated Playground proxy/HMR and no Production crossover; browser proved the real current API empty state; listener was stopped before handoff and `NO_LISTENER_4173` was verified. No private manifest path/content or protected identifier is recorded.
 VISUAL_CHECKPOINTS: Desktop dark and mobile light screenshots inspected; no overflow at 320/390/768/1024/1440; 200% page scale retained normal layout bounds; Tab reached visible Staff sign-in focus; reduced-motion computed 0.001s animation/transition durations; real guarded-preview advertisement state was `empty` with `aria-busy=false`, hidden hero media, hidden duplicate parity projection, and zero `#/public.register` links.
 
 VALIDATION: PASS — `npx eslint src/v5`; changed-test ESLint; `npm test -- tests/unit/v5-public-landing-state.test.js` (7/7); focused lifecycle Playwright (1 passed/8 skipped); combined public Playwright (12 passed/24 skipped); `npm test` (149 files/1100 tests); `npm run build`; `npm run verify:dist`; `npm run test:e2e:v5` (133 passed/200 skipped); `npm run test:e2e:v5:visual` (5 passed); final Prettier/diff/governance/continuation/handoff checks; final normal Git push/readback.
@@ -67,9 +79,12 @@ RECOVERY_POINTER_CHANGES: 0
 MERGES_INTO_MAIN: 0
 HISTORY_REWRITES: 0
 LIVE_PRODUCTION_CHANGED: NO
-BLOCKER: FALSE; FI-02 is complete. The only retained broad-lint non-pass is the pre-existing owner-recorded unrelated baseline described above.
+CONTRACT_REALIZATION_GATE: signin=REALIZED; verify/application/status=RESPONSE_DISCARDED; static application-status=STATIC_FALLBACK_CONFLICT; unsupported backend contracts=NONE.
+CONDITIONAL_PROJECTION_SCOPE: admin-parity publicPanels/afterRender/onSubmit for FI03 public verify/application/status; runtime afterRender only if static fallback proves necessary; dispatch/backend/auth/security frozen.
+FI02_SCOPE_AUDIT_CORRECTION: runtime=REQUIRED_CONTRACT_PROJECTION; registry=REQUIRED_ROUTE_STATE_MAPPING; static fallback=REQUIRED_STATIC_FALLBACK_REMOVAL where applicable; UNRELATED=0; UNVERIFIED=0; documentation only/no FI02 rerun.
+BLOCKER: FALSE; owner accepted bounded result projection; valid FI-03 lock and guarded persistent preview remain active.
 
 NO_REPEAT_FACTS: Do not retry live Figma while the connector requires reauthentication; use the accepted hashed Git mirror unless a new accepted authority says otherwise. Do not hand edit `dist/index.html` or `HAU-USC_Logistics-Prototype-Shareable.html`; regenerate only through `npm run build`. Do not use the stale retained design scripts that target the retired prototype preview as current-app acceptance. Do not use generic legacy `test:e2e` against the guarded V5 preview; use the V5 configs. Do not reopen D02/D04/D08 without new owner authority.
-NEXT_EXACT_ACTION: FI-03_SIGNIN_VERIFICATION_APPLICATION_STATUS
+NEXT_EXACT_ACTION: FI-04_AUTHENTICATED_SHELL_NAVIGATION_PROFILE after accepted handoff.
 RESUME_COMMANDS: Rehydrate this current chain; verify `git status --short`, branch/upstream/head parity, and no active writer; locate an accepted FI-03 specification; acquire a new FI-03 writer lock before any source or preview mutation.
 PROHIBITED_ACTIONS: No FI-03 implementation without accepted FI-03 authority/lock; no backend/API/auth/data/schema/migration/provider/Figma/Playground/Production mutation; no dependency; no unsupported route or registration; no rebase/reset/clean/force-push/history rewrite/main merge/tag/deploy; no hand edit of generated artifacts.

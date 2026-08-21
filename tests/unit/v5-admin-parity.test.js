@@ -293,6 +293,104 @@ describe('V5 admin and public parity controller', () => {
     expect(integration.accountApplicationVerificationReceipt).toBe('opaque-verification-receipt');
   });
 
+  it('retains only safe FI-03 result projection fields and never projects private credentials', async () => {
+    const backend = backendStub();
+    const integration = { session: { csrfToken: 'csrf-exact' } };
+    backend.auth.confirmAccountApplicationEmail.mockResolvedValue({
+      ok: true,
+      verificationReceipt: 'opaque-verification-receipt',
+    });
+    backend.auth.submitAccountApplication.mockResolvedValue({
+      ok: true,
+      applicationCode: 'AAP-SYNTHETIC-003',
+      state: 'PENDING_ADMIN_REVIEW',
+      revision: 4,
+      statusToken: 'private-status-token',
+      nextStep: 'AWAIT_ADMINISTRATOR_REVIEW',
+    });
+    backend.auth.getAccountApplicationStatus.mockResolvedValue({
+      ok: true,
+      applicationCode: 'AAP-SYNTHETIC-003',
+      state: 'CHANGES_REQUESTED',
+      revision: 5,
+      submittedAt: '2026-08-22T01:00:00.000Z',
+      updatedAt: '2026-08-22T02:00:00.000Z',
+      nextStep: 'COMPLETE_AND_SUBMIT_APPLICATION',
+      changeRequestSummary: 'Correct the governed affiliation selection.',
+      statusToken: 'private-status-token',
+    });
+    const controller = controllerFor(backend, integration);
+
+    submit(
+      controller,
+      form('application-email', {
+        operation: 'CONFIRM',
+        email: 'eligible@example.test',
+        code: '01234567',
+      }),
+    );
+    await vi.waitFor(() =>
+      expect(integration.fi03PublicResult).toEqual({
+        route: 'public.verify',
+        kind: 'verified',
+      }),
+    );
+    expect(JSON.stringify(integration.fi03PublicResult)).not.toContain('verification-receipt');
+
+    submit(
+      controller,
+      form('application-submit', {
+        operation: 'SUBMIT',
+        clientRequestId: 'retry-owner-supplied-03',
+        verificationReceipt: 'opaque-verification-receipt',
+        legalName: 'Authorized Tester',
+        contactNumber: '+639171234567',
+        departmentId: 'DEPT-EXACT',
+        courseId: 'COURSE-EXACT',
+        yearLevel: '3',
+        requestedUsername: 'authorized.tester',
+        requestedAccountType: 'STAFF',
+        requestedRoleId: 'DOL_STAFF',
+        requestedCommitteeIds: '',
+        requestedWorkspaceIds: '',
+        requestCenterAccess: false,
+        lendingSelfService: false,
+        internalLendingOperations: false,
+        password: 'correct horse battery staple',
+        confirmPassword: 'correct horse battery staple',
+      }),
+    );
+    await vi.waitFor(() =>
+      expect(integration.fi03PublicResult).toEqual({
+        route: 'public.application',
+        kind: 'submitted',
+        applicationCode: 'AAP-SYNTHETIC-003',
+        state: 'PENDING_ADMIN_REVIEW',
+        nextStep: 'AWAIT_ADMINISTRATOR_REVIEW',
+      }),
+    );
+    expect(JSON.stringify(integration.fi03PublicResult)).not.toContain('private-status-token');
+
+    submit(
+      controller,
+      form('application-status', { operation: 'STATUS', statusToken: 'private-status-token' }),
+    );
+    await vi.waitFor(() =>
+      expect(integration.fi03PublicResult).toEqual({
+        route: 'public.application-status',
+        kind: 'status',
+        applicationCode: 'AAP-SYNTHETIC-003',
+        state: 'CHANGES_REQUESTED',
+        revision: 5,
+        submittedAt: '2026-08-22T01:00:00.000Z',
+        updatedAt: '2026-08-22T02:00:00.000Z',
+        nextStep: 'COMPLETE_AND_SUBMIT_APPLICATION',
+        changeRequestSummary: 'Correct the governed affiliation selection.',
+      }),
+    );
+    expect(JSON.stringify(integration.fi03PublicResult)).not.toContain('private-status-token');
+  });
+
   it('preserves exact application review evidence, revision, reason, and CSRF', async () => {
     const backend = backendStub();
     const controller = controllerFor(backend);

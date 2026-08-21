@@ -219,16 +219,9 @@ export const verify = () =>
   publicShell(
     `<div class="auth-card">
       <h1>Confirm your email</h1>
-      <p>We sent a confirmation link to the institutional address you provided.</p>
-      ${notice({
-        tone: 'info',
-        title: 'Nothing is active yet',
-        body: 'Your account stays inactive until the link is opened and an administrator completes the review.',
-      })}
-      <div style="display:grid;gap:8px;margin-top:20px">
-        <button class="btn" type="button" data-act="open-parity-actions">Resend confirmation</button>
-        <a class="btn btn--quiet" href="#/public.signin">Back to sign in</a>
-      </div>
+      <p>Start with your approved institutional email, then enter the eight-digit code when you receive it.</p>
+      <div class="fi03-result" data-fi03-result hidden aria-live="polite"></div>
+      <p class="auth-alt">Email verification only confirms this step. It does not approve or activate an account.</p>
     </div>`,
   );
 
@@ -240,34 +233,9 @@ export const application = () =>
       <h1>Apply for access</h1>
       <p>Tell us who you are and what you need to do. A Department of Logistics administrator reviews every application.</p>
     </div>
-    ${stepper(['Identity', 'Purpose', 'Review'], 0)}
-    <form class="form-grid" onsubmit="return false">
-      <fieldset>
-        <legend>Your identity</legend>
-        <div style="display:grid;gap:16px">
-          ${field({ label: 'Full name', name: 'n', required: true })}
-          ${field({ label: 'Institutional email', name: 'e', type: 'email', required: true })}
-          ${field({
-            label: 'You are a',
-            name: 'kind',
-            options: ['USC officer', 'USC staff', 'Angelite student', 'Department of Logistics staff'],
-          })}
-        </div>
-      </fieldset>
-      <fieldset>
-        <legend>What you need</legend>
-        <div style="display:grid;gap:16px">
-          ${field({
-            label: 'Reason for access',
-            name: 'r',
-            textarea: true,
-            hint: 'Describe the work you need to do. Do not include personal records here.',
-            required: true,
-          })}
-        </div>
-      </fieldset>
-      <button class="btn btn--primary" type="submit" data-act="open-parity-actions">Continue to review</button>
-    </form>`,
+    ${stepper(['Email verification', 'Application', 'Review'], 1)}
+    <div class="fi03-result" data-fi03-result hidden aria-live="polite"></div>
+    <p class="fi03-flow-note">Verification, administrator review, Director approval, and account activation are separate steps.</p>`,
   );
 
 /* ---------- 6. Application status ---------- */
@@ -276,18 +244,10 @@ export const applicationStatus = () =>
   publicShell(
     `<div class="public__head">
       <h1>Application status</h1>
-      <p>Open the private status link issued for an application.</p>
+      <p>Use the private status token issued after submission. It is never placed in a URL.</p>
     </div>
-    <div class="panel"><div class="panel__body">
-      ${timeline([
-        { title: 'Application not loaded', meta: 'A private status token is required', current: true },
-      ])}
-      ${notice({
-        tone: 'info',
-        title: 'What happens next',
-        body: 'An administrator checks your identity against the protected directory. If it does not match exactly, the application waits for manual review rather than being approved automatically.',
-      })}
-    </div></div>`,
+    <div class="fi03-result" data-fi03-result hidden aria-live="polite"></div>
+    <p class="fi03-flow-note">A status check does not reveal protected review details or change an application.</p>`,
   );
 
 /* ---------- 7. Public request intake ---------- */
