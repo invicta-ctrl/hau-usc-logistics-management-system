@@ -1,7 +1,7 @@
-# Current Bounded Task — FI-LIVE-PREVIEW-01 Acceptance Repair
+# Current Bounded Task — FI-LIVE-PREVIEW-01 Documentation Amendment (Complete)
 
 INTENT: DOCUMENTATION_WORKFLOW_AMENDMENT
-MODE: REHYDRATE_REPAIR_VERIFY_HANDOFF
+MODE: COMPLETE_HANDOFF
 OBJECTIVE: Persist FI-LIVE-PREVIEW-01 and its token-efficient, loopback-only local-preview workflow for FI-01 through FI-12 without starting FI-02 or a preview.
 TARGET: frontend-design-integration at `04f82930aca4eded8118ecea2560722d2f0b6bd6` / tree `0c0df80bd428c7693c3cdf3a8a7a0e597140cc30`.
 CURRENT_POINTER: .codex/CURRENT.md
@@ -9,26 +9,26 @@ CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi01-shared-design-foundation.md
 AUTHORITY: Earl FI-LIVE-PREVIEW-01 owner amendment -> project governance/current chain -> existing FI-01 accepted specification/integration packet -> existing guarded local-preview command.
 REQUIRED_MODEL: gpt-5.6-terra sole branch writer, recorded as TERRA_MAX:/root/fi01_integration_writer.
-ACTIVE_WRITER: TERRA_MAX:/root/fi01_integration_writer
+ACTIVE_WRITER: NONE
 RISK: LOW;DOCUMENTATION_ONLY
 SCOPE: Accepted amendment record, integration plan/handoff/start-here/continuation discoverability, the eleven required current-handoff preview fields, current-chain linkage, focused documentation validation, normal commit/push/readback.
 OUT_OF_SCOPE: FI-02 implementation/spec adoption; starting a preview/browser; private manifest resolution or disclosure; runtime/package/script/backend/API/auth/data/schema/migration/provider/Figma/Playground/Production changes; build/lint/E2E/deployment; rebase/reset/force/history rewrite or main merge.
 VERIFICATION: Complete logical diff, targeted Prettier, git diff --check, check:agents, handoff:verify, check:continuation, exact-link/reference checks, secret/private-data scan, no port-4173 listener at closeout, normal push/readback parity.
 STOP_CONDITIONS: Branch/upstream drift, dirty/conflicting writer, missing authority, runtime/private/provider access need, Production crossover, validator failure, private information exposure, or any non-documentation scope expansion.
-WRITER_LOCK: HELD
-LOCK_STATUS: HELD
-HANDOFF_STATUS: FI_LIVE_PREVIEW_01_ACCEPTANCE_REPAIR_IN_PROGRESS
+WRITER_LOCK: RELEASED
+LOCK_STATUS: RELEASED
+HANDOFF_STATUS: READY_FOR_FI02
 GIT_UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_READBACK_PARITY_0_0
 PRE_FI01_ROLLBACK_SHA: eacdfcc951c687cfca5731ede245130266b1c3da
 PRE_FI01_ROLLBACK_TREE: 30b2ae1d15731d42fa668f48fe6a0064869ff655
 ORIGIN_MAIN_SHA: 86553349f5c2ebefaa637c30828c560a301f99ba
-STATUS: FI_LIVE_PREVIEW_01_ACCEPTANCE_REPAIR_IN_PROGRESS
+STATUS: FI_LIVE_PREVIEW_01_AMENDMENT_COMPLETE
 ACCEPTED_AMENDMENT: .codex/specs/active/frontend-integration-live-local-preview-amendment.md;FI-LIVE-PREVIEW-01
-NEXT_EXACT_ACTION: FI_LIVE_PREVIEW_01_ACCEPTANCE_REPAIR_CLOSEOUT
+NEXT_EXACT_ACTION: FI-02_PUBLIC_LANDING_AND_PORTAL_SHELL
 
 ## Delivered and verified
 
-### FI-LIVE-PREVIEW-01 acceptance repair in progress
+### FI-LIVE-PREVIEW-01 amendment delivered and verified
 
 - The exact accepted amendment is persisted and linked through the current chain
   and FI packet; no local preview, private manifest lookup, browser opening, or
