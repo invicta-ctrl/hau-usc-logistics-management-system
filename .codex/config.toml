@@ -1,6 +1,6 @@
 # Project-scoped Codex configuration for the HAU-USC repository.
 
 [agents]
-max_threads = 32
+max_threads = 2
 max_depth = 1
 interrupt_message = false
