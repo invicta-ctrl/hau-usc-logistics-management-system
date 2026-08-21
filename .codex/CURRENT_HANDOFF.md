@@ -1,7 +1,7 @@
 # Current Environment Handoff
 
 FROM: TERRA_MAX:/root/v83_completion_terra_writer
-TO: TERRA_MAX:/root/v83_playground_reset_terra_writer — V83_PRODUCTION_FAST_CLOSE_CLOSEOUT
+TO: TERRA_MAX:/root/v83_playground_reset_terra_writer — V83_PRODUCTION_RELEASED_OWNER_FAST_CLOSE_OVERRIDE_S17_CLOSEOUT
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 TREE: GIT_TREE
@@ -35,19 +35,23 @@ PLAYGROUND_INTEGRITY_AT_STOP: PRE_SOURCE_GATE_SCHEMA32_SINGLE_LEDGER0032_FOREIGN
 POST_ACCEPTANCE_EXTERNAL_ACTIONS: PROBE_BINDING_DEPLOY=1;SOURCE_PROBE=1_NO_RETRY;OWNER_AUTHORIZED_SESSION_BOOTSTRAP=2_TOTAL;PROVIDER_EMAIL_DELIVERY=0;RESET=0;SESSION_REVOKE=0;PRODUCTION_MUTATION=0
 FROZEN_RECEIPT: SHA=f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;TREE=5788251d483f23ec5e19048e1a946b3a00450436;PACKAGE_VERSION=0.8.3;LOCKFILE_SHA256=28c8436fa65cefacb1b7d5ac0ad95ae136af10a765e928efb53c5b23f85967cd;STAGING_APPLICATION_ARTIFACT_SHA256=60dd9c63a99d347dfa4f7a4315639cc2fb9725578bf6e194e0d84cc8f5415a99;WORKER_SOURCE_SHA256=5b37974f449b659e89ddb480a6fa09ea403c1329d303623932f38240738a44ca;MIGRATION_ORDER=0031_THEN_0032
 RECOVERY_RECEIPT: PLAYGROUND_D1_TIME_TRAVEL_BOOKMARK_PRESENT=TRUE;WORKER_ROLLBACK_HISTORY_PRESENT=TRUE;R2_CONFIG_IDENTITY=VERIFIED_REDACTED;D1_R2_PRODUCTION_CROSSOVER=FALSE;SECOND_OWNER_AUTHORIZED_PRE_AND_POST_RESET_RECEIPTS=CAPTURED_PRIVATE;SECOND_RESET_RECONCILIATION=CLEAN_SCHEMA30_0030_FK_R2_PASS;SECOND_RESET_0031_REAPPLY_PRE_AND_POST_RECOVERY=CAPTURED_PRIVATE;ATOMIC_0032_PRE_AND_POST_IMPORT_RECOVERY=CAPTURED_PRIVATE
-OWNER_PRODUCTION_GO: EXPLICIT_FAST_CLOSE_OVERRIDE;OWNER=EARL;EXACT_FROZEN_CANDIDATE=f8e63372bc8afcb6d092970b7f9fc9ee72fd3580
+OWNER_PRODUCTION_GO: EXPLICIT_FAST_CLOSE_OVERRIDE_CONSUMED;OWNER=EARL;EXACT_FROZEN_CANDIDATE=f8e63372bc8afcb6d092970b7f9fc9ee72fd3580
+PRODUCTION_FAST_CLOSE_RECONCILIATION: PASS_OWNER_FAST_CLOSE_SCOPE;EXACT_F8_RUNTIME_AND_WORKER_TRAFFIC_100_PERCENT=PASS;VERSION=0.8.3;SCHEMA32_MIGRATION_CHAIN0031_0032_SINGLE0032_LEDGER_FK0_THREE_ACTIVITY_HISTORY_TABLES=PASS;ROSTER_IDENTIFIER_CONFIG_AND_PROTECTED_GOOGLE_ROSTER_PRIVATE_KEY_PRESENCE=PASS;PRIVATE_TIME_TRAVEL_RECOVERY_RECEIPT=CAPTURED;PLAYGROUND_PRODUCTION_CROSSOVER=FALSE;NO_PRIVATE_VALUE_RECORDED
+PRODUCTION_SMOKE: HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED;OWNER_ACCEPTED_MINIMAL_FALLBACK=TRUE;HTTP_PASS=NOT_CLAIMED;NO_RETRY
+ID_H_LIVE_DELIVERY: OWNER_WAIVED_OR_UNRUN;NEVER_PASS;PROVIDER_EMAIL_SEND_BY_THIS_WRITER=0
 HISTORICAL_PLAYGROUND_SOURCE_GATE: COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE;NOT_PASS;NO_RETRY
-BLOCKER: FALSE_PENDING_LIVE_PRODUCTION_RECONCILIATION
-NEXT_ACTION_SCOPE: PHASE_1_2_READ_ONLY_PRODUCTION_RECONCILIATION_AND_ONE_BOUNDED_SMOKE
-NEXT_EXACT_ACTION: Reconcile exact Production candidate/runtime/schema32/0032/foreign keys/Activity History/recovery/roster-secret presence and run one approved non-mutating smoke; stop on a material mismatch.
-RESUME_COMMANDS: Rehydrate this receipt, use only approved private production configuration without printing values, and execute the Phase 1/2 read-only reconciliation once.
+PRODUCTION_ELIGIBILITY: OWNER_FAST_CLOSE_OVERRIDE_CONSUMED;HISTORICAL_PLAYGROUND_NONPASS_RETAINED_NOT_PASS_NOT_ACTIVE_BLOCKER
+BLOCKER: FALSE;NO_ACTIVE_PRODUCTION_IDENTITY_INTEGRITY_RECOVERY_OR_PRIVACY_MISMATCH
+NEXT_ACTION_SCOPE: PHASE_3_PROTECTED_MAIN_GOVERNANCE_LINEAGE_ACCEPTANCE
+NEXT_EXACT_ACTION: Integrate the verified governance-only origin/main lineage into the v0.8.3 release lineage, prove frozen product/artifact parity, and push/read back before recovery-pointer rotation.
+RESUME_COMMANDS: Rehydrate this receipt, use the verified local Git topology and focused document validators, then perform the Phase 3 protected-main governance-lineage acceptance once.
 PROHIBITED_ACTIONS: No source/dependency/build/workflow/repository-runtime-config, migration rerun, source-probe retry, roster configuration/secret activation, provider/email/browser/manual mutation, Production data mutation, recovery-data deletion, AGENTS/project-policy sync, v0.8.4 implementation, frontend runtime/backend/design mutation, or unproven branch/worktree deletion.
 
 ## Continuity and release state
 
 A7-R2 is controlling under Earl's explicit current instruction, adopted at 2026-08-20T23:33:37+08:00. The exact owner mapping is ID-A auth/session/security preservation, ID-B canonical person and assignment domain, ID-C email/provenance and explicit account linkage, ID-D existing active-access preservation, ID-E two-stage approval, ID-F Staff Directory, ID-G staff/account operational activity history, and ID-H secure eight-digit verification lifecycle.
 
-The product matrix is ID-A VERIFIED_NO_OP, ID-B PASS, ID-C PASS, ID-D PASS, ID-E VERIFIED_NO_OP, ID-F PASS, ID-G PASS, ID-H_IMPLEMENTATION PASS, ID-H_PLAYGROUND_DELIVERY_GATE PENDING, password visibility PASS, and password browser evidence PASS. ID-D's old zero/probe bookkeeping is historical: the live candidate-bound check is SOURCE_RECONCILIATION_PLAYGROUND_GATE=COMPLETED_NONPASS and has no code/API rename.
+The product matrix is ID-A VERIFIED_NO_OP, ID-B PASS, ID-C PASS, ID-D PASS, ID-E VERIFIED_NO_OP, ID-F PASS, ID-G PASS, ID-H_IMPLEMENTATION PASS, ID-H_PLAYGROUND_DELIVERY_GATE OWNER_WAIVED_OR_UNRUN (never PASS), password visibility PASS, and password browser evidence PASS. ID-D's old zero/probe bookkeeping is historical: the live candidate-bound check is SOURCE_RECONCILIATION_PLAYGROUND_GATE=COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE and has no code/API rename.
 
 Schema target is 32. The atomic-import checkpoint was CLEAN at schema32/0032 under exact f8, and the final deterministic automated acceptance is PASS_WITH_P3_ADVISORY. Earl then authorized the active Playground session, one bounded replacement session bootstrap, one candidate-bound source probe, and one distinct read-only diagnostic. The probe-binding deployment retained exact f8/tree/artifact and isolation, but the single source probe completed NONPASS; its private sanitized receipt retains aggregate `safeFlags=false` only, not a safe component classification or local response-shape-validator failure. The diagnostic confirmed absent required roster-source configuration and secret inventory. Its one safe D1 aggregate read was nonzero/unparsed with no retained private error receipt, so the exact A7 subtype remains unresolved. No source read or mutation followed. Pre-source schema32/ledger/FK/Activity History evidence remains green; post-NONPASS reconciliation is not claimed. The ID-H Luna review ACCEPTED with P0=0, P1=0, and P2=0; no plan/audit loop is reopened.
 
@@ -59,4 +63,4 @@ Earl's explicit `AUTHORIZED PLAYGROUND SESSION — CONTINUE FAST-CLOSE` reclassi
 
 ## Active 2026-08-21 owner fast-close transfer
 
-Earl explicitly authorized v0.8.3 Production fast closeout, recovery-pointer rotation, lossless branch/worktree hygiene, v0.8.4 branch preservation/refresh without implementation, and frontend-design adoption preparation without runtime or design mutation. The stale writer lock transfers to `TERRA_MAX:/root/v83_playground_reset_terra_writer`. Phase 1/2 is one bounded Production reconciliation plus one non-mutating approved smoke. The expected Production state remains unclaimed until direct reconciliation: exact frozen f8 runtime, app version 0.8.3, schema32/0032, one 0032 ledger entry, no foreign-key issue, three Activity History tables, protected roster configuration/secret presence, and private recovery evidence. Email or smoke not directly completed must be `OWNER_WAIVED_OR_UNRUN`, never PASS.
+Earl explicitly authorized v0.8.3 Production fast closeout, recovery-pointer rotation, lossless branch/worktree hygiene, v0.8.4 branch preservation/refresh without implementation, and frontend-design adoption preparation without runtime or design mutation. The stale writer lock transfers to `TERRA_MAX:/root/v83_playground_reset_terra_writer`. The bounded Production reconciliation is complete: exact f8 runtime/100% Worker traffic, v0.8.3/schema32/migrations 0031+0032/single 0032 ledger/FK0/three Activity History tables, roster configuration/protected-secret presence, private recovery evidence, and no Playground crossover all pass. The consumed smoke is `HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED`, an owner-accepted fallback and never `HTTP_PASS`; email delivery is `OWNER_WAIVED_OR_UNRUN`, never PASS.

@@ -2,6 +2,19 @@
 
 ## Current state
 
+### v0.8.3 owner-fast-close release state
+
+- **Milestone:** `V83_PRODUCTION_RELEASED_OWNER_FAST_CLOSE_OVERRIDE_S17_CLOSEOUT` is active under Earl's explicit fast-close authority; protected-main acceptance, recovery rotation, and lossless S17 closure remain.
+- **Production identity:** direct read-only reconciliation proves v0.8.3 at frozen f8 with 100% Worker traffic, schema32/migrations 0031+0032/single 0032 ledger/FK0/three Activity History tables, roster configuration/protected-secret presence, private recovery evidence, and no Playground crossover.
+- **Smoke:** `HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED` is the owner-accepted minimal fallback; `HTTP_PASS` is not claimed and no retry is authorized.
+- **Playground gates:** the candidate-bound source gate is historical `COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE`, never PASS; live ID-H delivery and manual/browser gates are `OWNER_WAIVED_OR_UNRUN`, never PASS.
+- **Git/recovery:** permanent pointers remain `main`, `backup/last-known-good`, and `regression/r1` through `regression/r3`; rotation awaits protected-main acceptance and exact readback. The f8 candidate and application artifact remain frozen.
+- **Future boundaries:** preserve/refresh v0.8.4 without implementation; retain frontend-design integration for documented adoption preparation only. Backend/API/auth/data contracts remain authoritative.
+- **Writer:** `ACTIVE_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer`; lock held until S17 evidence and handoff are complete.
+- **Next action:** integrate the verified governance-only main lineage into the v0.8.3 release lineage, then rotate recovery pointers and close temporary state losslessly.
+
+### Historical baseline
+
 - **Milestone:** V0.8.1 Design DNA Research Gate, initial governance commit `4825f02dfa96b9e5e6fe018d1bfd252d7720f47d`, and the bounded post-commit closure-truth repair are complete; Luna's pre-commit final content audit PASS occurred before this closure commit, and an independent read-only exact-SHA audit follows normal closure commit/push before Sol's owner handoff; implementation remains unauthorized pending Earl's design-direction decision.
 - **Design research:** eight independent live-reference studies, a reference matrix, one coherent USC Design DNA, proposed design/component/motion/3D/accessibility/performance systems, a module rollout plan, and an owner-facing gate handoff are complete under `docs/design/`.
 - **Proposed direction:** “Institutional Logistics Ledger” — a calm operational workbench with unequal overview hierarchy, evidence-led records, scarce gold focus, restrained continuity motion, and a 2D-authoritative optional spatial strategy.
@@ -19,6 +32,7 @@
 
 ## Verification
 
+- Direct Production reconciliation is green for exact f8/runtime/traffic, schema/migration/ledger/FK/history, protected roster configuration/secret-name presence, private recovery receipt, and isolation. The one helper smoke reached an expected noncanonical host perimeter outcome; its status is not retained and it is not HTTP PASS.
 - Focused governance validation passed before the initial normal commit/push: pre-final Sol review and Luna review/recheck; `tests/unit/codex-governance.test.js` (14 tests); `check:agents` (12 project files); `check:continuation`; and `handoff:verify`. Markdown/JavaScript formatting, `git diff --check`, the complete logical-diff review, and the targeted active-governance contradiction scan passed; TOML is validated by the repository's restricted-TOML governance check. The completed post-commit closure-truth repair reran focused Prettier, `git diff --check`, `check:governance`, `handoff:verify`, ledger/record coherence, targeted contradiction/no-disallowed-path checks, and complete-diff review successfully; Luna's pre-commit final content audit PASS occurred before this closure commit, and an independent read-only exact-SHA audit follows normal closure commit/push before Sol's owner handoff.
 - Research documentation and the completed governance amendment passed their applicable link/path, formatting, governance, handoff, focused validation, and complete-diff reviews; neither changed application, build, generated artifact, migration, or provider configuration.
 - Live public-reference research covered search/filter/command/component-preview/3D-orbit states. The managed browser was fixed at 1280 × 720, so implementation-phase responsive testing remains required.

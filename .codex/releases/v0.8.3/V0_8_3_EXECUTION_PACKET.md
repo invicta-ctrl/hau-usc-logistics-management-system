@@ -5,7 +5,7 @@
 - **Controlling amendment:** .codex/specs/active/v0.8.3-v1r7-a7-r2-final-acceleration-s17-closure-amendment.md
 - **Adoption authority:** Earl's explicit current instruction, adopted 2026-08-20T23:33:37+08:00.
 - **Accepted product specification:** .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md.
-- **Canonical writer / lock:** TERRA_MAX:/root/v83_completion_terra_writer; HELD and ACTIVE.
+- **Canonical writer / lock:** TERRA_MAX:/root/v83_playground_reset_terra_writer; HELD and ACTIVE for owner-authorized Production/S17 closeout.
 - **Integrated ID-G canonical baseline:** release/v0.8.3-identity-foundation at merge 45bbc1caf661d64a1abfdf1f775878ec89d88853, tree 4baebecc466b258d1b3729cff376bfafb2640ef6, pushed clean and live-equal before this continuity update.
 - **Integrated ID-H canonical baseline:** release/v0.8.3-identity-foundation at fast-forward fb93da76cbf71ec0419036d86c0b780b18bfeff4, tree 0947c934bd40a9bb8d4fe8bbae99e09e13f235df; exact nine accepted paths, clean and live-equal before this continuity update.
 - **Policy-sync boundary:** Context Vault project-extension target remains sync_allowed=false with BLOCKED_ACTIVE_WRITER_AND_DIRTY_WORK. Do not synchronize AGENTS.md or project policy during this release.
@@ -13,6 +13,14 @@
 A7-R2 supersedes the first A7 draft for v0.8.3 execution. It does not reduce accepted product scope, waive safety or external gates, or authorize v0.8.4 in this session.
 
 FAST_CLOSE=ACTIVE. Minimum necessary verification applies: reuse unchanged candidate evidence, do not reopen review or broad suites, and stop for material gate failures.
+
+## Owner-fast-close Production reconciliation
+
+- **Owner GO:** `EXPLICIT_FAST_CLOSE_OVERRIDE_CONSUMED` for frozen candidate `f8e63372bc8afcb6d092970b7f9fc9ee72fd3580`.
+- **Direct Production reconciliation:** PASS_OWNER_FAST_CLOSE_SCOPE — exact f8 runtime with 100% Worker traffic; app version 0.8.3; schema32; migration chain 0031+0032 with one 0032 ledger entry; FK issues 0; three Activity History tables; roster identifier configuration and protected `GOOGLE_ROSTER_PRIVATE_KEY` presence; private Time Travel recovery receipt; and no Playground/Production crossover.
+- **Smoke:** `HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED`; this exact host-perimeter fallback is owner accepted, no retry is authorized, and `HTTP_PASS` is not claimed.
+- **Unrun external gates:** historical Playground source gate remains `COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE`, never PASS; live ID-H email delivery is `OWNER_WAIVED_OR_UNRUN`, never PASS.
+- **Next release action:** protected-main governance-lineage acceptance, then recovery-pointer rotation and lossless S17 closure.
 
 ## Explicit owner mapping and product disposition
 
@@ -54,7 +62,7 @@ No Activity History plan rewrite or routine plan-audit loop is authorized. The a
 - **Focused evidence:** portable Node 22.23.2; unit/SQLite-D1/provider/resend/Worker/V5 80/80 PASS; legacy eight-digit browser 1/1 PASS; V5 browser 29 PASS with 7 intentional skips; syntax, scoped ESLint, exact Prettier, privacy/scope, and diff checks PASS.
 - **Independent review:** Luna ACCEPT; P0=0; P1=0; P2=0.
 - **P3 advisory:** nonblocking and unrepaired; `tests/e2e/v072-account-access.spec.js` hard-codes committed-harness port 4173. It is not expanded in this release slice.
-- **Live boundary:** `ID_H_PLAYGROUND_DELIVERY_GATE=PENDING`; provider email delivery is 0. This is distinct from the provider-free implementation PASS and from the exact frozen pre-migration Playground deployment recorded below.
+- **Live boundary:** `ID_H_PLAYGROUND_DELIVERY_GATE=OWNER_WAIVED_OR_UNRUN`, never PASS; provider email delivery by this writer is 0. This is distinct from the provider-free implementation PASS and from the exact frozen pre-migration Playground deployment recorded below.
 
 ## Migration and external sequence
 
@@ -83,7 +91,7 @@ Safe read-only and post-deploy facts are limited to allowlisted public identity 
 | Production          | 0.8.2              | c316e047c845fa182e82156c95945c4a5e5de2ff | 30 / 0030_production_access_and_operations.sql | true  |
 | Isolated Playground | 0.8.3-playground.1 | f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 | 32 / 0032_staff_account_activity_history.sql   | true  |
 
-No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground remains the exact frozen v0.8.3 candidate after its second accepted reset, terminally reconciled 0031 reapply, and one terminally reconciled atomic 0032 import. The import checkpoint was CLEAN at schema32/0032; the final provider-free schema32 automated acceptance is PASS_WITH_P3_ADVISORY. The owner-authorized probe-binding deployment preserved candidate identity and isolation; SOURCE_RECONCILIATION_PLAYGROUND_GATE is now COMPLETED_NONPASS with no retry, and ID_H_PLAYGROUND_DELIVERY_GATE remains pending.
+No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground remains the exact frozen v0.8.3 candidate after its second accepted reset, terminally reconciled 0031 reapply, and one terminally reconciled atomic 0032 import. The import checkpoint was CLEAN at schema32/0032; the final provider-free schema32 automated acceptance is PASS_WITH_P3_ADVISORY. The owner-authorized probe-binding deployment preserved candidate identity and isolation; SOURCE_RECONCILIATION_PLAYGROUND_GATE is historical COMPLETED_NONPASS with no retry, and ID_H_PLAYGROUND_DELIVERY_GATE is OWNER_WAIVED_OR_UNRUN, never PASS.
 
 ## Owner-authorized Playground reset receipt
 
@@ -120,7 +128,7 @@ No endpoint URL, credential, provider identifier, recipient, database value, or 
 
 ## Historical former next gate
 
-V83_ISOLATED_PLAYGROUND_SCHEMA32_AUTOMATED_ACCEPTANCE: this historical gate completed PASS_WITH_P3_ADVISORY from the terminally reconciled CLEAN schema32/0032 state. The subsequent candidate-bound SOURCE_RECONCILIATION_PLAYGROUND_GATE completed NONPASS; ID_H_PLAYGROUND_DELIVERY_GATE remains pending.
+V83_ISOLATED_PLAYGROUND_SCHEMA32_AUTOMATED_ACCEPTANCE: this historical gate completed PASS_WITH_P3_ADVISORY from the terminally reconciled CLEAN schema32/0032 state. The subsequent candidate-bound SOURCE_RECONCILIATION_PLAYGROUND_GATE completed NONPASS; ID_H_PLAYGROUND_DELIVERY_GATE is OWNER_WAIVED_OR_UNRUN, never PASS.
 
 Do not request a routine owner pause until the later Playground manual-test and explicit Production-GO gate. Do not change source, dependencies, build/workflow/repository runtime config, Production, recovery pointers, AGENTS/project policy, or v0.8.4 in this step.
 
@@ -128,6 +136,6 @@ Do not request a routine owner pause until the later Playground manual-test and 
 
 - Automated acceptance: PASS_WITH_P3_ADVISORY. Exact f8/version/schema32/readiness, safe public routes, and unauthenticated deny passed. The sole P3 is a same-origin image-suffix HTML fallback, retained only for later visual confirmation.
 - Owner session / binding activation: Earl reclassified the retained DIRTY active session as `OWNER_AUTHORIZED_PLAYGROUND_SESSION`. One isolated Playground-only probe-binding deployment passed bounded pre/post reconciliation: exact f8/tree/prebuilt artifact, candidate-bound authorized SHA, isolated D1/R2, provider-disabled state, and Production zero remained intact. Two owner-authorized session bootstraps occurred (the first local-validator discard plus one replacement); no reset or revoke occurred.
-- Source gate: the candidate-bound source probe was invoked exactly once and is `COMPLETED_NONPASS`, no retry. Its private receipt retains aggregate `safeFlags=false`; raw response material and safe HTTP/status/component/quarantine classification are intentionally not retained, and no local response-shape-validator failure is retained. A distinct one-time read-only diagnostic then confirmed absent required roster-source configuration and secret inventory. Its one D1 safe aggregate read was nonzero/unparsed, with no retained private error receipt, so the exact A7 NONPASS subtype remains unresolved; no source read or mutation followed. The source reconciliation gate is not accepted and Production is ineligible.
+- Source gate: the candidate-bound source probe was invoked exactly once and is `COMPLETED_NONPASS`, no retry. Its private receipt retains aggregate `safeFlags=false`; raw response material and safe HTTP/status/component/quarantine classification are intentionally not retained, and no local response-shape-validator failure is retained. A distinct one-time read-only diagnostic then confirmed absent required roster-source configuration and secret inventory. Its one D1 safe aggregate read was nonzero/unparsed, with no retained private error receipt, so the exact A7 NONPASS subtype remains unresolved; no source read or mutation followed. This is historical `COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE`, never PASS, and not an active blocker under the consumed owner override.
 - Integrity: schema32, one 0032 ledger entry, foreign keys, exact three Activity History tables/two indexes/twenty-one triggers, and empty new Activity History rows were PASS before the source invocation. Post-NONPASS reconciliation is not claimed.
-- Exact next action: Stop. Do not retry the consumed probe or diagnostic. The proposed minimum remedy, not authorized here, is to re-establish and verify approved private isolated Playground roster-source configuration and secret presence, then obtain new authority for a fresh bounded diagnostic or gate; do not mutate the source, candidate, or Production.
+- Historical next action: Do not retry the consumed probe or diagnostic. The proposed minimum remedy remains not authorized here. The active action is protected-main governance-lineage acceptance and S17 closeout; do not mutate the source, candidate, or Production.
