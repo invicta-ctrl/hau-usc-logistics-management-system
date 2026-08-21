@@ -1,5 +1,57 @@
 # Coding Agent Instructions
 
+## Owner-reserved v0.8.4 forward-preparation amendment — 2026-08-21
+
+- **STATUS:** ACCEPTED BY EARL'S CURRENT EXPLICIT INSTRUCTION
+- **BRANCH:** `release/v0.8.4-live-operations-performance`
+- **PURPOSE:** Prepare v0.8.4 `Live Operations + Performance` without starting product implementation before v0.8.3 closes.
+- **PREPARATION_BASE_SHA:** `f8e63372bc8afcb6d092970b7f9fc9ee72fd3580`
+- **IMPLEMENTATION_STATUS:** `NOT_STARTED`
+- **SCOUT_SOURCE:** `HAU_USC_Logistics_Claude_Code_v084_Read_Only_Scout_Prompt_2026-08-21.md` / owner-supplied equivalent.
+
+### GPT Context Vault bootstrap for this branch
+
+Before project work on this branch, use the account-wide routing chain first and then return to repository authority:
+
+```text
+connected Context Vault AGENTS.md
+-> START_HERE.md
+-> CONTEXT_INDEX.md
+-> projects/PROJECT_REGISTRY.md
+-> projects/HAU_USC_LOGISTICS.md when needed
+-> this repository AGENTS.md
+-> .codex/CURRENT.md
+-> .codex/CURRENT_TASK.md
+-> .codex/CURRENT_HANDOFF.md
+-> .codex/PHASE_AND_CONTEXT_POLICY.md
+-> accepted specification named by the pointer
+```
+
+Use the minimum sufficient context. The Context Vault is the account-wide routing and governance layer; this repository remains authoritative for code, migrations, tests, release state, provider state, implementation status, and the exact v0.8.4 baseline. Stop on a material contradiction instead of blending incompatible instructions.
+
+Authority order for this branch is:
+
+```text
+Earl current explicit instruction
+> accepted v0.8.4 specification/amendments once adopted
+> authoritative repository + current pointer + verified state
+> active Context Vault governance
+> relevant memory/recent context
+> historical material only when required
+```
+
+### v0.8.4 branch reservation and v0.8.3 closure exclusion
+
+This branch is explicitly owner-reserved before v0.8.3 S17 so v0.8.4 can begin in a fresh session without reconstructing its Git home.
+
+- v0.8.3 release hygiene **MUST NOT delete, prune, retarget, repurpose, or clean this branch**. The accepted v0.8.3 closure cleanup is limited to temporary **v0.8.3** branches/worktrees after unique-work proof.
+- This branch may be deleted only after the accepted v0.8.4 release closes, or after Earl explicitly closes it and unique-work preservation is proven.
+- Do not force-push, reset, or rebase away unknown/unique work on this branch.
+- Do not start v0.8.4 product implementation while v0.8.3 still owns the canonical writer lock. The first implementation session must rehydrate after v0.8.3 S17 with `ACTIVE_WRITER: NONE`, `WRITER_LOCK: RELEASED`, and `HANDOFF_STATUS: READY_FOR_HANDOFF`.
+- `STALE_IF`: the final accepted v0.8.3 closing SHA/tree differs from `PREPARATION_BASE_SHA`. Before v0.8.4 implementation, reconcile this branch to the final v0.8.3 closing lineage through a non-destructive, reviewed Git path and record the new baseline.
+- The v0.8.4 scout/readiness material is **candidate planning only** until refreshed against the final v0.8.3 closing SHA and adopted through the normal specification gate.
+- This preparation must not mutate the active v0.8.3 worktree, v0.8.3 current chain, Production, Playground provider state, D1, R2, Google resources, secrets, migrations, or deployments.
+
 The Git repository is the durable shared source of truth. Chat history, account memory, local summaries, and local folders are supporting context only; they must never be required to reconstruct active project state.
 
 ## Canonical continuity chain
