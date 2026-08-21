@@ -1,93 +1,74 @@
 # Current Environment Handoff
 
-FROM: TERRA_MAX:/root/v83_playground_reset_terra_writer
-TO: OWNER_OR_FRESH_FRONTEND_SPEC_WRITER — FRONTEND_DESIGN_ADOPTION_SPEC_REVIEW
-PROGRAM: HAU-USC Logistics v0.8.3 Final Frontend Design Adoption Intake
-STATUS: READY_FOR_FRONTEND_ADOPTION_SPEC_REVIEW
+FROM: CLAUDE_OPUS_5:frontend_integration_preparation_2026-08-21
+TO: CODEX — FI-00 ACCEPTED INTEGRATION BASELINE
+PROGRAM: HAU-USC Logistics — frozen v0.8.3 frontend design integration
+STATUS: FRONTEND_INTEGRATION_PREPARATION_COMPLETE
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 TREE: GIT_TREE
 UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
-WORKTREE: D:/Documents/Codex/_verification/v83-final-gate-f8e6337
+WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: NONE
 TERRA_WRITER: NONE
 LOCK_HOLDER: NONE
 WRITER_LOCK: RELEASED
 LOCK_STATUS: RELEASED
-HANDOFF_STATUS: READY
 LOCK_CONTINUITY: CLOSED
+HANDOFF_STATUS: READY_FOR_CODEX_FRONTEND_INTEGRATION
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
-CONTROLLING_OWNER_TASK: 2026-08-21_V083_FAST_CLOSE_PHASE9_FRONTEND_DESIGN_ADOPTION_INTAKE
+CONTROLLING_OWNER_TASK: 2026-08-21_FRONTEND_INTEGRATION_PREPARATION_CLAUDE_OPUS_5
 
-VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F;Figma_Make_v39;prototypes/impeccable-whole-site-redesign-v5/;frontend-design-integration@19232a20d7a5d2c1e4aed6494b17fba4612f6720
-FUNCTIONAL_BASELINE: final v0.8.3 main 86553349f5c2ebefaa637c30828c560a301f99ba and exact Production frozen candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;backend/API/auth/data contracts win
-INTEGRATION_DIRECTION: final-v0.8.3 functionality and contracts -> selectively ported design evidence; never wholesale branch code transfer
-V39_DELTA_PROVENANCE: RECONSTRUCTABLE_FROM_COMMITTED_BUILD_MAKE_THEME_AND_THEME_CANONICAL_ARTIFACT;NOT_SOLELY_FIGMA;NO_FIGMA_CALL_OR_MUTATION
-COMPLETED: Historical v5 design evidence, Figma Design baseline, Figma Make v39 receipt, theme source, maps, screenshots, decisions, and rollback evidence are preserved. The Phase 9 documentation intake is complete; frontend implementation has not started.
-FRONTEND_DESIGN_ADOPTION_INTAKE: COMPLETE
-FRONTEND_IMPLEMENTATION: NOT_STARTED
-DEPLOY: NOT_AUTHORIZED
-READY_FOR_FRONTEND_ADOPTION_SPEC_REVIEW: TRUE
-VALIDATION: Exact frontend branch tip, final-v0.8.3 main/f8 baseline, governance-blob parity, focused formatting for newly authored and branch-local records, handoff, continuation, and diff checks are reconciled. The preserved historical handoff body remains byte-identical and excluded from formatter rewrite. The v39 scoped atrium pin is reproducible from committed sources and is not a Figma-only delta. The historical frontend policy-marker validator is non-pass; AGENTS.md and project-policy blobs equal final main and no AGENTS synchronization is authorized.
-EXTERNAL_ACTIONS: Git documentation commits and normal pushes only; no Figma, provider, database, recovery, deployment, or Production mutation.
+PREPARATION_START_SHA: c4356570bd0442304303989e0e7cc97e31d481f7
+PREPARATION_START_TREE: cf0f28dc794afc32492057ab14d80aa086431cc6
+FROZEN_MAIN_SHA: 86553349f5c2ebefaa637c30828c560a301f99ba
+FROZEN_MAIN_TREE: db95ebaafb7de421d02b12f0158bc1a93953edde
+FROZEN_PRODUCT_RELEASE: v0.8.3 -> 07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e
+FROZEN_PRODUCTION_CANDIDATE: f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;tree=5788251d483f23ec5e19048e1a946b3a00450436;verified ancestor of origin/main
+PRODUCTION_SCHEMA: schema32
+PRODUCTION_MIGRATIONS: 0031_canonical_identity_foundation.sql;0032_staff_account_activity_history.sql;32 files total
 
-## Historical V5 design candidate evidence — retained, not active implementation authority
+FUNCTIONAL_BASELINE: FROZEN_V083_MAIN;backend, API, auth, capability, and data contracts win over every visual reference
+VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F;Figma_Design=hXJElH4p72KfgAaoUyfNOC;Figma_Make=rP9W9MQlZkyQrUx38TVsFS@Version39;pending edits NONE
+FIGMA_SOURCE_STATUS: RECOVERABLE_FROM_GIT;output/design/make-adoption/theme.css sha256 249857a93f0f90425504da286aab4a296445b4f74546e4fbff72dcf30663140d matches the v39 identity in the baseline register
+INTEGRATION_DIRECTION: frozen v0.8.3 contracts and runtime -> selectively ported visual layer; never a wholesale frontend replacement
+BRANCH_ROLE: TEMPORARY_FRONTEND_INTEGRATION_WORK_BRANCH
 
-CLAUDE_STOP_STATE: Partial committed checkpoint at 85f064a; tracked tree clean; two untracked Claude artifacts preserved.
-CODEX_RECOVERY_CLASSIFICATION: B. PARTIAL COMMITTED CHECKPOINT.
-CLAUDE_WORK_PRESERVED: YES — no destructive Git or filesystem recovery action.
-FILES_CLAUDE_ALREADY_CHANGED: Design programme/references; DESIGN.md; visual tokens/overlays; docked detail foundation in runtime/runtime-extensions/shell; visual tests; generated standalone/shareable artifacts; governance/continuation records.
-FILES_CODEX_CHANGED: Accepted v5 amendment/map; v5 production cascade/adapter/module index; landing/profile/signature controls; plain-language presentation modules; responsive/project configuration; affected unit/e2e tests; functional/visual parity documents; generated artifacts and screenshot evidence; branch task/handoff.
+COMPLETED: Seven preparation documents under docs/design/, branch-local continuity records, and reconciliation notes on the Phase 9 intake. The frozen-main contract inventory, Figma and Make source register, source-disposition map, FI-00 to FI-16 execution plan, and Playground and Production acceptance matrix are complete. Frontend implementation has not started.
 
-MODULE_INDEX: V5 searchable index uses real routes and access-aware destinations; authorization still applies on selection.
-PROFILE: V5 profile grid contains real display/contact/username/password/access/status/correction/session functions; no unsupported action invented.
-LANDING: V5 campus gateway uses real Request, Lending, Staff Sign In, tracking, and module-index destinations with no demo/version/mock chrome.
-OVERVIEW: Real role metrics/queues/actions render through v5 command layout; no fake metric.
-REQUEST: Public intake/tracking and staff review/routing fields, actions, validation, statuses, errors, and services preserved.
-LENDING: Public catalog/intake/tracking and staff review/handoff/return/history lifecycle preserved.
-RELEASE: Recipient, quantity, evidence, partial release, history, and owner correction preserved.
-INVENTORY: Stock truth, classification, ledger, adjustment/reversal, maintenance, and movement history preserved.
-ADMINISTRATION: Accounts/Access, Account Requests, Directory, Reference Administration, Links, Announcements/Brand, Profile, and owner/system surfaces preserved in v5 patterns.
-
-REAL_ROUTES_CONNECTED: Public `/`, `/portals`, `/login`, `/register`, `/application-status`, `/request`, `/lending`; canonical and legacy workspace/module routes; real operational and administration destinations.
-REAL_SERVICES_CONNECTED: Existing auth/bootstrap/router, public Request/Lending, profile, operational module, administration, directory/reference/link/brand, and owner diagnostic clients; no contract rewrite.
-MOCK_BEHAVIOR_REMOVED: V5 registry fixtures, role/viewport/state selectors, preview labels, fake user/status/counts, implementation notes, and design-version copy do not drive production.
-PRODUCTION_FEATURES_PRESERVED: Routes, role/access boundaries, forms/fields, actions, validation, statuses, success/error/denial, audit/history, Request, Lending, Release, Return, Inventory, Restocking/Receiving, Procurement/Canvassing, Events, administration, Profile, and owner surfaces.
-MISSING_V5_COMPONENTS_ADDED: Production route adapter/index, full real profile/security actions, workspace switcher, production forms/tables/queues/dialogs/drawers, loading/error/denied states, and administration patterns in v5 language.
-
-COPY_SIMPLIFIED: Direct headings/descriptions/actions; Access, Permissions, Account status, View history, Loading your workspace, Getting things ready, Needs review, Test site, Try again.
-DEMO_PREVIEW_UI_REMOVED: YES — no user-facing V4.2/v5/prototype/preview/mock/state selector/role simulator/responsive selector/debug/version label.
-3D: Dependency-free, presentation-only campus logistics network; no WebGL or business coupling.
-3D_FALLBACK: Static/mobile/reduced-motion/save-data/off-screen/hidden-tab behavior passes.
-MOTION: V5 finite route continuity, celestial theme, kinetic menu/drawer, compact back, explicit carousel control; everything settles.
-LIGHT_MODE: PASS
-DARK_MODE: PASS
-
-FUNCTIONAL_PARITY: PASS — docs/design/V5_PRODUCTION_FUNCTIONAL_PARITY.md
-VISUAL_PARITY: PASS — docs/design/V5_PRODUCTION_VISUAL_ACCEPTANCE.md; result is v5 with real production functionality.
-ACCESSIBILITY: PASS — keyboard/focus, dialogs, forms, module index, profile, controls, focus restoration.
-RESPONSIVE: PASS — 320/375/414/768/1024/1440; no page-level horizontal overflow.
-REDUCED_MOTION: PASS
-200_PERCENT_ZOOM: PASS
-PERFORMANCE: 66 modules; standalone 1,562,781 bytes and gzip 638.50 kB; no new 3D/WebGL dependency.
-
-TESTS_AND_EXACT_RESULTS: `npm run lint` 0 errors/1 pre-existing warning; `npm test -- --maxWorkers=1` 123 files/847 tests; `npx playwright test --workers=4` 138 passed/541 intentional skips/0 failed; final token-only visual/responsive matrix 35 passed/84 intentional skips/0 failed; `npm run build`, `check:apps-script`, `verify:dist`, and `check:governance` pass; Hallmark 58/58; Impeccable detector invoked once and four advisories repaired.
-VISUAL_EVIDENCE: output/design/v5-production-acceptance (landing, index, profile, overview, Request, Lending, Release, Inventory, Accounts/Access, mobile, light/dark) plus regenerated output/design/acceptance width/dark/200-percent matrix.
-GENERATED_ARTIFACTS: dist/index.html; all-in-one standalone; guided demo; seven module shareables; Apps Script split bundle, all through repository generators.
-BACKEND_CHANGES: NONE
-SERVICE_CONTRACT_CHANGES: NONE
-AUTH_MODEL_CHANGES: NONE
-MIGRATIONS: NONE
-EXTERNAL_WRITES: NONE DURING THIS V5 TRANSFER
+FRONTEND_RUNTIME_CHANGES: 0
+BACKEND_CHANGES: 0
+SERVICE_CONTRACT_CHANGES: 0
+AUTH_MODEL_CHANGES: 0
+MIGRATIONS: 0
+PROVIDER_WRITES: 0
+FIGMA_WRITES: 0
+PLAYGROUND_WRITES: 0
+PRODUCTION_WRITES: 0
 LIVE_PRODUCTION_CHANGED: NO
-ROLLBACK_POINT: c4d98273ef90c47e8e2f46131abe0192ff34a0ec
-HISTORICAL_V5_UNRESOLVED_RISKS: Bundle growth from consuming the exact modular v5 visual baseline was measured and accepted for its historical candidate review. This Phase 9 intake treats that candidate only as design evidence.
-BLOCKER: FALSE;NO_ACTIVE_CONTRACT_IDENTITY_PRIVACY_OR_PRESERVATION_MISMATCH
-HISTORICAL_V5_PUSH_VERIFIED: NOT_PERFORMED_UNDER_THE_OLD_LOCAL_CANDIDATE_SCOPE
-NEXT_EXACT_ACTION: STOP. Await owner-approved, contract-complete frontend adoption specification review; do not start frontend implementation, deploy, or Figma work.
-RESUME_COMMANDS: Rehydrate the final-v0.8.3 functional baseline and preserved frontend evidence; complete only the four Phase 9 intake artifacts and branch-local records; run focused document validation; push/read back; release the lock; stop.
-PROHIBITED_ACTIONS: No frontend source/dependency/build/generated-artifact change, Figma mutation, merge/rebase into main, tag, deployment, backend/service-contract/auth/data/migration/provider/protected-data write, destructive Git recovery, or duplicate v5 lineage.
-DO_NOT_REPEAT: Do not reconstruct a visual implementation from chat, rerun historical broad visual suites, use old v0.7.2 functionality as current authority, hand-edit generated HTML, merge, rebase, deploy, or touch protected systems.
+
+VALIDATION: Deterministic extraction of the route, capability, operation, state, and transition inventories from frozen main; Figma Make sha256 reconciliation against the durable baseline register; path existence checks for every referenced file; contract-matrix coverage and source-disposition completeness checks; Markdown formatting; git diff --check; check:governance and handoff:verify; complete logical diff review; normal push and readback. The product test suite was not run because no runtime code changed.
+
+EXTERNAL_ACTIONS: Git documentation commit and normal push only. Two read-only Figma calls (whoami, get_metadata) that mutated nothing. No provider, database, recovery, deployment, or Production action.
+
+FIRST_CODEX_SLICE: FI-00 Integration baseline and branch reconciliation
+FIRST_CODEX_OWNED_PATHS: .codex/CURRENT.md;.codex/CURRENT_TASK.md;.codex/CURRENT_HANDOFF.md;.codex/specs/active/<new frontend-integration spec>;the merge commit reconciling origin/main into this branch
+FIRST_CODEX_REQUIRED_READS: AGENTS.md;.agents/PROJECT_POLICY.md;.codex/CURRENT.md;.codex/CURRENT_TASK.md;.codex/CURRENT_HANDOFF.md;docs/design/FRONTEND_INTEGRATION_START_HERE.md;docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md FI-00 section;docs/design/FRONTEND_SOURCE_DISPOSITION.md DO_NOT_MIGRATE list;git diff --name-status origin/main frontend-design-integration
+FIRST_CODEX_DO_NOT_REPEAT: the Figma audit;the Make capture;the route/capability/operation/state inventory;the source classification;the historical v5 browser matrix;any use of v0.7.2 as current authority
+
+BLOCKER: TRUE;FI-00_REQUIRED. This branch is 191 commits behind origin/main and merging it into main as-is would delete 135 files, including migrations 0031 and 0032 and the whole src/v5/integration adapter layer. Two owner decisions are also outstanding: the branch strategy that supersedes the Phase 9 recommendation, and the disposition of 1,170 branch-only design-evidence files totalling 138,815,428 bytes. Figma defects D-08, D-04, and D-02 remain open and block FI-01 and FI-02.
+
+UNVERIFIED_ITEMS: live Figma Design page count (a read-only probe returned one page where the audit records 28; consistent with the desktop bridge, not evidence of change); live Figma Make version (no MCP tool reads a /make/ URL); 54 inferred colours on Figma page 15; original authorship of the preserved RequestCenterRoute.tsx edit.
+
+OWNER_DECISIONS_REQUIRED: branch strategy confirmation;design-evidence promotion disposition;typeface reality (D-04);blur ladder reconciliation (D-02);landing hero ink and state semantics (D-08);whether scripts/design/** joins the work-branch toolchain;any dependency or verification expansion;separate Playground deploy authority and separate Production GO.
+
+ROLLBACK_POINT: c4356570bd0442304303989e0e7cc97e31d481f7
+
+NEXT_EXACT_ACTION: CODEX_FI_00_ACCEPTED_INTEGRATION_BASELINE
+
+RESUME_COMMANDS: Read the governance chain and the three current records; read docs/design/FRONTEND_INTEGRATION_START_HERE.md; verify the packet against current HEAD using each document's STALE_IF block; obtain the two owner decisions; merge origin/main into this branch with --no-ff resolving every behavior path in main's favour; prove `git diff --name-status origin/main HEAD | grep '^D' | wc -l` returns 0; run npm run check; write the accepted frontend-integration specification; update the three current records; stop before FI-01.
+
+PROHIBITED_ACTIONS: No frontend implementation before FI-00 is accepted. No rebase, reset, clean, force-push, or history rewrite. No merge into main outside the FI-15 protected path. No tag, deployment, migration, provider write, or Production action without that action's exact accepted authority. No Figma mutation. No hand-edited generated artifact. No fixture, mock actor, fake count, or preview control in a user-facing surface. No client-side authorization. No new runtime dependency without a separate owner decision.

@@ -114,3 +114,29 @@ FRONTEND_IMPLEMENTATION: NOT_STARTED
 DEPLOY: NOT_AUTHORIZED
 READY_FOR_FRONTEND_ADOPTION_SPEC_REVIEW: TRUE
 ```
+
+## 2026-08-21 reconciliation — branch strategy superseded
+
+This intake's "Future starting boundary" recommended starting implementation in
+a new worktree cut from final main and never merging this branch. **Earl's
+2026-08-21 directive supersedes that recommendation.**
+`frontend-design-integration` is now the temporary frontend-integration work
+branch and is promoted through the protected `main` lineage at FI-15.
+
+Everything else in this intake stands: the authority direction, the durable
+evidence table, the adoption classification, the owner decisions, and the
+readiness criteria remain correct and reusable.
+
+Two verified consequences of the branch decision are carried into FI-00:
+
+```text
+1. The branch is 191 commits behind origin/main and would delete 135 files main
+   has, including migrations 0031 and 0032 and the whole src/v5/integration
+   adapter layer. FI-00 merges origin/main into the branch and proves zero
+   deletions before any implementation.
+2. Frozen main has no prototypes/, output/design/, or scripts/design/. Promoting
+   this branch adds 1,170 files totalling 138,815,428 bytes, of which
+   134,737,146 bytes are 904 PNG screenshots. Disposition is an owner decision.
+```
+
+Start at [FRONTEND_INTEGRATION_START_HERE.md](FRONTEND_INTEGRATION_START_HERE.md).

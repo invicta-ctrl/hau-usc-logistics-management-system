@@ -99,3 +99,22 @@ FRONTEND_IMPLEMENTATION: NOT_STARTED
 DEPLOY: NOT_AUTHORIZED
 READY_FOR_FRONTEND_ADOPTION_SPEC_REVIEW: TRUE
 ```
+
+## 2026-08-21 reconciliation — superseded by the integration packet
+
+The guardrails above remain correct and are still the governing port rules. Two
+statements are superseded by Earl's 2026-08-21 directive:
+
+- "Future work starts from final main on a new isolated branch/worktree" —
+  replaced. `frontend-design-integration` is the temporary work branch.
+- "This retained frontend branch remains a preserved reference and is never
+  merged or rebased into main" — replaced. The branch is promoted through the
+  protected `main` lineage at FI-15, after Playground acceptance and Earl's
+  explicit Production GO, and is deleted at FI-16.
+
+The route-slice table above is planning-level. The authoritative, deterministically
+extracted contract inventory is now
+[FRONTEND_BACKEND_CONTRACT_MATRIX.md](FRONTEND_BACKEND_CONTRACT_MATRIX.md), and
+the complete classification is
+[FRONTEND_SOURCE_DISPOSITION.md](FRONTEND_SOURCE_DISPOSITION.md). Where this map
+and the matrix differ on a route, capability, state, or field, the matrix wins.
