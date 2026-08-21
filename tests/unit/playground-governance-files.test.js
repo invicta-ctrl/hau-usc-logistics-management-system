@@ -4,8 +4,16 @@ import { describe, expect, it } from 'vitest';
 const read = (path) => readFileSync(path, 'utf8');
 
 describe('repository-hardcoded playground release governance', () => {
-  it('keeps the exact five permanent pointers in root AGENTS.md', () => {
+  it('keeps universal governance rules in root AGENTS.md', () => {
     const agents = read('AGENTS.md');
+    expect(agents).toContain('scope: account-wide-general');
+    expect(agents).toContain('managed_replica_policy: byte-identical-generated');
+    expect(agents).toContain('project_extension_path: .agents/PROJECT_POLICY.md');
+    expect(agents).toContain('The only editable general-policy authority is:');
+  });
+
+  it('keeps recovery pointers and Production GO in the project policy', () => {
+    const policy = read('.agents/PROJECT_POLICY.md');
     for (const branch of [
       'main',
       'backup/last-known-good',
@@ -13,10 +21,15 @@ describe('repository-hardcoded playground release governance', () => {
       'regression/r2',
       'regression/r3',
     ]) {
-      expect(agents).toContain(`\`${branch}\``);
+      expect(policy).toMatch(new RegExp(`^${branch}$`, 'm'));
     }
-    expect(agents).toMatch(/Staging\/playground and\s+production are deployment environments/);
-    expect(agents).toContain("Earl's explicit GO");
+    expect(policy).toContain(
+      'Staging/Playground and Production are environments, not permanent Git branches.',
+    );
+    expect(policy).toContain('-> Earl explicit Production GO');
+    expect(policy).toContain(
+      "Production promotion requires Earl's explicit GO for the exact tested candidate.",
+    );
   });
 
   it('automates candidate to playground and contains no production continuation', () => {
