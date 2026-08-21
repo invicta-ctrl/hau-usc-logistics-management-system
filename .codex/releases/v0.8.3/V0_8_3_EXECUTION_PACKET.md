@@ -56,7 +56,7 @@ No Activity History plan rewrite or routine plan-audit loop is authorized. The a
 
 ## Migration and external sequence
 
-- **0031:** APPLIED_ONCE_AND_RECONCILED_ON_ISOLATED_PLAYGROUND.
+- **0031:** APPLIED_ONCE_HISTORICALLY; its state was restored by the second owner-authorized Playground reset, so one reapply is now pending.
 - **0032:** source present and REQUIRED because accepted ID-G includes it.
 - **Target schema:** 32; required order is 0031 then 0032 when the target begins at schema 30.
 - **Order:** 0031 then 0032.
@@ -79,9 +79,9 @@ Safe read-only and post-deploy facts are limited to allowlisted public identity 
 | Environment         | Version            | Candidate                                | Schema / latest migration                      | Ready |
 | ------------------- | ------------------ | ---------------------------------------- | ---------------------------------------------- | ----- |
 | Production          | 0.8.2              | c316e047c845fa182e82156c95945c4a5e5de2ff | 30 / 0030_production_access_and_operations.sql | true  |
-| Isolated Playground | 0.8.3-playground.1 | f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 | 31 / 0031_canonical_identity_foundation.sql    | true  |
+| Isolated Playground | 0.8.3-playground.1 | f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 | 30 / 0030_production_access_and_operations.sql | true  |
 
-No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground remains the exact frozen v0.8.3 candidate after its accepted reset and 0031 reconciliation. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain PENDING.
+No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground remains the exact frozen v0.8.3 candidate after its second accepted reset; it is currently CLEAN at sealed schema30/0030 pending one 0031 reapply. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain PENDING.
 
 ## Owner-authorized Playground reset receipt
 
@@ -97,8 +97,15 @@ No endpoint URL, credential, provider identifier, recipient, database value, or 
 - **Recovery:** private pre- and post-migration Time Travel recovery receipts were captured; no recovery pointer was rotated.
 - **Terminal reconciliation:** working state `CLEAN`; schema `31`; ledger `0031` with `0032` absent and no pending `0031`; foreign keys, canonical-identity STRICT tables, immutable identifier trigger, indexes, and FK declarations PASS; exact-f8 runtime/readiness PASS; Production mutation `0`.
 
+## Second owner-authorized Playground reset receipt
+
+- **Authority:** Earl's second exact `RESET PLAYGROUND` command after the bounded session-only DIRTY reconciliation.
+- **Scope:** only isolated Playground working D1/R2 state; no Git source/artifact, baseline, Production resource, or recovery-pointer mutation.
+- **Terminal reconciliation:** fresh private pre/post-reset recovery evidence; working state `CLEAN`; schema `30` / migration `0030`; foreign keys PASS; reset probe absent; working R2 brand identity equals the sealed baseline; working evidence is empty; exact f8 runtime/bindings and Production non-crossover PASS.
+- **Consequence:** the historical 0031 application was restored with the sealed baseline. One isolated provider-disabled 0031 reapply is authorized and strictly next; 0032 remains unattempted.
+
 ## Exact next gate
 
-V83_ISOLATED_PLAYGROUND_MIGRATION_0032_AND_RECONCILIATION: from the 0031-reconciled CLEAN state, immediately recheck redacted recovery and the remote schema-31/0031 ledger, apply only `0032_staff_account_activity_history.sql` to isolated Playground D1, and prove the migration ledger, schema, foreign keys, activity-history DDL/triggers, append-only invariants, and Production non-crossover before final automated acceptance. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain later post-migration Playground gates.
+V83_ISOLATED_PLAYGROUND_REAPPLY_0031_THEN_0032_AND_RECONCILIATION: from the second-reset CLEAN schema30/0030 state, reapply only `0031_canonical_identity_foundation.sql` and terminally reconcile it. Then validate the root-authorized private atomic 0032-plus-ledger wrapper locally and, only from a fresh CLEAN schema31/0031 boundary, execute its one remote file import and prove ledger, schema, foreign keys, activity-history DDL/triggers, append-only invariants, and Production non-crossover before final automated acceptance. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain later post-migration Playground gates.
 
 Do not request a routine owner pause until the later Playground manual-test and explicit Production-GO gate. Do not change source, dependencies, build/workflow/repository runtime config, Production, recovery pointers, AGENTS/project policy, or v0.8.4 in this step.
