@@ -3,20 +3,20 @@
 FROM: TERRA_MAX:/root/fi01_integration_writer
 TO: FI-02 Public Landing & Portal Shell — next accepted branch writer
 PROGRAM: HAU-USC Logistics — frozen v0.8.3 frontend design integration
-STATUS: READY_FOR_FI02
+STATUS: FI_LIVE_PREVIEW_01_ACCEPTANCE_REPAIR_IN_PROGRESS
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 TREE: GIT_TREE
 UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_READBACK_PARITY_0_0
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: NONE
-TERRA_WRITER: NONE
-LOCK_HOLDER: NONE
-WRITER_LOCK: RELEASED
-LOCK_STATUS: RELEASED
-LOCK_CONTINUITY: CLOSED
-HANDOFF_STATUS: READY_FOR_FI02
+ACTIVE_WRITER: TERRA_MAX:/root/fi01_integration_writer
+TERRA_WRITER: TERRA_MAX:/root/fi01_integration_writer
+LOCK_HOLDER: TERRA_MAX:/root/fi01_integration_writer
+WRITER_LOCK: HELD
+LOCK_STATUS: HELD
+LOCK_CONTINUITY: OPEN
+HANDOFF_STATUS: FI_LIVE_PREVIEW_01_ACCEPTANCE_REPAIR_IN_PROGRESS
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi01-shared-design-foundation.md
@@ -64,6 +64,6 @@ EXTERNAL_ACTIONS: Normal Git commit/push/readback only; no Figma, provider, data
 
 NEXT_SLICE: FI-02 — Public Landing & Portal Shell; D08 remains OPEN_FOR_FI02
 BLOCKER: FALSE; FI-01 is accepted and closed. D08 remains OPEN_FOR_FI02; do not begin without an accepted FI-02 task.
-NEXT_EXACT_ACTION: FI-02_PUBLIC_LANDING_AND_PORTAL_SHELL
-RESUME_COMMANDS: Rehydrate governance/current records; require an accepted FI-02 specification, correct branch/worktree, and sole writer lock; verify no Production crossover; only then start or reuse the guarded loopback preview and report its local URL once. Do not start a preview before those gates.
+NEXT_EXACT_ACTION: FI_LIVE_PREVIEW_01_ACCEPTANCE_REPAIR_CLOSEOUT
+RESUME_COMMANDS: Complete the three bounded FI-LIVE-PREVIEW-01 acceptance corrections, push/read back, release the lock, then rehydrate before FI-02.
 PROHIBITED_ACTIONS: No FI-02 implementation before its accepted task. No rebase, reset, clean, force-push, history rewrite, main merge, tag, deployment, migration, provider/Figma/Playground/Production action, or hand edit of a generated artifact. Do not add a dependency or alter backend/API/auth/data contracts. Do not reopen D04/D02; D08 is FI-02-only.

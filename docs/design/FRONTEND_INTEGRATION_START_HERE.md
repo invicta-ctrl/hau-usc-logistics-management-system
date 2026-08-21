@@ -93,7 +93,7 @@ FI-02 (Public Landing & Portal Shell) is next, with D-08 explicitly
 5. docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md                 FI-02 section
 6. src/index.html and src/v5/styles/tokens.css                        active shared authority
 7. docs/design/DESIGN_AUTHORITY.md                                    D08 only for FI-02
-9. docs/design/FRONTEND_BACKEND_CONTRACT_MATRIX.md section 7          cross-cutting UI contracts
+8. docs/design/FRONTEND_BACKEND_CONTRACT_MATRIX.md section 7          cross-cutting UI contracts
 ```
 
 Do not reopen FI-01's resolved D-04/D-02 decisions. D-08 remains the only
