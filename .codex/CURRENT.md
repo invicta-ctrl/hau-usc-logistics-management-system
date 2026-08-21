@@ -4,19 +4,19 @@ PROGRAM: HAU-USC Logistics
 MILESTONE: FRONTEND_INTEGRATION_FI01_SHARED_DESIGN_FOUNDATION
 RELEASE: v0.8.3_FINAL_FUNCTIONAL_BASELINE
 RELEASE_STATE: FRONTEND_INTEGRATION_FI01_SHARED_FOUNDATION_ACCEPTED
-STATUS: FI_LIVE_PREVIEW_01_AMENDMENT_IN_PROGRESS
+STATUS: FI_LIVE_PREVIEW_01_AMENDMENT_COMPLETE
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: TERRA_MAX:/root/fi01_integration_writer
-TERRA_WRITER: TERRA_MAX:/root/fi01_integration_writer
-LOCK_HOLDER: TERRA_MAX:/root/fi01_integration_writer
-WRITER_LOCK: HELD
-LOCK_STATUS: HELD
-LOCK_CONTINUITY: OPEN
-HANDOFF_STATUS: FI_LIVE_PREVIEW_01_AMENDMENT_IN_PROGRESS
+ACTIVE_WRITER: NONE
+TERRA_WRITER: NONE
+LOCK_HOLDER: NONE
+WRITER_LOCK: RELEASED
+LOCK_STATUS: RELEASED
+LOCK_CONTINUITY: CLOSED
+HANDOFF_STATUS: READY_FOR_FI02
 REQUIRED_MODEL: One Terra-class sole branch writer per accepted FI slice, unless Earl issues another explicit task-specific override. FI-00 was executed by Claude Code / Claude Opus 5 under such an override, which has now expired.
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
@@ -42,9 +42,9 @@ FIGMA_SOURCE_REGISTER: docs/design/FIGMA_MAKE_SOURCE_REGISTER.md
 EXECUTION_PLAN: docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md
 ACCEPTANCE_MATRIX: docs/design/FRONTEND_INTEGRATION_ACCEPTANCE_MATRIX.md
 CODEX_HANDOFF: docs/design/CODEX_FRONTEND_INTEGRATION_HANDOFF.md
-BLOCKER: FALSE; documentation-only FI-LIVE-PREVIEW-01 amendment is in progress. FI-01 remains closed and D-08 remains OPEN_FOR_FI02.
-VALIDATION: FI-01 repair PASS: npm run build + verify:dist; focused npx eslint src/v5; build-make-theme --check, verify-make-theme, verify-make-landing-theme, theme-source --check; D41 contrast; governance/handoff/continuation; Prettier; diff check; secret scan; current-app Playwright visual matrix 320/390/768/1024/1440 with manual 390/768/1440 review; focused current-app reduced-motion/focus test. Full npm lint remains only the pre-existing unrelated prototypes/public-portals-r3 browser-global configuration failure (plus its existing server warning).
-NEXT_EXACT_ACTION: FI_LIVE_PREVIEW_01_DOCUMENTATION_CLOSEOUT
+BLOCKER: FALSE; FI-LIVE-PREVIEW-01 amendment `bc87642b54fd0dcad30d29b04c0aa8591d85d078` is pushed/read back. FI-01 remains closed and D-08 remains OPEN_FOR_FI02.
+VALIDATION: FI-LIVE-PREVIEW-01 documentation PASS: exact owner-amendment parity, targeted Prettier, git diff --check, check:agents, handoff:verify, check:continuation, link/reference checks, secret/private-data scan, and no listener on 127.0.0.1:4173. No build, browser, lint, E2E, deployment, provider, or private-manifest action ran for this docs-only amendment. FI-01 repair evidence remains recorded in its receipt.
+NEXT_EXACT_ACTION: FI-02_PUBLIC_LANDING_AND_PORTAL_SHELL
 
 ## What FI-00 settled
 
