@@ -42,9 +42,10 @@ ID_H_LIVE_DELIVERY: OWNER_WAIVED_OR_UNRUN;NEVER_PASS;PROVIDER_EMAIL_SEND_BY_THIS
 HISTORICAL_PLAYGROUND_SOURCE_GATE: COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE;NOT_PASS;NO_RETRY
 PRODUCTION_ELIGIBILITY: OWNER_FAST_CLOSE_OVERRIDE_CONSUMED;HISTORICAL_PLAYGROUND_NONPASS_RETAINED_NOT_PASS_NOT_ACTIVE_BLOCKER
 BLOCKER: FALSE;NO_ACTIVE_PRODUCTION_IDENTITY_INTEGRITY_RECOVERY_OR_PRIVACY_MISMATCH
-NEXT_ACTION_SCOPE: PHASE_3_PROTECTED_MAIN_GOVERNANCE_LINEAGE_ACCEPTANCE
-NEXT_EXACT_ACTION: Integrate the verified governance-only origin/main lineage into the v0.8.3 release lineage, prove frozen product/artifact parity, and push/read back before recovery-pointer rotation.
-RESUME_COMMANDS: Rehydrate this receipt, use the verified local Git topology and focused document validators, then perform the Phase 3 protected-main governance-lineage acceptance once.
+PHASE_3_4_CHECKPOINT: PASS;PR_25_NORMAL_MERGE=07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e;CI_VERIFY_CODEQL_BROWSER_SMOKE=PASS;CODEQL_99_FALSE_POSITIVE_DISMISSED;F8_APPLICATION_PATH_PARITY=PASS;V083_TAG=PASS;RECOVERY_POINTERS_ROTATED_AND_READBACK=PASS;P2_PAGINATION_REVIEW_THREADS_DEFERRED_TO_POST_V083_FRONTEND_INTAKE_WITHOUT_PRODUCT_CHANGE
+NEXT_ACTION_SCOPE: PHASE_5_LOSSLESS_V083_BRANCH_AND_WORKTREE_HYGIENE
+NEXT_EXACT_ACTION: Prove every non-retained v0.8.3 branch and worktree has zero unique or independently preserved work, then close only eligible temporary state before S17.
+RESUME_COMMANDS: Rehydrate this receipt, use the verified local Git topology and focused document validators, then perform the Phase 5 lossless branch/worktree proof before any deletion.
 PROHIBITED_ACTIONS: No source/dependency/build/workflow/repository-runtime-config, migration rerun, source-probe retry, roster configuration/secret activation, provider/email/browser/manual mutation, Production data mutation, recovery-data deletion, AGENTS/project-policy sync, v0.8.4 implementation, frontend runtime/backend/design mutation, or unproven branch/worktree deletion.
 
 ## Continuity and release state
