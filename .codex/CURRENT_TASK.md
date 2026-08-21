@@ -1,40 +1,40 @@
-# Current Bounded Task
+# Current Bounded Task — v0.8.3 Frontend Design Adoption Intake
 
-> **BRANCH-LOCAL RECORD.** This file describes
-> `frontend-design-integration`. `.codex/CURRENT.md` remains the project-wide
-> pointer owned by `main` and is intentionally unchanged.
-
-INTENT: SOFTWARE_FEATURE
-MODE: EXECUTE — owner-directed v5 architecture transfer into the real frontend
-OBJECTIVE: Transfer exact production functionality into the modular v5 frontend architecture without changing backend behavior or contracts.
-TARGET: frontend-design-integration
+INTENT: FRONTEND_DESIGN_ADOPTION_INTAKE
+MODE: EXECUTE_OWNER_AUTHORIZED_PHASE9_DOCUMENTATION_ONLY
+OBJECTIVE: Prepare a durable adoption intake that preserves the retained Figma Design, Figma Make v39, and v5 evidence while making final v0.8.3 main and Production contracts the functional authority for any future frontend work.
+TARGET: frontend-design-integration design evidence reconciled against final v0.8.3 main 86553349f5c2ebefaa637c30828c560a301f99ba and frozen candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580.
 BRANCH_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
-AUTHORITY: Earl's V4.2/v5 correction -> accepted frontend specification amendment -> AGENTS.md -> branch-local task/handoff -> verified Git state
-REQUIRED_MODEL: Requested routing is platform-accepted; exact runtime identity is not agent-attestable
-RISK: HIGH — whole-frontend presentation architecture transfer with strict functional parity; no backend or production authority
-SCOPE: Accepted-spec amendment; route transfer/parity maps; real frontend source; frontend tests; generated artifacts through repository scripts; v5 visual evidence; local candidate commit
-OUT_OF_SCOPE: Backend; service contracts; auth model; migrations; provider/D1/R2/Google writes; staging/production/GPT Sites deploy; merge; tag; DNS; protected data; v6/duplicate v5 lineage
-VERIFICATION: Unit/lint/build/generated parity; complete Playwright matrix; production journeys; v5 visual comparison; accessibility; responsive; reduced motion; 200 percent zoom; governance; complete diff review
-STOP_CONDITIONS: Backend/contract/auth change required; feature loss; parity cannot be proven; production/staging/GPT Sites/merge/tag/provider write required; unknown route or invariant conflict; unclassifiable work
-ACTIVE_WRITER: CODEX
-WRITER_LOCK: RELEASED BY CANDIDATE COMMIT
-GIT_UPSTREAM: origin/frontend-design-integration
+AUTHORITY: Earl explicit 2026-08-21 v0.8.3 fast-close Phase 9 instruction -> final v0.8.3 main/Production contracts -> accepted retained frontend design specification for historical visual evidence -> AGENTS.md -> branch-local task/handoff -> verified Git state.
+REQUIRED_MODEL: Terra MAX sole frontend-branch writer; no Figma, runtime, backend, provider, or deployment mutation.
+RISK: HIGH;FRONTEND_VISUAL_ADOPTION_MUST_NOT_REGRESS_FINAL_V083_AUTHORIZATION_DATA_PRIVACY_OR_RELEASE_CONTRACTS
+SCOPE: Documentation-only intake, contract-to-design map, handoff, resume prompt, and branch-local continuity records. Classify reusable visual evidence against final v0.8.3 contracts; preserve historical branch content without merging or rebasing it.
+OUT_OF_SCOPE: Any frontend source, dependency, build, generated artifact, backend/service/API/auth/data contract, migration, provider/D1/R2/Google action, Figma mutation, deploy, Production action, merge/rebase into main, tag, or v0.8.4 implementation.
+VERIFICATION: Exact branch/main identity and ancestry facts; final-v0.8.3 product-path contract authority; durable baseline/v39/theme/map/screenshot/decision/rollback evidence; focused document/governance/handoff/diff checks; normal push/readback only.
+STOP_CONDITIONS: Missing final-v0.8.3 functional authority, missing preserved visual/rollback evidence, unclassifiable source delta requiring an unsafe inference, active-writer conflict, unknown dirty path, privacy exposure, required backend/API/auth/data change, or any deployment/provider/Figma mutation need.
+ACTIVE_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+TERRA_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+LOCK_HOLDER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+WRITER_LOCK: HELD
+LOCK_STATUS: ACTIVE
+HANDOFF_STATUS: IN_PROGRESS
+GIT_UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_REQUIRED
 ORIGINAL_BASE_SHA: 7245c717f2b8bff3f327b47ff844281d94eaa1db
 CODEX_STARTING_SHA: d57b1c5931c82886b98c88dc468adfefd3d62bdf
 PRODUCTION_RELEASE_AT_START: v0.7.2 @ 84eacfcdb47a3985fed48e3ba14bb413946d4410
 ROLLBACK_POINT: c4d98273ef90c47e8e2f46131abe0192ff34a0ec
-STATUS: COMPLETE — V5-BASED PRODUCTION FRONTEND CANDIDATE IS GIT_HEAD
-NEXT_EXACT_ACTION: Owner review of GIT_HEAD; authorize promotion separately if accepted. Do not merge or deploy from this task.
+STATUS: PHASE9_FRONTEND_DESIGN_ADOPTION_INTAKE_ACTIVE
+NEXT_EXACT_ACTION: Complete the owner-authorized Phase 9 frontend-design adoption intake documents and branch-local handoff, validate and push the checkpoint, release the frontend lock, then stop; no implementation or deployment.
 
-SKILLS: lean-ctx; Hallmark; Impeccable; Browser control
-VISUAL_FRONTEND_AUTHORITY: prototypes/impeccable-whole-site-redesign-v5/
-FUNCTIONAL_AUTHORITY: exact deployed production v0.7.2 at 84eacfcdb47a3985fed48e3ba14bb413946d4410 and matching repository source
-INTEGRATION_DIRECTION: production functionality -> v5 frontend architecture
+HISTORICAL_V5_SKILLS: lean-ctx; Hallmark; Impeccable; Browser control
+VISUAL_FRONTEND_AUTHORITY: DESIGN_BASELINE_2026-08-20-F;Figma_Make_v39;prototypes/impeccable-whole-site-redesign-v5/;branch evidence at 19232a20d7a5d2c1e4aed6494b17fba4612f6720
+FUNCTIONAL_AUTHORITY: final v0.8.3 main 86553349f5c2ebefaa637c30828c560a301f99ba and exact Production f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;backend/API/auth/data contracts win
+INTEGRATION_DIRECTION: final-v0.8.3 functionality and contracts -> selectively ported design evidence; never wholesale branch code transfer
 
-## Recovery
+## Historical V5 candidate evidence — retained, not active implementation authority
 
 CLAUDE_STOP_STATE: Committed checkpoint `85f064a0f809654d584853204e9a33eb1fc52d32`; tracked/staged tree clean; two untracked Claude artifacts preserved.
 

@@ -1,24 +1,36 @@
 # Current Environment Handoff
 
-FROM: CODEX
-TO: EARL / NEXT_AGENT
-PROGRAM: HAU-USC Logistics V4.2/v5 Production Front-End Transfer
-STATUS: COMPLETE — V5-BASED PRODUCTION FRONTEND CANDIDATE
-BRANCH: frontend-design-integration
+FROM: TERRA_MAX:/root/v83_playground_reset_terra_writer
+TO: TERRA_MAX:/root/v83_playground_reset_terra_writer — PHASE9_FRONTEND_DESIGN_ADOPTION_INTAKE
+PROGRAM: HAU-USC Logistics v0.8.3 Final Frontend Design Adoption Intake
+STATUS: PHASE9_FRONTEND_DESIGN_ADOPTION_INTAKE_ACTIVE
+BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
-STARTING_SHA: d57b1c5931c82886b98c88dc468adfefd3d62bdf
-CANDIDATE_SHA: GIT_HEAD
-UPSTREAM: origin/frontend-design-integration
-WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/spec-v073-frontend-design-integration
-WORKTREE_STATE: CLEAN TRACKED TREE AFTER COMMIT; preserved local untracked artifacts remain
-ACTIVE_WRITER: NONE
+TREE: GIT_TREE
+UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_REQUIRED
+WORKTREE: D:/Documents/Codex/_verification/v83-final-gate-f8e6337
+WORKTREE_STATE: GIT_STATUS
+ACTIVE_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+TERRA_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+LOCK_HOLDER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+WRITER_LOCK: HELD
+LOCK_STATUS: ACTIVE
+HANDOFF_STATUS: IN_PROGRESS
+LOCK_CONTINUITY: PHASE9_FRONTEND_DESIGN_ADOPTION_INTAKE
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
+CONTROLLING_OWNER_TASK: 2026-08-21_V083_FAST_CLOSE_PHASE9_FRONTEND_DESIGN_ADOPTION_INTAKE
 
-VISUAL_BASELINE: prototypes/impeccable-whole-site-redesign-v5/
-FUNCTIONAL_BASELINE: deployed v0.7.2 @ 84eacfcdb47a3985fed48e3ba14bb413946d4410 and matching repository source
-INTEGRATION_DIRECTION: production functionality -> v5 frontend
+VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F;Figma_Make_v39;prototypes/impeccable-whole-site-redesign-v5/;frontend-design-integration@19232a20d7a5d2c1e4aed6494b17fba4612f6720
+FUNCTIONAL_BASELINE: final v0.8.3 main 86553349f5c2ebefaa637c30828c560a301f99ba and exact Production frozen candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;backend/API/auth/data contracts win
+INTEGRATION_DIRECTION: final-v0.8.3 functionality and contracts -> selectively ported design evidence; never wholesale branch code transfer
+V39_DELTA_PROVENANCE: RECONSTRUCTABLE_FROM_COMMITTED_BUILD_MAKE_THEME_AND_THEME_CANONICAL_ARTIFACT;NOT_SOLELY_FIGMA;NO_FIGMA_CALL_OR_MUTATION
+COMPLETED: Historical v5 design evidence, Figma Design baseline, Figma Make v39 receipt, theme source, maps, screenshots, decisions, and rollback evidence are preserved. Phase 9 documentation intake is active; frontend implementation has not started.
+VALIDATION: Exact frontend branch tip, final-v0.8.3 main/f8 baseline, governance blob parity, and durable visual evidence are reconciled. The v39 scoped atrium pin is reproducible from committed sources and is not a Figma-only delta.
+EXTERNAL_ACTIONS: Git local branch checkout only; no Figma, provider, database, recovery, deployment, or Production mutation.
+
+## Historical V5 design candidate evidence — retained, not active implementation authority
 
 CLAUDE_STOP_STATE: Partial committed checkpoint at 85f064a; tracked tree clean; two untracked Claude artifacts preserved.
 CODEX_RECOVERY_CLASSIFICATION: B. PARTIAL COMMITTED CHECKPOINT.
@@ -68,10 +80,10 @@ MIGRATIONS: NONE
 EXTERNAL_WRITES: NONE DURING THIS V5 TRANSFER
 LIVE_PRODUCTION_CHANGED: NO
 ROLLBACK_POINT: c4d98273ef90c47e8e2f46131abe0192ff34a0ec
-UNRESOLVED_RISKS: Bundle growth from consuming the exact modular v5 visual baseline is measured and accepted for candidate review. `.codex/CURRENT.md` remains main-owned and intentionally points to rollout stabilization; this branch-local task/handoff is authoritative for the candidate.
-BLOCKER: NONE
-PUSH_VERIFIED: NOT PERFORMED — current correction prompt authorizes a local candidate and forbids deployment; push was not necessary for completion.
-NEXT_EXACT_ACTION: Owner reviews GIT_HEAD and separately authorizes any push, merge, GPT Sites publication, staging, or production promotion.
-RESUME_COMMANDS: git status --short --branch; git rev-parse HEAD; git diff HEAD^ --check; npm run verify:dist
-PROHIBITED_ACTIONS: No merge, tag, GPT Sites/staging/production deploy, backend/service-contract/auth/migration/provider/protected-data write, destructive Git recovery, or duplicate v5 lineage.
-DO_NOT_REPEAT: Do not reconstruct work from chat; rerun the Impeccable detector; repeat expensive tests while GIT_HEAD/artifacts are unchanged; use old production UI as visual authority; clone v5; hand-edit generated HTML; merge; tag; deploy; or touch protected systems.
+HISTORICAL_V5_UNRESOLVED_RISKS: Bundle growth from consuming the exact modular v5 visual baseline was measured and accepted for its historical candidate review. This Phase 9 intake treats that candidate only as design evidence.
+BLOCKER: FALSE;NO_ACTIVE_CONTRACT_IDENTITY_PRIVACY_OR_PRESERVATION_MISMATCH
+HISTORICAL_V5_PUSH_VERIFIED: NOT_PERFORMED_UNDER_THE_OLD_LOCAL_CANDIDATE_SCOPE
+NEXT_EXACT_ACTION: Complete the owner-authorized Phase 9 frontend-design adoption intake documents and branch-local handoff, validate and push the checkpoint, release the frontend lock, then stop; no implementation or deployment.
+RESUME_COMMANDS: Rehydrate the final-v0.8.3 functional baseline and preserved frontend evidence; complete only the four Phase 9 intake artifacts and branch-local records; run focused document validation; push/read back; release the lock; stop.
+PROHIBITED_ACTIONS: No frontend source/dependency/build/generated-artifact change, Figma mutation, merge/rebase into main, tag, deployment, backend/service-contract/auth/data/migration/provider/protected-data write, destructive Git recovery, or duplicate v5 lineage.
+DO_NOT_REPEAT: Do not reconstruct a visual implementation from chat, rerun historical broad visual suites, use old v0.7.2 functionality as current authority, hand-edit generated HTML, merge, rebase, deploy, or touch protected systems.
