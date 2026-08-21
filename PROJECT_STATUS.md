@@ -2,6 +2,12 @@
 
 ## Current state
 
+### FI-LIVE-FIGMA-AUTHORITY-01 verified closeout pending
+
+- **Scope:** FI-00/FI-01 authority and foundation audit, FI-02 landing/public shell, and FI-03 pre-auth presentation only; FI-04 has not started.
+- **Result:** FI-00 and FI-01 are `VERIFIED_NO_OP`; FI-02 and FI-03 are `FUNCTIONAL_PASS;VISUAL_PASS` against current live Make v39 where implemented and Design documentation where Make explicitly has no built route.
+- **Boundary:** no backend/API/auth/session/data/schema/migration/dependency/provider/Figma/Playground/Production change; the Terra writer lock stays held through normal commit/push/readback, then the branch is ready for a separately authorized FI-04 writer.
+
 ### v0.8.3 owner-fast-close release state
 
 - **Milestone:** `V83_PRODUCTION_RELEASED_OWNER_FAST_CLOSE_OVERRIDE_S17_PASS` is complete under Earl's explicit fast-close authority; protected-main acceptance, recovery rotation, lossless temporary-state hygiene, writer-lock release, and final v0.8.3 handoff are complete.

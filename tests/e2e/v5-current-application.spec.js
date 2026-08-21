@@ -143,7 +143,7 @@ test('invalid release identity cannot activate the Playground cue or owner sessi
   expect(requests.some(({ pathname }) => pathname === '/api/playground/session')).toBe(false);
 });
 
-test('published public announcement drives the major-event landing content without arbitrary markup', async ({
+test('published public announcement remains a truthful update without replacing the logistics landing intent', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The governed projection contract runs once.');
@@ -165,17 +165,12 @@ test('published public announcement drives the major-event landing content witho
   await page.goto('/#/public.landing');
   await waitForV5(page);
   await expect(page.locator('.landing-updates')).toHaveAttribute('data-advertisement-state', 'populated');
-  await expect(page.locator('.landing-hero')).toHaveAttribute('data-event-active', 'true');
-  await expect(page.locator('.landing-hero')).toHaveAttribute('data-event-media-state', 'ready');
-  await expect(page.locator('.landing-hero h1')).toHaveText('Youth Development Day 2026');
-  await expect(page.locator('.landing-hero__content > p')).toContainText('Sibulahi');
-  await expect(page.locator('.landing-link')).toHaveText(/View event details/u);
-  await expect(page.locator('.landing-link')).toHaveAttribute(
-    'href',
-    'https://www.facebook.com/holyangeluniversitysc/',
-  );
+  await expect(page.locator('.landing-hero h1')).toHaveText('Every request. Every handoff. On record.');
+  await expect(page.locator('.landing-hero__eyebrow')).toHaveText('HAU-USC · Institutional Logistics Ledger');
+  await expect(page.locator('.landing-hero__actions .btn--primary')).toHaveText(/Start a logistics request/u);
+  await expect(page.locator('.landing-link')).toHaveText(/Browse public lending/u);
   await expect(page.locator('.landing-updates h2')).toHaveText('Youth Development Day 2026');
-  await expect(page.locator('.landing-hero__media')).toHaveAttribute(
+  await expect(page.locator('.landing-updates__media')).toHaveAttribute(
     'alt',
     'Youth Development Day 2026 official event cover',
   );
@@ -199,18 +194,18 @@ test('public landing truthfully projects loading, empty, request-error, and medi
   await page.goto('/#/public.landing');
   await waitForV5(page);
   const updates = page.locator('.landing-updates');
-  const heroMedia = page.locator('.landing-hero__media');
+  const institutionalMedia = page.locator('.landing-hero__institutional-media');
   await expect(updates).toHaveAttribute('data-advertisement-state', 'loading');
   await expect(updates).toHaveAttribute('aria-busy', 'true');
   await expect(updates.getByRole('heading')).toHaveText('Loading official updates');
-  await expect(page.locator('[href="#/public.request-intake"]')).toBeVisible();
-  await expect(heroMedia).not.toBeVisible();
+  await expect(page.getByRole('link', { name: 'Start a logistics request', exact: true })).toBeVisible();
+  await expect(institutionalMedia).toBeVisible();
 
   delayed.resolve();
   await expect(updates).toHaveAttribute('data-advertisement-state', 'empty');
   await expect(updates).toHaveAttribute('aria-busy', 'false');
   await expect(updates).toContainText('No published updates are currently available.');
-  await expect(heroMedia).not.toBeVisible();
+  await expect(institutionalMedia).toBeVisible();
   await expect(page.locator('[data-v5-admin-parity="advertisement-projection"]')).toBeHidden();
 
   await page.unroute('**/api/public/advertisements');
@@ -226,8 +221,8 @@ test('public landing truthfully projects loading, empty, request-error, and medi
   await page.goto('/#/public.landing');
   await expect(updates).toHaveAttribute('data-advertisement-state', 'error');
   await expect(updates.getByRole('heading')).toHaveText('Updates are temporarily unavailable');
-  await expect(page.locator('[href="#/public.request-intake"]')).toBeVisible();
-  await expect(heroMedia).not.toBeVisible();
+  await expect(page.getByRole('link', { name: 'Start a logistics request', exact: true })).toBeVisible();
+  await expect(institutionalMedia).toBeVisible();
 
   await page.unroute('**/api/public/advertisements');
   await page.route('**/api/public/advertisements', (route) =>
@@ -252,8 +247,9 @@ test('public landing truthfully projects loading, empty, request-error, and medi
   await expect(updates).toHaveAttribute('data-advertisement-state', 'media-failure');
   await expect(updates).toContainText('The published media could not be loaded.');
   await expect(updates).toContainText('Core public destinations are unaffected.');
-  await expect(page.locator('[href="#/public.request-intake"]')).toBeVisible();
-  await expect(heroMedia).not.toBeVisible();
+  await expect(page.getByRole('link', { name: 'Start a logistics request', exact: true })).toBeVisible();
+  await expect(institutionalMedia).toBeVisible();
+  await expect(page.locator('.landing-updates__media-slot')).toBeHidden();
   await expectNoHorizontalOverflow(page);
 });
 
@@ -390,7 +386,7 @@ test('public sign-in keeps reset collapsed and renders starter activation only a
       body: JSON.stringify({ state: 'ACTIVATION_REQUIRED', csrfToken: 'csrf-activation-e2e' }),
     });
   });
-  await page.getByLabel('Username').fill('synthetic.activation');
+  await page.getByLabel('Identifier').fill('synthetic.activation');
   await page
     .locator('.auth-card--signin form')
     .locator('input[name="p"]')
@@ -490,7 +486,7 @@ for (const routeCase of defaultWorkspaceRouteCases) {
     try {
       await page.goto('/#/public.signin');
       await waitForV5(page);
-      await page.getByLabel('Username').fill('synthetic.owner');
+      await page.getByLabel('Identifier').fill('synthetic.owner');
       await page
         .locator('.auth-card--signin form')
         .locator('input[name="p"]')
@@ -1646,13 +1642,24 @@ test('light and dark V5 themes remain usable at the configured responsive width'
   await page.goto('/#/public.landing');
   await waitForV5(page);
 
-  await expect(page.locator('.landing-hero__content > p')).toHaveText(
-    "As the University's highest student governing body, the Council represents the tertiary student community through leadership, service, and shared responsibility.",
+  await expect(page.locator('.landing-hero h1')).toHaveText('Every request. Every handoff. On record.');
+  await expect(
+    page.locator('.landing-hero__content > p:not(.landing-hero__eyebrow):not(.landing-hero__utility)'),
+  ).toHaveText(
+    'Start a service-backed logistics request, follow it with its private reference, and keep each operational handoff accountable.',
   );
-  const heroMedia = page.locator('.landing-hero__media');
+  const heroMedia = page.locator('.landing-hero__institutional-media');
   await expect(page.locator('.landing-updates')).toHaveAttribute('data-advertisement-state', 'empty');
-  await expect(heroMedia).not.toBeVisible();
-  await expect(page.locator('.landing-hero__actions .btn--primary')).toHaveText(/Staff sign in/u);
+  await expect(heroMedia).toBeVisible();
+  await expect(page.locator('.landing-hero__actions .btn--primary')).toHaveText(/Start a logistics request/u);
+  await expect(page.getByRole('link', { name: 'Track request', exact: true })).toHaveAttribute(
+    'href',
+    '#/public.request-tracking',
+  );
+  await expect(page.getByRole('link', { name: 'Staff sign in' }).first()).toHaveAttribute(
+    'href',
+    '#/public.signin',
+  );
   await expect(page.locator('.landing-hero__monogram img')).toHaveAttribute('alt', 'USC');
   await expect(page.locator('.public__marks img')).toHaveCount(2);
   await expect(page.locator('.public__wordmark b')).toHaveText('Holy Angel University Student Council');
@@ -1660,7 +1667,7 @@ test('light and dark V5 themes remain usable at the configured responsive width'
   if (testInfo.project.name === 'v5-chromium-1280') {
     for (const selector of [
       '.landing-hero h1',
-      '.landing-hero__content > p',
+      '.landing-hero__content > p:not(.landing-hero__eyebrow):not(.landing-hero__utility)',
       '.landing-hero__actions .btn--primary',
     ]) {
       const box = await page.locator(selector).boundingBox();
@@ -1674,6 +1681,16 @@ test('light and dark V5 themes remain usable at the configured responsive width'
 
   const themeToggle = page.locator('[data-act="toggle-theme"]').first();
   await expect(themeToggle).toHaveAttribute('aria-label', 'Switch to dark mode');
+  const themeToggleBox = await themeToggle.boundingBox();
+  expect(themeToggleBox).not.toBeNull();
+  expect(themeToggleBox.width).toBeGreaterThanOrEqual(44);
+  expect(themeToggleBox.height).toBeGreaterThanOrEqual(44);
+  if ((await page.evaluate(() => window.innerWidth)) <= 720) {
+    const compactMenuBox = await page.locator('.public__compact-nav summary').boundingBox();
+    expect(compactMenuBox).not.toBeNull();
+    expect(compactMenuBox.width).toBeGreaterThanOrEqual(44);
+    expect(compactMenuBox.height).toBeGreaterThanOrEqual(44);
+  }
   await themeToggle.click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');

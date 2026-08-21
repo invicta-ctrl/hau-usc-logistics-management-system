@@ -1,5 +1,16 @@
 # Work Continuation
 
+## FI-LIVE-FIGMA-AUTHORITY-01 current resume block
+
+- **Milestone:** `FRONTEND_INTEGRATION_LIVE_FIGMA_AUTHORITY_AUDIT_REPAIR`; verification is complete and normal commit/push/readback remains. FI-04 has not started.
+- **Repository/worktree:** `D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration`; branch `frontend-design-integration`; starting adoption SHA `32a8ed71e7f6275124e9d734d9a32984bac90a27`.
+- **Authority:** accepted `.codex/specs/active/frontend-integration-live-figma-authority-fi00-fi03-audit-repair-amendment.md`; authenticated Make v39 is current visual authority; Design is documentation/reference; repository contracts remain functional truth.
+- **Completed result:** FI-00 and FI-01 `VERIFIED_NO_OP`; FI-02 and FI-03 `FUNCTIONAL_PASS;VISUAL_PASS`. The bounded evidence register is `docs/design/FRONTEND_FI00_FI03_LIVE_FIGMA_AUDIT_REGISTER.md`.
+- **Implementation:** landing hero is static Make-aligned logistics composition with a governed institutional asset; truthful published advertisement/media remains in its separate updates region. Sign-in receives Make-aligned presentation only; verification/application/status retain contract-backed behavior because Make v39 has no built screens for them.
+- **Verification:** focused lint/Prettier/diff check PASS; V5 cross-width announcement/media, sign-in, theme, compact-control, and no-overflow matrix PASS at 320/375/390/414/768/1024/1280/1440/1920; visual acceptance PASS at 320/390/768/1024/1440; full unit regression PASS; `npm run build`, `verify:dist`, `check:agents`, `handoff:verify`, and `check:continuation` PASS.
+- **External boundary:** read-only Figma MCP/Chrome inspection only; no Figma, provider, Playground, Production, deployment, migration, database, or other external write.
+- **Next exact action:** commit/push/readback, then release the FI-00 through FI-03 Terra lock and hand off `READY_FOR_FI04` to `FI-04_AUTHENTICATED_SHELL_NAVIGATION_PROFILE`.
+
 ## Current resume block
 
 - **Milestone:** FRONTEND_INTEGRATION_FI03_AUTH_APPLICATION_COMPLETE; `FI03_STATUS: PASS` and `READY_FOR_FI04` pending normal FI-03 commit/push/readback.

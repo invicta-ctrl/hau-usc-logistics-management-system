@@ -25,6 +25,37 @@
   gap: var(--s-2);
 }
 
+.public__navigation {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--s-2), 1.8vw, var(--s-5));
+  margin-left: auto;
+}
+
+.public__navigation a,
+.public__signin-link {
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.public__navigation a[aria-current='page'],
+.public__navigation a:hover,
+.public__signin-link:hover {
+  color: var(--anchor);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.public__signin-link {
+  white-space: nowrap;
+}
+
+.public__compact-nav {
+  display: none;
+}
+
 .public__brand {
   display: flex;
   align-items: center;
@@ -83,21 +114,15 @@
 
 /* ---------- FI-02 public landing and portal shell ---------- */
 
-/* The integration layer reveals this element only after the existing public
-   advertisement adapter has accepted a published item. Keeping the image out
-   of the empty/error composition prevents a previous cover from becoming a
-   fabricated current announcement. */
-.public--landing .landing-hero:not([data-event-active='true']) .landing-hero__media {
-  display: none;
-}
-
-.public--landing .landing-hero[data-event-active='true'] .landing-hero__media {
-  display: block;
-}
-
-.public--landing .landing-hero[data-event-media-state='failure'] .landing-hero__media,
-.public--landing .landing-hero[data-event-media-state='not-present'] .landing-hero__media {
-  display: none;
+.public--landing .landing-hero__institutional-media {
+  filter: blur(1.5px) saturate(0.82) brightness(0.84);
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  object-position: center;
+  position: absolute;
+  transform: scale(1.025);
+  width: 100%;
 }
 
 /* ACCESSIBILITY_CORRECTION (D-08): Page 15's dark-on-dark ink does not meet
@@ -116,6 +141,29 @@
 .public--landing .landing-hero h1,
 .public--landing .landing-hero__content > p {
   color: var(--anchor-ink);
+}
+
+.public--landing .landing-hero__eyebrow {
+  color: var(--gold-300);
+  font-size: var(--t-xs);
+  font-weight: 800;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.public--landing .landing-hero__utility {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  margin-top: var(--s-5);
+}
+
+.public--landing .landing-hero__utility a {
+  color: var(--gold-200);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 /* Secondary hero action stays quieter than the primary button while retaining
@@ -170,6 +218,22 @@
   font-weight: 700;
 }
 
+.landing-updates__media-slot[hidden] {
+  display: none;
+}
+
+.landing-updates__media-slot {
+  min-width: 0;
+}
+
+.landing-updates__media {
+  border-radius: var(--r-sm);
+  display: block;
+  height: 120px;
+  object-fit: cover;
+  width: min(100%, 220px);
+}
+
 /* The existing admin-parity diagnostic is useful to its protected owner
    surface, but duplicates public-feed status on this signed-out landing. */
 .public--landing [data-v5-admin-parity='advertisement-projection'] {
@@ -177,6 +241,88 @@
 }
 
 @media (max-width: 720px) {
+  .public--landing .public__bar {
+    align-items: center;
+    flex-wrap: nowrap;
+    min-height: 54px;
+    padding-block: 6px;
+  }
+
+  .public--landing .public__wordmark,
+  .public--landing .public__navigation {
+    display: none;
+  }
+
+  .public--landing .public__marks .public__mark:last-child,
+  .public--landing .public__signin-link {
+    display: none;
+  }
+
+  .public--landing .public__mark {
+    height: 40px;
+    min-width: 40px;
+    padding: 4px;
+    width: 40px;
+  }
+
+  .public--landing .public__compact-nav {
+    display: block;
+    position: relative;
+  }
+
+  .public--landing .public__bar-actions .celestial {
+    --celestial-h: 38px;
+    --celestial-pad: 4px;
+    --celestial-plate: 30px;
+    --celestial-travel: 40px;
+    --celestial-w: 78px;
+    flex: 0 0 78px;
+    height: 44px;
+    min-height: 44px;
+    min-width: 78px;
+    width: 78px;
+  }
+
+  .public--landing .public__compact-nav summary {
+    align-items: center;
+    border: 1px solid var(--anchor-line);
+    border-radius: var(--r-sm);
+    color: var(--anchor);
+    cursor: pointer;
+    display: flex;
+    height: 44px;
+    justify-content: center;
+    list-style: none;
+    width: 44px;
+  }
+
+  .public--landing .public__compact-nav summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .public--landing .public__compact-nav nav {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    box-shadow: var(--elev-2);
+    display: grid;
+    gap: var(--s-2);
+    padding: var(--s-3);
+    position: absolute;
+    right: 0;
+    top: calc(100% + var(--s-2));
+    width: max-content;
+    z-index: 3;
+  }
+
+  .public--landing .public__compact-nav a {
+    color: var(--ink);
+    font-size: var(--t-sm);
+    font-weight: 700;
+    padding: var(--s-2);
+    text-decoration: none;
+  }
+
   .public--landing .landing-hero__content {
     background: linear-gradient(
       0deg,
@@ -184,6 +330,12 @@
       color-mix(in srgb, var(--ox-900) 98%, transparent) 82%,
       transparent 100%
     );
+  }
+
+  .public--landing .landing-hero__utility {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--s-3);
   }
 }
 
@@ -341,6 +493,63 @@
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   background: var(--paper);
+}
+
+.public--signin {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--ox-900) 78%, transparent),
+      color-mix(in srgb, var(--ox-900) 28%, transparent)
+    ),
+    url('/brand/login-background') center / cover;
+}
+
+.public--signin .public__main {
+  align-content: center;
+  display: grid;
+  min-height: 0;
+}
+
+.auth-card--signin {
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--ox-900) 94%, transparent),
+    color-mix(in srgb, var(--ox-800) 82%, transparent)
+  );
+  border-color: color-mix(in srgb, var(--gold-300) 54%, transparent);
+  box-shadow: var(--elev-3);
+  color: var(--gold-100);
+  max-width: 500px;
+}
+
+.auth-card--signin h1,
+.auth-card--signin > p {
+  color: var(--gold-100);
+}
+
+.auth-card--signin .auth-card__eyebrow {
+  color: var(--gold-300);
+  font-size: var(--t-xs);
+  font-weight: 800;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.auth-card--signin .field label,
+.auth-card--signin .field__password-toggle,
+.auth-card--signin .auth-card__help,
+.auth-card--signin .auth-alt,
+.auth-card--signin .auth-alt a {
+  color: var(--gold-100);
+}
+
+.auth-card--signin .auth-card__help {
+  margin-top: var(--s-4);
+}
+
+.auth-card--signin .auth-alt {
+  border-color: color-mix(in srgb, var(--gold-300) 36%, transparent);
 }
 
 .auth-card h1 {

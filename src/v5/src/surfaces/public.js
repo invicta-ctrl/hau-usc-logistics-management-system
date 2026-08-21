@@ -33,16 +33,29 @@ export function setPublicTheme(dark) {
 
 export function publicShell(
   inner,
-  { wide = false, back = true, dark = publicDark, landing = false, dataLabel = true } = {},
+  { wide = false, back = true, dark = publicDark, landing = false, signin = false, dataLabel = true } = {},
 ) {
-  return `<div class="public${landing ? ' public--landing' : ''}">
+  return `<div class="public${landing ? ' public--landing' : ''}${signin ? ' public--signin' : ''}">
     <header class="public__bar">
       <div class="public__brand">${marks}
         <span class="public__wordmark"><b>Holy Angel University Student Council</b><span>Department of Logistics</span></span>
       </div>
+      ${
+        landing
+          ? `<nav class="public__navigation" aria-label="Public navigation">
+              <a href="#/public.landing" aria-current="page">Home</a>
+              <a href="#/public.request-intake">Logistics hub</a>
+            </nav>`
+          : ''
+      }
       <div class="public__bar-actions">
         ${themeToggle(dark)}
-        ${back ? backControl() : ''}
+        ${landing ? '<a class="public__signin-link" href="#/public.signin">Staff sign in</a>' : back ? backControl() : ''}
+        ${
+          landing
+            ? `<details class="public__compact-nav"><summary aria-label="Open public navigation">${icon('menu')}</summary><nav aria-label="Compact public navigation"><a href="#/public.landing" aria-current="page">Home</a><a href="#/public.request-intake">Logistics hub</a><a href="#/public.signin">Staff sign in</a></nav></details>`
+            : ''
+        }
       </div>
     </header>
     <main class="public__main${wide ? ' public__main--wide' : ''}" id="surface-main" tabindex="-1">${dataLabel ? serviceDataLabel : ''}${inner}</main>
@@ -99,32 +112,39 @@ export function landing({ state } = {}) {
   const announcement = landingAnnouncementPresentation(advertisementState);
   return publicShell(
     `<section class="landing-hero" aria-labelledby="landing-title">
-      <div class="landing-hero__media-slot"></div>
+      <div class="landing-hero__media-slot" aria-hidden="true"><img class="landing-hero__institutional-media" src="/brand/login-background" alt="" /></div>
       <div class="landing-hero__content">
-        <h1 id="landing-title">Holy Angel University Student Council</h1>
-        <p>As the University's highest student governing body, the Council represents the tertiary student community through leadership, service, and shared responsibility.</p>
+        <p class="landing-hero__eyebrow">HAU-USC · Institutional Logistics Ledger</p>
+        <h1 id="landing-title">Every request. Every handoff. On record.</h1>
+        <p>Start a service-backed logistics request, follow it with its private reference, and keep each operational handoff accountable.</p>
         <div class="landing-hero__actions">
-          <a class="btn btn--primary" href="#/public.signin">Staff sign in${icon('arrow-right')}</a>
-          <a class="landing-link" href="https://www.facebook.com/holyangeluniversitysc" target="_blank" rel="noopener noreferrer">Visit the official USC Facebook page${icon('arrow-right', 'icon--sm')}</a>
+          <a class="btn btn--primary" href="#/public.request-intake">Start a logistics request${icon('arrow-right')}</a>
+          <a class="landing-link" href="#/public.lending-intake">Browse public lending${icon('arrow-right', 'icon--sm')}</a>
         </div>
+        <p class="landing-hero__utility"><a href="#/public.request-tracking">Track request</a><a href="#/public.signin">Staff sign in</a></p>
       </div>
       <div class="landing-hero__monogram"><img src="/brand/usc-logo" alt="USC" /></div>
     </section>
 
     <section class="landing-intro" aria-labelledby="landing-intro-title">
-      <h2 id="landing-intro-title">Student representation that stays close to the Angelite community.</h2>
-      <p>USC brings together elected student leaders from across Holy Angel University's colleges. Its public work is grounded in service, integrity, equality, solidarity, and responsibility.</p>
+      <h2 id="landing-intro-title">A calmer public front door for accountable logistics.</h2>
+      <p>Use the official public routes to submit or track a request, borrow reusable equipment, or enter the protected staff workspace.</p>
     </section>
 
     <nav class="portal-actions" aria-label="Logistics portals">
       <a class="portal-action portal-action--primary" href="#/public.request-intake">
         <span class="portal-action__mark">${icon('clipboard')}</span>
-        <span><b>Request Center</b><small>Create a department request or privately track existing work.</small></span>
+        <span><b>Start a logistics request</b><small>Create a department request through the service-backed workflow.</small></span>
         ${icon('arrow-right')}
       </a>
       <a class="portal-action" href="#/public.lending-intake">
         <span class="portal-action__mark">${icon('lending')}</span>
-        <span><b>Office Lending</b><small>Borrow reusable equipment with an accountable return date.</small></span>
+        <span><b>Browse public lending</b><small>Borrow reusable equipment with an accountable return date.</small></span>
+        ${icon('arrow-right')}
+      </a>
+      <a class="portal-action" href="#/public.request-tracking">
+        <span class="portal-action__mark">${icon('search')}</span>
+        <span><b>Track request</b><small>Use the private tracking reference already issued for your request.</small></span>
         ${icon('arrow-right')}
       </a>
       <a class="portal-action" href="#/public.signin">
@@ -142,6 +162,7 @@ export function landing({ state } = {}) {
         <p class="landing-updates__status" role="status">${announcement.status}</p>`
             : ''
         }</div>
+      <div class="landing-updates__media-slot" hidden></div>
       <a class="btn" href="https://www.facebook.com/holyangeluniversitysc" target="_blank" rel="noopener noreferrer">View official page${icon('arrow-right', 'icon--sm')}</a>
     </section>`,
     { back: false, wide: true, landing: true, dataLabel: false },
@@ -155,8 +176,9 @@ export function signin({ state }) {
   const unavailable = state === 'unavailable';
   return publicShell(
     `<div class="auth-card auth-card--signin">
+      <p class="auth-card__eyebrow">Department of Logistics</p>
       <h1>Staff sign in</h1>
-      <p>Department of Logistics accounts only.</p>
+      <p>Access the logistics workspace. The authorized account record determines what you can view and do.</p>
       ${
         unavailable
           ? notice({
@@ -176,7 +198,13 @@ export function signin({ state }) {
           : ''
       }
       <form onsubmit="return false">
-        ${field({ label: 'Username', name: 'u', required: true, value: invalid ? 'logistics.office' : '' })}
+        ${field({
+          label: 'Identifier',
+          name: 'u',
+          required: true,
+          value: invalid ? 'logistics.office' : '',
+          placeholder: 'Username, account code, or email',
+        })}
         ${field({
           label: 'Password',
           name: 'p',
@@ -190,8 +218,10 @@ export function signin({ state }) {
           state === 'loading' ? ' data-state="loading" disabled' : ''
         }>${icon('lock')}${state === 'loading' ? 'Signing in…' : 'Sign in'}</button>
       </form>
-      <p class="auth-alt">No account yet? <a href="#/public.application">Apply for access</a></p>
+      <p class="auth-card__help">If you have trouble signing in, contact your system administrator.</p>
+      <p class="auth-alt"><a href="#/public.landing">Return to public front door</a><span aria-hidden="true"> · </span><a href="#/public.application">Apply for access</a></p>
     </div>`,
+    { signin: true },
   );
 }
 

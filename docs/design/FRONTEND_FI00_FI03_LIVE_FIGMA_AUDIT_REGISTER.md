@@ -1,0 +1,39 @@
+# FI-00 to FI-03 Live Figma Authority Audit Register
+
+TASK: FI-LIVE-FIGMA-AUTHORITY-01
+AUTHORITY: Live Make `rP9W9MQlZkyQrUx38TVsFS` for current visual implementation; live Design `hXJElH4p72KfgAaoUyfNOC` for documentation/reference; repository contracts for behavior.
+SCOPE: FI-00 through FI-03 only. No Figma, provider, Playground, or Production write occurred.
+
+## Evidence freeze
+
+- Official Figma MCP identity: root direct read-only `whoami` PASS as `Invicta-ctrl`.
+- Design metadata: root direct read-only PASS at page 90 / node `55:14`; FI-01 foundation context/screenshot PASS at `223:2`; FI-03 documentation contexts/screenshots PASS at `123:1012`, `123:1542`, `123:1671`, and `123:1816`.
+- Make: root authenticated Chrome inspection PASS on exact file version 39 at desktop and compact widths; ordinary web fetch was not used.
+- This writer saw one isolated Design-app reauthentication failure and made the one permitted `codex mcp login figma` recovery invocation. Root's subsequent official MCP identity and targeted reads passed; no further OAuth attempt was made.
+
+## Bounded surface register
+
+| Slice | Real surface                | Current live evidence                                                                                                                                                                                         | Repository disposition                                                                                                                                                                                                                        |
+| ----- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FI-00 | Authority chain             | Make is accessible through authenticated Chrome; Design is accessible through official MCP; old exports are fallback only.                                                                                    | `VERIFIED_NO_OP`: classification corrected in the current audit chain; historical evidence preserved.                                                                                                                                         |
+| FI-01 | Shared foundation           | Design M0-M4/G0-G4 retains semantic hierarchy on existing variables, light/dark roles, Bricolage/IBM Plex/Newsreader role map, oxblood authority, gold decisive focus, and separate operational status roles. | `VERIFIED_NO_OP`: existing tokens and G1-G4 system conform. Only route-local CSS extensions use those variables.                                                                                                                              |
+| FI-02 | Public landing              | Make v39: USC/DOL masthead; Home, Logistics hub, theme, Staff sign in; warm blurred institutional hero; `HAU-USC · Institutional Logistics Ledger`; requested headline/actions/utility links.                 | Repaired hero, navigation, action hierarchy, governed institutional media, and stopped announcements from replacing logistics intent. Announcement loading/populated/empty/error/media-failure stays a separate truthful service-backed area. |
+| FI-03 | Staff sign-in               | Make v39: campus backdrop, dark oxblood centered card, Department of Logistics eyebrow, Identifier placeholder, password visibility, help, gold sign-in action, return link; compact reflow.                  | Repaired presentation only; field binding remains `u` and existing auth/session controls are unchanged.                                                                                                                                       |
+| FI-03 | Verify, application, status | Make v39 contains only a placeholder for these routes; it is not a visual implementation authority for them. Design documentation frames are explicitly proposed/reference only.                              | Existing contract-backed routes and safe states retained; Design reference used only where compatible. No placeholder, mock behavior, or new auth flow introduced.                                                                            |
+
+## Acceptance result
+
+FI00_RESULT: VERIFIED_NO_OP
+FI01_RESULT: VERIFIED_NO_OP
+FI02_FUNCTIONAL_STATUS: PASS
+FI02_VISUAL_STATUS: PASS (root authenticated Make versus hot-reloaded local comparison)
+FI03_FUNCTIONAL_STATUS: PASS
+FI03_VISUAL_STATUS: PASS (Make-supported sign-in; documentation-constrained verification/application/status retained without invention)
+
+## Verification receipt
+
+- Cross-width public lifecycle, sign-in, and theme matrix: 20 PASS at 320, 375, 390, 414, 768, 1024, 1280, 1440, and 1920 CSS pixels; 16 state-specific skips are expected by the configured browser projects.
+- V5 visual acceptance: 5 PASS at 320, 390, 768, 1024, and 1440 CSS pixels.
+- Full unit regression: `npm test` PASS. Canonical artifacts were rebuilt with `npm run build`, and `npm run verify:dist` PASS.
+- Focused touched-file ESLint, Prettier, `git diff --check`, `npm run check:agents`, `npm run handoff:verify`, and `npm run check:continuation` PASS.
+- Root visual inspection confirmed the Make-aligned landing and sign-in at desktop and 390px compact, with no horizontal overflow, a 78×44 theme target, and a 44×44 compact-navigation target.

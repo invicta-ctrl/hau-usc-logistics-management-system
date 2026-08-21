@@ -300,6 +300,7 @@ export function field({
   options = null,
   textarea = false,
   autocomplete = '',
+  placeholder = '',
   passwordVisibility = false,
 }) {
   const id = nextId('f');
@@ -310,6 +311,7 @@ export function field({
   const invalid = error ? ' aria-invalid="true"' : '';
   const req = required ? ' required' : '';
   const complete = autocomplete ? ` autocomplete="${esc(autocomplete)}"` : '';
+  const placeholderText = placeholder ? ` placeholder="${esc(placeholder)}"` : '';
 
   let control;
   if (options) {
@@ -323,7 +325,7 @@ export function field({
   } else {
     const input = `<input id="${id}" name="${esc(name)}" type="${esc(type)}" value="${esc(
       value,
-    )}"${complete}${describe}${invalid}${req} />`;
+    )}"${complete}${placeholderText}${describe}${invalid}${req} />`;
     control = passwordVisibility
       ? `<span class="field__password-control">${input}${passwordVisibilityToggleMarkup(id)}</span>`
       : input;

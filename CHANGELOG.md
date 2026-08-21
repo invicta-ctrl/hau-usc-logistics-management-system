@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### FI-LIVE-FIGMA-AUTHORITY-01
+
+- Reconciled FI-00 through FI-03 against the authenticated live Figma authority: FI-00/FI-01 are VERIFIED_NO_OP; FI-02 and FI-03 retain functional contracts and regain visual acceptance.
+- Rebuilt the landing around the current Make v39 logistics hierarchy and governed institutional media, separated truthful published-announcement state from hero intent, and aligned sign-in presentation without changing auth behavior.
+- Added the bounded live-evidence register and directly coupled V5 coverage. No backend/API/auth/session/data/schema/migration/dependency/provider/Figma/Playground/Production change occurred.
+
 ### FI-03 Sign-In, Verification, Application, and Status
 
 - Replaced fake public verification, application, and application-status shells with existing contract-backed forms and safe route-local result presentation; receipts and bearer status tokens remain private.

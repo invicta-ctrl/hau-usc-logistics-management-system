@@ -1238,10 +1238,6 @@ export function createV5Runtime({ backend, app }) {
     const item = integration.advertisements[0];
     if (!item) return;
     const section = document.querySelector('.landing-updates');
-    const hero = document.querySelector('.landing-hero');
-    const heroTitle = hero?.querySelector('h1');
-    const heroSummary = hero?.querySelector('.landing-hero__content > p');
-    const heroLink = hero?.querySelector('.landing-link');
     const heading = section?.querySelector('h2');
     const summary = section?.querySelector('.landing-updates__summary');
     const link = section?.querySelector('a');
@@ -1250,39 +1246,28 @@ export function createV5Runtime({ backend, app }) {
     const target = text(item.destinationUrl, item.url, item.targetUrl);
     const callToAction = text(item.callToAction, 'View official page');
     const mediaUrl = text(item.mediaUrl, item.imageUrl);
-    const mediaState = integration.dynamicMedia === 'FAIL' ? 'failure' : mediaUrl ? 'ready' : 'not-present';
-    if (hero) {
-      hero.dataset.eventActive = 'true';
-      hero.dataset.eventMediaState = mediaState;
-    }
-    if (heroTitle && title) heroTitle.textContent = title;
-    if (heroSummary && description) heroSummary.textContent = description;
-    if (heroLink) {
-      heroLink.firstChild.textContent = callToAction;
-      if (/^https:\/\//u.test(target)) heroLink.href = target;
-    }
     if (heading && title) heading.textContent = title;
     if (summary && description) summary.textContent = description;
     if (link) {
       link.firstChild.textContent = callToAction;
       if (/^https:\/\//u.test(target)) link.href = target;
     }
-    const mediaSlot = document.querySelector('.landing-hero__media-slot');
+    const mediaSlot = section?.querySelector('.landing-updates__media-slot');
     if (mediaSlot) {
       mediaSlot.replaceChildren();
+      mediaSlot.hidden = true;
       if (
         mediaUrl &&
         integration.dynamicMedia !== 'FAIL' &&
         (/^\//u.test(mediaUrl) || /^https:\/\//u.test(mediaUrl))
       ) {
         const media = document.createElement('img');
-        media.className = 'landing-hero__media';
-        media.width = 960;
-        media.height = 356;
+        media.className = 'landing-updates__media';
         media.decoding = 'async';
         media.src = mediaUrl;
         media.alt = text(item.altText, item.title);
         mediaSlot.append(media);
+        mediaSlot.hidden = false;
       }
     }
   }
