@@ -1,4 +1,4 @@
-# Current Task — V0.8.3 Owner Fast-Close Production/S17 Closure
+# Current Task — V0.8.3 Owner Fast-Close Production/S17 Closure (Complete)
 
 INTENT: RELEASE_CLOSEOUT_RECOVERY_ROTATION_LOSSLESS_REPOSITORY_HYGIENE_AND_FRONTEND_ADOPTION_PREPARATION
 MODE: EXECUTE_OWNER_FAST_CLOSE
@@ -10,26 +10,27 @@ ACCEPTED_SPEC: .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md
 CONTROLLING_AMENDMENT: .codex/specs/active/v0.8.3-v1r7-a7-r2-final-acceleration-s17-closure-amendment.md#23-production-preflight
 AUTHORITY: Earl explicit 2026-08-21 owner Production fast-close instruction -> V1R7-A7-R2 as amended by that override -> accepted v0.8.3 A5 specification -> checked-in AGENTS.md -> current continuity chain.
 REQUIRED_MODEL: Terra MAX canonical writer; do not reopen an ID-G/ID-H audit loop or run broad suites.
-ACTIVE_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
-TERRA_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
-LOCK_HOLDER: TERRA_MAX:/root/v83_playground_reset_terra_writer
-WRITER_LOCK: HELD
-LOCK_STATUS: ACTIVE
+ACTIVE_WRITER: NONE
+TERRA_WRITER: NONE
+LOCK_HOLDER: NONE
+WRITER_LOCK: RELEASED
+LOCK_STATUS: RELEASED
+HANDOFF_STATUS: READY_FOR_HANDOFF
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
-UPSTREAM: origin/release/v0.8.3-identity-foundation@GIT_HEAD;PUSH_PARITY_REQUIRED
+UPSTREAM: origin/main@GIT_HEAD;PUSH_PARITY_VERIFIED
 WORKTREE: D:/Documents/Codex/_verification/v83-final-gate-f8e6337
 WORKTREE_STATE: GIT_STATUS
 RISK: CRITICAL;PRODUCTION_IDENTITY_SCHEMA_RECOVERY_PRIVACY_PROTECTED_REFS_AND_LOSSLESS_HISTORY_PRESERVATION
 ACTIVE_SCOPE_OVERRIDE: FAST_CLOSE=ACTIVE;OWNER_PRODUCTION_GO=EXPLICIT_FAST_CLOSE_OVERRIDE_CONSUMED;PLAYGROUND_SOURCE_GATE=COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE_NOT_PASS;ID_H_LIVE_DELIVERY=OWNER_WAIVED_OR_UNRUN_NEVER_PASS;PRODUCTION_SMOKE=HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED_NOT_HTTP_PASS;V084_IMPLEMENTATION=PROHIBITED;FRONTEND_IMPLEMENTATION_AND_DEPLOY=PROHIBITED
 SCOPE: Record the completed bounded Production reconciliation and accepted smoke fallback truthfully; integrate the verified governance-only main lineage without executable product changes; tag/rotate recovery refs only after proof; close branches/worktrees losslessly; refresh v0.8.4 from final main without implementation; then prepare frontend-design adoption documents on the retained frontend branch.
 OUT_OF_SCOPE: Any source, dependency, build, workflow, release-runtime-config, migration, D1/R2/Google/provider write, email send, new session/domain-data mutation, broad suite/review, AGENTS/project-policy synchronization, v0.8.4 implementation, frontend runtime/backend/design mutation, or deploy beyond already-verified Production state.
-ID_G_INTEGRATION_SCOPE: HISTORICAL_ACCEPTED_26_PATHS;OUTSIDE_AUTHORIZED_PATHS=0;THE_ID_G_TASK_WORKTREE_REMAINS_PRESERVED
+ID_G_INTEGRATION_SCOPE: HISTORICAL_ACCEPTED_26_PATHS;OUTSIDE_AUTHORIZED_PATHS=0;HISTORICAL_TASK_WORKTREE_CLOSED_LOSSLESSLY
 ID_G_IMPLEMENTATION_IDENTITY: IMPLEMENTATION=2aa73aeaf965d4eb55449e87c3cbda675730ba97;REPAIR_CURRENT=c13bbdadf7fa46829a3a78dece66f08bfe111013;REPAIR_TREE=9fd68d4e8c4b4d19e9e23793834365d35467b499;MERGE=45bbc1caf661d64a1abfdf1f775878ec89d88853;MERGE_TREE=4baebecc466b258d1b3729cff376bfafb2640ef6;OWNED_PATHS=26;CANONICAL_FAST_FORWARD=PASS
 ID_G_PRIOR_REVIEW: LUNA_ACCEPT_WITH_REQUIRED_REPAIRS;P1_REQUIRED_REAL_MINIFLARE_PRODUCER_EXECUTION_AND_V5_NAVIGATION_RACE;REPAIR_COMPLETE;FOCUSED_LUNA_REREVIEW=ACCEPT;P0=0;P1=0;P2=0
 ID_G_MERGE_PARITY: PRODUCT_26_BLOBS_TO_C13=PASS;A7_ADOPTION_7_BLOBS_TO_0D=PASS;MERGE_PARENTS=c13bbdadf7fa46829a3a78dece66f08bfe111013,0d784ba348a82101b7c7e6a794b7a35f0ab82452
 ID_G_FOCUSED_EVIDENCE: PORTABLE_NODE=22.23.2;REAL_MINIFLARE_PRODUCER_SAFETY=PASS_1_FILE;ACCESS_MANAGEMENT_REPOSITORY=PASS_14_OF_14;RELATED_UNITS=PASS_55_OF_55;V5_STAFF_DIRECTORY=PASS_5_OF_5;LOCAL_WORKER_DTO_AND_400=PASS_1_OF_1;NODE_SYNTAX_ESLINT_PRETTIER_PRIVACY_SCOPE_DIFF=PASS
-ID_H_INTEGRATION: PASS;IMPLEMENTATION_AND_CANONICAL_COMMIT=fb93da76cbf71ec0419036d86c0b780b18bfeff4;TREE=0947c934bd40a9bb8d4fe8bbae99e09e13f235df;TASK_BRANCH=release/v0.8.3-eight-digit-verification;OWNED_PATHS=9;CANONICAL_FAST_FORWARD=PASS
+ID_H_INTEGRATION: PASS;IMPLEMENTATION_AND_CANONICAL_COMMIT=fb93da76cbf71ec0419036d86c0b780b18bfeff4;TREE=0947c934bd40a9bb8d4fe8bbae99e09e13f235df;HISTORICAL_TASK_BRANCH=release/v0.8.3-eight-digit-verification;CLOSED_LOSSLESSLY;OWNED_PATHS=9;CANONICAL_FAST_FORWARD=PASS
 ID_H_FOCUSED_EVIDENCE: PORTABLE_NODE=22.23.2;UNIT_SQLITE_D1_PROVIDER_RESEND_WORKER_V5=PASS_80_OF_80;LEGACY_EIGHT_DIGIT_BROWSER=PASS_1_OF_1;V5_BROWSER=PASS_29_WITH_7_INTENTIONAL_SKIPS;SYNTAX_ESLINT_PRETTIER_PRIVACY_SCOPE_DIFF=PASS
 ID_H_LUNA_REVIEW: ACCEPT;P0=0;P1=0;P2=0;P3=NONBLOCKING_UNREPAIRED_COMMITTED_HARNESS_PORT_4173_ADVISORY
 ID_MAPPING: ID-A=auth/session/security preservation;ID-B=canonical person and assignment domain;ID-C=email/provenance and explicit account linkage;ID-D=existing active-access preservation;ID-E=two-stage approval;ID-F=Staff Directory;ID-G=staff/account operational activity history;ID-H=secure eight-digit verification lifecycle.
@@ -48,8 +49,10 @@ PRODUCTION_CLOSEOUT_RECEIPT: PASS_OWNER_FAST_CLOSE_SCOPE;EXACT_F8_RUNTIME_AND_10
 VERIFICATION: Reuse frozen f8 evidence and execute only live refs, frozen product-path identity checks, lossless unique-history proofs, exact ref readback, focused document validators, and frontend evidence/map preparation. Protected main acceptance is PASS at 07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e with f8 application-path parity; `v0.8.3` is tagged there and the recovery ladder is rotated. No further HTTP/provider/D1 call is authorized before a directly required later mutation reconciliation. No gate is PASS unless directly verified; email is OWNER_WAIVED_OR_UNRUN and the accepted smoke fallback is never HTTP_PASS.
 STOP_CONDITIONS: Stop the affected operation on wrong Production target, candidate/runtime/schema/ledger/FK/history mismatch, recovery absence, protected-secret/roster-config absence, Production crossover, unknown dirty target, conflicting writer, unpreserved unique work, protected-ref failure, or private-data exposure. Do not rerun migrations, broad suites, source gates, provider/email flows, or deployment.
 PHASE_3_4_CHECKPOINT: PASS;PR_25_NORMAL_MERGE=07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e;CI_VERIFY_CODEQL_BROWSER_SMOKE=PASS;CODEQL_99_FALSE_POSITIVE_DISMISSED;P2_PAGINATION_THREADS_DEFERRED_WITHOUT_PRODUCT_CHANGE;F8_APPLICATION_PATH_PARITY=PASS;V083_TAG=PASS;RECOVERY_POINTERS_ROTATED_AND_READBACK=PASS
-NEXT_ACTION_SCOPE: PHASE_5_LOSSLESS_V083_BRANCH_AND_WORKTREE_HYGIENE
-NEXT_EXACT_ACTION: Prove every non-retained v0.8.3 branch and worktree has zero unique or independently preserved work, then close only eligible temporary state before S17.
+PHASE_5_CHECKPOINT: PASS_WITH_PRESERVATION_EXCEPTION;temporary remote refs closed losslessly after unique-history proof; research audit retained by immutable archive tag; primary main checkout clean; v082 product-dirty worktree retained untouched; unregistered generated-only node_modules residual is a tooling-blocked P3 with no Git history or ref loss.
+S17_CLOSEOUT: PASS;Production/main/f8 identity/recovery rotation/lossless hygiene/retained future refs/pushed readback pass; ACTIVE_WRITER=NONE; WRITER_LOCK=RELEASED; HANDOFF_STATUS=READY_FOR_HANDOFF.
+NEXT_ACTION_SCOPE: V83_CLOSED;SEPARATE_BRANCH_LOCAL_PREPARATION_ONLY
+NEXT_EXACT_ACTION: Do not reopen v0.8.3. Take and release a separate branch-local v0.8.4 preparation lock only under the owner-authorized Phase 8 scope.
 
 ## Historical source-gate diagnostic record
 
