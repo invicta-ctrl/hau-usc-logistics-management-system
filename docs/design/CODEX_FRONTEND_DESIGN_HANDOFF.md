@@ -1,5 +1,35 @@
 # HAU-USC Logistics — Frontend Design Baseline to Codex Handoff
 
+> The original 2026-08-20 handoff below is preserved as historical design-stream
+> evidence. Its v0.7.2 functional baseline is not current product authority.
+
+## v0.8.3 adoption intake — active branch-local record
+
+```text
+STATUS:                     COMPLETE
+FUNCTIONAL_BASELINE:         FINAL_V083_MAIN @ 86553349f5c2ebefaa637c30828c560a301f99ba
+PRODUCTION_IDENTITY:         frozen f8e63372bc8afcb6d092970b7f9fc9ee72fd3580
+VISUAL_BASELINE:             DESIGN_BASELINE_2026-08-20-F + Figma Make v39
+VISUAL_EVIDENCE_BRANCH:      frontend-design-integration @ 19232a20d7a5d2c1e4aed6494b17fba4612f6720
+FRONTEND_IMPLEMENTATION:     NOT_STARTED
+DEPLOY:                      NOT_AUTHORIZED
+FRONTEND_DESIGN_ADOPTION_INTAKE: COMPLETE
+READY_FOR_FRONTEND_ADOPTION_SPEC_REVIEW: TRUE
+```
+
+Use [V083_FRONTEND_DESIGN_ADOPTION_INTAKE.md](V083_FRONTEND_DESIGN_ADOPTION_INTAKE.md)
+for classification, decision gates, and the future starting boundary. Use
+[V083_TO_FRONTEND_INTEGRATION_MAP.md](V083_TO_FRONTEND_INTEGRATION_MAP.md) for
+route slices and contract-preserving port rules.
+
+Final main/Production contracts win over every historical visual artifact.
+Figma Make v39 is sufficiently represented by committed generator/override,
+saved-source, cascade, and rollback evidence; no Figma action is authorized or
+needed for this intake. Do not merge or rebase this branch into main, port old
+branch runtime source wholesale, or start frontend implementation from it.
+
+## Historical 2026-08-20 design-stream handoff (retained)
+
 ```text
 STATUS:                     READY_FOR_CODEX_ADOPTION_PLANNING
 

@@ -1,22 +1,22 @@
 # Current Environment Handoff
 
 FROM: TERRA_MAX:/root/v83_playground_reset_terra_writer
-TO: TERRA_MAX:/root/v83_playground_reset_terra_writer — PHASE9_FRONTEND_DESIGN_ADOPTION_INTAKE
+TO: OWNER_OR_FRESH_FRONTEND_SPEC_WRITER — FRONTEND_DESIGN_ADOPTION_SPEC_REVIEW
 PROGRAM: HAU-USC Logistics v0.8.3 Final Frontend Design Adoption Intake
-STATUS: PHASE9_FRONTEND_DESIGN_ADOPTION_INTAKE_ACTIVE
+STATUS: READY_FOR_FRONTEND_ADOPTION_SPEC_REVIEW
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 TREE: GIT_TREE
-UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_REQUIRED
+UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
 WORKTREE: D:/Documents/Codex/_verification/v83-final-gate-f8e6337
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
-TERRA_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
-LOCK_HOLDER: TERRA_MAX:/root/v83_playground_reset_terra_writer
-WRITER_LOCK: HELD
-LOCK_STATUS: ACTIVE
-HANDOFF_STATUS: IN_PROGRESS
-LOCK_CONTINUITY: PHASE9_FRONTEND_DESIGN_ADOPTION_INTAKE
+ACTIVE_WRITER: NONE
+TERRA_WRITER: NONE
+LOCK_HOLDER: NONE
+WRITER_LOCK: RELEASED
+LOCK_STATUS: RELEASED
+HANDOFF_STATUS: READY
+LOCK_CONTINUITY: CLOSED
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
@@ -26,9 +26,13 @@ VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F;Figma_Make_v39;prototypes/impeccab
 FUNCTIONAL_BASELINE: final v0.8.3 main 86553349f5c2ebefaa637c30828c560a301f99ba and exact Production frozen candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;backend/API/auth/data contracts win
 INTEGRATION_DIRECTION: final-v0.8.3 functionality and contracts -> selectively ported design evidence; never wholesale branch code transfer
 V39_DELTA_PROVENANCE: RECONSTRUCTABLE_FROM_COMMITTED_BUILD_MAKE_THEME_AND_THEME_CANONICAL_ARTIFACT;NOT_SOLELY_FIGMA;NO_FIGMA_CALL_OR_MUTATION
-COMPLETED: Historical v5 design evidence, Figma Design baseline, Figma Make v39 receipt, theme source, maps, screenshots, decisions, and rollback evidence are preserved. Phase 9 documentation intake is active; frontend implementation has not started.
-VALIDATION: Exact frontend branch tip, final-v0.8.3 main/f8 baseline, governance blob parity, and durable visual evidence are reconciled. The v39 scoped atrium pin is reproducible from committed sources and is not a Figma-only delta.
-EXTERNAL_ACTIONS: Git local branch checkout only; no Figma, provider, database, recovery, deployment, or Production mutation.
+COMPLETED: Historical v5 design evidence, Figma Design baseline, Figma Make v39 receipt, theme source, maps, screenshots, decisions, and rollback evidence are preserved. The Phase 9 documentation intake is complete; frontend implementation has not started.
+FRONTEND_DESIGN_ADOPTION_INTAKE: COMPLETE
+FRONTEND_IMPLEMENTATION: NOT_STARTED
+DEPLOY: NOT_AUTHORIZED
+READY_FOR_FRONTEND_ADOPTION_SPEC_REVIEW: TRUE
+VALIDATION: Exact frontend branch tip, final-v0.8.3 main/f8 baseline, governance-blob parity, focused formatting for newly authored and branch-local records, handoff, continuation, and diff checks are reconciled. The preserved historical handoff body remains byte-identical and excluded from formatter rewrite. The v39 scoped atrium pin is reproducible from committed sources and is not a Figma-only delta. The historical frontend policy-marker validator is non-pass; AGENTS.md and project-policy blobs equal final main and no AGENTS synchronization is authorized.
+EXTERNAL_ACTIONS: Git documentation commits and normal pushes only; no Figma, provider, database, recovery, deployment, or Production mutation.
 
 ## Historical V5 design candidate evidence — retained, not active implementation authority
 
@@ -83,7 +87,7 @@ ROLLBACK_POINT: c4d98273ef90c47e8e2f46131abe0192ff34a0ec
 HISTORICAL_V5_UNRESOLVED_RISKS: Bundle growth from consuming the exact modular v5 visual baseline was measured and accepted for its historical candidate review. This Phase 9 intake treats that candidate only as design evidence.
 BLOCKER: FALSE;NO_ACTIVE_CONTRACT_IDENTITY_PRIVACY_OR_PRESERVATION_MISMATCH
 HISTORICAL_V5_PUSH_VERIFIED: NOT_PERFORMED_UNDER_THE_OLD_LOCAL_CANDIDATE_SCOPE
-NEXT_EXACT_ACTION: Complete the owner-authorized Phase 9 frontend-design adoption intake documents and branch-local handoff, validate and push the checkpoint, release the frontend lock, then stop; no implementation or deployment.
+NEXT_EXACT_ACTION: STOP. Await owner-approved, contract-complete frontend adoption specification review; do not start frontend implementation, deploy, or Figma work.
 RESUME_COMMANDS: Rehydrate the final-v0.8.3 functional baseline and preserved frontend evidence; complete only the four Phase 9 intake artifacts and branch-local records; run focused document validation; push/read back; release the lock; stop.
 PROHIBITED_ACTIONS: No frontend source/dependency/build/generated-artifact change, Figma mutation, merge/rebase into main, tag, deployment, backend/service-contract/auth/data/migration/provider/protected-data write, destructive Git recovery, or duplicate v5 lineage.
 DO_NOT_REPEAT: Do not reconstruct a visual implementation from chat, rerun historical broad visual suites, use old v0.7.2 functionality as current authority, hand-edit generated HTML, merge, rebase, deploy, or touch protected systems.

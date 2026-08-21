@@ -1,7 +1,7 @@
 # Current Bounded Task — v0.8.3 Frontend Design Adoption Intake
 
 INTENT: FRONTEND_DESIGN_ADOPTION_INTAKE
-MODE: EXECUTE_OWNER_AUTHORIZED_PHASE9_DOCUMENTATION_ONLY
+MODE: COMPLETE_OWNER_AUTHORIZED_PHASE9_DOCUMENTATION_ONLY
 OBJECTIVE: Prepare a durable adoption intake that preserves the retained Figma Design, Figma Make v39, and v5 evidence while making final v0.8.3 main and Production contracts the functional authority for any future frontend work.
 TARGET: frontend-design-integration design evidence reconciled against final v0.8.3 main 86553349f5c2ebefaa637c30828c560a301f99ba and frozen candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580.
 BRANCH_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
@@ -15,19 +15,25 @@ SCOPE: Documentation-only intake, contract-to-design map, handoff, resume prompt
 OUT_OF_SCOPE: Any frontend source, dependency, build, generated artifact, backend/service/API/auth/data contract, migration, provider/D1/R2/Google action, Figma mutation, deploy, Production action, merge/rebase into main, tag, or v0.8.4 implementation.
 VERIFICATION: Exact branch/main identity and ancestry facts; final-v0.8.3 product-path contract authority; durable baseline/v39/theme/map/screenshot/decision/rollback evidence; focused document/governance/handoff/diff checks; normal push/readback only.
 STOP_CONDITIONS: Missing final-v0.8.3 functional authority, missing preserved visual/rollback evidence, unclassifiable source delta requiring an unsafe inference, active-writer conflict, unknown dirty path, privacy exposure, required backend/API/auth/data change, or any deployment/provider/Figma mutation need.
-ACTIVE_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
-TERRA_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
-LOCK_HOLDER: TERRA_MAX:/root/v83_playground_reset_terra_writer
-WRITER_LOCK: HELD
-LOCK_STATUS: ACTIVE
-HANDOFF_STATUS: IN_PROGRESS
-GIT_UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_REQUIRED
+ACTIVE_WRITER: NONE
+TERRA_WRITER: NONE
+LOCK_HOLDER: NONE
+WRITER_LOCK: RELEASED
+LOCK_STATUS: RELEASED
+HANDOFF_STATUS: READY
+GIT_UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
 ORIGINAL_BASE_SHA: 7245c717f2b8bff3f327b47ff844281d94eaa1db
 CODEX_STARTING_SHA: d57b1c5931c82886b98c88dc468adfefd3d62bdf
 PRODUCTION_RELEASE_AT_START: v0.7.2 @ 84eacfcdb47a3985fed48e3ba14bb413946d4410
 ROLLBACK_POINT: c4d98273ef90c47e8e2f46131abe0192ff34a0ec
-STATUS: PHASE9_FRONTEND_DESIGN_ADOPTION_INTAKE_ACTIVE
-NEXT_EXACT_ACTION: Complete the owner-authorized Phase 9 frontend-design adoption intake documents and branch-local handoff, validate and push the checkpoint, release the frontend lock, then stop; no implementation or deployment.
+STATUS: FRONTEND_DESIGN_ADOPTION_INTAKE_COMPLETE
+FRONTEND_DESIGN_ADOPTION_INTAKE: COMPLETE
+FUNCTIONAL_BASELINE: FINAL_V083_MAIN
+FRONTEND_IMPLEMENTATION: NOT_STARTED
+DEPLOY: NOT_AUTHORIZED
+READY_FOR_FRONTEND_ADOPTION_SPEC_REVIEW: TRUE
+VALIDATION: Focused formatting for newly authored and branch-local records, handoff, continuation, diff, and final-main governance-blob parity passed; the preserved historical handoff body remains byte-identical and excluded from formatter rewrite. The historical frontend policy-marker validator is non-pass and no AGENTS synchronization is authorized.
+NEXT_EXACT_ACTION: STOP. Await owner-approved, contract-complete frontend adoption specification review; do not start frontend implementation, deploy, or Figma work.
 
 HISTORICAL_V5_SKILLS: lean-ctx; Hallmark; Impeccable; Browser control
 VISUAL_FRONTEND_AUTHORITY: DESIGN_BASELINE_2026-08-20-F;Figma_Make_v39;prototypes/impeccable-whole-site-redesign-v5/;branch evidence at 19232a20d7a5d2c1e4aed6494b17fba4612f6720
