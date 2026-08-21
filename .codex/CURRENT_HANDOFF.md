@@ -36,7 +36,7 @@ FUNCTIONAL_BASELINE: CURRENT_FROZEN_V083_MAIN;backend, API, auth, capability, an
 RUNTIME_PARITY_TO_MAIN: PASS;0 files present on origin/main and absent here;0 diff across src, apps-script, migrations, migration, cloudflare, public, tests, package.json, package-lock.json, vite.config.js, wrangler.jsonc, eslint.config.js, worker-configuration.d.ts, appsscript.json and playwright configs
 GOVERNANCE: PASS;check:agents passes after main's scripts/check-agent-instructions.mjs and .codex/agents/*.toml won the merge;AGENTS.md and .agents/PROJECT_POLICY.md were already byte-identical to main
 HISTORICAL_ARTIFACTS: CONTAINED_AND_PRESERVED;1078 files and 136,496,010 bytes removed from the active tree, all verified present in the archive tag first;plus 14 runtime-scope files and 109,569 bytes where main wins exactly
-ACTIVE_TREE_REDUCTION: 916 files and 141,450,911 bytes versus the pre-FI-00 tree;active tree is now 978 files and 25,666,831 bytes against main's 851 files and 22,939,630 bytes
+ACTIVE_TREE_REDUCTION: 915 files and 141,418,356 bytes versus the pre-FI-00 tree;active tree is now 979 files and 25,699,386 bytes against main's 851 files and 22,939,630 bytes
 VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F;Figma_Design=hXJElH4p72KfgAaoUyfNOC;Figma_Make=rP9W9MQlZkyQrUx38TVsFS@Version39;pending edits NONE
 FIGMA_SOURCE_STATUS: RECOVERABLE_FROM_GIT;output/design/make-adoption/theme.css sha256 249857a93f0f90425504da286aab4a296445b4f74546e4fbff72dcf30663140d, reverified on the reconciled tree;register paths unchanged
 BRANCH_ROLE: TEMPORARY_FRONTEND_INTEGRATION_WORK_BRANCH;promotion is clean-lineage only, by squash merge or a fresh promotion branch cut from accepted main;a normal historical-branch merge into main is forbidden

@@ -175,10 +175,10 @@ src/v5/integration/*                             7 files, byte-identical to main
 ```text
 pre-FI-00 branch tree     1,894 files    167,117,742 bytes
 origin/main                 851 files     22,939,630 bytes
-FI-00 reconciled            978 files     25,666,831 bytes
+FI-00 reconciled            979 files     25,699,386 bytes
 
-active-tree reduction       916 files    141,450,911 bytes
-surplus over main           127 files      2,727,201 bytes   the design packet only
+active-tree reduction       915 files    141,418,356 bytes
+surplus over main           128 files      2,759,756 bytes   the design packet only
 ```
 
 Everything removed is preserved in `archive/frontend-design-pre-fi00-2026-08-21`.

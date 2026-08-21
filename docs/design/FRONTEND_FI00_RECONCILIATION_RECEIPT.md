@@ -147,19 +147,19 @@ ARTIFACT_CONTAINMENT_RESULT      PASS
 ACTIVE_TREE_FILES_REMOVED        1,078   (containment)  + 14 (runtime scope)
 ACTIVE_TREE_BYTES_REMOVED        136,496,010            + 109,569
 ARCHIVE_PRESERVATION_REF         archive/frontend-design-pre-fi00-2026-08-21
-RETAINED_DESIGN_SOURCE_COUNT     115 files across 9 retained areas
+RETAINED_DESIGN_SOURCE_COUNT     126 files across 9 retained areas
 UNCLASSIFIED_LOAD_BEARING_ITEMS  0
 ```
 
-Active-tree reduction:
+Active-tree reduction, measured at the FI-00 reconciliation commit `eea6abd`:
 
 ```text
 pre-FI-00 branch tree     1,894 files    167,117,742 bytes
 origin/main                 851 files     22,939,630 bytes
-FI-00 reconciled            978 files     25,666,831 bytes
+FI-00 reconciled            979 files     25,699,386 bytes
 
-reduction vs pre-FI-00      916 files    141,450,911 bytes
-surplus over main           127 files      2,727,201 bytes
+reduction vs pre-FI-00      915 files    141,418,356 bytes
+surplus over main           128 files      2,759,756 bytes
 ```
 
 This is **active-tree** reduction only. Repository size is unchanged: the

@@ -63,9 +63,9 @@ migrations              32 files; 0031 blob 39dd85fa, 0032 blob 6f9bdf0c
 src/v5/integration      7 files, byte-identical to main
 tests                   146 unit / 2 integration / 25 e2e / 2 cloudflare / 3 staging
 package version         0.8.3
-active tree             978 files, 25,666,831 bytes
+active tree             979 files, 25,699,386 bytes
                         origin/main is 851 files, 22,939,630 bytes
-                        surplus is 127 files, 2,727,201 bytes of design packet
+                        surplus is 128 files, 2,759,756 bytes of design packet
 governance root cause   the branch carried a superseded
                         scripts/check-agent-instructions.mjs (0ce245f5) and two
                         stale .codex/agents/*.toml; AGENTS.md and PROJECT_POLICY.md

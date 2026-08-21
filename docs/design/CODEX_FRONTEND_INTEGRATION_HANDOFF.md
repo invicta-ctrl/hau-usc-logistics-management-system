@@ -167,8 +167,8 @@ rollback baseline, and everything else preserved by the immutable archive tag
 
 ```text
 pre-FI-00 branch tree   1,894 files   167,117,742 bytes
-FI-00 reconciled          978 files    25,666,831 bytes
-surplus over main         127 files     2,727,201 bytes
+FI-00 reconciled          979 files    25,699,386 bytes
+surplus over main         128 files     2,759,756 bytes
 ```
 
 Promotion to main is **clean-lineage only** — squash merge through the protected
