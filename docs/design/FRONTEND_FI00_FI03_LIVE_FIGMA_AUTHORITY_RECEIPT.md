@@ -15,4 +15,4 @@ EVIDENCE: `FRONTEND_FI00_FI03_LIVE_FIGMA_AUDIT_REGISTER.md` records the root-aut
 
 BOUNDARY: no Figma write, provider, backend/API/auth/session/data/schema/migration, Playground, Production, or deployment change occurred. The design-source reauthentication failure was isolated to the writer app; root's official Figma MCP identity and targeted Design reads recovered the authority chain.
 
-CONTINUATION: normal commit/push/readback must complete before `READY_FOR_FI04`; then the next exact action is `FI-04_AUTHENTICATED_SHELL_NAVIGATION_PROFILE` under a separately accepted authority and newly acquired sole-writer lock.
+CONTINUATION: `READY_FOR_FI04`; the next exact action is `FI-04_AUTHENTICATED_SHELL_NAVIGATION_PROFILE` under a separately accepted authority and newly acquired sole-writer lock.
