@@ -2,7 +2,7 @@
 
 ## Controlling authority
 
-V1R7-A7-R2 is the controlling v0.8.3 execution amendment, adopted under Earl's explicit current instruction at 2026-08-20T23:33:37+08:00. The accepted product specification remains .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md. The canonical writer is TERRA_MAX:/root/v83_completion_terra_writer and the writer lock remains HELD.
+V1R7-A7-R2 is the controlling v0.8.3 execution amendment, adopted under Earl's explicit current instruction at 2026-08-20T23:33:37+08:00. The accepted product specification remains .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md. The canonical writer is TERRA_MAX:/root/v83_completion_terra_writer and the writer lock remains HELD. FAST_CLOSE=ACTIVE.
 
 ## Product matrix
 
@@ -38,20 +38,21 @@ V1R7-A7-R2 is the controlling v0.8.3 execution amendment, adopted under Earl's e
 
 ## Release-gate disposition
 
-| Gate                                      | Status                                                                                                                                         |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| MIGRATION_0031_DECISION                   | FIRST_HISTORICAL_APPLY_RESTORED_BY_SECOND_OWNER_RESET;SECOND_REAPPLY_PASS_AND_TERMINALLY_RECONCILED                                            |
-| MIGRATION_0032_DECISION                   | SOURCE_PRESENT_AND_REQUIRED_BECAUSE_ACCEPTED_ID_G_INCLUDES_0032;ONE_ATOMIC_FILE_IMPORT_PASS_NO_RETRY                                           |
-| Schema target                             | 32; required migration order is 0031 then 0032 when target begins at schema 30                                                                 |
-| Owner-authorized Playground reset         | PASS twice: second reset restored clean working D1/R2 schema30/0030 with fresh private recovery receipts; Production unchanged                 |
-| Migration application                     | PASS: second-reset 0031 reapply then one atomic 0032 import; CLEAN schema32/single ledger0032/FKs/Activity History invariants/recovery/runtime |
-| Candidate freeze                          | PASS: f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 / tree 5788251d483f23ec5e19048e1a946b3a00450436                                                 |
-| Pre-migration Playground deployment       | PASS: workflow dispatched once; exact f8/tree/artifact/runtime/binding proof; reset-reconciled schema30/0030 checkpoint                        |
-| SOURCE_RECONCILIATION_PLAYGROUND_GATE     | PENDING; candidate-bound and read-only, not ID-D                                                                                               |
-| ID_H_PLAYGROUND_DELIVERY_GATE             | PENDING; candidate-bound                                                                                                                       |
-| Playground manual/browser acceptance      | PENDING                                                                                                                                        |
-| Earl Production GO                        | PENDING                                                                                                                                        |
-| Production release / reconciliation / S17 | REMAINING                                                                                                                                      |
+| Gate                                      | Status                                                                                                                                           |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| MIGRATION_0031_DECISION                   | FIRST_HISTORICAL_APPLY_RESTORED_BY_SECOND_OWNER_RESET;SECOND_REAPPLY_PASS_AND_TERMINALLY_RECONCILED                                              |
+| MIGRATION_0032_DECISION                   | SOURCE_PRESENT_AND_REQUIRED_BECAUSE_ACCEPTED_ID_G_INCLUDES_0032;ONE_ATOMIC_FILE_IMPORT_PASS_NO_RETRY                                             |
+| Schema target                             | 32; required migration order is 0031 then 0032 when target begins at schema 30                                                                   |
+| Owner-authorized Playground reset         | PASS twice: second reset restored clean working D1/R2 schema30/0030 with fresh private recovery receipts; Production unchanged                   |
+| Migration application                     | PASS: second-reset 0031 reapply then one atomic 0032 import; CLEAN schema32/single ledger0032/FKs/Activity History invariants/recovery/runtime   |
+| Candidate freeze                          | PASS: f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 / tree 5788251d483f23ec5e19048e1a946b3a00450436                                                   |
+| Pre-migration Playground deployment       | PASS: workflow dispatched once; exact f8/tree/artifact/runtime/binding proof; reset-reconciled schema30/0030 checkpoint                          |
+| Schema32 automated acceptance             | PASS_WITH_P3_ADVISORY: exact f8/runtime/schema32/readiness/public routes/unauth deny; image-suffix HTML fallback retained for later visual check |
+| SOURCE_RECONCILIATION_PLAYGROUND_GATE     | UNINVOKED_BLOCKED: unknown DIRTY active-session concurrent-writer state prevents sealed-state proof; not ID-D                                    |
+| ID_H_PLAYGROUND_DELIVERY_GATE             | PENDING; candidate-bound                                                                                                                         |
+| Playground manual/browser acceptance      | PENDING                                                                                                                                          |
+| Earl Production GO                        | PENDING                                                                                                                                          |
+| Production release / reconciliation / S17 | REMAINING                                                                                                                                        |
 
 Safe read-only and post-deploy facts: Production remains v0.8.2 at c316e047c845fa182e82156c95945c4a5e5de2ff, schema 30, latest migration 0030_production_access_and_operations.sql, ready; isolated Playground is v0.8.3-playground.1 at frozen f8e63372bc8afcb6d092970b7f9fc9ee72fd3580, tree 5788251d483f23ec5e19048e1a946b3a00450436, CLEAN at schema 32 / migration 0032_staff_account_activity_history.sql, ready, and binding-isolated. Redacted Time Travel recovery, Worker rollback history, R2/config identity, provider secret/config name presence, and candidate artifact proof all PASS. Safe endpoints expose candidate identity but not tree; unchanged typed binding evidence remains the tree/artifact proof. No private endpoint, credential, provider identifier, recipient, database value, or recovery value was recorded.
 
@@ -63,8 +64,12 @@ The old ID_D=0 label and blocked live source probe are historical. Under A7-R2, 
 
 The only current P3 is the nonblocking, unrepaired committed-harness port-4173 advisory in `tests/e2e/v072-account-access.spec.js`; it does not alter the accepted ID-H implementation PASS or authorize a scope expansion.
 
-## Next bounded action
+## Historical former next action
 
-V83_ISOLATED_PLAYGROUND_SCHEMA32_AUTOMATED_ACCEPTANCE: from the terminally reconciled isolated Playground schema32/0032 CLEAN state, run only the final deterministic provider-free automated acceptance against exact frozen f8 runtime/artifact/bindings. Source reconciliation and live email delivery remain later candidate-bound Playground gates.
+V83_ISOLATED_PLAYGROUND_SCHEMA32_AUTOMATED_ACCEPTANCE was completed PASS_WITH_P3_ADVISORY before the current material state stop.
 
-No routine owner pause occurs before the later Playground manual-test and explicit Production-GO gate. No v0.8.4 work starts in this session.
+## Active fast-close stop checkpoint
+
+The schema32 automated acceptance is complete. The current Playground state is DIRTY with active test session true and unknown concurrent-writer provenance; no pending operation exists, the active session predates the dirty marker, and no audit/evidence/idempotency/Activity History delta follows it or the prior checkpoint. Schema32/single ledger0032/FKs/exact Activity History objects/new rows remain green. No binding deployment, source probe, provider/email, reset, session mutation, or Production mutation occurred.
+
+Next action: stop for Earl direction before any reset, binding activation, source probe, provider/email action, browser/manual acceptance, or Production gate. No v0.8.4 work starts in this session.

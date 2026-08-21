@@ -12,6 +12,8 @@
 
 A7-R2 supersedes the first A7 draft for v0.8.3 execution. It does not reduce accepted product scope, waive safety or external gates, or authorize v0.8.4 in this session.
 
+FAST_CLOSE=ACTIVE. Minimum necessary verification applies: reuse unchanged candidate evidence, do not reopen review or broad suites, and stop for material gate failures.
+
 ## Explicit owner mapping and product disposition
 
 | ID   | A7-R2 capability                                                                                                                                                                                                | Current disposition |
@@ -81,7 +83,7 @@ Safe read-only and post-deploy facts are limited to allowlisted public identity 
 | Production          | 0.8.2              | c316e047c845fa182e82156c95945c4a5e5de2ff | 30 / 0030_production_access_and_operations.sql | true  |
 | Isolated Playground | 0.8.3-playground.1 | f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 | 32 / 0032_staff_account_activity_history.sql   | true  |
 
-No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground remains the exact frozen v0.8.3 candidate after its second accepted reset, terminally reconciled 0031 reapply, and one terminally reconciled atomic 0032 import; it is currently CLEAN at schema32/0032. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain PENDING.
+No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground remains the exact frozen v0.8.3 candidate after its second accepted reset, terminally reconciled 0031 reapply, and one terminally reconciled atomic 0032 import. The import checkpoint was CLEAN at schema32/0032; the final provider-free schema32 automated acceptance is PASS_WITH_P3_ADVISORY. SOURCE_RECONCILIATION_PLAYGROUND_GATE is UNINVOKED/BLOCKED by the current unknown DIRTY active-session state; ID_H_PLAYGROUND_DELIVERY_GATE remains pending.
 
 ## Owner-authorized Playground reset receipt
 
@@ -116,8 +118,16 @@ No endpoint URL, credential, provider identifier, recipient, database value, or 
 - **Local proof:** frozen 0032 source prefix and the locked Wrangler ledger suffix were byte-equal; no BOM, truncation, or CRLF change; fresh local schema31-to-32 import, single ledger entry, foreign keys, 3 tables, 2 indexes, 21 triggers, STRICT, and append-only invariants PASS.
 - **Terminal reconciliation:** `CLEAN`; no active test session; schema `32` / single ledger `0032`; foreign keys PASS; reset probe absent; the 3 Activity History tables, 2 indexes, and 21 triggers match frozen source; append-only guards and empty additive defaults PASS; exact frozen runtime/readiness PASS at schema32; provider remains disabled; fresh private pre/post-import recovery evidence is captured; Production mutation and crossover are `0`.
 
-## Exact next gate
+## Historical former next gate
 
 V83_ISOLATED_PLAYGROUND_SCHEMA32_AUTOMATED_ACCEPTANCE: from the terminally reconciled CLEAN schema32/0032 state, run only the final deterministic provider-free automated acceptance against exact frozen f8 runtime/artifact/bindings. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain later candidate-bound Playground gates.
 
 Do not request a routine owner pause until the later Playground manual-test and explicit Production-GO gate. Do not change source, dependencies, build/workflow/repository runtime config, Production, recovery pointers, AGENTS/project policy, or v0.8.4 in this step.
+
+## Active fast-close stop checkpoint
+
+- Automated acceptance: PASS_WITH_P3_ADVISORY. Exact f8/version/schema32/readiness, safe public routes, and unauthenticated deny passed. The sole P3 is a same-origin image-suffix HTML fallback, retained only for later visual confirmation.
+- Current sealed-state blocker: DIRTY plus active test session of unknown concurrent-writer provenance. No pending operation exists; the active session predates the DIRTY marker; no audit/evidence/idempotency/Activity History delta follows the marker or prior evidence checkpoint.
+- Integrity: schema32, one 0032 ledger entry, foreign keys, exact three Activity History tables/two indexes/twenty-one triggers, and empty new Activity History rows remain PASS.
+- No new external mutation: binding deploy 0; source probe 0; provider/email 0; Production 0; this writer did not reset or create/revoke a session.
+- Exact next action: Stop. Earl must direct the isolated Playground DIRTY active-session disposition before any reset, binding activation, source probe, provider/email action, browser/manual acceptance, or Production gate.

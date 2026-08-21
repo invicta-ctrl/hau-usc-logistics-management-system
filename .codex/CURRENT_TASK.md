@@ -1,8 +1,8 @@
-# Current Task — V0.8.3 Isolated Playground Schema32 Automated Acceptance
+# Current Task — V0.8.3 Fast-Close Playground Concurrent-Writer Stop
 
-INTENT: ISOLATED_PLAYGROUND_ACCEPTANCE
-MODE: EXECUTE
-OBJECTIVE: Preserve the frozen v0.8.3 candidate and its verified isolated Playground deployment, retain the terminally reconciled CLEAN schema32/0032 working state, then run only the required final deterministic automated acceptance before the later candidate-bound external gates.
+INTENT: RELEASE_CONTINUITY_OWNER_DECISION
+MODE: STOPPED_AWAITING_OWNER_DIRECTION
+OBJECTIVE: Preserve the frozen v0.8.3 candidate and record the completed schema32 automated acceptance plus the unresolved isolated Playground DIRTY active-session state without further external mutation.
 TARGET: Frozen candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580, tree 5788251d483f23ec5e19048e1a946b3a00450436, deployed to the isolated Playground at terminally reconciled schema 32 / migration 0032.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
@@ -21,6 +21,7 @@ UPSTREAM: origin/release/v0.8.3-identity-foundation@GIT_HEAD;PUSH_PARITY_REQUIRE
 WORKTREE: D:/Documents/Codex/_verification/v83-final-gate-f8e6337
 WORKTREE_STATE: GIT_STATUS
 RISK: HIGH;FROZEN_CANDIDATE_IDENTITY_REMOTE_D1_MIGRATION_RECOVERY_PRIVACY_AND_EXTERNAL_GATE_BOUNDARY
+ACTIVE_SCOPE_OVERRIDE: FAST_CLOSE=ACTIVE;AUTOMATED_ACCEPTANCE_COMPLETE;UNKNOWN_CONCURRENT_WRITER_DIRTY_ACTIVE_SESSION_IS_A_MATERIAL_STOP;THIS_OVERRIDE_SUPERSEDES_PRIOR_NEXT-GATE_LANGUAGE
 SCOPE: A7-R2 Section 18 final deterministic automated acceptance only: the second exact owner `RESET PLAYGROUND`, second-reset 0031 reapply, and one root-authorized atomic 0032 file import are terminally reconciled CLEAN at schema32/0032. Reuse unchanged exact-f8 provider-free evidence; verify the required final deterministic schema32 Playground acceptance without source, configuration, provider, or Production mutation. Record sanitized durable evidence before the later candidate-bound source-reconciliation gate.
 OUT_OF_SCOPE: Any source, dependency, build, workflow, or repository-runtime-config edit; Production read/write/migration/deploy; recovery-pointer rotation; fabricated backfill; provider values, recipient disclosure, or email send; source-projection probe; browser/manual acceptance; branch cleanup; AGENTS/project-policy sync; any new ID-G/ID-H audit loop; or v0.8.4 work.
 ID_G_INTEGRATION_SCOPE: HISTORICAL_ACCEPTED_26_PATHS;OUTSIDE_AUTHORIZED_PATHS=0;THE_ID_G_TASK_WORKTREE_REMAINS_PRESERVED
@@ -43,10 +44,20 @@ PLAYGROUND_SECOND_RESET_RECEIPT: PASS;OWNER_AUTHORIZATION=SECOND_RESET_PLAYGROUN
 PLAYGROUND_0031_RECEIPT: PASS;FIRST_APPLICATION_HISTORICAL_RESTORED_BY_SECOND_OWNER_RESET;SECOND_REAPPLY_APPLIED_ONCE_TO_ISOLATED_PLAYGROUND_D1;PRE_AND_POST_RECOVERY=CAPTURED_PRIVATE;WORKING_STATE=CLEAN;SCHEMA31_LEDGER0031_FOREIGN_KEYS=PASS;CANONICAL_IDENTITY_11_EXPLICIT_STRICT_TABLE_TRIGGER_INDEX_AND_FK_INVARIANTS=PASS;RESET_PROBE=ABSENT;NO_0032_PARTIAL_DDL=PASS;EXACT_F8_PROVIDER_DISABLED_RUNTIME=PASS;PRODUCTION_MUTATION=0
 PLAYGROUND_0032_RECEIPT: PASS;ROOT_AUTHORIZED_ATOMIC_FILE_IMPORT=INVOKED_ONCE_EXIT_0;LOCAL_FROZEN_SOURCE_PREFIX_AND_LOCKED_WRANGLER_LEDGER_SUFFIX_BYTE_PROOF=PASS;PRE_AND_POST_RECOVERY=CAPTURED_PRIVATE;WORKING_STATE=CLEAN;SCHEMA32_SINGLE_LEDGER0032_FOREIGN_KEYS=PASS;ACTIVITY_HISTORY_3_TABLES_2_INDEXES_21_TRIGGERS_STRICT_APPEND_ONLY_AND_EMPTY_DEFAULTS=PASS;RESET_PROBE=ABSENT;EXACT_F8_PROVIDER_DISABLED_RUNTIME=PASS;PRODUCTION_MUTATION=0
 PRIVACY_INCIDENT: METADATA_ONLY_LOCAL_FILENAMES_NO_CONTENT_NO_MUTATION;RECONCILED_BY_ROOT;NO_FILENAMES_RECORDED
-VERIFICATION: Reuse accepted Node 22.23.2 product evidence because f8 product blobs are unchanged. The one atomic 0032 import is terminally reconciled CLEAN at schema32/0032 with foreign keys, reset-probe absence, exact activity-history DDL/trigger/append-only invariants, recovery, exact f8 candidate/version/readiness, and Production non-crossover; safe endpoints do not expose tree, so unchanged typed-binding evidence remains the tree/artifact proof. Run only the required final deterministic automated acceptance at schema32 plus governance, handoff, continuity, scope, and diff checks; do not rerun broad suites.
-STOP_CONDITIONS: Conflicting candidate, writer, account, binding, runtime, schema, or artifact identity; any new DIRTY/active session; P0/P1 security/privacy/data-integrity regression; private-data exposure; unexpected source/config mutation; failed automated acceptance; or any action beyond the isolated Playground automated-acceptance step.
-NEXT_ACTION_SCOPE: V83_ISOLATED_PLAYGROUND_SCHEMA32_AUTOMATED_ACCEPTANCE
-NEXT_EXACT_ACTION: V83_ISOLATED_PLAYGROUND_SCHEMA32_AUTOMATED_ACCEPTANCE — run the required final deterministic provider-free automated acceptance against exact frozen f8 runtime/artifact/bindings at schema32; record the terminal result before proceeding to the later candidate-bound source-reconciliation gate.
+VERIFICATION: Schema32 automated acceptance is PASS_WITH_P3_ADVISORY: exact f8/version/schema32/readiness, public routes, and unauthenticated deny passed; the P3 image-suffix HTML fallback is recorded only for later visual confirmation. Bounded provenance is schema32/single ledger0032/FK/exact Activity History objects/new rows empty PASS, with no post-checkpoint audit/evidence/idempotency/activity delta. The current state remains DIRTY with activeTestSession true, no pending operation, and an active session that predates the dirty marker.
+STOP_CONDITIONS: The active stop condition occurred: unknown concurrent-writer DIRTY active-session state prevents proof of the sealed release-critical source gate. Do not normalize, reset, deploy, activate bindings, create/revoke sessions, invoke source/email/browser actions, or access Production without Earl direction.
+NEXT_ACTION_SCOPE: AWAIT_EARL_DIRECTION_FOR_PLAYGROUND_DIRTY_ACTIVE_SESSION
+NEXT_EXACT_ACTION: Stop. Earl must direct the isolated Playground DIRTY active-session disposition before any reset, binding activation, source probe, provider/email action, browser/manual acceptance, or Production gate.
+
+## Active fast-close stop override
+
+FAST_CLOSE=ACTIVE. The earlier automated-acceptance scope is complete: exact f8/version/schema32/readiness, public routes, and unauthenticated deny passed, with one nonblocking P3 image-suffix HTML fallback retained for later visual confirmation.
+
+The source-reconciliation probe is UNINVOKED/BLOCKED. Current Playground metadata is DIRTY with active test session true and unknown concurrent-writer provenance; no pending operation exists. The active session predates the dirty marker, and no audit, evidence, idempotency, or Activity History delta follows the marker or prior checkpoint.
+
+Schema32, one 0032 ledger entry, foreign keys, the exact three Activity History tables/two indexes/twenty-one triggers, and empty new Activity History rows remain green. No binding deployment, source probe, provider/email action, reset, session mutation, or Production mutation occurred in this checkpoint.
+
+Stop condition is material: do not reset, normalize, deploy, activate bindings, create or revoke sessions, invoke source/email/browser actions, or access Production until Earl directs the state disposition.
 
 ## A7-R2 continuity facts
 
