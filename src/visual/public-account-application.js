@@ -1,5 +1,6 @@
 import { AppError } from '../app/errors.js';
 import { brandLockupMarkup } from './brand-assets.js';
+import { attachPasswordVisibilityControls, passwordFieldMarkup } from './password-visibility.js';
 import { releaseIdentityMarkup } from './portal-navigation.js';
 
 const APPLICATION_STATES_WITHDRAWABLE = new Set([
@@ -94,26 +95,8 @@ function setBusy(form, busy) {
   form.setAttribute('aria-busy', String(busy));
 }
 
-function attachPasswordToggles(root) {
-  root.querySelectorAll('[data-application-password-toggle]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const input = root.querySelector(`#${button.dataset.applicationPasswordToggle}`);
-      if (!input) return;
-      const reveal = input.type === 'password';
-      input.type = reveal ? 'text' : 'password';
-      button.textContent = reveal ? 'Hide' : 'Show';
-      button.setAttribute('aria-pressed', String(reveal));
-      input.focus({ preventScroll: true });
-    });
-  });
-}
-
 function passwordField({ id, name, label }) {
-  return `<label for="${id}">${label}</label>
-    <div class="auth-password-control">
-      <input id="${id}" name="${name}" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
-      <button class="auth-password-toggle" type="button" data-application-password-toggle="${id}" aria-pressed="false">Show</button>
-    </div>`;
+  return passwordFieldMarkup({ id, name, label, autocomplete: 'new-password', minlength: '12' });
 }
 
 function shellMarkup({ title, intro, body, wide = true }) {
@@ -292,13 +275,14 @@ function mountRegistration({ root, client }) {
     root.innerHTML = shellMarkup({
       title: 'Enter verification code',
       intro:
-        'If the address is eligible and delivery is configured, use the short-lived code sent to that address.',
+        'If the address is eligible and delivery is configured, enter the exact 8-digit code sent to that address.',
       body: `${alertMarkup(error)}
-        <div class="account-application-progress" aria-label="Application steps"><span class="current">Verify email</span><span>Identity and access</span><span>Review</span></div>
-        <form class="auth-form" data-application-email-confirm>
-          <label for="applicationCode">Verification code</label>
-          <input id="applicationCode" name="code" inputmode="numeric" autocomplete="one-time-code" minlength="6" maxlength="12" required spellcheck="false">
-          <button class="primary" type="submit">Confirm email</button>
+       <div class="account-application-progress" aria-label="Application steps"><span class="current">Verify email</span><span>Identity and access</span><span>Review</span></div>
+       <form class="auth-form" data-application-email-confirm>
+         <label for="applicationCode">Verification code</label>
+          <input id="applicationCode" name="code" inputmode="numeric" pattern="\\d{8}" autocomplete="one-time-code" minlength="8" maxlength="8" required spellcheck="false" aria-describedby="applicationCodeHelp">
+          <small id="applicationCodeHelp">Enter all 8 digits. A leading zero is part of the code.</small>
+         <button class="primary" type="submit">Confirm email</button>
           <button class="auth-text-button" type="button" data-use-different-email>Use a different email</button>
         </form>`,
     });
@@ -327,7 +311,7 @@ function mountRegistration({ root, client }) {
         <button class="primary" type="submit">Review and submit application</button>
       </form>`,
     });
-    attachPasswordToggles(root);
+    attachPasswordVisibilityControls(root);
     const form = root.querySelector('[data-account-application-form]');
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -416,7 +400,7 @@ function mountStatus({ root, client, initialStatusToken = '' }) {
         'This view is private to the saved status token. Reviewer identities and internal evidence are not exposed.',
       body: `${alertMarkup(error)}${statusDetailMarkup(current)}${changeForm}${withdrawForm}`,
     });
-    attachPasswordToggles(root);
+    attachPasswordVisibilityControls(root);
     const resubmitForm = root.querySelector('[data-resubmit-form]');
     resubmitForm?.addEventListener('submit', async (event) => {
       event.preventDefault();

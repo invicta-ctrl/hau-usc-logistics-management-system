@@ -1,9 +1,14 @@
 import { Miniflare } from 'miniflare';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { createD1AccountApplicationRepository } from '../../src/server/d1/account-application-repository.js';
 import { createD1AccessManagementRepository } from '../../src/server/d1/access-management-repository.js';
+import { createD1IdentityFoundationRepository } from '../../src/server/d1/identity-foundation-repository.js';
 
 const BEFORE = '2026-08-03T00:00:00.000Z';
 const AFTER = '2026-08-03T00:01:00.000Z';
+const repositoryRoot = resolve(import.meta.dirname, '../..');
 
 let miniflare;
 
@@ -12,7 +17,31 @@ afterEach(async () => {
   miniflare = null;
 });
 
-async function database({ roleId = 'DOL_STAFF', credentialVersion = 1, lockedAt = null } = {}) {
+function migrationStatements(source) {
+  const statements = [];
+  let current = [];
+  let trigger = false;
+  for (const line of String(source).split(/\r?\n/u)) {
+    if (!current.length && /^\s*PRAGMA foreign_keys = ON;\s*$/u.test(line)) continue;
+    if (/^\s*CREATE TRIGGER\b/iu.test(line)) trigger = true;
+    current.push(line);
+    if ((trigger && /^END;\s*$/u.test(line)) || (!trigger && /;\s*$/u.test(line))) {
+      statements.push(current.join('\n'));
+      current = [];
+      trigger = false;
+    }
+  }
+  if (current.join('').trim()) throw new Error('The synthetic migration statement parser was incomplete.');
+  return statements;
+}
+
+async function database({
+  roleId = 'DOL_STAFF',
+  credentialVersion = 1,
+  lockedAt = null,
+  activityHistory = false,
+  accountApplications = false,
+} = {}) {
   miniflare = new Miniflare({
     modules: true,
     script: 'export default { fetch() { return new Response("ok"); } }',
@@ -20,6 +49,12 @@ async function database({ roleId = 'DOL_STAFF', credentialVersion = 1, lockedAt 
   });
   const db = await miniflare.getD1Database('DB');
   for (const statement of [
+    `CREATE TABLE app_metadata (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    ) STRICT`,
+    "INSERT INTO app_metadata (key, value, updated_at) VALUES ('operational_schema_version', '31', '2026-08-03T00:00:00.000Z')",
     `CREATE TABLE data_revisions (
       scope TEXT PRIMARY KEY,
       revision INTEGER NOT NULL,
@@ -50,6 +85,7 @@ async function database({ roleId = 'DOL_STAFF', credentialVersion = 1, lockedAt 
       last_password_reset_at TEXT,
       username_normalized TEXT,
       profile_email_verified_at TEXT,
+      verified_email_fingerprint TEXT,
       profile_department_id TEXT,
       profile_course_id TEXT,
       profile_year_level INTEGER,
@@ -120,6 +156,16 @@ async function database({ roleId = 'DOL_STAFF', credentialVersion = 1, lockedAt 
       correlation_id TEXT NOT NULL,
       notes TEXT NOT NULL
     ) STRICT`,
+    `CREATE TRIGGER audit_log_no_update
+       BEFORE UPDATE ON audit_log
+       BEGIN
+         SELECT RAISE(ABORT, 'audit log is append-only');
+       END`,
+    `CREATE TRIGGER audit_log_no_delete
+       BEFORE DELETE ON audit_log
+       BEGIN
+         SELECT RAISE(ABORT, 'audit log is append-only');
+       END`,
     `CREATE TABLE idempotency_keys (
       scope TEXT NOT NULL,
       idempotency_key TEXT NOT NULL,
@@ -136,6 +182,96 @@ async function database({ roleId = 'DOL_STAFF', credentialVersion = 1, lockedAt 
     ) STRICT`,
   ]) {
     await db.prepare(statement).run();
+  }
+  if (activityHistory) {
+    for (const migration of [
+      '0031_canonical_identity_foundation.sql',
+      '0032_staff_account_activity_history.sql',
+    ]) {
+      const source = await readFile(resolve(repositoryRoot, 'migrations', migration), 'utf8');
+      const statements = migrationStatements(source);
+      for (const [index, statement] of statements.entries()) {
+        try {
+          await db.prepare(statement.replace(/;\s*$/u, '')).run();
+        } catch (error) {
+          throw new Error(`Synthetic D1 migration failed at ${migration} statement ${index + 1}.`, {
+            cause: error,
+          });
+        }
+      }
+    }
+  } else {
+    for (const statement of [
+      `CREATE TABLE account_staff_links (
+        id TEXT PRIMARY KEY,
+        account_id TEXT NOT NULL,
+        person_id TEXT NOT NULL,
+        state TEXT NOT NULL
+      ) STRICT`,
+      `CREATE TABLE staff_account_activity_audit_context (
+        audit_id TEXT PRIMARY KEY,
+        person_id TEXT NOT NULL,
+        account_id TEXT NOT NULL,
+        account_staff_link_id TEXT NOT NULL,
+        link_state TEXT NOT NULL,
+        account_access_id_snapshot TEXT NOT NULL,
+        action_code TEXT NOT NULL,
+        correlation_id TEXT NOT NULL,
+        prepared_at TEXT NOT NULL
+      ) STRICT`,
+    ]) {
+      await db.prepare(statement).run();
+    }
+  }
+  if (accountApplications) {
+    for (const statement of [
+      `CREATE TABLE account_applications (
+        id TEXT PRIMARY KEY,
+        application_code TEXT NOT NULL UNIQUE,
+        email_fingerprint TEXT NOT NULL,
+        identity_class_id TEXT NOT NULL,
+        protected_email_envelope TEXT NOT NULL,
+        protected_profile_envelope TEXT NOT NULL,
+        department_id TEXT NOT NULL,
+        course_id TEXT NOT NULL DEFAULT '',
+        year_level INTEGER,
+        requested_username_normalized TEXT NOT NULL,
+        pending_password_credential_json TEXT,
+        requested_access_json TEXT NOT NULL,
+        state TEXT NOT NULL,
+        revision INTEGER NOT NULL,
+        status_token_digest TEXT NOT NULL UNIQUE,
+        status_token_expires_at TEXT NOT NULL,
+        client_request_id TEXT NOT NULL UNIQUE,
+        administrator_reviewer_id TEXT REFERENCES accounts(id),
+        administrator_reviewed_at TEXT,
+        director_reviewer_id TEXT REFERENCES accounts(id),
+        director_reviewed_at TEXT,
+        approved_account_id TEXT UNIQUE REFERENCES accounts(id),
+        expires_at TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        archived_at TEXT
+      ) STRICT`,
+      `CREATE TABLE account_application_history (
+        id TEXT PRIMARY KEY,
+        application_id TEXT NOT NULL REFERENCES account_applications(id),
+        from_state TEXT NOT NULL,
+        to_state TEXT NOT NULL,
+        actor_account_id TEXT REFERENCES accounts(id),
+        applicant_authority_fingerprint TEXT NOT NULL DEFAULT '',
+        reason TEXT NOT NULL DEFAULT '',
+        before_json TEXT NOT NULL,
+        after_json TEXT NOT NULL,
+        expected_revision INTEGER NOT NULL,
+        resulting_revision INTEGER NOT NULL,
+        idempotency_key TEXT NOT NULL UNIQUE,
+        correlation_id TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      ) STRICT`,
+    ]) {
+      await db.prepare(statement).run();
+    }
   }
   await db
     .prepare(
@@ -238,6 +374,122 @@ function nextAccount(overrides = {}) {
     },
     ...overrides,
   });
+}
+
+function statusIdempotency(key, createdAt) {
+  return {
+    scope: 'access-set-account-status',
+    key,
+    actorAccountId: 'OWNER-1',
+    requestFingerprint: `FP-${key}`,
+    result: { changed: true },
+    createdAt,
+  };
+}
+
+function activityPersonId(suffix) {
+  return `PER-423E4567-E89B-42D3-A456-426614174${suffix}`;
+}
+
+async function createActivityLink(foundation, { accountId, suffix, state = 'ACTIVE' }) {
+  const personId = activityPersonId(suffix);
+  const linkId = `LNK-ACTIVITY-${suffix}`;
+  await foundation.createPerson({ personId, sourceProvenanceEnvelope: null, createdAt: BEFORE });
+  await foundation.createAccountStaffLink(
+    {
+      id: linkId,
+      accountId,
+      personId,
+      state,
+      sourceProvenanceEnvelope: null,
+      createdAt: BEFORE,
+      updatedAt: BEFORE,
+    },
+    { correlationId: `COR-LINK-${suffix}` },
+  );
+  return { personId, linkId };
+}
+
+async function insertApplication(
+  db,
+  {
+    id,
+    state,
+    revision,
+    approvedAccountId = null,
+    administratorReviewerId = null,
+    applicationCode = `AAP-${id}`,
+  },
+) {
+  await db
+    .prepare(
+      `INSERT INTO account_applications (
+         id, application_code, email_fingerprint, identity_class_id, protected_email_envelope,
+         protected_profile_envelope, department_id, course_id, year_level,
+         requested_username_normalized, pending_password_credential_json, requested_access_json,
+         state, revision, status_token_digest, status_token_expires_at, client_request_id,
+         administrator_reviewer_id, administrator_reviewed_at, director_reviewer_id,
+         director_reviewed_at, approved_account_id, expires_at, created_at, updated_at, archived_at
+       ) VALUES (?1, ?2, 'KEYED-EMAIL-FP', 'SYNTHETIC_STAFF', 'v1.synthetic.email',
+         'v1.synthetic.profile', 'USC-DEPT-DOL', '', NULL, 'synthetic.applicant',
+         '{"hash":"synthetic"}', '{"requestedRoleId":"REQUESTER"}', ?3, ?4,
+         ?5, '2026-09-03T00:00:00.000Z', ?6, ?7, ?8, NULL, NULL, ?9,
+         '2026-09-03T00:00:00.000Z', ?10, ?10, NULL)`,
+    )
+    .bind(
+      id,
+      applicationCode,
+      state,
+      revision,
+      `STATUS-${id}`,
+      `REQUEST-${id}`,
+      administratorReviewerId,
+      administratorReviewerId ? BEFORE : null,
+      approvedAccountId,
+      BEFORE,
+    )
+    .run();
+}
+
+function applicationHistory({ id, applicationId, fromState, toState, expectedRevision, createdAt }) {
+  return {
+    id,
+    applicationId,
+    fromState,
+    toState,
+    actorAccountId: 'ACCOUNT-1',
+    applicantAuthorityFingerprint: 'SYNTHETIC-APPLICANT-AUTHORITY-FP',
+    reason: 'Synthetic real D1 activity-history producer coverage.',
+    before: { state: fromState, revision: expectedRevision },
+    after: { state: toState },
+    expectedRevision,
+    resultingRevision: expectedRevision + 1,
+    idempotencyKey: `IDEMPOTENCY-${id}`,
+    correlationId: `COR-${id}`,
+    createdAt,
+  };
+}
+
+function applicationAudit({
+  id,
+  action,
+  applicationId,
+  accountId = '',
+  actorAccountId = 'ACCOUNT-1',
+  createdAt,
+}) {
+  return {
+    id,
+    applicationId,
+    accountId,
+    actorAccountId,
+    action,
+    before: {},
+    after: { state: action },
+    correlationId: `COR-${id}`,
+    reason: 'Synthetic real D1 activity-history producer coverage.',
+    createdAt,
+  };
 }
 
 async function update(repository, current, proposed = nextAccount()) {
@@ -648,4 +900,752 @@ describe('D1 access-management repository guards', () => {
       result: idempotency.result,
     });
   });
+
+  it('projects and consumes real 0031/0032 link and account-audit contexts in Miniflare D1', async () => {
+    const db = await database({ activityHistory: true });
+    const foundation = createD1IdentityFoundationRepository(db);
+    const repository = createD1AccessManagementRepository(db);
+    const personId = 'PER-423E4567-E89B-42D3-A456-426614174000';
+    await foundation.createPerson({ personId, sourceProvenanceEnvelope: null, createdAt: BEFORE });
+    await foundation.createAccountStaffLink(
+      {
+        id: 'LNK-ACTIVITY-0001',
+        accountId: 'ACCOUNT-1',
+        personId,
+        state: 'ACTIVE',
+        sourceProvenanceEnvelope: null,
+        createdAt: BEFORE,
+        updatedAt: BEFORE,
+      },
+      { correlationId: 'COR-LINK-CREATE-0001' },
+    );
+
+    await repository.changeAccessId({
+      account: account({ accessIdNormalized: 'HAU.FOOD.001' }),
+      actor: { id: 'OWNER-1', accessIdNormalized: 'HAU.OWNER.001' },
+      newAccessId: 'HAU.FOOD.009',
+      collisionKey: 'HAUFOOD009',
+      changedAt: AFTER,
+      reason: 'Synthetic activity projection verification.',
+      correlationId: 'COR-ACCESS-ID-0001',
+      environment: 'TEST',
+      idempotencyKey: 'access-id-activity-0001',
+      historyId: 'ACCESS-HISTORY-0001',
+      auditId: 'AUDIT-ACTIVITY-0001',
+    });
+    await foundation.updateAccountStaffLinkState({
+      id: 'LNK-ACTIVITY-0001',
+      state: 'REVOKED',
+      updatedAt: '2026-08-03T00:02:00.000Z',
+      correlationId: 'COR-LINK-STATE-0001',
+    });
+    await foundation.createStaffAssignment(
+      {
+        id: 'ASN-ACTIVITY-0001',
+        personId,
+        assignmentFingerprint: 'FP-ACTIVITY-ASSIGNMENT-0001',
+        protectedAssignmentEnvelope: 'v1.synthetic.assignment.activity',
+        state: 'ACTIVE',
+        effectiveFrom: '2026-08-03T01:00:00.000Z',
+        effectiveTo: '2026-08-03T02:00:00.000Z',
+        sourceProvenanceEnvelope: null,
+        createdAt: '2026-08-03T00:03:00.000Z',
+        updatedAt: '2026-08-03T00:03:00.000Z',
+      },
+      { correlationId: 'COR-ASSIGNMENT-CREATE-0001' },
+    );
+    await foundation.updateStaffAssignmentState({
+      id: 'ASN-ACTIVITY-0001',
+      state: 'HISTORICAL',
+      updatedAt: '2026-08-03T00:04:00.000Z',
+      correlationId: 'COR-ASSIGNMENT-STATE-0001',
+    });
+    await foundation.updateStaffAssignmentEffectiveWindow({
+      id: 'ASN-ACTIVITY-0001',
+      effectiveFrom: '2026-08-03T01:30:00.000Z',
+      effectiveTo: '2026-08-03T02:30:00.000Z',
+      updatedAt: '2026-08-03T00:05:00.000Z',
+      correlationId: 'COR-ASSIGNMENT-WINDOW-0001',
+    });
+
+    await expect(
+      db
+        .prepare(
+          `SELECT event_type, action_code, person_id, account_id, account_staff_link_id,
+                  account_access_id_snapshot, correlation_id
+           FROM staff_account_activity_history
+           ORDER BY occurred_at, event_id`,
+        )
+        .all(),
+    ).resolves.toMatchObject({
+      results: [
+        {
+          event_type: 'ACCOUNT_STAFF_LINK',
+          action_code: 'LINK_CREATED',
+          person_id: personId,
+          account_id: 'ACCOUNT-1',
+          account_staff_link_id: 'LNK-ACTIVITY-0001',
+          account_access_id_snapshot: null,
+          correlation_id: 'COR-LINK-CREATE-0001',
+        },
+        {
+          event_type: 'ACCOUNT_AUDIT',
+          action_code: 'ACCESS_ID_CHANGED',
+          person_id: personId,
+          account_id: 'ACCOUNT-1',
+          account_staff_link_id: 'LNK-ACTIVITY-0001',
+          account_access_id_snapshot: 'HAU.FOOD.009',
+          correlation_id: 'COR-ACCESS-ID-0001',
+        },
+        {
+          event_type: 'ACCOUNT_STAFF_LINK',
+          action_code: 'LINK_STATE_CHANGED',
+          person_id: personId,
+          account_id: 'ACCOUNT-1',
+          account_staff_link_id: 'LNK-ACTIVITY-0001',
+          account_access_id_snapshot: null,
+          correlation_id: 'COR-LINK-STATE-0001',
+        },
+        {
+          event_type: 'STAFF_ASSIGNMENT',
+          action_code: 'ASSIGNMENT_CREATED',
+          person_id: personId,
+          account_id: null,
+          account_staff_link_id: null,
+          account_access_id_snapshot: null,
+          correlation_id: 'COR-ASSIGNMENT-CREATE-0001',
+        },
+        {
+          event_type: 'STAFF_ASSIGNMENT',
+          action_code: 'ASSIGNMENT_STATE_CHANGED',
+          person_id: personId,
+          account_id: null,
+          account_staff_link_id: null,
+          account_access_id_snapshot: null,
+          correlation_id: 'COR-ASSIGNMENT-STATE-0001',
+        },
+        {
+          event_type: 'STAFF_ASSIGNMENT',
+          action_code: 'ASSIGNMENT_EFFECTIVE_WINDOW_CHANGED',
+          person_id: personId,
+          account_id: null,
+          account_staff_link_id: null,
+          account_access_id_snapshot: null,
+          correlation_id: 'COR-ASSIGNMENT-WINDOW-0001',
+        },
+      ],
+    });
+    await expect(
+      db.prepare('SELECT COUNT(*) AS count FROM staff_account_activity_audit_context').first(),
+    ).resolves.toEqual({ count: 0 });
+    await expect(
+      db.prepare('SELECT COUNT(*) AS count FROM staff_account_activity_transition_context').first(),
+    ).resolves.toEqual({ count: 0 });
+    await expect(
+      db.prepare("UPDATE staff_account_activity_history SET action_code = 'LINK_CREATED'").run(),
+    ).rejects.toThrow(/append-only/u);
+    await expect(
+      db
+        .prepare(
+          "UPDATE account_staff_links SET state = 'QUARANTINED', updated_at = '2026-08-03T00:06:00.000Z' WHERE id = 'LNK-ACTIVITY-0001'",
+        )
+        .run(),
+    ).rejects.toThrow(/context/u);
+    await expect(
+      db
+        .prepare(
+          "UPDATE staff_assignments SET assignment_fingerprint = 'FP-ACTIVITY-ASSIGNMENT-OTHER' WHERE id = 'ASN-ACTIVITY-0001'",
+        )
+        .run(),
+    ).rejects.toThrow(/immutable/u);
+    await expect(db.prepare("DELETE FROM audit_log WHERE id = 'AUDIT-ACTIVITY-0001'").run()).rejects.toThrow(
+      /append-only/u,
+    );
+  });
+
+  it('executes every account-audit producer and unprojected safety branch through real Miniflare D1', async () => {
+    const db = await database({ activityHistory: true, accountApplications: true });
+    const foundation = createD1IdentityFoundationRepository(db);
+    const access = createD1AccessManagementRepository(db);
+    const applications = createD1AccountApplicationRepository(db);
+    const accessChangedAt = '2026-08-03T00:01:00.000Z';
+    const statusChangedAt = '2026-08-03T00:02:00.000Z';
+    const activationAt = '2026-08-03T00:03:00.000Z';
+    const noLinkActivationAt = '2026-08-03T00:04:00.000Z';
+    const accessStarterAt = '2026-08-03T00:05:00.000Z';
+    const applicationStarterAt = '2026-08-03T00:06:00.000Z';
+    const active = await createActivityLink(foundation, { accountId: 'ACCOUNT-1', suffix: '101' });
+
+    await access.changeAccessId({
+      account: account({ accessIdNormalized: 'HAU.FOOD.001' }),
+      actor: { id: 'OWNER-1', accessIdNormalized: 'HAU.OWNER.001' },
+      newAccessId: 'HAU.FOOD.009',
+      collisionKey: 'HAUFOOD009',
+      changedAt: accessChangedAt,
+      reason: 'Synthetic real D1 access-ID producer coverage.',
+      correlationId: 'COR-ACCESS-ID-REAL',
+      environment: 'TEST',
+      idempotencyKey: 'access-id-real-0001',
+      historyId: 'ACCESS-HISTORY-REAL-0001',
+      auditId: 'AUDIT-ACCESS-ID-REAL-0001',
+    });
+    await access.setAccountStatus({
+      account: account({
+        accessIdNormalized: 'HAU.FOOD.009',
+        credentialVersion: 2,
+        updatedAt: accessChangedAt,
+      }),
+      actor: { id: 'OWNER-1' },
+      nextStatus: 'LOCKED',
+      changedAt: statusChangedAt,
+      reason: 'Synthetic real D1 status producer coverage.',
+      correlationId: 'COR-STATUS-REAL',
+      auditId: 'AUDIT-STATUS-REAL-0001',
+      idempotency: statusIdempotency('status-real-0001', statusChangedAt),
+    });
+
+    await insertAccount(db, {
+      id: 'ACCOUNT-ACTIVATION-REAL',
+      accessId: 'HAU.ACTIVATION.001',
+    });
+    const activation = await createActivityLink(foundation, {
+      accountId: 'ACCOUNT-ACTIVATION-REAL',
+      suffix: '102',
+    });
+    await insertApplication(db, {
+      id: 'APP-ACTIVATION-REAL',
+      state: 'APPROVED_ACTIVATION_REQUIRED',
+      revision: 4,
+      approvedAccountId: 'ACCOUNT-ACTIVATION-REAL',
+      administratorReviewerId: 'ACCOUNT-1',
+    });
+    await applications.transitionApplication({
+      applicationId: 'APP-ACTIVATION-REAL',
+      fromState: 'APPROVED_ACTIVATION_REQUIRED',
+      toState: 'ACTIVE',
+      expectedRevision: 4,
+      actorAccountId: 'ACCOUNT-ACTIVATION-REAL',
+      idempotencyKey: 'application-activation-real-0001',
+      occurredAt: activationAt,
+      history: applicationHistory({
+        id: 'HISTORY-ACTIVATION-REAL-0001',
+        applicationId: 'APP-ACTIVATION-REAL',
+        fromState: 'APPROVED_ACTIVATION_REQUIRED',
+        toState: 'ACTIVE',
+        expectedRevision: 4,
+        createdAt: activationAt,
+      }),
+      audit: applicationAudit({
+        id: 'AUDIT-APPLICATION-ACTIVATION-REAL-0001',
+        action: 'ACCOUNT_APPLICATION_ACTIVATED',
+        applicationId: 'APP-ACTIVATION-REAL',
+        actorAccountId: 'ACCOUNT-ACTIVATION-REAL',
+        createdAt: activationAt,
+      }),
+      conditionalAccountAudit: applicationAudit({
+        id: 'AUDIT-ACCOUNT-ACTIVATION-REAL-0001',
+        action: 'ACCOUNT_APPLICATION_ACTIVATED',
+        applicationId: 'APP-ACTIVATION-REAL',
+        accountId: 'ACCOUNT-ACTIVATION-REAL',
+        actorAccountId: 'ACCOUNT-ACTIVATION-REAL',
+        createdAt: activationAt,
+      }),
+    });
+
+    await insertAccount(db, { id: 'ACCOUNT-ACTIVATION-NO-LINK', accessId: 'HAU.ACTIVATION.002' });
+    await insertApplication(db, {
+      id: 'APP-ACTIVATION-NO-LINK',
+      state: 'APPROVED_ACTIVATION_REQUIRED',
+      revision: 4,
+      approvedAccountId: 'ACCOUNT-ACTIVATION-NO-LINK',
+      administratorReviewerId: 'ACCOUNT-1',
+    });
+    await applications.transitionApplication({
+      applicationId: 'APP-ACTIVATION-NO-LINK',
+      fromState: 'APPROVED_ACTIVATION_REQUIRED',
+      toState: 'ACTIVE',
+      expectedRevision: 4,
+      actorAccountId: 'ACCOUNT-ACTIVATION-NO-LINK',
+      idempotencyKey: 'application-activation-no-link-0001',
+      occurredAt: noLinkActivationAt,
+      history: applicationHistory({
+        id: 'HISTORY-ACTIVATION-NO-LINK-0001',
+        applicationId: 'APP-ACTIVATION-NO-LINK',
+        fromState: 'APPROVED_ACTIVATION_REQUIRED',
+        toState: 'ACTIVE',
+        expectedRevision: 4,
+        createdAt: noLinkActivationAt,
+      }),
+      audit: applicationAudit({
+        id: 'AUDIT-APPLICATION-ACTIVATION-NO-LINK-0001',
+        action: 'ACCOUNT_APPLICATION_ACTIVATED',
+        applicationId: 'APP-ACTIVATION-NO-LINK',
+        actorAccountId: 'ACCOUNT-ACTIVATION-NO-LINK',
+        createdAt: noLinkActivationAt,
+      }),
+      conditionalAccountAudit: applicationAudit({
+        id: 'AUDIT-ACCOUNT-ACTIVATION-NO-LINK-0001',
+        action: 'ACCOUNT_APPLICATION_ACTIVATED',
+        applicationId: 'APP-ACTIVATION-NO-LINK',
+        accountId: 'ACCOUNT-ACTIVATION-NO-LINK',
+        createdAt: noLinkActivationAt,
+      }),
+    });
+
+    await access.createStarterAccount({
+      account: {
+        id: 'ACCOUNT-STARTER-ACCESS',
+        accessIdNormalized: 'HAU.STARTER.ACCESS',
+        status: 'STARTER',
+        roleId: 'DOL_STAFF',
+        defaultCommitteeId: '',
+        committeeIds: [],
+        accessProfile: null,
+        temporaryCredential: { hash: 'synthetic-access-starter' },
+        createdAt: accessStarterAt,
+        lendingEligible: false,
+        institutionId: '',
+        departmentId: '',
+      },
+      actor: { id: 'OWNER-1' },
+      collisionKey: 'HAUSTARTERACCESS',
+      reason: 'Synthetic real D1 access starter producer coverage.',
+      correlationId: 'COR-STARTER-ACCESS-REAL',
+      auditId: 'AUDIT-STARTER-ACCESS-REAL-0001',
+    });
+
+    await insertApplication(db, {
+      id: 'APP-STARTER-APPLICATION',
+      state: 'PENDING_DIRECTOR_APPROVAL',
+      revision: 3,
+      administratorReviewerId: 'ACCOUNT-1',
+    });
+    await applications.approveApplication({
+      applicationId: 'APP-STARTER-APPLICATION',
+      expectedRevision: 3,
+      actorAccountId: 'ACCOUNT-1',
+      idempotencyKey: 'application-starter-real-0001',
+      approvedAt: applicationStarterAt,
+      starterAccount: {
+        id: 'ACCOUNT-STARTER-APPLICATION',
+        accessIdNormalized: 'HAU.STARTER.APPLICATION',
+        collisionKey: 'HAUSTARTERAPPLICATION',
+        roleId: 'DOL_STAFF',
+        defaultCommitteeId: '',
+        committeeIds: [],
+        accessProfile: null,
+        temporaryCredential: { hash: 'synthetic-application-starter' },
+        createdAt: applicationStarterAt,
+        lendingEligible: false,
+        institutionId: '',
+        departmentId: '',
+        usernameNormalized: 'synthetic.application.starter',
+        verifiedEmailFingerprint: 'KEYED-EMAIL-FP',
+        profileDepartmentId: 'USC-DEPT-DOL',
+        profileCourseId: '',
+        profileYearLevel: null,
+      },
+      history: applicationHistory({
+        id: 'HISTORY-STARTER-APPLICATION-REAL-0001',
+        applicationId: 'APP-STARTER-APPLICATION',
+        fromState: 'PENDING_DIRECTOR_APPROVAL',
+        toState: 'APPROVED_ACTIVATION_REQUIRED',
+        expectedRevision: 3,
+        createdAt: applicationStarterAt,
+      }),
+      accountAudit: applicationAudit({
+        id: 'AUDIT-STARTER-APPLICATION-REAL-0001',
+        action: 'STARTER_ACCOUNT_CREATED',
+        applicationId: 'APP-STARTER-APPLICATION',
+        accountId: 'ACCOUNT-STARTER-APPLICATION',
+        createdAt: applicationStarterAt,
+      }),
+      applicationAudit: applicationAudit({
+        id: 'AUDIT-APPLICATION-APPROVAL-REAL-0001',
+        action: 'ACCOUNT_APPLICATION_DIRECTOR_APPROVED',
+        applicationId: 'APP-STARTER-APPLICATION',
+        createdAt: applicationStarterAt,
+      }),
+      allowSameReviewer: true,
+    });
+
+    const safetyAccounts = [
+      { id: 'ACCOUNT-NO-LINK', accessId: 'HAU.SAFETY.001' },
+      { id: 'ACCOUNT-AMBIGUOUS', accessId: 'HAU.SAFETY.002' },
+      { id: 'ACCOUNT-REVOKED', accessId: 'HAU.SAFETY.003' },
+      { id: 'ACCOUNT-QUARANTINED', accessId: 'HAU.SAFETY.004' },
+      { id: 'ACCOUNT-MALFORMED-CORRELATION', accessId: 'HAU.SAFETY.005' },
+      { id: 'ACCOUNT-MALFORMED-TIMESTAMP', accessId: 'HAU.SAFETY.006' },
+    ];
+    for (const safetyAccount of safetyAccounts) await insertAccount(db, safetyAccount);
+    await createActivityLink(foundation, { accountId: 'ACCOUNT-AMBIGUOUS', suffix: '103' });
+    // The production partial-unique index prevents this state. Remove it only in
+    // this ephemeral D1 fixture to prove that a pre-existing corrupt/legacy
+    // ambiguous source has no canonical projection; the producer still uses the
+    // real repository statement against the migrated table and triggers.
+    await db.prepare('DROP INDEX uq_account_staff_links_active_account').run();
+    await createActivityLink(foundation, { accountId: 'ACCOUNT-AMBIGUOUS', suffix: '104' });
+    await createActivityLink(foundation, { accountId: 'ACCOUNT-REVOKED', suffix: '105', state: 'REVOKED' });
+    await createActivityLink(foundation, {
+      accountId: 'ACCOUNT-QUARANTINED',
+      suffix: '106',
+      state: 'QUARANTINED',
+    });
+    await createActivityLink(foundation, { accountId: 'ACCOUNT-MALFORMED-CORRELATION', suffix: '107' });
+    await createActivityLink(foundation, { accountId: 'ACCOUNT-MALFORMED-TIMESTAMP', suffix: '108' });
+
+    const statusSafetyCases = [
+      {
+        id: 'ACCOUNT-NO-LINK',
+        accessId: 'HAU.SAFETY.001',
+        auditId: 'AUDIT-NO-LINK-REAL-0001',
+        correlationId: 'COR-NO-LINK-REAL',
+        changedAt: '2026-08-03T00:07:00.000Z',
+      },
+      {
+        id: 'ACCOUNT-AMBIGUOUS',
+        accessId: 'HAU.SAFETY.002',
+        auditId: 'AUDIT-AMBIGUOUS-REAL-0001',
+        correlationId: 'COR-AMBIGUOUS-REAL',
+        changedAt: '2026-08-03T00:08:00.000Z',
+      },
+      {
+        id: 'ACCOUNT-REVOKED',
+        accessId: 'HAU.SAFETY.003',
+        auditId: 'AUDIT-REVOKED-REAL-0001',
+        correlationId: 'COR-REVOKED-REAL',
+        changedAt: '2026-08-03T00:09:00.000Z',
+      },
+      {
+        id: 'ACCOUNT-QUARANTINED',
+        accessId: 'HAU.SAFETY.004',
+        auditId: 'AUDIT-QUARANTINED-REAL-0001',
+        correlationId: 'COR-QUARANTINED-REAL',
+        changedAt: '2026-08-03T00:10:00.000Z',
+      },
+      {
+        id: 'ACCOUNT-MALFORMED-CORRELATION',
+        accessId: 'HAU.SAFETY.005',
+        auditId: 'AUDIT-MALFORMED-CORRELATION-REAL-0001',
+        correlationId: ' ',
+        changedAt: '2026-08-03T00:11:00.000Z',
+      },
+      {
+        id: 'ACCOUNT-MALFORMED-TIMESTAMP',
+        accessId: 'HAU.SAFETY.006',
+        auditId: 'AUDIT-MALFORMED-TIMESTAMP-REAL-0001',
+        correlationId: 'COR-MALFORMED-TIMESTAMP-REAL',
+        changedAt: '2026-08-03T00:12:00.00Z',
+      },
+    ];
+    for (const safetyCase of statusSafetyCases) {
+      await access.setAccountStatus({
+        account: account({ id: safetyCase.id, accessIdNormalized: safetyCase.accessId }),
+        actor: { id: 'OWNER-1' },
+        nextStatus: 'LOCKED',
+        changedAt: safetyCase.changedAt,
+        reason: 'Synthetic real D1 unprojected safety coverage.',
+        correlationId: safetyCase.correlationId,
+        auditId: safetyCase.auditId,
+        idempotency: statusIdempotency(`status-${safetyCase.id}`, safetyCase.changedAt),
+      });
+    }
+
+    const insertLegacyAudit = ({ id, createdAt, action, entityType, entityId, correlationId }) =>
+      db
+        .prepare(
+          `INSERT INTO audit_log (
+             id, created_at, action, entity_type, entity_id, actor_account_id,
+             before_json, after_json, correlation_id, notes
+           ) VALUES (?1, ?2, ?3, ?4, ?5, 'OWNER-1', '{}', '{}', ?6, '')`,
+        )
+        .bind(id, createdAt, action, entityType, entityId, correlationId)
+        .run();
+    await insertLegacyAudit({
+      id: 'AUDIT-AUTHENTICATION-SENTINEL-REAL-0001',
+      createdAt: '2026-08-03T00:13:00.000Z',
+      action: 'AUTHENTICATION',
+      entityType: 'AUTHENTICATION',
+      entityId: 'AUTHENTICATION',
+      correlationId: 'COR-AUTHENTICATION-SENTINEL',
+    });
+    await insertLegacyAudit({
+      id: 'AUDIT-NON-ACCOUNT-REAL-0001',
+      createdAt: '2026-08-03T00:14:00.000Z',
+      action: 'ACCOUNT_STATUS_CHANGED',
+      entityType: 'REQUEST',
+      entityId: 'REQUEST-SYNTHETIC-0001',
+      correlationId: 'COR-NON-ACCOUNT-REAL',
+    });
+    await insertLegacyAudit({
+      id: 'AUDIT-NONEXISTENT-ACCOUNT-REAL-0001',
+      createdAt: '2026-08-03T00:15:00.000Z',
+      action: 'ACCOUNT_STATUS_CHANGED',
+      entityType: 'ACCOUNT',
+      entityId: 'ACCOUNT-NONEXISTENT',
+      correlationId: 'COR-NONEXISTENT-ACCOUNT-REAL',
+    });
+    await insertLegacyAudit({
+      id: 'AUDIT-DELAYED-REAL-0001',
+      createdAt: '2026-08-03T00:16:00.000Z',
+      action: 'ACCOUNT_STATUS_CHANGED',
+      entityType: 'ACCOUNT',
+      entityId: 'ACCOUNT-1',
+      correlationId: 'COR-DELAYED-REAL',
+    });
+    await db
+      .prepare(
+        `INSERT INTO staff_account_activity_audit_context (
+           audit_id, person_id, account_id, account_staff_link_id, link_state,
+           account_access_id_snapshot, action_code, correlation_id, prepared_at
+         ) VALUES (?1, ?2, 'ACCOUNT-1', ?3, 'ACTIVE', 'HAU.FOOD.009',
+           'ACCOUNT_STATUS_CHANGED', ?4, ?5)`,
+      )
+      .bind(
+        'AUDIT-DELAYED-REAL-0001',
+        active.personId,
+        active.linkId,
+        'COR-DELAYED-REAL',
+        '2026-08-03T00:17:00.000Z',
+      )
+      .run();
+    await expect(
+      insertLegacyAudit({
+        id: 'AUDIT-DELAYED-REAL-0001',
+        createdAt: '2026-08-03T00:18:00.000Z',
+        action: 'ACCOUNT_STATUS_CHANGED',
+        entityType: 'ACCOUNT',
+        entityId: 'ACCOUNT-1',
+        correlationId: 'COR-DELAYED-REAL',
+      }),
+    ).rejects.toThrow();
+
+    const conflictContext = db
+      .prepare(
+        `INSERT INTO staff_account_activity_audit_context (
+           audit_id, person_id, account_id, account_staff_link_id, link_state,
+           account_access_id_snapshot, action_code, correlation_id, prepared_at
+         ) VALUES (?1, ?2, 'ACCOUNT-1', ?3, 'ACTIVE', 'HAU.FOOD.009',
+           'ACCOUNT_STATUS_CHANGED', ?4, ?5)`,
+      )
+      .bind(
+        'AUDIT-CONTEXT-CONFLICT-REAL-0001',
+        active.personId,
+        active.linkId,
+        'COR-CONTEXT-EXPECTED',
+        '2026-08-03T00:19:00.000Z',
+      );
+    const conflictAudit = db
+      .prepare(
+        `INSERT INTO audit_log (
+           id, created_at, action, entity_type, entity_id, actor_account_id,
+           before_json, after_json, correlation_id, notes
+         ) VALUES (?1, '2026-08-03T00:19:00.000Z', 'ACCOUNT_STATUS_CHANGED', 'ACCOUNT',
+           'ACCOUNT-1', 'OWNER-1', '{}', '{}', 'COR-CONTEXT-WRONG', '')`,
+      )
+      .bind('AUDIT-CONTEXT-CONFLICT-REAL-0001');
+    await expect(db.batch([conflictContext, conflictAudit])).rejects.toThrow(/context mismatch/u);
+
+    const accountAuditHistory = await db
+      .prepare(
+        `SELECT action_code, account_id, person_id, account_access_id_snapshot
+         FROM staff_account_activity_history
+         WHERE event_type = 'ACCOUNT_AUDIT'
+         ORDER BY occurred_at, event_id`,
+      )
+      .all();
+    expect(accountAuditHistory.results).toEqual([
+      {
+        action_code: 'ACCESS_ID_CHANGED',
+        account_id: 'ACCOUNT-1',
+        person_id: active.personId,
+        account_access_id_snapshot: 'HAU.FOOD.009',
+      },
+      {
+        action_code: 'ACCOUNT_STATUS_CHANGED',
+        account_id: 'ACCOUNT-1',
+        person_id: active.personId,
+        account_access_id_snapshot: 'HAU.FOOD.009',
+      },
+      {
+        action_code: 'ACCOUNT_APPLICATION_ACTIVATED',
+        account_id: 'ACCOUNT-ACTIVATION-REAL',
+        person_id: activation.personId,
+        account_access_id_snapshot: 'HAU.ACTIVATION.001',
+      },
+    ]);
+    await expect(
+      db
+        .prepare(
+          `SELECT id, entity_type, entity_id
+           FROM audit_log
+           WHERE id IN (
+             'AUDIT-ACCOUNT-ACTIVATION-REAL-0001',
+             'AUDIT-AMBIGUOUS-REAL-0001',
+             'AUDIT-APPLICATION-ACTIVATION-REAL-0001',
+             'AUDIT-APPLICATION-APPROVAL-REAL-0001',
+             'AUDIT-MALFORMED-CORRELATION-REAL-0001',
+             'AUDIT-MALFORMED-TIMESTAMP-REAL-0001',
+             'AUDIT-NO-LINK-REAL-0001',
+             'AUDIT-QUARANTINED-REAL-0001',
+             'AUDIT-REVOKED-REAL-0001'
+           )
+           ORDER BY id`,
+        )
+        .all(),
+    ).resolves.toMatchObject({
+      results: [
+        {
+          id: 'AUDIT-ACCOUNT-ACTIVATION-REAL-0001',
+          entity_type: 'ACCOUNT',
+          entity_id: 'ACCOUNT-ACTIVATION-REAL',
+        },
+        {
+          id: 'AUDIT-AMBIGUOUS-REAL-0001',
+          entity_type: 'ACCOUNT',
+          entity_id: 'ACCOUNT-AMBIGUOUS',
+        },
+        {
+          id: 'AUDIT-APPLICATION-ACTIVATION-REAL-0001',
+          entity_type: 'ACCOUNT_APPLICATION',
+          entity_id: 'APP-ACTIVATION-REAL',
+        },
+        {
+          id: 'AUDIT-APPLICATION-APPROVAL-REAL-0001',
+          entity_type: 'ACCOUNT_APPLICATION',
+          entity_id: 'APP-STARTER-APPLICATION',
+        },
+        {
+          id: 'AUDIT-MALFORMED-CORRELATION-REAL-0001',
+          entity_type: 'ACCOUNT',
+          entity_id: 'ACCOUNT-MALFORMED-CORRELATION',
+        },
+        {
+          id: 'AUDIT-MALFORMED-TIMESTAMP-REAL-0001',
+          entity_type: 'ACCOUNT',
+          entity_id: 'ACCOUNT-MALFORMED-TIMESTAMP',
+        },
+        {
+          id: 'AUDIT-NO-LINK-REAL-0001',
+          entity_type: 'ACCOUNT',
+          entity_id: 'ACCOUNT-NO-LINK',
+        },
+        {
+          id: 'AUDIT-QUARANTINED-REAL-0001',
+          entity_type: 'ACCOUNT',
+          entity_id: 'ACCOUNT-QUARANTINED',
+        },
+        {
+          id: 'AUDIT-REVOKED-REAL-0001',
+          entity_type: 'ACCOUNT',
+          entity_id: 'ACCOUNT-REVOKED',
+        },
+      ],
+    });
+    await expect(
+      db
+        .prepare(
+          `SELECT id, entity_type, entity_id
+           FROM audit_log
+           WHERE id IN (
+             'AUDIT-STARTER-ACCESS-REAL-0001',
+             'AUDIT-STARTER-APPLICATION-REAL-0001',
+             'AUDIT-APPLICATION-ACTIVATION-NO-LINK-0001',
+             'AUDIT-AUTHENTICATION-SENTINEL-REAL-0001',
+             'AUDIT-NON-ACCOUNT-REAL-0001',
+             'AUDIT-NONEXISTENT-ACCOUNT-REAL-0001',
+             'AUDIT-DELAYED-REAL-0001'
+           )
+           ORDER BY id`,
+        )
+        .all(),
+    ).resolves.toMatchObject({
+      results: [
+        {
+          id: 'AUDIT-APPLICATION-ACTIVATION-NO-LINK-0001',
+          entity_type: 'ACCOUNT_APPLICATION',
+          entity_id: 'APP-ACTIVATION-NO-LINK',
+        },
+        {
+          id: 'AUDIT-AUTHENTICATION-SENTINEL-REAL-0001',
+          entity_type: 'AUTHENTICATION',
+          entity_id: 'AUTHENTICATION',
+        },
+        { id: 'AUDIT-DELAYED-REAL-0001', entity_type: 'ACCOUNT', entity_id: 'ACCOUNT-1' },
+        {
+          id: 'AUDIT-NON-ACCOUNT-REAL-0001',
+          entity_type: 'REQUEST',
+          entity_id: 'REQUEST-SYNTHETIC-0001',
+        },
+        {
+          id: 'AUDIT-NONEXISTENT-ACCOUNT-REAL-0001',
+          entity_type: 'ACCOUNT',
+          entity_id: 'ACCOUNT-NONEXISTENT',
+        },
+        {
+          id: 'AUDIT-STARTER-ACCESS-REAL-0001',
+          entity_type: 'ACCOUNT',
+          entity_id: 'ACCOUNT-STARTER-ACCESS',
+        },
+        {
+          id: 'AUDIT-STARTER-APPLICATION-REAL-0001',
+          entity_type: 'ACCOUNT',
+          entity_id: 'ACCOUNT-STARTER-APPLICATION',
+        },
+      ],
+    });
+    await expect(
+      db
+        .prepare(
+          `SELECT COUNT(*) AS count
+           FROM audit_log
+           WHERE id = 'AUDIT-ACCOUNT-ACTIVATION-NO-LINK-0001'`,
+        )
+        .first(),
+    ).resolves.toEqual({ count: 0 });
+    await expect(
+      db
+        .prepare(
+          `SELECT COUNT(*) AS count
+           FROM staff_account_activity_history
+           WHERE source_event_id IN (
+             'AUDIT-STARTER-ACCESS-REAL-0001',
+             'AUDIT-STARTER-APPLICATION-REAL-0001',
+             'AUDIT-APPLICATION-APPROVAL-REAL-0001',
+             'AUDIT-APPLICATION-ACTIVATION-NO-LINK-0001',
+             'AUDIT-AUTHENTICATION-SENTINEL-REAL-0001',
+             'AUDIT-NON-ACCOUNT-REAL-0001',
+             'AUDIT-NONEXISTENT-ACCOUNT-REAL-0001',
+             'AUDIT-DELAYED-REAL-0001',
+             'AUDIT-NO-LINK-REAL-0001',
+             'AUDIT-AMBIGUOUS-REAL-0001',
+             'AUDIT-REVOKED-REAL-0001',
+             'AUDIT-QUARANTINED-REAL-0001',
+             'AUDIT-MALFORMED-CORRELATION-REAL-0001',
+             'AUDIT-MALFORMED-TIMESTAMP-REAL-0001'
+           )`,
+        )
+        .first(),
+    ).resolves.toEqual({ count: 0 });
+    await expect(
+      db
+        .prepare(
+          `SELECT audit_id
+           FROM staff_account_activity_audit_context
+           ORDER BY audit_id`,
+        )
+        .all(),
+    ).resolves.toMatchObject({
+      results: [{ audit_id: 'AUDIT-DELAYED-REAL-0001' }],
+    });
+    await expect(
+      db
+        .prepare(
+          `SELECT COUNT(*) AS count
+           FROM staff_account_activity_audit_context
+           WHERE audit_id = 'AUDIT-CONTEXT-CONFLICT-REAL-0001'`,
+        )
+        .first(),
+    ).resolves.toEqual({ count: 0 });
+  }, 30_000);
 });

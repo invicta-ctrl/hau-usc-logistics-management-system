@@ -170,7 +170,7 @@
   position: relative;
 }
 .auth-password-control input {
-  padding-right: 6rem;
+  padding-right: 6.25rem;
 }
 .auth-password-control .auth-password-toggle {
   position: absolute;
@@ -180,7 +180,7 @@
   justify-content: center;
   gap: 0.3rem;
   min-width: 5rem;
-  min-height: 2.3rem;
+  min-height: 2.75rem;
   margin: 0;
   padding: 0.25rem 0.45rem;
   border: 0;
@@ -191,6 +191,16 @@
 }
 .auth-password-toggle:hover {
   background: #f4e9d8;
+}
+.auth-password-toggle[aria-pressed='true'] {
+  background: #f4e9d8;
+}
+.auth-password-toggle:active {
+  transform: translateY(1px);
+}
+.auth-password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 .auth-password-toggle:focus-visible,
 .auth-text-button:focus-visible {

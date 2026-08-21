@@ -12,7 +12,7 @@ afterEach(() => {
   database = null;
 });
 
-async function schema30() {
+async function schema32() {
   database = new DatabaseSync(':memory:');
   const migrationDirectory = resolve(repositoryRoot, 'migrations');
   const migrations = (await readdir(migrationDirectory)).filter((name) => name.endsWith('.sql')).sort();
@@ -53,9 +53,9 @@ function addInventoryFixture(sqlite) {
   `);
 }
 
-describe('schema-30 Inventory reconciliation', () => {
-  it('accepts independently derived Inventory truth on a clean schema-30 fixture', async () => {
-    const sqlite = await schema30();
+describe('schema-32 Inventory reconciliation', () => {
+  it('accepts independently derived Inventory truth on a clean schema-32 fixture', async () => {
+    const sqlite = await schema32();
     addInventoryFixture(sqlite);
 
     const result = reconcileInventoryDatabase(sqlite, {
@@ -64,8 +64,8 @@ describe('schema-30 Inventory reconciliation', () => {
     });
 
     expect(result.database).toEqual({
-      operationalSchema: '30',
-      latestMigration: '0030_production_access_and_operations.sql',
+      operationalSchema: '32',
+      latestMigration: '0032_staff_account_activity_history.sql',
       integrityOk: true,
       foreignKeyViolations: 0,
     });
@@ -79,7 +79,7 @@ describe('schema-30 Inventory reconciliation', () => {
   });
 
   it('requires a candidate-bound result for Production read-only reconciliation', async () => {
-    const sqlite = await schema30();
+    const sqlite = await schema32();
     addInventoryFixture(sqlite);
 
     expect(() => reconcileInventoryDatabase(sqlite, { environment: 'PRODUCTION_READ_ONLY' })).toThrow(
@@ -95,8 +95,8 @@ describe('schema-30 Inventory reconciliation', () => {
       environment: 'PRODUCTION_READ_ONLY',
       candidateSha: 'b'.repeat(40),
       database: {
-        operationalSchema: '30',
-        latestMigration: '0030_production_access_and_operations.sql',
+        operationalSchema: '32',
+        latestMigration: '0032_staff_account_activity_history.sql',
       },
       summary: {
         checksExecuted: expect.any(Number),
@@ -106,7 +106,7 @@ describe('schema-30 Inventory reconciliation', () => {
   });
 
   it('blocks a fixture with overconsumption, direct opening stock, and an orphan transfer effect', async () => {
-    const sqlite = await schema30();
+    const sqlite = await schema32();
     addInventoryFixture(sqlite);
     sqlite.exec(`
       DROP TRIGGER inventory_items_opening_quantity_update_guard;
@@ -148,7 +148,7 @@ describe('schema-30 Inventory reconciliation', () => {
   });
 
   it('blocks a receipt recorded after its procurement parent became terminal', async () => {
-    const sqlite = await schema30();
+    const sqlite = await schema32();
     addInventoryFixture(sqlite);
     sqlite.exec(`
       INSERT INTO restock_requests (
@@ -198,7 +198,7 @@ describe('schema-30 Inventory reconciliation', () => {
   });
 
   it('blocks missing replay fields and a correction without the exact reversal link', async () => {
-    const sqlite = await schema30();
+    const sqlite = await schema32();
     addInventoryFixture(sqlite);
     sqlite.exec(`
       DROP TRIGGER release_correction_state_guard;

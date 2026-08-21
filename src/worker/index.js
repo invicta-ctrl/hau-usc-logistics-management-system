@@ -7,7 +7,9 @@ import { AuthError, createAuthService } from '../server/auth/service.js';
 import { createD1AuthRepository, createD1RateLimiter } from '../server/d1/auth-repository.js';
 import { createD1AccessManagementRepository } from '../server/d1/access-management-repository.js';
 import { createD1AccountApplicationRepository } from '../server/d1/account-application-repository.js';
+import { createD1IdentityFoundationRepository } from '../server/d1/identity-foundation-repository.js';
 import { createD1IdentityRosterRepository } from '../server/d1/identity-roster-repository.js';
+import { createD1IdentitySourceProjectionRepository } from '../server/d1/identity-source-projection-repository.js';
 import { createD1ProfileRepository } from '../server/d1/profile-repository.js';
 import { createD1ReferenceLinkRepository } from '../server/d1/reference-link-repository.js';
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
@@ -34,6 +36,20 @@ import {
 import { createIdentityRosterCrypto } from '../server/identity-roster/crypto.js';
 import { createGoogleSheetsRosterSource } from '../server/identity-roster/google-source.js';
 import { createIdentityRosterService, IdentityRosterError } from '../server/identity-roster/service.js';
+import {
+  createIdentityFoundationReconciliationService,
+  IdentityFoundationReconciliationError,
+} from '../server/identity-foundation/reconciliation.js';
+import {
+  createStaffAccountActivityHistoryService,
+  StaffAccountActivityHistoryError,
+} from '../server/identity-foundation/staff-account-activity-history-service.js';
+import { createStaffDirectoryService } from '../server/identity-foundation/staff-directory-service.js';
+import {
+  createIdentitySourceProjectionProbeService,
+  IdentitySourceProjectionProbeError,
+  isIdentitySourceProjectionProbeExecutionAuthorized,
+} from '../server/identity-foundation/source-projection-probe.js';
 import { createOperationalHealthService } from '../server/operational-health-service.js';
 import {
   createAccountApplicationActivationHandoff,
@@ -205,7 +221,9 @@ function json(value, status = 200, additionalHeaders = {}) {
 function services(env) {
   const repository = createD1AuthRepository(env.DB);
   const accessRepository = createD1AccessManagementRepository(env.DB);
+  const identityFoundationRepository = createD1IdentityFoundationRepository(env.DB);
   const rosterRepository = createD1IdentityRosterRepository(env.DB);
+  const sourceProjectionRepository = createD1IdentitySourceProjectionRepository(env.DB);
   const accountApplicationRepository = createD1AccountApplicationRepository(env.DB);
   const passwordKdf = createPasswordKdf({
     timingSafeEqual: constantTimeEqual,
@@ -324,15 +342,31 @@ function services(env) {
   });
   const brandAssets = createBrandAssetService({ db: env.DB, bucket: env.BRAND_ASSETS });
   const lendingUsage = createLendingUsageService({ db: env.DB });
+  const googleRosterSource = createGoogleSheetsRosterSource({
+    spreadsheetId: env.GOOGLE_ROSTER_SPREADSHEET_ID,
+    range: env.GOOGLE_ROSTER_RANGE,
+    serviceAccountEmail: env.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
+    serviceAccountPrivateKey: env.GOOGLE_ROSTER_PRIVATE_KEY,
+    fingerprint: rosterCrypto.fingerprint,
+  });
   const identityRoster = createIdentityRosterService({
     repository: rosterRepository,
-    source: createGoogleSheetsRosterSource({
-      spreadsheetId: env.GOOGLE_ROSTER_SPREADSHEET_ID,
-      range: env.GOOGLE_ROSTER_RANGE,
-      serviceAccountEmail: env.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
-      serviceAccountPrivateKey: env.GOOGLE_ROSTER_PRIVATE_KEY,
-    }),
+    source: googleRosterSource,
     crypto: rosterCrypto,
+  });
+  const identityFoundationReconciliation = createIdentityFoundationReconciliationService({
+    legacyRosterRepository: rosterRepository,
+    foundationRepository: identityFoundationRepository,
+    crypto: rosterCrypto,
+  });
+  const staffDirectory = createStaffDirectoryService({ repository: identityFoundationRepository });
+  const staffAccountActivityHistory = () =>
+    createStaffAccountActivityHistoryService({ repository: identityFoundationRepository });
+  const sourceProjectionProbe = createIdentitySourceProjectionProbeService({
+    source: googleRosterSource,
+    repository: sourceProjectionRepository,
+    reconciliation: identityFoundationReconciliation,
+    executionAuthorized: isIdentitySourceProjectionProbeExecutionAuthorized(env),
   });
   const profile = createProfileService({
     repository: createD1ProfileRepository(env.DB),
@@ -352,8 +386,12 @@ function services(env) {
     brandAssets,
     auth,
     evidence,
+    identityFoundationReconciliation,
     lendingUsage,
     identityRoster,
+    sourceProjectionProbe,
+    staffAccountActivityHistory,
+    staffDirectory,
     operationalHealth,
     operations,
     profile,
@@ -500,8 +538,12 @@ async function handleApi(request, env, requestId, executionContext) {
     brandAssets,
     auth,
     evidence,
+    identityFoundationReconciliation,
+    staffAccountActivityHistory,
+    staffDirectory,
     lendingUsage,
     identityRoster,
+    sourceProjectionProbe,
     operationalHealth,
     operations,
     profile,
@@ -1052,6 +1094,16 @@ async function handleApi(request, env, requestId, executionContext) {
       throw new AccessManagementError('ACCESS_ACCOUNT_NOT_FOUND', { status: 404 });
     }
 
+    if (url.pathname === '/api/admin/staff-directory' && request.method === 'POST') {
+      await authorize(request, auth, CAPABILITIES.ACCESS_ADMIN, { mutation: false });
+      return json({ ok: true, ...(await staffDirectory.list(await body(request))) });
+    }
+
+    if (url.pathname === '/api/admin/staff-account-activity-history' && request.method === 'POST') {
+      await authorize(request, auth, CAPABILITIES.ACCESS_ADMIN, { mutation: false });
+      return json({ ok: true, ...(await staffAccountActivityHistory().list(await body(request))) });
+    }
+
     if (url.pathname.startsWith('/api/owner/identity-roster/') && request.method === 'POST') {
       const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: true })).account;
       const command = await body(request);
@@ -1072,6 +1124,22 @@ async function handleApi(request, env, requestId, executionContext) {
         return json({ ok: true, ...(await identityRoster.rollback(context)) });
       }
       throw new IdentityRosterError('ROSTER_PREVIEW_NOT_FOUND', { status: 404 });
+    }
+
+    if (
+      url.pathname === '/api/owner/identity-foundation/reconciliation-preview' &&
+      request.method === 'POST'
+    ) {
+      const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: false })).account;
+      return json({ ok: true, ...(await identityFoundationReconciliation.preview({ actor })) });
+    }
+
+    if (
+      url.pathname === '/api/owner/identity-foundation/source-projection-probe' &&
+      request.method === 'POST'
+    ) {
+      const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: false })).account;
+      return json({ ok: true, ...(await sourceProjectionProbe.probe({ actor })) });
     }
 
     if (url.pathname.startsWith('/api/owner/evidence/') && request.method === 'POST') {
@@ -1275,12 +1343,18 @@ async function handleApi(request, env, requestId, executionContext) {
       error instanceof AccessManagementError ||
       error instanceof EvidenceServiceError ||
       error instanceof IdentityRosterError ||
+      error instanceof IdentityFoundationReconciliationError ||
+      error instanceof IdentitySourceProjectionProbeError ||
+      error instanceof StaffAccountActivityHistoryError ||
       error instanceof AccountApplicationError;
     const status =
       error instanceof ApiError ||
       error instanceof AccessManagementError ||
       error instanceof EvidenceServiceError ||
       error instanceof IdentityRosterError ||
+      error instanceof IdentityFoundationReconciliationError ||
+      error instanceof IdentitySourceProjectionProbeError ||
+      error instanceof StaffAccountActivityHistoryError ||
       error instanceof AccountApplicationError
         ? error.status
         : error instanceof AuthError

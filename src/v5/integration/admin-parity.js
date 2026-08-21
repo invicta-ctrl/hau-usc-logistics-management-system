@@ -1,3 +1,5 @@
+import { passwordVisibilityToggleDefinition, togglePasswordVisibility } from '../src/password-visibility.js';
+
 const CAPABILITY = Object.freeze({
   ACCESS: 'access.admin',
   APPLICATION_ADMIN: 'account_application.admin_review',
@@ -53,6 +55,87 @@ function element(tag, { className = '', textContent = '', attrs = {}, dataset = 
   return node;
 }
 
+function activityValue(...values) {
+  for (const value of values) {
+    const normalized = text(value);
+    if (normalized) return normalized;
+  }
+  return 'Not recorded';
+}
+
+function activityTransition(previous, next) {
+  const before = text(previous);
+  const after = text(next);
+  if (before && after) return `${before} → ${after}`;
+  return activityValue(after, before);
+}
+
+function activityWindow(item) {
+  const before = [text(item?.oldEffectiveFrom), text(item?.oldEffectiveTo)].filter(Boolean).join(' – ');
+  const after = [text(item?.newEffectiveFrom), text(item?.newEffectiveTo)].filter(Boolean).join(' – ');
+  if (before && after) return `${before} → ${after}`;
+  return activityValue(after, before);
+}
+
+function setActivityFact(panel, label, value) {
+  const fact = [...panel.querySelectorAll('.facts > div')].find(
+    (entry) => text(entry.querySelector('dt')?.textContent) === label,
+  );
+  const target = fact?.querySelector('dd');
+  if (target) target.textContent = value;
+}
+
+export function renderStaffAccountActivityHistoryPanel(panel, { status = 'idle', history = null } = {}) {
+  if (!panel) return;
+  const statusLine = panel.querySelector('[data-staff-account-activity-history-status]');
+  const body = panel.querySelector('[data-staff-account-activity-history-table] tbody');
+  if (body) body.replaceChildren();
+  if (status === 'error') {
+    if (statusLine) statusLine.textContent = 'Activity history could not be loaded. Try again.';
+    setActivityFact(panel, 'History begins', 'Not loaded');
+    setActivityFact(panel, 'Retained events', 'Not loaded');
+    setActivityFact(panel, 'Page', 'Not loaded');
+    return;
+  }
+  if (status === 'loading') {
+    if (statusLine) statusLine.textContent = 'Loading retained activity history.';
+    return;
+  }
+  if (!history) return;
+  const historyStartsAt = activityValue(history.historyStartsAt);
+  const items = Array.isArray(history.items) ? history.items : [];
+  setActivityFact(panel, 'History begins', historyStartsAt);
+  setActivityFact(panel, 'Retained events', String(Number(history.total ?? items.length)));
+  setActivityFact(panel, 'Page', `${Number(history.page ?? 1)} of ${Number(history.totalPages ?? 0)}`);
+  if (statusLine) {
+    statusLine.textContent = items.length
+      ? `Retained activity for ${activityValue(history.personId)}.`
+      : `No retained activity is available. Retention begins ${historyStartsAt}.`;
+  }
+  if (!body) return;
+  for (const item of items) {
+    const row = element('tr');
+    const occurred = element('th', {
+      textContent: activityValue(item?.occurredAt),
+      attrs: { scope: 'row' },
+    });
+    const event = element('td', {
+      textContent: `${activityValue(item?.eventType)} · ${activityValue(item?.actionCode)}`,
+    });
+    const account = element('td', {
+      textContent: `${activityValue(item?.accountId)} · ${activityValue(item?.accountAccessIdSnapshot)}`,
+    });
+    const link = element('td', {
+      textContent: activityTransition(item?.previousLinkState, item?.linkState),
+    });
+    const assignment = element('td', {
+      textContent: `${activityTransition(item?.previousAssignmentState, item?.assignmentState)} · ${activityWindow(item)}`,
+    });
+    row.append(occurred, event, account, link, assignment);
+    body.append(row);
+  }
+}
+
 function field(spec) {
   const wrapper = element('div', { className: 'field' });
   const id = `v5-parity-${spec.name}-${Math.random().toString(36).slice(2)}`;
@@ -101,7 +184,19 @@ function field(spec) {
     checkbox.append(control, words);
     return checkbox;
   }
-  wrapper.append(label, control);
+  if (spec.passwordVisibility && spec.type === 'password') {
+    const passwordControl = element('span', { className: 'field__password-control' });
+    const toggle = passwordVisibilityToggleDefinition(id);
+    const button = element('button', {
+      className: 'field__password-toggle',
+      attrs: toggle.attrs,
+    });
+    button.innerHTML = toggle.content;
+    passwordControl.append(control, button);
+    wrapper.append(label, passwordControl);
+  } else {
+    wrapper.append(label, control);
+  }
   const help = element('span', {
     className: 'field__message field__hint',
     textContent: spec.hint || '',
@@ -247,8 +342,22 @@ function publicPanels(currentRoute, integration = {}) {
               required: true,
               hint: 'Use your approved USC work email.',
             },
-            { label: 'New password', name: 'password', type: 'password', required: true },
-            { label: 'Confirm new password', name: 'confirmPassword', type: 'password', required: true },
+            {
+              label: 'New password',
+              name: 'password',
+              type: 'password',
+              required: true,
+              autocomplete: 'new-password',
+              passwordVisibility: true,
+            },
+            {
+              label: 'Confirm new password',
+              name: 'confirmPassword',
+              type: 'password',
+              required: true,
+              autocomplete: 'new-password',
+              passwordVisibility: true,
+            },
           ],
         }),
       );
@@ -262,8 +371,22 @@ function publicPanels(currentRoute, integration = {}) {
         disclosure: true,
         fields: [
           { label: 'Reset token', name: 'resetToken', type: 'password', required: true },
-          { label: 'New password', name: 'password', type: 'password', required: true },
-          { label: 'Confirm new password', name: 'confirmPassword', type: 'password', required: true },
+          {
+            label: 'New password',
+            name: 'password',
+            type: 'password',
+            required: true,
+            autocomplete: 'new-password',
+            passwordVisibility: true,
+          },
+          {
+            label: 'Confirm new password',
+            name: 'confirmPassword',
+            type: 'password',
+            required: true,
+            autocomplete: 'new-password',
+            passwordVisibility: true,
+          },
         ],
       }),
     );
@@ -345,8 +468,22 @@ function publicPanels(currentRoute, integration = {}) {
           { label: 'Request Center access', name: 'requestCenterAccess', type: 'checkbox' },
           { label: 'Lending self-service', name: 'lendingSelfService', type: 'checkbox' },
           { label: 'Internal lending operations', name: 'internalLendingOperations', type: 'checkbox' },
-          { label: 'Password', name: 'password', type: 'password', required: true },
-          { label: 'Confirm password', name: 'confirmPassword', type: 'password', required: true },
+          {
+            label: 'Password',
+            name: 'password',
+            type: 'password',
+            required: true,
+            autocomplete: 'new-password',
+            passwordVisibility: true,
+          },
+          {
+            label: 'Confirm password',
+            name: 'confirmPassword',
+            type: 'password',
+            required: true,
+            autocomplete: 'new-password',
+            passwordVisibility: true,
+          },
         ],
       }),
     ];
@@ -482,7 +619,7 @@ function accessPanel() {
   });
 }
 
-function rosterPanel(capabilities) {
+export function rosterPanel(capabilities) {
   const operations = capabilities.has(CAPABILITY.SYSTEM)
     ? ['STATUS', 'PREVIEW', 'DIRECTORY', 'APPLY', 'ROLLBACK', 'SELF']
     : ['SELF'];
@@ -687,9 +824,27 @@ function profilePanel() {
       { label: 'Expected profile revision', name: 'expectedRevision' },
       { label: 'Mobile or contact number', name: 'mobileNumber' },
       { label: 'New username', name: 'username' },
-      { label: 'Current password', name: 'currentPassword', type: 'password' },
-      { label: 'New password', name: 'newPassword', type: 'password' },
-      { label: 'Confirm new password', name: 'confirmPassword', type: 'password' },
+      {
+        label: 'Current password',
+        name: 'currentPassword',
+        type: 'password',
+        autocomplete: 'current-password',
+        passwordVisibility: true,
+      },
+      {
+        label: 'New password',
+        name: 'newPassword',
+        type: 'password',
+        autocomplete: 'new-password',
+        passwordVisibility: true,
+      },
+      {
+        label: 'Confirm new password',
+        name: 'confirmPassword',
+        type: 'password',
+        autocomplete: 'new-password',
+        passwordVisibility: true,
+      },
       { label: 'Proposed legal name', name: 'legalName' },
       { label: 'Proposed email', name: 'email', type: 'email' },
       { label: 'Reason', name: 'reason', type: 'textarea' },
@@ -778,11 +933,6 @@ export function createAdminParityController({
       else panels.push(deniedPanel(CAPABILITY.ACCESS));
       const review = applicationReviewPanel(capabilities);
       if (review) panels.push(review);
-    }
-    if (currentRoute === 'admin.directory') {
-      if (capabilities.has(CAPABILITY.SYSTEM) || capabilities.has(CAPABILITY.VIEW_REQUEST))
-        panels.push(rosterPanel(capabilities));
-      else panels.push(deniedPanel(CAPABILITY.SYSTEM));
     }
     if (currentRoute === 'admin.reference') {
       if (capabilities.has(CAPABILITY.REFERENCE)) panels.push(referenceAdminPanel());
@@ -1144,6 +1294,12 @@ export function createAdminParityController({
   }
 
   function onClick(event) {
+    const passwordToggle = event?.target?.closest?.('[data-password-visibility-toggle]');
+    if (passwordToggle) {
+      event.preventDefault?.();
+      event.stopImmediatePropagation?.();
+      return togglePasswordVisibility(passwordToggle, document);
+    }
     const control = event?.target?.closest?.('[data-v5-admin-action]');
     if (!control) return false;
     event.preventDefault?.();

@@ -418,6 +418,207 @@ test('a Food session sees a data-free denial for the Materials overview before b
   expect(requests.filter(({ pathname }) => protectedDataPaths.has(pathname))).toEqual([]);
 });
 
+test('Staff Directory loads the canonical safe projection only for ACCESS_ADMIN', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-390', 'The Staff Directory contract runs once.');
+  const requests = await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+
+  await page.goto('/#/admin.directory');
+  await waitForV5(page);
+
+  await expect(page.getByRole('heading', { name: 'Staff Directory' })).toBeVisible();
+  await expect.poll(async () => (await integrationStatus(page)).connectedRoutes).toContain('admin.directory');
+  await expect(page.locator('[data-canonical-staff-directory]')).toContainText(
+    'PER-123E4567-E89B-42D3-A456-426614174000',
+  );
+  await expect(page.locator('[data-canonical-staff-directory]')).toContainText(
+    'Safe Staff Name · STAFF.0001',
+  );
+  expect(requests.filter(({ pathname }) => pathname === '/api/admin/staff-directory')).toHaveLength(1);
+  expect(requests.filter(({ pathname }) => pathname === '/api/admin/access/directory')).toHaveLength(0);
+  expect(requests.filter(({ pathname }) => pathname.startsWith('/api/owner/identity-roster/'))).toEqual([]);
+  await expect(page.locator('[data-v5-admin-parity]')).toHaveCount(0);
+});
+
+test('Staff Directory renders retained activity through textContent without a roster or access fallback', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'v5-chromium-390',
+    'The retained activity rendering contract runs once.',
+  );
+  const requests = await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+
+  await page.goto('/#/admin.directory');
+  await waitForV5(page);
+  await page.getByRole('button', { name: 'View history', exact: true }).click();
+
+  const panel = page.locator('[data-staff-account-activity-history]');
+  await expect(panel).toContainText('Staff account activity history');
+  await expect(panel).toContainText('<script>synthetic-account</script>');
+  await expect(panel).toContainText('2026-08-20T00:00:00.000Z');
+  await expect(panel.locator('script')).toHaveCount(0);
+  await expect(panel.locator('img')).toHaveCount(0);
+  expect(requests.filter(({ pathname }) => pathname === '/api/admin/staff-account-activity-history')).toEqual(
+    [
+      {
+        method: 'POST',
+        pathname: '/api/admin/staff-account-activity-history',
+        body: {
+          personId: 'PER-123E4567-E89B-42D3-A456-426614174000',
+          page: 1,
+          pageSize: 25,
+        },
+      },
+    ],
+  );
+  expect(requests.filter(({ pathname }) => pathname === '/api/admin/access/directory')).toEqual([]);
+  expect(requests.filter(({ pathname }) => pathname.startsWith('/api/owner/identity-roster/'))).toEqual([]);
+});
+
+test('Staff Directory gives retained-history empty and generic-error states without stale entries', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-390', 'The retained activity state contract runs once.');
+  const requests = await installV5ApiFixture(page, {
+    environment: STAGING,
+    authenticated: true,
+    staffAccountActivityHistory: 'empty',
+  });
+
+  await page.goto('/#/admin.directory');
+  await waitForV5(page);
+  await page.getByRole('button', { name: 'View history', exact: true }).click();
+  const panel = page.locator('[data-staff-account-activity-history]');
+  await expect(panel).toContainText(
+    'No retained activity is available. Retention begins 2026-08-20T00:00:00.000Z.',
+  );
+  await expect(panel.locator('tbody tr')).toHaveCount(0);
+
+  await page.unroute('**/api/admin/staff-account-activity-history');
+  await page.route('**/api/admin/staff-account-activity-history', (route) =>
+    route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 'SYNTHETIC_PRIVATE_HISTORY_FAILURE',
+        message: 'Synthetic protected source detail must never render.',
+      }),
+    }),
+  );
+  await page.getByRole('button', { name: 'View history', exact: true }).click();
+  await expect(panel).toContainText('Activity history could not be loaded. Try again.');
+  await expect(panel).not.toContainText('SYNTHETIC_PRIVATE_HISTORY_FAILURE');
+  await expect(panel).not.toContainText('Synthetic protected source detail');
+  await expect(panel.locator('tbody tr')).toHaveCount(0);
+  expect(requests.filter(({ pathname }) => pathname === '/api/admin/access/directory')).toEqual([]);
+  expect(requests.filter(({ pathname }) => pathname.startsWith('/api/owner/identity-roster/'))).toEqual([]);
+});
+
+test('Staff Directory discards a delayed activity-history response after navigation away and return', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'v5-chromium-390',
+    'The retained activity navigation-race contract runs once.',
+  );
+  await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+
+  await page.goto('/#/admin.directory');
+  await waitForV5(page);
+  await page.unroute('**/api/admin/staff-account-activity-history');
+  let releaseHistoryResponse;
+  const historyRequest = page.waitForRequest('**/api/admin/staff-account-activity-history');
+  await page.route('**/api/admin/staff-account-activity-history', async (route) => {
+    await new Promise((resolve, reject) => {
+      releaseHistoryResponse = async () => {
+        try {
+          await route.fulfill({
+            contentType: 'application/json',
+            body: JSON.stringify({
+              ok: true,
+              personId: 'PER-123E4567-E89B-42D3-A456-426614174000',
+              historyStartsAt: '2026-08-20T00:00:00.000Z',
+              page: 1,
+              pageSize: 25,
+              total: 1,
+              totalPages: 1,
+              items: [
+                {
+                  id: 'HIS-DELAYED-0001',
+                  occurredAt: '2026-08-20T00:01:00.000Z',
+                  eventType: 'ACCOUNT_AUDIT',
+                  actionCode: 'ACCESS_ID_CHANGED',
+                  accountId: 'STALE.ACCOUNT.001',
+                  accountAccessIdSnapshot: 'STALE.ACCOUNT.001',
+                  correlationId: 'COR-DELAYED-0001',
+                  linkState: 'ACTIVE',
+                  previousLinkState: null,
+                  assignmentState: null,
+                  previousAssignmentState: null,
+                  oldEffectiveFrom: null,
+                  oldEffectiveTo: null,
+                  newEffectiveFrom: null,
+                  newEffectiveTo: null,
+                },
+              ],
+            }),
+          });
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      };
+    });
+  });
+
+  await page.getByRole('button', { name: 'View history', exact: true }).click();
+  await historyRequest;
+  expect(releaseHistoryResponse).toEqual(expect.any(Function));
+  await page.goto('/#/admin.overview');
+  await waitForV5(page);
+  await page.goto('/#/admin.directory');
+  await waitForV5(page);
+  const panel = page.locator('[data-staff-account-activity-history]');
+  await expect(panel).toContainText('Select a canonical person to load their retained activity history.');
+  await expect(panel.locator('tbody tr')).toHaveCount(0);
+
+  await releaseHistoryResponse();
+  await page.waitForTimeout(50);
+  await expect(panel).not.toContainText('STALE.ACCOUNT.001');
+  await expect(panel).toContainText('Select a canonical person to load their retained activity history.');
+  await expect(panel.locator('tbody tr')).toHaveCount(0);
+});
+
+test('Staff Directory denies users without ACCESS_ADMIN before any directory read', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-390', 'The Staff Directory denial contract runs once.');
+  const requests = await installV5ApiFixture(page, {
+    environment: STAGING,
+    authenticated: true,
+    currentUser: {
+      authorization: {
+        capabilities: ['view.internal'],
+        workspaceIds: ['food'],
+        defaultWorkspaceId: 'food',
+        explicitDenies: [],
+      },
+    },
+  });
+  await page.goto('/#/admin.directory');
+  await waitForV5(page);
+
+  await expect(page.getByRole('heading', { name: 'You do not have access to this area' })).toBeVisible();
+  expect(requests.filter(({ pathname }) => pathname === '/api/admin/staff-directory')).toEqual([]);
+  expect(requests.filter(({ pathname }) => pathname === '/api/admin/staff-account-activity-history')).toEqual(
+    [],
+  );
+  expect(requests.filter(({ pathname }) => pathname === '/api/admin/access/directory')).toEqual([]);
+  expect(requests.filter(({ pathname }) => pathname.startsWith('/api/owner/identity-roster/'))).toEqual([]);
+});
+
 test('authenticated R1 lending and release forms preserve labels and release identity separation', async ({
   page,
 }) => {

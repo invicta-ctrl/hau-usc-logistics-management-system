@@ -6,7 +6,9 @@ import { describe, expect, it } from 'vitest';
 const root = resolve(import.meta.dirname, '../..');
 const read = (path) => readFile(resolve(root, path), 'utf8');
 const sha256 = async (path) =>
-  createHash('sha256').update(await readFile(resolve(root, path))).digest('hex');
+  createHash('sha256')
+    .update((await readFile(resolve(root, path), 'utf8')).replace(/\r\n/g, '\n'), 'utf8')
+    .digest('hex');
 const compact = (value) => value.replace(/\s+/g, ' ').trim();
 const generatedNotice =
   '<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->';
@@ -38,7 +40,7 @@ const cssMarkers = [
 ];
 
 describe('authoritative visual extraction', () => {
-  it('keeps the protected historical baseline byte-identical', async () => {
+  it('keeps the protected historical baseline canonical across checkout line endings', async () => {
     await expect(sha256('legacy/HAU-USC_Logistics-Prototype.original.html')).resolves.toBe(
       '06dc6c4e62ac6db1e873f5f18dd6531dd6a9f91e3a1b1d27e89582eac3f04a84',
     );

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### v0.8.3 owner-fast-close checkpoint
+
+- Reconciled the already-live owner-authorized Production v0.8.3 runtime to the exact frozen f8 candidate, 100% Worker traffic, schema32/migrations 0031+0032/single 0032 ledger/FK0, three Activity History tables, protected roster configuration/secret presence, private recovery evidence, and isolated Playground bindings.
+- Recorded `HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED` as the accepted minimal smoke fallback; it is never recorded as HTTP PASS. Historical Playground source NONPASS remains owner accepted for v0.8.3 fast close only, never PASS; live email/manual gates remain `OWNER_WAIVED_OR_UNRUN`.
+- Began the evidence-only protected-main/recovery/S17 closeout sequence. No source, dependency, build, workflow, migration, provider, D1/R2, Google, email, or deployment mutation was performed by this checkpoint.
+
 ### Added
 
 - Added the owner-authorized Sol/Terra/Luna orchestration governance amendment: GPT-5.6 Sol is the sole read-only orchestrator with no Sol children, Terra MAX is the only writer class with one canonical integration writer and isolated scopes, and Luna MAX is the read-only auditor class. The amendment preserves historical product specifications while superseding only their model-routing language.

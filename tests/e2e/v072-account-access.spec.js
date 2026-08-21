@@ -57,11 +57,41 @@ test('staff registration verifies email and returns a one-time private status re
     });
   });
 
-  await page.goto('/register');
+  await page.goto('/');
+  await page.evaluate(async () => {
+    const { mountPublicAccountApplication } = await import('/visual/public-account-application.js');
+    const root = document.createElement('main');
+    root.id = 'legacy-account-application-root';
+    document.body.replaceChildren(root);
+    const post = async (path, body) => {
+      const response = await fetch(path, {
+        method: 'POST',
+        headers: { accept: 'application/json', 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) throw new Error('Synthetic account-application request failed.');
+      return response.json();
+    };
+    mountPublicAccountApplication({
+      root,
+      client: {
+        startAccountApplicationEmail: (email) => post('/api/account-applications/email/start', { email }),
+        confirmAccountApplicationEmail: (email, code) =>
+          post('/api/account-applications/email/confirm', { email, code }),
+        submitAccountApplication: (command) => post('/api/account-applications', command),
+      },
+    });
+  });
   await expect(page.getByRole('heading', { name: 'Create staff account' })).toBeVisible();
   await page.getByLabel('Approved email address').fill('eligible@example.test');
   await page.getByRole('button', { name: 'Send verification code' }).click();
-  await page.locator('#applicationCode').fill('123456');
+  const code = page.locator('#applicationCode');
+  await expect(code).toHaveAttribute('inputmode', 'numeric');
+  await expect(code).toHaveAttribute('pattern', '\\d{8}');
+  await expect(code).toHaveAttribute('minlength', '8');
+  await expect(code).toHaveAttribute('maxlength', '8');
+  await expect(code).toHaveAttribute('autocomplete', 'one-time-code');
+  await code.fill('01234567');
   await page.getByRole('button', { name: 'Confirm email' }).click();
 
   const form = page.locator('[data-account-application-form]');
@@ -85,7 +115,7 @@ test('staff registration verifies email and returns a one-time private status re
   expect(submitted[0]).toEqual({ path: 'start', body: { email: 'eligible@example.test' } });
   expect(submitted[1]).toEqual({
     path: 'confirm',
-    body: { email: 'eligible@example.test', code: '123456' },
+    body: { email: 'eligible@example.test', code: '01234567' },
   });
   expect(submitted[2].body).toMatchObject({
     verificationReceipt: 'verification-receipt-synthetic-001',

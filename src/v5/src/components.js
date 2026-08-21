@@ -2,6 +2,7 @@
    Accessibility contracts live here so every surface inherits them. */
 
 import { icon } from './icons.js';
+import { passwordVisibilityToggleMarkup } from './password-visibility.js';
 import { statusLabel, tone } from './data/vocabulary.js';
 
 export const esc = (value) =>
@@ -298,6 +299,8 @@ export function field({
   required = false,
   options = null,
   textarea = false,
+  autocomplete = '',
+  passwordVisibility = false,
 }) {
   const id = nextId('f');
   const hintId = hint ? `${id}-hint` : '';
@@ -306,6 +309,7 @@ export function field({
   const describe = describedBy ? ` aria-describedby="${describedBy}"` : '';
   const invalid = error ? ' aria-invalid="true"' : '';
   const req = required ? ' required' : '';
+  const complete = autocomplete ? ` autocomplete="${esc(autocomplete)}"` : '';
 
   let control;
   if (options) {
@@ -317,9 +321,12 @@ export function field({
       value,
     )}</textarea>`;
   } else {
-    control = `<input id="${id}" name="${esc(name)}" type="${esc(type)}" value="${esc(
+    const input = `<input id="${id}" name="${esc(name)}" type="${esc(type)}" value="${esc(
       value,
-    )}"${describe}${invalid}${req} />`;
+    )}"${complete}${describe}${invalid}${req} />`;
+    control = passwordVisibility
+      ? `<span class="field__password-control">${input}${passwordVisibilityToggleMarkup(id)}</span>`
+      : input;
   }
 
   return `<div class="field" data-invalid="${!!error}">

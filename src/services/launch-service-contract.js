@@ -71,6 +71,7 @@ export const PROTECTED_RUNTIME_SERVICE_METHODS = Object.freeze([
   'previewIdentityRosterSync',
   'applyIdentityRosterSync',
   'rollbackIdentityRosterSync',
+  'previewCanonicalIdentityReconciliation',
   'getIdentityRosterSelfProfile',
 ]);
 

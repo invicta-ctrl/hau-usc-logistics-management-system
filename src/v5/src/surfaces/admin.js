@@ -57,40 +57,116 @@ export function access({ state }) {
   })}`;
 }
 
-export const directory = () => `${pageHead({
-  crumbs: ['Administration', 'Staff Directory'],
-  title: 'Staff Directory',
-  lede: 'A read-only projection of the protected institutional roster.',
-})}
+export const directory = ({ state }) => {
+  const head = pageHead({
+    crumbs: ['Administration', 'Staff Directory'],
+    title: 'Staff Directory',
+    lede: 'A read-only projection of canonical staff identity and assignment state.',
+  });
+  if (state === 'denied') return `${head}${deniedState()}`;
+  return `${head}
 ${notice({
   tone: 'info',
   title: 'This directory is read-only here',
-  body: 'Entries come from the protected institutional source. Corrections are made at the source and applied through a reviewed synchronisation.',
+  body: 'Identity-roster source review and management remain separate. This view never changes access or directory records.',
 })}
 <div class="panel" style="margin-top:16px"><div class="panel__body">
   ${facts([
-    { label: 'Active entries', value: 'Loading authorized directory' },
-    { label: 'Quarantined source rows', value: 'Loading authorized directory' },
-    { label: 'Last synchronisation', value: 'Loading authorized directory' },
-    { label: 'Inconsistent runs', value: 'Loading authorized directory' },
+    { label: 'Canonical people', value: 'Loading authorized directory' },
+    { label: 'Quarantined records', value: 'Loading authorized directory' },
+    { label: 'Active assignments', value: 'Loading authorized directory' },
+    { label: 'Directory state', value: 'Loading authorized directory' },
   ])}
-</div></div>`;
+</div></div>
+<div style="margin-top:16px" data-canonical-staff-directory>
+${queueTable({
+  caption: 'Read-only canonical staff identity and assignment state.',
+  columns: [
+    { label: 'Canonical person' },
+    { label: 'Linked account', priority: 2 },
+    { label: 'Link state' },
+    { label: 'Email state', priority: 3 },
+    { label: 'Active assignments', numeric: true, priority: 2 },
+    { label: 'Activity', priority: 2 },
+  ],
+  rows: [],
+})}
+</div>
+<section class="panel" style="margin-top:16px" data-staff-account-activity-history>
+  <div class="panel__body">
+    <div class="section__head">
+      <div>
+        <span class="label">Read-only retained projection</span>
+        <h2>Staff account activity history</h2>
+      </div>
+    </div>
+    <p data-staff-account-activity-history-status>Select a canonical person to load their retained activity history.</p>
+    ${facts([
+      { label: 'History begins', value: 'Not loaded' },
+      { label: 'Retained events', value: 'Not loaded' },
+      { label: 'Page', value: 'Not loaded' },
+    ])}
+    <div style="margin-top:16px" data-staff-account-activity-history-table>
+      ${queueTable({
+        caption:
+          'Retained staff account activity. This view contains no roster or access-directory fallback.',
+        columns: [
+          { label: 'Occurred' },
+          { label: 'Event' },
+          { label: 'Account' },
+          { label: 'Link state', priority: 2 },
+          { label: 'Assignment state', priority: 2 },
+        ],
+        rows: [],
+      })}
+    </div>
+  </div>
+</section>`;
+};
 
 export const reference = () => `${pageHead({
   crumbs: ['Administration', 'Reference Administration'],
   title: 'Reference Administration',
   lede: 'Controlled lists that other modules depend on. Changes are audited.',
-    actions: `<button class="btn btn--primary" type="button" data-act="open-parity-actions">${icon('plus')}Manage entries</button>`,
+  actions: `<button class="btn btn--primary" type="button" data-act="open-parity-actions">${icon('plus')}Manage entries</button>`,
 })}
 <div style="margin-top:16px">
 ${queueTable({
   caption: 'Controlled reference catalogs.',
   columns: [{ label: 'Catalog' }, { label: 'Entries', numeric: true, priority: 2 }, { label: 'State' }],
   rows: [
-    { ref: 'cat', cells: [rowLink('cat', 'Item categories', '7 controlled values', 'open-parity-actions'), '7', chip('ACTIVE')] },
-    { ref: 'unit', cells: [rowLink('unit', 'Units of measure', '10 controlled values', 'open-parity-actions'), '10', chip('ACTIVE')] },
-    { ref: 'dep', cells: [rowLink('dep', 'USC departments', 'Source-controlled', 'open-parity-actions'), '24', chip('ACTIVE')] },
-    { ref: 'sup', cells: [rowLink('sup', 'Supplier references', 'Materials committee only', 'open-parity-actions'), '12', chip('ACTIVE')] },
+    {
+      ref: 'cat',
+      cells: [
+        rowLink('cat', 'Item categories', '7 controlled values', 'open-parity-actions'),
+        '7',
+        chip('ACTIVE'),
+      ],
+    },
+    {
+      ref: 'unit',
+      cells: [
+        rowLink('unit', 'Units of measure', '10 controlled values', 'open-parity-actions'),
+        '10',
+        chip('ACTIVE'),
+      ],
+    },
+    {
+      ref: 'dep',
+      cells: [
+        rowLink('dep', 'USC departments', 'Source-controlled', 'open-parity-actions'),
+        '24',
+        chip('ACTIVE'),
+      ],
+    },
+    {
+      ref: 'sup',
+      cells: [
+        rowLink('sup', 'Supplier references', 'Materials committee only', 'open-parity-actions'),
+        '12',
+        chip('ACTIVE'),
+      ],
+    },
   ],
 })}
 </div>`;
@@ -99,17 +175,45 @@ export const links = () => `${pageHead({
   crumbs: ['Administration', 'Reference Administration', 'Link Registry'],
   title: 'Link Registry',
   lede: 'Named destinations used across the system, so URLs are never hard-coded into content.',
-    actions: `<button class="btn btn--primary" type="button" data-act="open-parity-actions">${icon('plus')}Manage links</button>`,
+  actions: `<button class="btn btn--primary" type="button" data-act="open-parity-actions">${icon('plus')}Manage links</button>`,
 })}
 <div style="margin-top:16px">
 ${queueTable({
   caption: 'Registered links and their publication state.',
   columns: [{ label: 'Link' }, { label: 'Used by', priority: 3 }, { label: 'State' }],
   rows: [
-    { ref: 'l1', cells: [rowLink('l1', 'Request Center guide', 'Public portals', 'open-parity-actions'), 'Public request intake', chip('ACTIVE')] },
-    { ref: 'l2', cells: [rowLink('l2', 'Lending terms', 'Public portals', 'open-parity-actions'), 'Public lending intake', chip('ACTIVE')] },
-    { ref: 'l3', cells: [rowLink('l3', 'Privacy Notice', 'All surfaces', 'open-parity-actions'), 'Footer', chip('ACTIVE')] },
-    { ref: 'l4', cells: [rowLink('l4', 'Archived orientation deck', 'Retired', 'open-parity-actions'), 'Not in use', chip('ARCHIVED')] },
+    {
+      ref: 'l1',
+      cells: [
+        rowLink('l1', 'Request Center guide', 'Public portals', 'open-parity-actions'),
+        'Public request intake',
+        chip('ACTIVE'),
+      ],
+    },
+    {
+      ref: 'l2',
+      cells: [
+        rowLink('l2', 'Lending terms', 'Public portals', 'open-parity-actions'),
+        'Public lending intake',
+        chip('ACTIVE'),
+      ],
+    },
+    {
+      ref: 'l3',
+      cells: [
+        rowLink('l3', 'Privacy Notice', 'All surfaces', 'open-parity-actions'),
+        'Footer',
+        chip('ACTIVE'),
+      ],
+    },
+    {
+      ref: 'l4',
+      cells: [
+        rowLink('l4', 'Archived orientation deck', 'Retired', 'open-parity-actions'),
+        'Not in use',
+        chip('ARCHIVED'),
+      ],
+    },
   ],
 })}
 </div>
@@ -123,12 +227,17 @@ export const brand = () => `${pageHead({
   crumbs: ['Administration', 'Brand and Media'],
   title: 'Brand and Media',
   lede: 'Versioned institutional assets. Publishing replaces the live asset; previous versions are retained.',
-    actions: `<button class="btn btn--primary" type="button" data-act="open-parity-actions">${icon('plus')}Manage media</button>`,
+  actions: `<button class="btn btn--primary" type="button" data-act="open-parity-actions">${icon('plus')}Manage media</button>`,
 })}
 <div style="margin-top:16px">
 ${queueTable({
   caption: 'Brand asset slots and their published version.',
-  columns: [{ label: 'Slot' }, { label: 'Version', numeric: true, priority: 2 }, { label: 'Published', priority: 3 }, { label: 'State' }],
+  columns: [
+    { label: 'Slot' },
+    { label: 'Version', numeric: true, priority: 2 },
+    { label: 'Published', priority: 3 },
+    { label: 'State' },
+  ],
   rows: [],
 })}
 </div>`;
@@ -156,8 +265,8 @@ export const profile = () => `${pageHead({
   <div class="panel"><div class="panel__body">
     <h2 class="block-title">Password</h2>
     <form style="display:grid;gap:16px" onsubmit="return false">
-      ${field({ label: 'Current password', name: 'cur', type: 'password', required: true })}
-      ${field({ label: 'New password', name: 'nw', type: 'password', required: true, hint: 'At least 12 characters.' })}
+      ${field({ label: 'Current password', name: 'cur', type: 'password', required: true, autocomplete: 'current-password', passwordVisibility: true })}
+      ${field({ label: 'New password', name: 'nw', type: 'password', required: true, autocomplete: 'new-password', passwordVisibility: true, hint: 'At least 12 characters.' })}
       <button class="btn btn--primary" type="submit" data-act="open-parity-actions" style="justify-self:start">Update password</button>
     </form>
   </div></div>
