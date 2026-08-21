@@ -7,7 +7,7 @@ canonical_repository: invicta-ctrl/gpt-context-vault
 canonical_relative_path: AGENTS.md
 managed_replica_policy: byte-identical-generated
 project_extension_path: .agents/PROJECT_POLICY.md
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-22
 ---
 
 # Universal Agent Governance
@@ -160,6 +160,17 @@ When a project lacks a durable resume mechanism, create or repair the smallest p
 - Prefer deterministic tools before asking a model to infer what a command or validator can prove.
 - Use bounded outputs and targeted retrieval for large commands.
 - Do not claim a tool, account, file, repository, provider, or external system was accessed unless it was actually accessed.
+
+## Live design-source authority and connector recovery
+
+When an active project explicitly names canonical live design sources and assigns them roles, follow that project-specific authority instead of silently treating an older export, screenshot, generated mirror, or repository snapshot as the current visual source of truth.
+
+- Repair a supported connector authentication failure once through the connector's documented authentication mechanism before declaring the live source unavailable.
+- Do not bypass an authenticated design source with ordinary web fetching merely because connector authentication expired.
+- Distinguish authentication failure from tool-capability limits. If the connector authenticates successfully but does not support the required file type or operation, record that exact limitation and use the project's approved alternate read path, such as an authenticated browser for visual inspection.
+- Use preserved repository exports only for the evidence class they can actually prove. A stale export must not override a newer accessible live source for current visual intent.
+- Design sources govern only the roles assigned by the active project. Repository contracts, authorization, data invariants, security boundaries, and accepted specifications remain authoritative for runtime behavior.
+- Never mutate a design source unless the current accepted task explicitly authorizes the write.
 
 ## Specification gate
 

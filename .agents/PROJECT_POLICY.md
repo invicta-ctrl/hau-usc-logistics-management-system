@@ -5,7 +5,7 @@ scope: hau-usc-logistics-project-extension
 extension_id: HAU-USC-LOGISTICS-PROJECT-POLICY-V1
 target_repository: invicta-ctrl/hau-usc-logistics-management-system
 universal_governance: ..\AGENTS.md
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-22
 ---
 
 # HAU-USC Logistics Project Policy Extension
@@ -49,6 +49,28 @@ defaults. Its absence is normal.
 - Record selected skills and delegated work when the current task requires a ledger.
 - Non-trivial behavior, architecture, migration, deployment, destructive maintenance, provider mutation, or external action requires an accepted specification or amendment.
 - Stop on a material conflict, missing acceptance criterion, privacy/security uncertainty, migration need, unknown dirty work, active writer conflict, or Production crossover.
+
+## Canonical frontend design-source authority
+
+For HAU-USC frontend integration, the current owner-approved source roles are locked as follows unless Earl explicitly amends them:
+
+1. **Live repository and accepted specifications** are functional truth for routes, backend/API/auth/data contracts, security, privacy, accessibility requirements, and supported behavior. Functional truth always wins over a design that implies unsupported behavior.
+2. **Figma Make — HAU-USC Logistics — Prototyping** is the primary current visual implementation authority and partial code/reference baseline for frontend composition, hierarchy, interaction intent, spacing, typography, responsive intent, and approved visual assets. Canonical file: https://www.figma.com/make/rP9W9MQlZkyQrUx38TVsFS/HAU-USC-Logistics-%E2%80%94-Prototyping?p=f&t=IzRz8zFMhHNpKUHC-0
+3. **Figma Design — HAU-USC Logistics — Frontend Design Lab** is documentation/reference authority for annotations, exploration, rationale, design research, component notes, comparison evidence, and supporting design decisions. Canonical file: https://www.figma.com/design/hXJElH4p72KfgAaoUyfNOC/HAU-USC-Logistics-%E2%80%94-Frontend-Design-Lab?node-id=0-1&p=f&t=MoIJxKJbLcfVZnz0-0
+4. Repository-preserved Figma/Make exports, screenshots, generated mirrors, and historical design branches are fallback evidence only. They do not override a newer accessible live Make state for current visual intent.
+
+### Required Figma access route
+
+- Use the Figma MCP for supported Design-file structured reads, metadata, screenshots, variables, and assets.
+- If Figma MCP reports reauthentication, run the supported Codex OAuth recovery once with "codex mcp login figma", then verify authenticated identity and Design-file access before falling back. Do not describe the connector as unavailable while this supported recovery remains untried.
+- Figma MCP currently authenticates successfully but its metadata/context tools do not support Figma Make files. Treat the message "This tool is not supported for Make files. Supported file type: Design." as a tool-capability limit, not an authentication failure.
+- For live Figma Make visual inspection, use the authenticated Chrome/browser route and the existing signed-in Figma session. Do not substitute normal web fetching.
+- When live Make code/source is not directly extractable through the supported route, use repository-preserved Make code exports only as partial code evidence and compare them against the current live Make visuals before adoption.
+- Never mutate either Figma file unless Earl's current accepted task explicitly authorizes a Figma write.
+
+### Frontend integration acceptance consequence
+
+FI-00 through FI-12 must be audited against these roles. A slice is not visually accepted merely because it matches an older Git mirror when the current live Make composition materially differs. Preserve valid functional work, then repair only the visual/interaction drift required by the current Make authority and the accepted repository contracts.
 
 ## Accepted mainline governance amendment — 2026-08-10
 
