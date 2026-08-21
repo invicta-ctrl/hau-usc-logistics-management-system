@@ -1,56 +1,25 @@
-# Current Bounded Task — FI-03 Sign-In, Verification, Application, and Application Status
+# Current Bounded Task — Live Figma Authority Audit/Repair for FI-00 through FI-03
 
-INTENT: SOFTWARE_FEATURE; FRONTEND_INTEGRATION; AUTHENTICATION_UI; ACCOUNT_APPLICATION_UI; ACCESSIBILITY
-MODE: COMPLETE
-OBJECTIVE: Implement FI-03 frontend presentation only on frozen v0.8.3 behavior: real sign-in, email verification, account application, application status, and directly coupled supported activation/recovery presentation.
-TARGET: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration at starting SHA 095fa2531d7cd898a57032573acc7809e0cd7b9d / tree a1b1bf9bd56aae666eec469a0dd78003e4e4829c.
+INTENT: FRONTEND_INTEGRATION_REPAIR
+MODE: EXECUTE
+OBJECTIVE: Audit and repair FI-00 through FI-03 against the current live Figma sources while preserving all valid v0.8.3 functional contracts and preventing FI-04 from starting before visual authority is reconciled.
+TARGET: frontend-design-integration worktree; FI-00, FI-01, FI-02, and FI-03 evidence and frontend surfaces named by the accepted amendment.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi03-auth-application-shell.md
-AUTHORITY: Earl FI-03 task -> FI-LIVE-PREVIEW-02 persistent-preview amendment -> canonical/project governance -> FI-02 PASS receipt/handoff -> accepted FI-03 spec -> FI-LIVE-PREVIEW-01/02 -> frozen v0.8.3 auth/application contracts -> DESIGN_BASELINE_2026-08-20-F/Figma Make v39 accepted Git mirror.
-RISK: HIGH; auth/security-adjacent UI.
-SCOPE: public.js signin/verify/application/applicationStatus and directly coupled supported activation/recovery; live accepted auth stylesheet after path proof; direct frontend tests/generated build outputs; current-chain/receipt/continuation/changelog closeout records.
-OUT_OF_SCOPE: all backend/auth/session/CSRF/rate-limit/verification/approval/provider behavior and src/server/auth/**, src/server/account-application/**, src/auth/http-contract.js, all src/v5/integration/** except the accepted FI-03 `admin-parity.js` publicPanels/afterRender/onSubmit result projection and proven `runtime.js` afterRender static-fallback removal; worker/server/services/domain/migrations/apps-script/wrangler/dependencies/Cloudflare/D1/R2/Google/secrets/permissions; public.register; Figma/Playground/Production writes/deploy; main merge/rebase/reset/clean/force-push/history rewrite.
-DELIVERABLE: FI03_STATUS PASS; real accessible responsive UI preserving current contracts; zero mock Production behavior, backend/auth-contract/migration/dependency/provider/Production changes; one coherent commit/push/readback; READY_FOR_FI04.
-VERIFICATION: scoped governance/lint/format; targeted auth/account-application/password-visibility/public-current-app/backend-integration tests; build and verify:dist; four bounded browser milestones over guarded loopback preview at 320/390/768/1024/1440, 200% zoom, keyboard/focus/reduced-motion/light/dark/no overflow; full check only once if required by repository closeout policy.
-STOP_CONDITIONS: branch/upstream/dirty/lock/predecessor conflict; missing/contradictory authority; any required excluded-path, security, privacy/enumeration, provider, real mutation, Production, registration, migration/dependency, or verification change/failure.
-
+ACCEPTED_SPEC: .codex/specs/active/frontend-integration-live-figma-authority-fi00-fi03-audit-repair-amendment.md
+AUTHORITY: Earl current instruction -> AGENTS.md -> .agents/PROJECT_POLICY.md -> this accepted amendment -> live repository functional contracts -> live Figma Make visual authority -> Figma Design documentation/reference.
 REQUIRED_MODEL: TERRA_INTEGRATION_WRITER
-ORCHESTRATOR_MODEL: GPT-5.6 SOL; ORCHESTRATOR_WRITES: FORBIDDEN
 ACTIVE_WRITER: NONE
-TERRA_WRITER: NONE
-WRITER_LOCK: RELEASED
-LOCK_STATUS: RELEASED
-HANDOFF_STATUS: READY_FOR_FI04
-STATUS: FI03_STATUS_PASS
-GIT_UPSTREAM: origin/frontend-design-integration@095fa2531d7cd898a57032573acc7809e0cd7b9d;NORMAL_FI02_PUSH_READBACK_0_0
-FI02_END_SHA: 095fa2531d7cd898a57032573acc7809e0cd7b9d
-FI02_SCOPE_AUDIT: PASS; only explicit FI-02 advertisement presentation exception in runtime.js/registry.js; no unauthorized backend/auth/migration diff.
-VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F + FIGMA_MAKE_V39; FIGMA_MCP: BLOCKED_REAUTHENTICATION; WEB_FETCH: NOT_USED; FALLBACK: REPOSITORY_PRESERVED_EXPORTS.
-FUNCTIONAL_BASELINE: CURRENT_FROZEN_V083_MAIN; backend/API/auth/data contracts win.
-ACCEPTED_AMENDMENT: FI-LIVE-PREVIEW-01/02; FI03 bounded result projection (OWNER_ACCEPTED_2026-08-22); FI02 contract-projection correction.
-LOCAL_PREVIEW: RUNNING_PERSISTENT
-LOCAL_PREVIEW_URL: http://127.0.0.1:4173
-LOCAL_PREVIEW_HOST: 127.0.0.1
-LOCAL_PREVIEW_PORT: 4173
-LOCAL_PREVIEW_WORKTREE: frontend-design-integration worktree
-LOCAL_PREVIEW_MODE: GUARDED_PLAYGROUND_PROXY
-PLAYGROUND_PROXY_VERIFIED: PASS
-PREVIEW_PRODUCTION_CROSSOVER: NONE
-PREVIEW_REUSED_OR_RESTARTED: RESTARTED_AFTER_SAFE_STARTUP_ARGUMENT_REPAIR
-PREVIEW_TEMPORARILY_PAUSED_FOR_TEST: NO
-PREVIEW_HMR_STATUS: HEALTHY
-PREVIEW_BACKEND_WRITES: 0
-VISUAL_CHECKPOINTS_PERFORMED: 4
-PREVIEW_STOPPED_AT_HANDOFF: NO
+RISK: MEDIUM; frontend-only repair with auth-adjacent FI-03 presentation and strict functional-contract preservation.
+SCOPE: Current-chain and design-authority correction; bounded live Figma evidence; FI-00/FI-01 audit; FI-02/FI-03 frontend-only visual and interaction repair; directly coupled tests; canonical generated artifacts; focused documentation and acceptance evidence.
+OUT_OF_SCOPE: FI-04 implementation; backend/API/auth/data/schema/migration/provider changes; D1/R2/Google writes; Figma writes; Playground or Production deployment; dependency changes without a separately accepted amendment; unsupported routes, features, or fabricated data; deletion of historical evidence.
+VERIFICATION: Figma MCP identity and Design access; authenticated browser Make access; bounded visual evidence register; local-preview comparison; route/state contract checks; 320/390/768/1024/1440; supported light/dark; keyboard/focus; reduced motion; 200% zoom; no overflow; applicable accessibility checks; focused tests first; broader invalidated gates once; complete logical diff; normal commit/push/readback.
+STOP_CONDITIONS: Conflicting writer; unexpected dirty work; live Make/Design conflict on a load-bearing fact; unsupported runtime behavior implied by design; required backend/auth/data/migration/provider change; Figma access failure after one supported reauthentication attempt; Make browser access failure; private-data exposure; Production crossover; mandatory verification failure.
+NEXT_EXACT_ACTION: ACQUIRE_FIGMA_AUDIT_WRITER_LOCK_AND_EXECUTE_PHASE_A
 
-## Delegation ledger
-
-| Agent ID                        | Model         | Role                     | Mode    | Scope      | Worktree                                       | Owned paths                                                         | Excluded paths              | Status |
-| ------------------------------- | ------------- | ------------------------ | ------- | ---------- | ---------------------------------------------- | ------------------------------------------------------------------- | --------------------------- | ------ |
-| `/root/fi03_integration_writer` | gpt-5.6-terra | TERRA_INTEGRATION_WRITER | execute | FI-03 only | canonical frontend-design-integration worktree | FI-03 records, owned frontend surface/style, direct tests/artifacts | all listed FI-03 exclusions | ACTIVE |
-
-CONTRACT_REALIZATION_GATE: signin=REALIZED; verify/application/application-status=RESPONSE_DISCARDED; static-status=STATIC_FALLBACK_CONFLICT; unsupported backend contracts=NONE.
-CONDITIONAL_PROJECTION_SCOPE: admin-parity publicPanels/afterRender/onSubmit for FI03 public verify/application/status; runtime afterRender only if fallback conflict requires it; dispatch/backend/security frozen.
-BLOCKER: FALSE; owner amendment accepted and persisted.
-NEXT_EXACT_ACTION: FI-04_AUTHENTICATED_SHELL_NAVIGATION_PROFILE after accepted handoff.
+FUNCTIONAL_BASELINE: v0.8.3 repository and accepted specifications remain functional truth.
+FIGMA_MAKE_ROLE: Primary current visual implementation authority and partial code/reference baseline.
+FIGMA_DESIGN_ROLE: Documentation/reference authority.
+FALLBACK_ROLE: Repository-preserved exports are partial fallback evidence only and must be compared against live Make visuals.
+KNOWN_DEFECT: FI-02 and FI-03 were visually accepted under a stale repository-preserved Make baseline after Figma was incorrectly recorded as blocked by reauthentication.
+EXPECTED_CLOSEOUT: FI-00 and FI-01 audited; FI-02 and FI-03 retain FUNCTIONAL_PASS and regain VISUAL_PASS; ACTIVE_WRITER NONE; WRITER_LOCK RELEASED; HANDOFF_STATUS READY_FOR_FI04.
