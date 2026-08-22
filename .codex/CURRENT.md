@@ -2,19 +2,20 @@
 
 PROGRAM: HAU-USC Logistics
 MILESTONE: FVR-02_FULL_FRONTEND_RECOVERY_MEDIA_MOTION_INDEX
-STATUS: ACTIVE_FVR02
+STATUS: BLOCKED_PARTIAL_FVR02
 PHASE: FVR02_FRONTEND_MEDIA_MOTION_INDEX_IMPLEMENTATION
 LOCAL_PREVIEW_REPAIR: ACCEPTED_LIVE_RUNTIME_VERIFIED;CORRECTION_COMMIT_4cbb921;PRIOR_PASSES_346f4bf_ac2d722_2d66d9d_b718ba1_ee412d4_9ad2d35_adf52f8_FAILED
 BRANCH: frontend-design-integration
-HEAD: RESOLVE_FROM_LIVE_GIT_HEAD
+HEAD: GIT_HEAD
 BASELINE_HEAD: RESOLVE_FROM_LIVE_GIT
-LAST_VERIFIED_AHEAD_BEHIND: BEHIND_0_AHEAD_13 (pre-live-acceptance checkpoint; resolve current from live Git)
+LAST_VERIFIED_AHEAD_BEHIND: BEHIND_0_AHEAD_22 (post-final-batch checkpoint; resolve current from live Git)
 UPSTREAM: origin/frontend-design-integration@e93e5c97fdb44f85f1b6ac1b578c9014a77b6166
-AHEAD_BEHIND: RESOLVE_FROM_LIVE_GIT
+AHEAD_BEHIND: BEHIND_0_AHEAD_22
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: CLEAN_EXCEPT_PRESERVED_EXCLUDED_UNTracked `.ai-bridge/`
-ACTIVE_WRITER: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v2
+WORKTREE_STATE: DIRTY_EXCEPT_PRESERVED_EXCLUDED_UNTracked `.ai-bridge/`
+ACTIVE_WRITER: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v3
 WRITER_LOCK: ACQUIRED
+HANDOFF_STATUS: READY_FOR_HANDOFF
 REQUIRED_MODEL: GPT-5.6_SOL_MAX
 SOL_MAX_ROLE: top-level orchestrator and final reviewer, read-only, writes forbidden
 CANONICAL_WRITER: DeepSeek V4 Pro #1
@@ -37,7 +38,7 @@ FI02_FUNCTIONAL_STATUS: PRESERVE_IF_VERIFIED
 FI02_VISUAL_MEDIA_MOTION_STATUS: REOPENED
 FI03_FUNCTIONAL_STATUS: PRESERVE_IF_VERIFIED
 FI03_VISUAL_STATUS: REVALIDATE
-PREVIEW_MODULE_INDEX_STATUS: NOT_IMPLEMENTED
+PREVIEW_MODULE_INDEX_STATUS: IMPLEMENTED_GATED_PREVIEW
 FI04_STATUS: BLOCKED
 
 MODEL_CONTRACT: GPT-5.6 Sol Max sole read-only orchestrator/final reviewer (Sol writes forbidden, only Sol spawns, depth one, no recursion/substitution). DeepSeek V4 Pro #1 sole canonical writer. Ox Alpha is the default read-only subagent for all safe review/scout/audit domains via explicit model override openrouter/stealth/ox-alpha; additional DeepSeek is exceptional heavy-analysis only with a one-sentence WHY_DEEPSEEK_NOT_OX. fork_turns none/narrow capsules for Ox; no silent substitution; one writer; non-propagation unchanged; actual runtime concurrency ceiling unchanged; Ox writer failover only under separately accepted FVR-02-A1 exhaustion authority.
@@ -58,6 +59,8 @@ MIGRATION: FORBIDDEN
 
 ROLLBACK: Git revert product commits; preserve FVR-001 and rollback tag; Playground repair only via recorded existing runbook recovery; no Production/Figma rollback because no writes.
 
-OPEN_RISKS: hero-video authority conflict (blocker); public-media source/runbook gap (blocker); Ox Alpha/model route availability to be reverified at dispatch; safe existing server-validated Index signal unverified.
+BLOCKER: FVR02_VIDEO_AUTHORITY_CONFLICT (live Make v39 exposes no hero video source; poster-only is intentional and no source was fabricated) plus FVR02_PUBLIC_MEDIA_BLOCKED (prior seed advertisement expired 2026-08-01, referenced R2 object missing, no accepted seed/upload runbook, no media mutation authorized).
 
-NEXT_EXACT_ACTION: resume the remaining original FVR-02 frontend/media/motion/index implementation under Ox-first routing, preserving the known hero-video authority conflict and public-media source/runbook blockers.
+OPEN_RISKS: hero-video authority conflict (blocker); public-media source/runbook gap (blocker).
+
+NEXT_EXACT_ACTION: Parent orchestrator final acceptance review of the FVR-02 final batch; FI-04 not ready/not advanced; preview remains RUNNING at 4173 (do not restart/stop).

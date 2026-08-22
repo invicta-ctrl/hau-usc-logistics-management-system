@@ -3,18 +3,16 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration`
-- **Branch/HEAD/upstream:** `frontend-design-integration`; baseline `02f5c9bed4a2f692df32114019f0b0bbfca0fc13`; upstream was equal before this coherent working-tree cutover.
-- **Current phase/stage:** FVR-001 closed at the atomic publication checkpoint; remote readback and conditional repository propagation are the remaining orchestration actions.
-- **Accepted scope:** `.codex/specs/accepted/2026-08-22-fvr001-atomic-figma-frontend-cutover.md` with accepted A1 and A2 amendments; deletion separately authorized by Earl on 2026-08-22.
-- **Completed work:** Recovered the Figma Make source, implemented the thin same-origin adapter, completed FI-00 through FI-03, retained server-confirmed public Request/Lending receipts and tracking, switched the active frontend, and removed the authorized legacy implementation.
-- **Files changed by purpose:** `src/frontend/**` and frontend entry/build files implement the cutover; `tests/**` and Playwright config preserve current behavior; scripts bind preview/build/release artifacts; current docs and `.codex/**` record authority and evidence; retired legacy files are deleted.
-- **Tests verified at current SHA:** Working-tree verification against baseline `02f5c9b`: build and dist verification passed; 145 unit files/1,038 tests passed; 50/50 frontend Playwright cases passed; focused changed-file ESLint passed; Cloudflare deploy dry-run passed.
-- **Generated artifacts:** `dist/index.html`, `HAU-USC_Logistics-Frontend-Shareable.html`, and `.wrangler/build/staging/index.html` are reproducibly generated from the current frontend source.
-- **External actions:** One guarded isolated-Playground preview is running; no production deployment, migration, provider mutation, or design-source mutation was performed.
-- **Rollback:** Annotated tag `archive/v5-final-before-figma-cutover-2026-08-22` resolves to tag object `e75192d` and target commit `02f5c9b`.
-- **Blocker:** None for branch publication; clean-lineage promotion remains conditional on preserving exact known main-worktree governance changes and all unique v0.8.4 work.
-- **Next three actions:** Publish the single atomic cutover commit; verify remote SHA and 0/0 divergence; conditionally fast-forward main and merge accepted main into v0.8.4 while preserving its unique history.
-- **Resume commands:** `git status --short`; `npm.cmd test`; `npx.cmd playwright test --config playwright.frontend.config.js --workers=1`; `npm.cmd run cloudflare:dry-run`.
-- **Prohibited actions:** Do not deploy Production, assign roles in the browser, fabricate authoritative identifiers/status/history, start FI-04 automatically, or discard unrelated main/v0.8.4 work.
-
-The writer lock is released at this transferable checkpoint. Stop when the accepted propagation work is complete or a preservation gate fails.
+- **Branch/HEAD/upstream:** `frontend-design-integration`; HEAD resolves from live Git (final batch commit); upstream `origin/frontend-design-integration` at `e93e5c97fdb44f85f1b6ac1b578c9014a77b6166`, behind 0 / ahead 22 before the final-batch commit.
+- **Current phase/stage:** FVR-02 frontend media/motion/index implementation is BLOCKED/PARTIAL at its final local batch; FI-04 remains not ready and not advanced.
+- **Accepted scope:** `.codex/specs/accepted/2026-08-22-fvr02-full-frontend-recovery-media-motion-index.md` with accepted A2 routing and local-preview-resilience amendments; this batch is artifact regeneration plus continuity closeout only.
+- **Completed work:** Public advertisement media exposure, deterministic regressions, Preview Index trusted gate/canonical registry/foundation, gated Preview Module Index UI/Surface Preview/Test Real Login, accessibility and review corrections, skip-link restoration, and the final tracked-artifact regeneration.
+- **Files changed by purpose:** `src/server/public-advertisement-service.js` and coupled tests implement the media contract; `src/frontend/**` implements the gated Preview Index and accessibility shell; `dist/index.html` and `HAU-USC_Logistics-Frontend-Shareable.html` are regenerated artifacts; `.codex/**` and `docs/WORK_CONTINUATION.md` record authority and evidence.
+- **Tests verified at current SHA:** `npm test` = 147 files / 1,114 tests passed (136.90s); full frontend Playwright = 120 passed across five widths plus targeted skip-link 5 passed; `npm run build` and `npm run verify:dist` passed; `npm run check:agents` and `npm run check:continuation` passed.
+- **Generated artifacts:** `dist/index.html` and `HAU-USC_Logistics-Frontend-Shareable.html` reproducibly regenerated from current source and verified (sha256 c84c8b398b9d67ab...).
+- **External actions:** None; no Figma/provider/Production/data/migration/deployment writes; guarded preview remains RUNNING at `127.0.0.1:4173`.
+- **Rollback:** Git revert product commits; preserve FVR-001 and its rollback tag; preview recovery only through the recorded local-preview runbook; no Production/Figma rollback because no writes.
+- **Blocker:** `FVR02_VIDEO_AUTHORITY_CONFLICT` (live Make v39 has no hero video source; poster-only is intentional) and `FVR02_PUBLIC_MEDIA_BLOCKED` (seed advertisement expired 2026-08-01, referenced R2 object missing, no accepted seed/upload runbook); FI-04 not ready/not advanced.
+- **Next three actions:** Parent orchestrator final acceptance review; keep preview RUNNING at 4173; do not start FI-04 or populate media without an accepted seed/upload runbook.
+- **Resume commands:** `git status --short`; `git rev-parse HEAD`; `npm run check:agents`; `npm run check:continuation`; `npm run handoff:verify`.
+- **Prohibited actions:** Production deployment/data write; provider/Figma write; backend/auth/data/schema/migration change; FI-04 start; media population without accepted runbook; history rewrite/reset/clean/force-push; touching `.ai-bridge/`; push.

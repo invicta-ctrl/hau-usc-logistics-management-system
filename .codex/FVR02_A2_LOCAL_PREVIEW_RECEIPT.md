@@ -97,3 +97,19 @@ No machine PIDs, control port, owner token, instance ID, private manifest path/h
 
 - A concurrent duplicate `start` racing a fresh start is guarded by the exclusive `wx` claim and Vite `--strictPort`; the CLI never force-kills an unknown listener.
 - Windows detached-process semantics use `detached: true`, `stdio: 'ignore'`, and `child.unref()`.
+
+## FVR-02 final batch closeout (2026-08-22)
+
+- IMPLEMENTATION_COMMITS_AFTER_PREVIEW_ACCEPTANCE: ae64a519beabd23647dc92b6d9d855044ef53cc8, b826ceb05e15b5e98e91e4230beeb918c91e467c, da5d517deda0b72848198a79b3c66b082d51522d, 8794140d96c22f05478f32d58f4f82a96f33cbad, 06b646b3a76db0475f9c1bfdd67c8abeedaf9737, afe71859f9f9d06a7358e434db0386179602a0c7, a8cc23bf0d8ade1458eda74b55b195129a14bffb, d5d85d6a9f43dfdbdb6feb790d042b4fd6e17487.
+- UNIT_INTEGRATION: `npm test` = 147 files / 1,114 tests passed, 136.90s.
+- PLAYWRIGHT_AFTER_FINAL_UI: full two-spec frontend suite 120 passed across widths 320/390/768/1024/1440; targeted skip-link 5 passed.
+- BUILD_AND_DIST: `npm run build` passed; `npm run verify:dist` passed (deterministic artifact sha256 c84c8b398b9d67ab...).
+- LIVE_PARENT_ACCEPTANCE: persistent `http://127.0.0.1:4173` root 200; `/api/version` playground true; exact hash/launcher/direct Index works; 15 entries/3 groups; widths no overflow; controls >=44px; Surface Preview read-only/no forms; focus return works; auth Open performs real unauthenticated session check and shows Sign in (expected 401 console-only signal); hero poster=1/video=0/`atrium-enter`; no mutating API requests; page errors 0.
+- PREVIEW_RESILIENCE: prior A2 acceptance at 15d7deb; persistent preview remains root 200 and `/api/version` playground true after full tests; leave running.
+- GOVERNANCE: `npm run check:agents` pass (12 project files); `npm run check:continuation` pass (14 required fields).
+- LINT_BASELINE: repository-wide `npm run lint` remains non-green solely due 26 no-undef browser-global errors in unchanged `prototypes/public-portals-r3/app.js` plus one unrelated warning in unchanged `src/server/public-request-service.js`; FVR-02 changed JS/test eslint has 0 errors and TS/JSX is ignored by the current ESLint config; recorded as unrun/non-gating baseline debt.
+- IMPECCABLE: detector ran exactly once after UI changes; its two new PreviewIndex findings were fixed at a8cc23b and it was not rerun by requirement; the seven literal-color advisories are exact live Figma `theme.css` source fidelity and intentionally unchanged.
+- MAKE_CSS: exact live Make v39 CSS sourced via authenticated Figma with only `./tailwind.css` -> `tailwindcss` adaptation; no Figma writes.
+- PRODUCTION_NEGATIVE: proxy/Production guard PASS; crossover 0; no provider/data/deploy mutations.
+- FINAL_STATUS: BLOCKED/PARTIAL; FI-04 not ready/not advanced.
+- BLOCKERS: FVR02_VIDEO_AUTHORITY_CONFLICT (live Make v39 exposes no hero video source; poster-only intentional); FVR02_PUBLIC_MEDIA_BLOCKED (seed advertisement expired 2026-08-01, referenced R2 object missing, no accepted seed/upload runbook, no media mutation authorized).
