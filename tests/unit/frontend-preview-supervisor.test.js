@@ -898,3 +898,55 @@ describe('lifecycle generation and persistence ordering', () => {
     expect(await ready).toBe(false);
   });
 });
+
+describe('production runtime-state binding', () => {
+  let dir;
+  beforeEach(async () => {
+    dir = await mkdtemp(path.join(os.tmpdir(), 'fvr02-binding-'));
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('createCli default claimState binds runtimeRoot and accepts the one-arg call shape', async () => {
+    const cli = createCli({
+      runtimeRoot: dir,
+      probePort: vi.fn(async () => 'closed'),
+      resolveManifest: vi.fn(async () => ({ manifestPath: '/private/m.json', fingerprint: 'fp' })),
+      generateInstanceId: vi.fn(() => 'inst-binding'),
+      spawn: vi.fn(() => {
+        throw new Error('spawn refused');
+      }),
+      clearClaim: vi.fn(async () => {}),
+    });
+    await expect(cli.doStart('/private/m.json')).resolves.toBe(1);
+    const state = await readState(dir);
+    expect(state).toBeTruthy();
+    expect(state.instanceId).toBe('inst-binding');
+  });
+
+  it('createCli default clearClaim clears its own pending claim on spawn failure', async () => {
+    const cli = createCli({
+      runtimeRoot: dir,
+      probePort: vi.fn(async () => 'closed'),
+      resolveManifest: vi.fn(async () => ({ manifestPath: '/private/m.json', fingerprint: 'fp' })),
+      generateInstanceId: vi.fn(() => 'inst-clear'),
+      spawn: vi.fn(() => {
+        throw new Error('spawn refused');
+      }),
+    });
+    await expect(cli.doStart('/private/m.json')).resolves.toBe(1);
+    expect(await readState(dir)).toBeNull();
+  });
+
+  it('createCli default safeClearStateIfDead clears a provably-dead stale state', async () => {
+    await claimState(dir, { instanceId: 'inst-dead', launcherPid: 1, supervisorPid: 2, vitePid: 3, pending: false, controlPort: null, ownerToken: null });
+    const cli = createCli({
+      runtimeRoot: dir,
+      isPidAlive: vi.fn(() => false),
+      probePort: vi.fn(async () => 'closed'),
+    });
+    await cli.doStop();
+    expect(await readState(dir)).toBeNull();
+  });
+});

@@ -324,19 +324,31 @@ export function createCli(deps = {}) {
   const makeControlRequestBound = deps.makeControlRequest ?? makeControlRequest;
   const httpRequestImpl = deps.httpRequest ?? request;
   const controlTimeoutMs = deps.controlTimeoutMs ?? 3000;
+  const runtimeRoot = deps.runtimeRoot ?? repoRoot;
+  const runtimeState = {
+    readState: deps.readState ?? (() => readState(runtimeRoot)),
+    claimState: deps.claimState ?? ((state) => claimState(runtimeRoot, state)),
+    clearState: deps.clearState ?? (() => clearState(runtimeRoot)),
+    clearClaim: deps.clearClaim ?? ((instanceId) => clearClaim(runtimeRoot, instanceId)),
+    isPidAlive: deps.isPidAlive ?? isPidAlive,
+    probePort: deps.probePort ?? probePort,
+  };
+  runtimeState.safeClearStateIfDead =
+    deps.safeClearStateIfDead ?? ((state) => safeClearStateIfDead(runtimeState, state));
   const bound = {
     ...deps,
     makeControlRequest: makeControlRequestBound,
     httpRequest: httpRequestImpl,
     controlTimeoutMs,
+    runtimeRoot,
+    readState: runtimeState.readState,
+    claimState: runtimeState.claimState,
+    clearState: runtimeState.clearState,
+    clearClaim: runtimeState.clearClaim,
+    isPidAlive: runtimeState.isPidAlive,
+    probePort: runtimeState.probePort,
+    safeClearStateIfDead: runtimeState.safeClearStateIfDead,
     spawn: deps.spawn ?? spawn,
-    readState: deps.readState ?? readState,
-    probePort: deps.probePort ?? probePort,
-    isPidAlive: deps.isPidAlive ?? isPidAlive,
-    claimState: deps.claimState ?? claimState,
-    clearState: deps.clearState ?? clearState,
-    clearClaim: deps.clearClaim ?? clearClaim,
-    safeClearStateIfDead: deps.safeClearStateIfDead ?? safeClearStateIfDead,
     resolveManifest: deps.resolveManifest ?? resolveManifest,
     generateInstanceId: deps.generateInstanceId ?? generateInstanceId,
     sleep: deps.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms))),

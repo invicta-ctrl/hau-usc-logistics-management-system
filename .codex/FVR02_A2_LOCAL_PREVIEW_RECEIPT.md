@@ -21,6 +21,8 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 - FIFTH_PASS_REVIEW: FAILED static concurrency review (readiness promotion and both health-loop writes still used direct raceable state writes; stop-won cleanup did not set in-memory STOPPED/terminationReason; restart-loop selection did not prefer expected stop).
 - SIXTH_PASS_COMMIT: 9ad2d35a179e8bfce3f6a3381c6887db2d8f69d9
 - SIXTH_PASS_REVIEW: FAILED static concurrency review (readiness verified only before its awaited fetch, so a stale probe for a replaced child could promote RUNNING; independent atomic renames were unordered so a delayed stale RUNNING write could win after RESTARTING).
+- SEVENTH_PASS_COMMIT: adf52f8f8b7f65ad7b253da6eb17953b4603078a
+- SEVENTH_PASS_REVIEW: runtime-discovered production-binding defect (the first authorized positional-manifest start failed safely before state/listener with `The "path" argument must be of type string. Received an instance of Object`; `claimState`, `clearClaim`, and `safeClearStateIfDead` were assigned directly as defaults but invoked with a mismatched arity, so the state object reached `path.join`). Parent verified state absent and listener count 0.
 - FINAL_CORRECTION: implemented in the final corrective commit. Live runtime acceptance is NOT claimed.
 
 ## Implemented result
@@ -49,6 +51,7 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 - Restart-loop selection now prefers expected stop: if shutdown appears before terminal loop preservation, the supervisor finalizes `stopped` instead of retaining a `loop` terminal record.
 - Readiness is bound to the exact child generation/reference: `verifyReady` and `waitReady` capture the expected child and revalidate same object + live exitCode + child generation after the awaited fetch and body read and before/after committing healthy state; a stale probe for a replaced child cannot promote RUNNING.
 - Lifecycle persistence is ordered through a single in-process write/clear queue plus a monotonic generation guard: `writeState` snapshots the generation at invocation and skips if a newer generation has superseded it, while RESTARTING/STOPPED/terminal writes and final clears bump generation so an older RUNNING write cannot overwrite later truth. Atomic file replacement is retained.
+- `createCli` now binds every module-level runtime-state default to the correct runtime root and call shape (`readState`, `claimState`, `clearState`, `clearClaim`, and `safeClearStateIfDead`), using an injectable `runtimeRoot` plus correctly wrapped defaults so temp-root integration tests exercise the real functions without touching repo runtime. The three previously misbound arities (`claimState` one-arg, `clearClaim` one-arg, `safeClearStateIfDead` one-arg) are corrected while dependency injection is preserved.
 - `scripts/start-frontend-playground-preview.mjs` is a thin CLI with `dev` (preserved foreground), `start`, `status`, `restart`, and `stop` modes; persistent `start` preserves `-- <vite args>` and restart reuses the canonical path with re-resolution.
 - `package.json` adds `preview:frontend:start`, `preview:frontend:status`, `preview:frontend:restart`, `preview:frontend:stop`, and keeps `dev:frontend:playground` (now explicit `dev` mode).
 
@@ -56,7 +59,7 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 
 - `git diff --check`: PASS.
 - `node scripts/check-agent-instructions.mjs`: PASS (12 project files).
-- Focused unit: `npx vitest run tests/unit/frontend-preview-supervisor.test.js tests/unit/frontend-playground-guard.test.js`: PASS (2 files, 52 tests).
+- Focused unit: `npx vitest run tests/unit/frontend-preview-supervisor.test.js tests/unit/frontend-playground-guard.test.js`: PASS (2 files, 55 tests).
 - Focused eslint on the three changed JS files: PASS (no findings).
 - `node --check` on both changed scripts: PASS.
 

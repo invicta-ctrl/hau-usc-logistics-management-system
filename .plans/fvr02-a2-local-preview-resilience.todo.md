@@ -32,7 +32,7 @@ FVR-02-A2 "Local Preview Resilience / Auto-Recovery Amendment" (accepted: `.code
 
 ## Status
 
-In progress. Only this local-preview slice is active. First-pass 346f4bf0b5e6a78308305393d72385d44f3d98ee, second-pass ac2d7227314acb923a55657f4e7fb09870f8d9b2, third-pass 2d66d9d35b09aa401436b41283f8fd4853e03b95, fourth-pass b718ba19811946297d715dd7c304809ac7653e0e, fifth-pass ee412d4e41df487d96571f51a99d430e52f38041, and sixth-pass 9ad2d35a179e8bfce3f6a3381c6887db2d8f69d9 all failed parent/Ox review; the final corrective commit closed the remaining stale-readiness-probe and persistence-ordering races. Live runtime acceptance is still pending and is not claimed.
+In progress. Only this local-preview slice is active. First-pass 346f4bf0b5e6a78308305393d72385d44f3d98ee, second-pass ac2d7227314acb923a55657f4e7fb09870f8d9b2, third-pass 2d66d9d35b09aa401436b41283f8fd4853e03b95, fourth-pass b718ba19811946297d715dd7c304809ac7653e0e, fifth-pass ee412d4e41df487d96571f51a99d430e52f38041, sixth-pass 9ad2d35a179e8bfce3f6a3381c6887db2d8f69d9, and seventh-pass adf52f8f8b7f65ad7b253da6eb17953b4603078a all failed parent/Ox review (seventh via runtime-discovered production binding defect). The final corrective commit closed the remaining runtime-state default-binding arity defects. Live runtime acceptance is still pending and is not claimed.
 
 ## Context
 
@@ -160,6 +160,7 @@ None beyond the preview launcher and package scripts.
 - Fourth pass (b718ba1) closed the third-pass gaps but left stop racing async pre-spawn verification and stop racing the RESTARTING state write.
 - Fifth pass (ee412d4) closed the fourth-pass gaps but left readiness promotion and health-loop writes raceable and stop-won cleanup without in-memory terminal state.
 - Sixth pass (9ad2d35) closed the fifth-pass gaps but left readiness verified only before its awaited fetch and independent renames unordered.
+- Seventh pass (adf52f8) closed the sixth-pass gaps but left `claimState`, `clearClaim`, and `safeClearStateIfDead` default-bound with mismatched arity, surfaced by the first authorized real start failing safely before state/listener.
 - Final correction (this active slice) closes the remaining gaps; see `.codex/FVR02_A2_LOCAL_PREVIEW_RECEIPT.md`.
 
 ## Blockers (recorded; not part of this slice)
