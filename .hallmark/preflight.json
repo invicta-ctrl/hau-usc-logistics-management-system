@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-08-08",
+  "genre": "modern-minimal",
+  "macrostructure": "Map / Diagram",
+  "designSystem": "DESIGN.md",
+  "directionSource": "docs/design/IMPECCABLE_V4_1_FEEDBACK_AMENDMENT.md",
+  "directionOwner": "owner v4.1 override",
+  "directionPinned": true,
+  "conceptSeed": "inherited v4 baseline: surface/operate key 00000004 -> candidate 5",
+  "conceptTournament": "historical deterministic degraded replay; current owner override controls v4.1",
+  "study": {
+    "primaryArtifact": "prototypes/impeccable-whole-site-redesign-v3/",
+    "designDNA": "docs/design/IMPECCABLE_V3_EXTERNAL_DESIGN_DNA.md",
+    "commands": ["study", "audit", "redesign"]
+  },
+  "requirements": {
+    "ownerComments": 12,
+    "majorFrontendChanges": 12,
+    "compositionalChanges": 5,
+    "visualDeltaPairs": 8
+  },
+  "navigation": {
+    "authenticated": "N13 authenticated command pill",
+    "public": "N5 public floating bar"
+  },
+  "footer": "Ft5 statement close",
+  "skills": ["Hallmark", "Impeccable", "lean-ctx"],
+  "review": {
+    "hallmarkGates": "58/58 pass",
+    "substantialRedesign": "pass",
+    "visualDelta": "pass",
+    "disposition": "ship"
+  }
+}

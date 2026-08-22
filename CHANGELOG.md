@@ -1,6 +1,37 @@
 # Changelog
 
+## 2026-08-22 — FVR-001 Figma-native frontend cutover
+
+- Replaced the active frontend with the live-Make-derived React implementation for FI-00 through FI-03 while preserving repository backend, auth, privacy, D1/R2, audit, and provider contracts.
+- Added same-origin public Request/Lending catalog, submission, receipt, and tracking integration; server responses remain the only source of record identifiers, private tracking codes, status, and lifecycle history.
+- Added cookie-session sign-in/logout, CSRF-protected starter activation, exact eight-digit email verification, account application submission, private status-token lookup, and supported withdrawal.
+- Removed the retired frontend implementation and its active scripts, configs, tests, specifications, plans, documents, and generated shareable after replacement, rollback, visual, responsive, accessibility, and guarded-Playground gates passed.
+- Production deployment, provider writes, database mutations, migrations, backend semantic changes, and Figma writes remain excluded.
+
 ## Unreleased
+
+### FI-LIVE-FIGMA-AUTHORITY-01
+
+- Reopened FI-02 after owner rejection of its stale visual acceptance, then reconciled only `#/public.landing` to live Make v39: attached institutional masthead/hero, Current split composition with truthful state projection, Logistics hub/ledger, and oxblood public footer. Routes, policy access, accessibility, and no-fabrication rules remain intact.
+- Reconciled FI-00 through FI-03 against the authenticated live Figma authority: FI-00/FI-01 are VERIFIED_NO_OP; FI-02 and FI-03 retain functional contracts and regain visual acceptance.
+- Rebuilt the landing around the current Make v39 logistics hierarchy and governed institutional media, separated truthful published-announcement state from hero intent, and aligned sign-in presentation without changing auth behavior.
+- Added the bounded live-evidence register and directly coupled V5 coverage. No backend/API/auth/session/data/schema/migration/dependency/provider/Figma/Playground/Production change occurred.
+
+### FI-03 Sign-In, Verification, Application, and Status
+
+- Replaced fake public verification, application, and application-status shells with existing contract-backed forms and safe route-local result presentation; receipts and bearer status tokens remain private.
+- Removed the proven conflicting static status fallback, retained the frozen dispatch/backend/security contracts, and corrected dark-mode public password-toggle contrast.
+- Added focused regression coverage and regenerated deterministic V5 artifacts; no backend/API/auth/data/migration/dependency/provider/Playground/Production change occurred.
+
+### FI-02 Public Landing & Portal Shell
+
+- Completed the real FI-02 public landing and portal shell with only verified public routes, an approved official USC destination, truthful existing-advertisement loading/populated/empty/request-error/media-failure states, conditional real-media rendering, and no self-service registration.
+- Applied the accepted D-08 accessibility decision: FI-01 semantic foregrounds preserve the Figma hierarchy while meeting WCAG AA in both authored themes; keyboard focus, reduced motion, responsive widths, and 200% zoom were accepted.
+
+### FI-02 verification boundary
+
+- FI-02 changes frontend presentation, accepted continuity evidence, focused tests, and canonically regenerated artifacts only. No backend/API/auth/data contract, migration, dependency, provider, Figma, Playground, Production, deployment, main merge, or history rewrite occurred.
+- Current V5 unit/browser/build/dist evidence passes. Repository-wide `npm run lint` keeps only its owner-recorded unrelated prototype browser-global baseline and one existing server warning; generic legacy `npm run test:e2e` is intentionally not FI-02 evidence against the dedicated guarded V5 preview, while the full V5 E2E and visual suites pass.
 
 ### v0.8.3 owner-fast-close checkpoint
 

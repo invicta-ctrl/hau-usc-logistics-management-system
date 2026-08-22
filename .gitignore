@@ -18,3 +18,7 @@ migration-private/
 *.private.sql
 *.private.ndjson
 Logistics Website Access codes.txt
+
+# Impeccable per-session detector cache. Machine-absolute paths, no unique
+# evidence, regenerated on every edit — it is tooling state, not project truth.
+.impeccable/hook.cache.json

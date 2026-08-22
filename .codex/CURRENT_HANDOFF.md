@@ -1,12 +1,12 @@
 # Current Environment Handoff
 
 FROM: TERRA_MAX:/root/v83_playground_reset_terra_writer
-TO: FRESH_SESSION_OR_SEPARATE_BRANCH_LOCAL_WRITER — V084_BRANCH_LOCAL_PREPARATION_COMPLETE
+TO: FRESH_SESSION_OR_SEPARATE_BRANCH_LOCAL_WRITER — V084_POST_FVR001_BASELINE_REFRESH_COMPLETE
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 TREE: GIT_TREE
-UPSTREAM: origin/release/v0.8.4-live-operations-performance@GIT_HEAD;PUSH_PARITY_VERIFIED
-WORKTREE: D:/Documents/Codex/_verification/v83-final-gate-f8e6337
+UPSTREAM: origin/release/v0.8.4-live-operations-performance@THIS_MERGE_COMMIT;VERIFY_AFTER_PUBLICATION
+WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/v084-live-operations-performance
 WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: NONE
 TERRA_WRITER: NONE
@@ -23,7 +23,7 @@ ACCEPTED_SPEC: .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md
 CONTROLLING_AMENDMENT: .codex/specs/active/v0.8.3-v1r7-a7-r2-final-acceleration-s17-closure-amendment.md
 AMENDMENT_COPY_EVIDENCE: CONTENT_EQUIVALENT_FORMATTING_NORMALIZED_FROM_EARL_ATTACHMENT;ATTACHMENT_SHA256=8bd8dd2ba29a6dbcf90513ccc95c55ec6975ae5cfacae79d6c768d746800e681;NORMALIZATION=11_MARKDOWN_DOUBLE_SPACE_HARD_BREAKS_TO_HTML_BR;RENDERED_METADATA_LINE_BREAKS=PRESERVED
 HISTORICAL_PLAN_AUDITS: SEVENTH=REJECTED_AND_REPAIRED;EIGHTH=P2_RECOVERY_WORDING_ONLY_REPAIRED;NINTH=PASS_NO_P0_P1_P2_WITH_ACCEPTED_P3_NO_LIVE_WORKER_403
-COMPLETED: v0.8.3 S17 is closed and immutable as a baseline: exact f8/tree production identity, schema32/0031+0032 single ledger/FK0, protected roster configuration and recovery evidence, protected main acceptance, recovery rotation, and lossless cleanup are all retained. Phase 8 is complete: the retained v0.8.4 branch received a normal final-main merge, focused continuity/governance/diff validation, normal push/readback, and release of its separate branch-local lock; v0.8.4 implementation remains not started.
+COMPLETED: Existing v0.8.4 history and readiness evidence remain intact; accepted Figma-native main f7e5bf83205dbe58b5fb72126a4456747d92e906 is merged once without independent frontend reimplementation; v0.8.4 implementation remains not started.
 VALIDATION: Candidate detached handshake and live branch parity PASS. Section 16 redacted preflight PASS: authenticated expected account scope, Production v0.8.2/c316 schema30/0030, Playground predeploy v0.8.2-playground.1/fc669 schema30/0030, Time Travel bookmark, worker rollback history, isolated D1/R2 bindings, provider secret/config name presence, and staging runtime/readiness. Package/deploy workflow SUCCESS. The first deployment-list read used an oldest-first array index; one bounded timestamp-selected reconciliation corrected that selection and independently proved the latest typed bindings plus safe endpoints are exact f8/tree/artifact, STAGING/PLAYGROUND_MODE, schema30/0030, and binding-isolated. The second reset terminally proved CLEAN schema30/0030, R2 baseline/working identity, empty working evidence, and Production mutation=0. The one-file provider-disabled 0031 reapply reached schema31/ledger0031 with no 0032 partial state, foreign keys, all 11 explicit canonical-identity STRICT table/trigger/index/FK invariants, exact f8 candidate/version/readiness, and fresh private post-0031 recovery. The atomic 0032 wrapper then passed byte-prefix/locked-ledger-suffix local validation and its one remote file import exited 0; terminal read-only reconciliation proved CLEAN schema32/single ledger0032, foreign keys, reset-probe absence, 3 Activity History tables, 2 indexes, 21 triggers, STRICT/append-only/empty-default invariants, exact f8 runtime/readiness, and fresh private recovery. The safe endpoint intentionally does not expose a tree; unchanged prior typed-binding evidence remains its tree/artifact proof. Accepted Node 22.23.2 product evidence remains valid because f8 product blobs are unchanged.
 P3_ADVISORY: NONBLOCKING_UNREPAIRED;tests/e2e/v072-account-access.spec.js hard-codes the committed harness port 4173; no scope expansion is authorized.
 PRIVACY_INCIDENT: METADATA_ONLY_LOCAL_FILENAMES_NO_CONTENT_NO_MUTATION;RECONCILED_BY_ROOT;NO_FILENAMES_RECORDED.
@@ -46,10 +46,10 @@ BLOCKER: FALSE;NO_ACTIVE_PRODUCTION_IDENTITY_INTEGRITY_RECOVERY_OR_PRIVACY_MISMA
 PHASE_3_4_CHECKPOINT: PASS;PR_25_NORMAL_MERGE=07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e;CI_VERIFY_CODEQL_BROWSER_SMOKE=PASS;CODEQL_99_FALSE_POSITIVE_DISMISSED;F8_APPLICATION_PATH_PARITY=PASS;V083_TAG=PASS;RECOVERY_POINTERS_ROTATED_AND_READBACK=PASS;P2_PAGINATION_REVIEW_THREADS_DEFERRED_TO_POST_V083_FRONTEND_INTAKE_WITHOUT_PRODUCT_CHANGE
 PHASE_5_CHECKPOINT: PASS_WITH_PRESERVATION_EXCEPTION;temporary remote refs closed losslessly after unique-history proof; research audit retained by immutable archive tag; primary main checkout clean; v082 product-dirty worktree retained untouched; unregistered generated-only node_modules residual is a tooling-blocked P3 with no Git history or ref loss.
 S17_CLOSEOUT: PASS;Production/main/f8 identity/recovery rotation/lossless hygiene/retained future refs/pushed readback pass; ACTIVE_WRITER=NONE; WRITER_LOCK=RELEASED; HANDOFF_STATUS=READY_FOR_HANDOFF.
-V084_BRANCH_LOCAL_BASELINE: FINAL_V083_MAIN=86553349f5c2ebefaa637c30828c560a301f99ba;FROZEN_F8_APPLICATION_PARITY=PASS;PRODUCTION=v0.8.3_SCHEMA32_0031_0032_SINGLE0032_LEDGER_FK0_PRIVATE_RECOVERY_REUSED_VERIFIED;PROTECTED_MAIN_AND_RECOVERY_REFS=RETAINED
-V084_BRANCH_LOCAL_REFRESH: PASS;NORMAL_FINAL_MAIN_MERGE=05ea4c50a30e75c6b74468ffe7c0a39435dd92c0;ACTIVE_LOCK_CHECKPOINT=5f6387a37f10cdda48bad061ef5eb5ad8cf2b424;FOCUSED_HANDOFF_CONTINUATION_GOVERNANCE_PRETTIER_AND_DIFF=PASS;PUSH_READBACK=PASS;ACTIVE_WRITER_NONE;WRITER_LOCK_RELEASED
-NEXT_ACTION_SCOPE: V83_CLOSED;V084_BRANCH_LOCAL_PREPARATION_COMPLETE;PHASE9_FRONTEND_BRANCH_LOCAL_PREPARATION_ONLY
-NEXT_EXACT_ACTION: Do not reopen v0.8.3 or start v0.8.4 implementation. Take and release a separate frontend-design-integration branch-local lock only under the owner-authorized Phase 9 adoption-intake scope.
+V084_BRANCH_LOCAL_BASELINE: ACCEPTED_MAIN=f7e5bf83205dbe58b5fb72126a4456747d92e906;FIGMA_NATIVE_TREE=480cf65cb9ec07fbab729f0588023e120cf3f97a;PRIOR_UNIQUE_COMMITS=6;UNIQUE_READINESS_PACKET=RETAINED
+V084_BRANCH_LOCAL_REFRESH: PASS;NORMAL_ACCEPTED_MAIN_MERGE=THIS_MERGE_COMMIT;FVR001_PRODUCT_TREE_INHERITED;UNIQUE_V084_HISTORY_PRESERVED;ACTIVE_WRITER_NONE;WRITER_LOCK_RELEASED
+NEXT_ACTION_SCOPE: FVR001_BASELINE_INHERITED;V084_IMPLEMENTATION_NOT_STARTED;NEW_ACCEPTED_AUTHORITY_REQUIRED
+NEXT_EXACT_ACTION: Do not start v0.8.4 implementation; rehydrate from this post-FVR001 baseline only under new accepted authority.
 RESUME_COMMANDS: Rehydrate this v0.8.4 preservation receipt and, only if the owner-authorized Phase 9 scope remains active, acquire a separate frontend-design-integration branch-local lock before preparing the adoption intake.
 PROHIBITED_ACTIONS: No source/dependency/build/workflow/repository-runtime-config, migration rerun, source-probe retry, roster configuration/secret activation, provider/email/browser/manual mutation, Production data mutation, recovery-data deletion, AGENTS/project-policy sync, v0.8.4 implementation, frontend runtime/backend/design mutation, deploy, recovery rotation, or unproven branch/worktree deletion.
 

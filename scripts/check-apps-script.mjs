@@ -10,7 +10,7 @@ import {
 } from './apps-script-bundle-lib.mjs';
 
 const applicationIndex = await readFile(resolve('src/index.html'), 'utf8');
-const v5WorkerCandidate = applicationIndex.includes('./v5/integration/entry.js');
+const frontendWorkerCandidate = applicationIndex.includes('./frontend/main.jsx');
 const generatedAppsScriptFiles = new Set(['Index.html', 'AppBody.html', 'AppStyles.html', 'AppScript.html']);
 
 const requiredFiles = [
@@ -114,7 +114,7 @@ const requiredFunctions = [
 ];
 const root = resolve('apps-script');
 const existing = new Set(await readdir(root));
-const applicableRequiredFiles = v5WorkerCandidate
+const applicableRequiredFiles = frontendWorkerCandidate
   ? requiredFiles.filter((file) => !generatedAppsScriptFiles.has(file))
   : requiredFiles;
 const missing = applicableRequiredFiles.filter((file) => !existing.has(file));
@@ -134,18 +134,18 @@ const manifest = JSON.parse(await readFile(resolve(root, 'appsscript.json'), 'ut
 if (manifest.runtimeVersion !== 'V8' || manifest.timeZone !== 'Asia/Manila')
   throw new Error('Apps Script manifest is not configured for V8 and Asia/Manila.');
 
-if (v5WorkerCandidate) {
+if (frontendWorkerCandidate) {
   const diagnosticShell = await readFile(resolve(root, 'DiagnosticShell.html'), 'utf8');
   if (!diagnosticShell.includes('api_htmlDiagnosticPing') || !diagnosticShell.includes('data-inline-script'))
     throw new Error('DiagnosticShell.html is missing its isolated client/server checks.');
   if (applicationIndex.includes('<!-- AUTHORITATIVE_VISUAL -->'))
-    throw new Error('The V5 Worker candidate cannot retain the legacy visual-injection marker.');
+    throw new Error('The frontend Worker candidate cannot retain the legacy visual-injection marker.');
 
   console.log(
     JSON.stringify(
       {
         message:
-          'Validated retained Apps Script server sources and diagnostics. Legacy generated UI artifacts are not applicable to the V5 Worker candidate.',
+          'Validated retained Apps Script server sources and diagnostics. Legacy generated UI artifacts are not applicable to the Figma frontend Worker candidate.',
         appsScriptSourceFiles: gasFiles.length,
         requiredFunctions: requiredFunctions.length,
       },

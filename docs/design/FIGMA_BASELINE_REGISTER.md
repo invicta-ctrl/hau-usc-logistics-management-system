@@ -1,0 +1,596 @@
+# Figma baseline register — HAU-USC Logistics frontend design
+
+Append-only. One row per verified baseline. A baseline records what the Figma
+file and its interactive counterpart actually contained at a point in time, so a
+later session can tell drift from change.
+
+## DESIGN_BASELINE_2026-08-19-A
+
+```text
+DESIGN_BASELINE_ID:      DESIGN_BASELINE_2026-08-19-A
+STATUS:                  PARTIAL — audit and foundations repair complete;
+                         module redesign passes not started
+DESIGN BRANCH:           frontend-design-integration
+STARTING SHA:            908653dc956c9ccffa68ac0b350fc23b69f053ea
+FIGMA FILE:              hXJElH4p72KfgAaoUyfNOC
+FIGMA PAGES:             28
+FIGMA VARIABLES:         120 across 8 collections (Light/Dark on 3)
+FIGMA COMPONENTS:        102
+FIGMA TEXT STYLES:       11
+FIGMA EFFECT STYLES:     9 (Material G0–G4 ladder)
+FIGMA MAKE:              NOT APPLICABLE — see audit section 4
+INTERACTIVE COUNTERPART: design-vault/figma/exports/
+                         institutional-ledger-prototype-2026-08-13/
+DESIGN DIRECTION:        Institutional Logistics Ledger (retained, not replaced)
+IMPLEMENTATION READY:    NO — design gate only
+```
+
+### What changed in this baseline
+
+| Change | Node / ID | Verified |
+|---|---|---|
+| Created semantic variable `color/accent/text`, scoped `TEXT_FILL`, aliased to `gold/700` | `VariableID:563:2` | Render + variable read-back |
+| Rebound 46 gold text nodes on current R2 Overview light frames | `434:61`, `434:594`, `434:2193`, `434:2726`, `434:2760` | Render of `434:529` |
+| **D-07** Moved "Reconciliation and provenance" below the exception command table in 5 desktop Overview frames, so exceptions lead per D20 | parents `434:234`, `434:767`, `434:1300`, `434:1833`, `434:2366` | Render of `434:61` |
+| **D-06** Hid the below-table hint duplicating the inspector empty state (6 nodes) | `434:560`, `434:1093`, `434:1626`, `434:2159`, `434:2692`, `434:2916` | Render |
+| **D-03** Built the Authority + Design Handoff board on the previously empty page 10 | `568:2` and 6 child blocks | Render |
+| File-wide gold-on-light contrast sweep across pages 15, 30, 40, 50, 60, 70, 80, 90 | — | 2,496 gold nodes measured, 0 further failures |
+| Reconciled `DESIGN.md` D05, D37; appended D40 | — | File diff |
+| Added the audit and this register | — | Files created |
+
+### Incident recorded in this baseline
+
+A contrast sweep that ignored `GRADIENT` and `IMAGE` fills wrongly recoloured
+294 nodes on pages 15, 80 and 90. Pages 80 and 90 (11 nodes) were restored
+exactly. Page 15: 206 restored by exact twin match, 23 by empirical role
+mapping, **54 by inference** and therefore not proven identical to the original.
+Full account, including the corrected method and the four standing rules it
+produced, is in section 3.1 of the audit. Figma version history holds the
+pre-session state if exactness on those 54 matters.
+
+## DESIGN_BASELINE_2026-08-19-B
+
+```text
+DESIGN_BASELINE_ID:      DESIGN_BASELINE_2026-08-19-B
+STATUS:                  Public Lending reconciled to production and built out
+DESIGN BRANCH:           frontend-design-integration
+PRODUCTION REFERENCE:    0.8.2 @ c316e047 · schema 30
+FIGMA VARIABLES:         122 (added color/accent/text, color/text/on-accent)
+NEW FRAMES:              581:15 · 587:15 · 588:15 · 589:15 · 591:15 · 592:15
+SUPERSEDED:              424:264 · 424:620 · 426:93 · 426:218 (sign-in-gated lending)
+IMPLEMENTATION READY:    NO — design gate only
+```
+
+| Frame | Node | Covers |
+|---|---|---|
+| Lending Center · NO LOGIN · 1440 light | `581:15` | Full portal, USC Staff branch |
+| … ANGELITE branch · 1440 light | `587:15` | Angelite conditional branch |
+| … submitted receipt | `588:15` | One-time code, For Review, degraded variant |
+| … 1440 dark | `589:15` | Dark via explicit variable modes |
+| … declared catalog states | `591:15` | Loading, service error, empty, filtered empty |
+| … 390 mobile light | `592:15` | Filter chips, horizontal cards, sticky selection bar |
+
+Two semantic tokens were added to close real gaps, both of the same class —
+"which ink goes on this branded surface":
+
+| Token | Light | Dark | Why |
+|---|---|---|---|
+| `color/accent/text` | `#7d5518` | `#c9a45f` | Accent text on working surfaces. `gold/400` measured 1.52:1 and failed AA |
+| `color/text/on-accent` | `#40070a` | `#40070a` | Text on the gold action surface, which stays light in both modes |
+
+Binding audit of the dark clone found only **2 unbound fills** across the whole
+portal, both since cleared — the portal is genuinely token-driven.
+
+### Accessibility position at this baseline
+
+`color/accent/text` resolves `#7d5518` in Light (**5.46:1** on the composited G2
+pane) and `#c9a45f` in Dark (**7.49:1** on dark paper). Both clear WCAG 2.2 AA
+1.4.3 for normal text. The prior value `gold/400 #e8b93c` measured **1.52:1** in
+Light and is now reserved for fills, edges, focus rings and oxblood-backed text,
+where it is correct.
+
+This is a **point fix on one module**, not a file-wide accessibility pass. Pages
+15, 30, 40, 50, 60, 70, 80 and 90 have not been contrast-audited. Do not read
+this baseline as an AA claim for the file.
+
+### Research decisions adopted as defaults
+
+The 2026-08-10 research handoff left five open owner questions. Per the owner's
+standing instruction to use recommended defaults rather than escalate
+micro-decisions, these were adopted as-is and are recorded here so a later
+session does not re-litigate them:
+
+1. Institutional Logistics Ledger retained as the design direction — evolved,
+   not replaced.
+2. `admin.overview` / Command Center remains the first bounded slice.
+3. Slice 1 stays 2D-only; no 3D dependency introduced.
+4. Incumbent oxblood / gold / warm-paper identity retained; composition and
+   component roles evolve.
+5. Overview exceptions use a ranked mix (request age, release due, lending
+   overdue, stock health) as already built into the R2 command table.
+
+### Known gaps carried forward
+
+| ID | Gap | Severity | State |
+|---|---|---|---|
+| D-08 | Landing hero: 17 of 59 texts failed AA, worst 1.01:1 — oxblood ink on dark glass cards | HIGH | FIXED — owner confirmed the cards read as ACTIVE; 137 nodes rebound to inverse/rail inks. 13 gold-gradient button labels reverted to dark ink |
+| D-02 | Blur ladder defined twice, values disagree (12/18/24/28 vs 16/22/30/36) | MEDIUM | OPEN |
+| D-04 | Figma renders Inter; authority mandates Bricolage / IBM Plex / Newsreader; production ships Georgia / Aptos | MEDIUM | OPEN |
+| D-05 | Variable-binding coverage measured only on page 30 (97.7%) | MEDIUM | OPEN |
+| — | 54 inferred colours on page 15 from the section 3.1 incident | MEDIUM | OPEN |
+| P-01 | Prototype `route-map.js` points at superseded Figma sections | MEDIUM | OPEN |
+| P-02 | Prototype loads fonts from `fonts.googleapis.com` against D09 | MEDIUM | OPEN |
+| D-01 | Gold text failing AA on light panes | HIGH | FIXED — Overview; rest of file measured clean |
+| D-03 | Page `10 — Authority + Design Handoff` empty | MEDIUM | FIXED |
+| D-06 | Redundant inspector hint inside command-table row | LOW | FIXED |
+| D-07 | Overview hierarchy placed provenance above exceptions, inverting D20 | MEDIUM | FIXED |
+
+### Boundary attestation
+
+No product, release, provider, or environment state was modified. The v0.8.3
+stream lives in a separate git repository
+(`worktrees/v081-production-execution-eb14cd81/.git`, branch
+`release/v0.8.3-identity-foundation`) and was neither read for mutation nor
+written. No Cloudflare, D1, R2, or Google call was made. No deployment,
+migration, or release artifact was produced.
+
+### Next recommended action
+
+Superseded by baseline 2026-08-19-C below. Both items named here are done: the
+Public Request diff is at parity audit §21 and the authenticated requester
+portal is built at `624:2`.
+
+## Baseline 2026-08-19-C — production reconciliation
+
+Recorded by **content identity**, not by a version name. `saveVersionHistoryAsync`
+is not exposed through the MCP bridge, so a named Figma version is the one step
+in this baseline that still needs the Figma UI. Everything below is verifiable
+from the file itself, which is the stronger record anyway: a version label can be
+right while the contents are not.
+
+```text
+FIGMA DESIGN     hXJElH4p72KfgAaoUyfNOC
+FIGMA MAKE       rP9W9MQlZkyQrUx38TVsFS   (PublicFlows.tsx save staged, sync blocked upstream)
+DESIGN BRANCH    frontend-design-integration
+DESIGN COMMIT    fd423fd6231a9dc309307a0d308deb46af770646
+PRODUCTION REF   0.8.2 @ c316e047 · schema 30
+```
+
+### File identity
+
+| Measure | Value |
+|---|---|
+| Pages | 28 |
+| Variables | **131** (was 122 — 10 Glass Material tokens added, 1 earlier) |
+| Collections | Semantic Color [Light/Dark] · Primitives [Light/Dark] · Glass Material [Light/Dark] · Spacing · Radius · Size · Motion · Layout |
+| Components | 102 |
+| Effect styles | 9 — the four Material blur radii now **bound** to variables |
+| Text styles | 11 |
+
+### Built in this pass
+
+| Node | Surface |
+|---|---|
+| `615:2` | `request.submit` — the Staff Request submission region, 1118×1619 |
+| `300:624` | per-line route decision panel, rebuilt to the RV-01.6 contract |
+| `628:2` | `request.composite` — feature-flagged event logistics sections |
+| `616:2` | review queue pagination, server-clamped |
+| `624:2` | `portal.request` — authenticated requester portal, 1440×2436 |
+| `626:2` | `public.request` — five-step intake, 1440×3780 |
+| `639:2` | the same intake in dark, by explicit variable modes, zero unbound fills |
+
+### Structural state
+
+| Property | Value |
+|---|---|
+| Frames clipping their own content | **0** across all non-superseded lanes |
+| Unbound solid paints | 7,373 of 45,137 — **83.7% bound**, up from 67.7% |
+| Blur ladder | single-sourced: variables 16/22/30/36, bound to the Material effect styles |
+| Glass tokens | Figma ↔ `glass.css` map one-to-one, 21 properties, zero value drift |
+| Superseded lanes touched | none; one accidental edit was reverted |
+
+### Verifiable from the branch
+
+```bash
+npm run design:tracker:check   # derived progress, fails when stale
+npm run design:contrast        # 66/66 WCAG pairs, both themes
+```
+
+### Known gaps at this baseline
+
+Figma Make internal modules; the D-04 typeface conversion across seven pages
+plus the Bahnschrift pocket on Inventory; 7,373 paints needing role decisions;
+54 inferred colours on page 15; dark and 390 variants for the new request
+frames; a real keyboard walk and screen-reader pass; and the named Figma
+version above.
+
+
+## Baseline 2026-08-20-A — canonical gold, Make recovery, real accessibility
+
+```text
+FIGMA DESIGN     hXJElH4p72KfgAaoUyfNOC
+FIGMA MAKE       rP9W9MQlZkyQrUx38TVsFS  ·  Version 35, synced, no pending warning
+DESIGN BRANCH    frontend-design-integration
+PRODUCTION REF   0.8.2 @ c316e047 · schema 30
+CANONICAL GOLD   #D4AF37  (DESIGN.md D08.0, owner-locked)
+```
+
+### Structural state
+
+| Property | Value |
+|---|---|
+| Frames clipping their own content | **0** document-wide |
+| Superseded gold values anywhere | **0** |
+| Off-system typefaces in CURRENT lanes | **0** of 23,189 text nodes |
+| Solid paint coverage | **93.1%** (42,536 paints) |
+| Glass tokens | Figma ↔ `glass.css` one-to-one, zero drift |
+
+### Added since 2026-08-19-C
+
+| Node | Surface |
+|---|---|
+| `639:2` | public request intake, 1440 dark |
+| `654:2` / `657:2` | public request intake, 390 light and dark |
+| `657:350` | public lending portal, 390 dark |
+| `658:2` `658:14` `658:28` `658:42` | intake loading, source-empty, validation error, service unavailable |
+
+### Verifiable from the branch
+
+```bash
+npm run design:tracker:check   # derived progress, fails when stale
+npm run design:contrast        # 66/66 WCAG pairs, both themes
+npm run design:keyboard        # 32/32 real Playwright keyboard traversal
+npm run design:semantics       # 30/30 accessibility tree via CDP
+```
+
+
+## Baseline 2026-08-20-B — programme closeout
+
+```text
+FIGMA DESIGN     hXJElH4p72KfgAaoUyfNOC  ·  28 pages · 136 variables · 102 components
+FIGMA MAKE       rP9W9MQlZkyQrUx38TVsFS  ·  Version 35, synced, no pending warning
+DESIGN BRANCH    frontend-design-integration @ dd22a8c
+PRODUCTION REF   0.8.2 @ c316e047 · schema 30  (read-only, never modified)
+CANONICAL GOLD   #D4AF37  ·  DESIGN.md D08.0, owner-locked
+```
+
+### Final confirmation sweep — one pass, whole document
+
+| Check | Result |
+|---|---|
+| Frames clipping their own content | **0** |
+| Superseded gold values (solid or gradient stop) | **0** |
+| Off-system typefaces across 21,498 CURRENT-lane text nodes | **0** |
+| Superseded route phrases anywhere | **0** |
+| Solid paint coverage | 93.1% of 42,723 |
+
+### Runnable acceptance
+
+```bash
+npm run design:tracker:check   # derived progress, fails when stale
+npm run design:contrast        # 66/66 WCAG pairs, both themes
+npm run design:keyboard        # 32/32 real Playwright keyboard traversal
+npm run design:semantics       # 30/30 accessibility tree via CDP
+```
+
+### Boundary attestation
+
+The v0.8.3 product worktree was read for contract truth and **never written**.
+Its three dirty `.codex` files carry a 2026-08-17 timestamp, three days before
+this programme began, and were preserved untouched. No Cloudflare, D1, R2,
+Google, provider, migration, deployment or release action occurred.
+
+### Accepted residuals
+
+| Item | Status |
+|---|---|
+| `FD-COLOUR` — 54 historically inferred colours | **BLOCKED.** The node ids were never recorded, so the set cannot be identified even with version history. Needs the Figma REST API with an owner token, or a manual version diff |
+| `FD-TOKENS-RESIDUAL` — 2,941 one-off paints | **Deliberately stopped** on owner direction that semantic correctness outranks binding percentage |
+| Hallmark as its own pass | Not run, not claimed |
+| Screen-reader runtime | Not run, not claimed; accessibility-tree evidence recorded instead |
+
+## Baseline 2026-08-20-C — Codex handoff freeze
+
+```text
+DESIGN_BASELINE_ID   DESIGN_BASELINE_2026-08-20-C
+DATE                 2026-08-20 (Asia/Manila)
+FIGMA DESIGN         hXJElH4p72KfgAaoUyfNOC · 28 pages · 136 variables across 8 collections
+                     102 components (86 components + 16 component sets)
+                     11 text styles · 9 effect styles · 0 paint styles
+FIGMA DESIGN VERSION content identity only — the MCP bridge cannot create named Figma history
+FIGMA MAKE           rP9W9MQlZkyQrUx38TVsFS · live at Version 36 · last verified content Version 35
+DESIGN BRANCH        frontend-design-integration
+DESIGN SHA           8c4a6f6f9e1af11b2b93c31ab4ac92f45542b250 · plus the two-line SHA backfill commit that follows it
+TRACKER COMPLETION   87% (derived)
+HANDOFF READINESS    READY
+CANONICAL GOLD       #D4AF37 · DESIGN.md D08.0 · owner-locked
+DESIGN DIRECTION     Institutional Logistics Ledger
+GLASS SYSTEM         Institutional Glass · blur ladder 16/22/30/36
+RESPONSIVE STATUS    VERIFIED — 8 widths, 0 horizontal overflow
+ACCESSIBILITY STATUS VERIFIED to available evidence — 66/66 contrast, 32/32 keyboard, 30/30 a11y tree
+HALLMARK STATUS      PASS — bounded closure pass, 2026-08-20
+IMPECCABLE STATUS    PASS — bounded closure pass, 2026-08-20, one material finding fixed
+CODEX HANDOFF PATH   docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md
+```
+
+### What changed since 2026-08-20-B
+
+| Change | Evidence |
+|---|---|
+| Authority board `568:2` brought current and given five new blocks: canonical gold, Institutional Glass, responsive and accessibility requirements, the module index, and the implementation handoff pointer | Render of `568:2` |
+| 21 top-level frames given an explicit lane word; `PROPOSED` retired from the State, Responsive and Motion matrices, which are requirements rather than proposals | Frame-name sweep |
+| The in-file programme board `60:2` marked HISTORICAL and redirected to the derived tracker — it was still asserting an earlier 100% | Retext of `60:5` |
+| Status vocabulary reconciled to production's `STATUS_LABELS`: 148 nodes across the design file and its component library | Parity audit §33 |
+| Two remaining superseded-gold paints on page 99 bound to `color/gold/primary`; 7.97:1 on oxblood | Per-paint scan, lane-aware |
+| Four `FM-*` gates moved to `NEEDS_REVERIFY` because their evidence is pinned to Make v35 and the live file is at v36 | Tracker, residual MK-01 |
+| Paint binding re-measured with a stricter per-paint method: 81.8% of 54,025 active solid paints | Tracker `FD-TOKENS-RESIDUAL` |
+| Hallmark and Impeccable closure passes actually run | `HALLMARK_IMPECCABLE_CLOSURE.md` |
+| System dark-mode preference now resolves the dark palette | `prototypes/public-portals-r3/app.js` |
+
+### Verification at this baseline
+
+```text
+npm run design:tracker:check   derived progress current
+npm run design:contrast        66/66
+npm run design:keyboard        32/32
+npm run design:semantics       30/30
+```
+
+Forbidden review-route phrases in live lanes: **0**. Superseded gold in live
+lanes: **0**. Off-system typefaces in live lanes: **0**.
+
+### Boundary attestation
+
+The v0.8.3 product worktree was read for contract truth and **never written**. No
+Cloudflare, D1, R2, Google, provider, migration, deployment or release action
+occurred.
+
+---
+
+# Baseline DESIGN_BASELINE_2026-08-20-B — canonical theme, comfort and second-generation glass
+
+**Named:** 2026-08-20 (Asia/Manila). Supersedes 2026-08-20-A for everything
+colour, surface, background and glass. Nothing else in -A is displaced.
+
+## Content identity
+
+| Field | Value |
+|---|---|
+| Figma design file | `hXJElH4p72KfgAaoUyfNOC` |
+| Pages | 28 |
+| Variable collections | 8 |
+| Primitives | 17 — `paper/overlay` created, completing the five-step ladder in primitives rather than leaving one step as a literal on the semantic layer |
+| Semantic Color | 59 — `color/border/control`, `color/selected-line` and `color/focus/ring-contrast` created. These three carry WCAG 2.2 1.4.11 and previously existed only in code, so the one part of the palette with a hard legal floor was the part the design file could not see |
+| Glass Material | 26 — `material/saturate/g1..g4` created. Saturation was a CSS literal with no variable, so a pane could match Figma on fill and blur and still render differently |
+| Canonical gold | `#D4AF37`, **unchanged**. The sync report lists all five gold and all five oxblood steps under `unchangedVariables`, which is the evidence that this pass did not touch the owner-locked decision |
+| Blur ladder | 10 / 14 / 18 / 22, propagated from the variables into the four Material effect styles. D-02 stays closed |
+
+## Rendered evidence, measured on the same scale as the code
+
+| Frame | mean L\* | pure white | near black |
+|---|---|---|---|
+| Public Lending 1440 light (`581:15`) | 88.3 | 0.00% | 0.00% |
+| Public Lending 390 dark (`657:350`) | 16.3 | 0.00% | 0.00% |
+
+The Figma frames and the coded prototypes now measure inside the same comfort
+band. That is what "Figma and code agree" should mean — not that a screenshot
+looks similar.
+
+## Source of truth
+
+`scripts/design/theme-source.mjs`. The Figma collections and
+`prototypes/shared/hau-theme.css` are two renderings of it. Re-sync Figma with
+`node scripts/design/figma-theme-payload.mjs`; rebuild the CSS with
+`npm run design:theme`.
+
+## Known gaps at this baseline
+
+- **Figma Make is not on the canonical theme.** Its `src/styles/theme.css` is a
+  third palette whose gold is `#E8B93C`. The override is generated, complete and
+  cascade-verified at
+  `prototypes/public-portals-r3/figma-make/src/styles/theme-canonical.css`.
+  Applying it is an external provider mutation, and it is additionally held by an
+  ownership boundary: Make saves the whole pending set, and the file holds an
+  unsaved third-party edit. See `MK-02`, `MK-03` and
+  `docs/design/FIGMA_MAKE_ADOPTION_PACKET.md`.
+
+  Make identity captured 2026-08-20 at **Version 36**:
+
+  ```text
+  theme.css             9,419 bytes   sha256 50cb55de9d8e20ad0661cb187b295ea86621aaf2e29c7d8584dd7e159d833082
+  PublicFlows.tsx      50,694 bytes   sha256 50c623013e35f64c93bf63415ed7e8d78b82089d9a106f513fcebac5e272191c
+  LendingHubRoute.tsx  22,816 bytes   sha256 2132c68c06915a7acea4a43d7ae31c079a7b5c5ec039cc3c0529d6c738efa967
+  ReleaseDeskRoute.tsx 21,957 bytes   sha256 7c92b4835aa95386d6ea2611caf9b5379e74b8b74e934d201c8624ac4a2c898e
+  ```
+
+  `PublicFlows.tsx` at v36 differs from the committed design-branch copy by one
+  trailing comment line and nothing else, which is what closes `MK-01`.
+- **`FD-COLOUR`** carries forward unchanged from 2026-08-19-A.
+
+---
+
+## Baseline 2026-08-20-D — final Claude design baseline, tracker synchronised
+
+The closing baseline for the Claude frontend-design stream. What distinguishes
+it from 2026-08-20-C is not new design work — the visual system was frozen
+there — but that the Figma file, the repository and the handoff now all state
+the same derived completion figure, and that Figma Make has been read and
+hashed at its live version rather than inferred from an older one.
+
+```text
+DESIGN_BASELINE_ID   DESIGN_BASELINE_2026-08-20-D
+DATE                 2026-08-20 (Asia/Manila)
+FIGMA DESIGN         hXJElH4p72KfgAaoUyfNOC · 28 pages · 136 variables across 8 collections
+                     102 components (86 components + 16 component sets)
+                     11 text styles · 9 effect styles · 0 paint styles
+FIGMA DESIGN VERSION content identity only — the MCP bridge cannot create named Figma history
+FIGMA TRACKER NODE   page 55:3 · board 568:2 (AUTHORITY + DESIGN HANDOFF · CURRENT)
+                     block 691:2 · heading 691:3 · body 691:4 · inserted at child index 2
+FIGMA MAKE           rP9W9MQlZkyQrUx38TVsFS · Version 36 · READ-VERIFIED
+                     theme.css      sha256 50cb55de9d8e20ad0661cb187b295ea86621aaf2e29c7d8584dd7e159d833082
+                     PublicFlows    sha256 50c623013e35f64c93bf63415ed7e8d78b82089d9a106f513fcebac5e272191c
+                     LendingHub     sha256 2132c68c06915a7acea4a43d7ae31c079a7b5c5ec039cc3c0529d6c738efa967
+                     ReleaseDesk    sha256 7c92b4835aa95386d6ea2611caf9b5379e74b8b74e934d201c8624ac4a2c898e
+MAKE PENDING EDIT    RequestCenterRoute.tsx · unsaved · third-party · +28/-16
+                     sha256 4087473ca337b510859bb841425bfd4548181b2847db62627b0ea79715d5b159
+                     preserved at output/design/make-preservation/RequestCenterRoute.unsaved.tsx
+MAKE THEME           SAFE_READY_TO_APPLY — patch generated and cascade-verified, provider write withheld
+DESIGN BRANCH        frontend-design-integration
+DESIGN SHA           01037a3e1e79568449727aa80fdc8c613c22f5f7
+                     (+ the one-line SHA backfill commit that follows it)
+TRACKER COMPLETION   97% (derived)
+GATE COUNTS          49 VERIFIED · 1 IN_PROGRESS · 0 NEEDS_REVERIFY · 1 BLOCKED · 51 gates · 97.0/100.0 weight
+HANDOFF READINESS    READY
+CANONICAL GOLD       #D4AF37 · DESIGN.md D08.0 · owner-locked
+DESIGN DIRECTION     Institutional Logistics Ledger
+GLASS SYSTEM         Institutional Glass · fill up, blur down · G1-G4 10/14/18/22
+RESPONSIVE STATUS    VERIFIED — 8 widths, 0 horizontal overflow
+ACCESSIBILITY STATUS VERIFIED to available evidence — 66/66 contrast, 32/32 keyboard, 30/30 a11y tree
+SCREEN READER        NOT_RUN — accessibility-tree evidence is not a runtime screen-reader pass
+HALLMARK STATUS      PASS
+IMPECCABLE STATUS    PASS
+P0 / P1              0 / 0
+CODEX HANDOFF PATH   docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md
+```
+
+### What changed since 2026-08-20-C
+
+| Change | Evidence |
+|---|---|
+| Figma Make opened at Version 36 and every relevant route file read and hashed; `MK-01` closed and the four `FM-*` gates restored | `FIGMA_DESIGN_MAKE_AUDIT.md` §9 |
+| `FM-INTERNAL-ROUTES` and `FM-STATES` closed at v36; Release Desk found to carry **eleven** states, not the nine previously recorded from partial v35 evidence | Tracker Area 6 |
+| Tracker moved 87% → 92% → 97%, derived at every step from the gate table | `DESIGN_EXECUTION_TRACKER.md` |
+| `MK-02` scope corrected: the Make override had to replace a hardcoded dark glass ladder, an oxblood-derived dark surface set, and superseded golds baked into `rgba()` literals — a palette-only override would not have worked | `FIGMA_MAKE_ADOPTION_PACKET.md` §3.1 |
+| `MK-03` raised: four Make route files paint with literal hexes; `RequestCenterRoute.tsx` reads no CSS variables at all | Adoption packet §4 |
+| `MK-04` re-derived from Product truth: the Make fixture omits `itemId`, `type` and `catalogType`, which are exactly the three fields `permittedRoutes()` branches on | Adoption packet §4.1 |
+| Tracker mirrored into the Figma CURRENT authority board as a derived block carrying its own SOURCE and STALE IF | Node `691:2` |
+| Tracker consistency check added, so the Figma payload and the documents that quote a completion figure cannot drift from the gate table | `scripts/design/figma-tracker-payload.mjs --check` |
+
+### Verification at this baseline
+
+```text
+npm run design:tracker:check      derived progress current
+npm run design:figma-tracker:check tracker, handoff and register agree at 97%
+npm run design:contrast           66/66
+npm run design:theme:check        hau-theme.css current
+npm run design:make-theme:check   theme-canonical.css current
+npm run design:make-verify        no superseded value survives the Make cascade
+```
+
+---
+
+## Baseline 2026-08-20-E — Figma Make canonical theme adopted
+
+The closing baseline. Figma Make is no longer the surface that does not resolve
+from the canonical theme, and the pending third-party edit that had blocked the
+write is resolved under explicit owner authority.
+
+```text
+DESIGN_BASELINE_ID   DESIGN_BASELINE_2026-08-20-E
+DATE                 2026-08-20 (Asia/Manila)
+FIGMA DESIGN         hXJElH4p72KfgAaoUyfNOC · 28 pages · 136 variables across 8 collections
+FIGMA TRACKER NODE   page 55:3 · board 568:2 · block 691:2 (heading 691:3, body 691:4)
+FIGMA MAKE           rP9W9MQlZkyQrUx38TVsFS
+                     Version 37  canonical theme + route adoption, 5 files
+                     Version 38  landing atrium pinned, 1 file
+                     pending edits: NONE
+MAKE THEME           ADOPTED_AND_VERIFIED
+MAKE ADOPTION AUTHORITY
+                     OWNER_AUTHORIZED_DESIGN_STREAM_ADOPTION, 2026-08-20
+                     historical authorship of the adopted edit remains UNKNOWN
+ADOPTED EDIT         RequestCenterRoute.tsx, previously unsaved and unowned
+                     rollback baseline sha256
+                     4087473ca337b510859bb841425bfd4548181b2847db62627b0ea79715d5b159
+                     preserved at output/design/make-preservation/RequestCenterRoute.unsaved.tsx
+DESIGN BRANCH        frontend-design-integration
+DESIGN SHA           2cc378b27c08b70059b39e3c62ef6d9c736b0836
+TRACKER COMPLETION   97% (derived — unchanged; the Make work closed register
+                     residuals, not weighted gates, and was not allowed to move the number)
+GATE COUNTS          49 VERIFIED · 1 IN_PROGRESS · 0 NEEDS_REVERIFY · 1 BLOCKED
+CANONICAL GOLD       #D4AF37 · resolves in Make light; #E1C671 in Make dark
+P0 / P1              0 / 0
+CODEX HANDOFF PATH   docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md
+```
+
+### Saved Make artifacts at this baseline
+
+```text
+theme.css             19,954 bytes  sha256 7e34388ee26354b7da7b63490d9aeb69103098e2655a5dcf5a9a72eecae070c4
+RequestCenterRoute    47,823 bytes  sha256 995704cc4dcd198d1d469dfe5e0b7c335003219080d6ca194c9657b1ce03943e
+PublicFlows           50,829 bytes  sha256 755c6ed62916608e427eb9f65b5ecb4ea34258fedb1f8a02a3602e4f159aa23c
+LendingHubRoute       22,814 bytes  sha256 b1faac84ee52e69ef243db6e02d3f8a63b9143d1cb4b4664156beab387c4d0f8
+ReleaseDeskRoute      21,914 bytes  sha256 f9584533cc7eb7cfff9dd153b26dce11a3c0eb2571bd91be75b9f9bfe513cc24
+```
+
+Every one was built locally, parse-checked, hash-verified in the editor before
+saving, and re-hashed from the saved document afterwards.
+
+### What changed since 2026-08-20-D
+
+| Change | Evidence |
+|---|---|
+| `MK-02` closed — canonical theme appended to Make's `theme.css`, saved as v37 | `verify-make-theme.mjs` against the saved artifact |
+| `MK-03` closed — **44** superseded occurrences replaced by semantic role across four route files, not the 33 first counted; the extra 11 were `rgba()` forms | `build-make-routes.mjs` |
+| `MK-04` closed from Product truth — fixture gained `itemId`, `type`, `catalogType`; `permittedRoutes()` mirrors `runtime.js` and matches it in all 10 combinations | Route-equivalence test |
+| `MK-05` raised and closed — the adoption itself made the landing hero dark-on-dark; all nine `--atrium-*` tokens pinned, and the verifier now asserts they resolve light in both modes | v38 |
+| `MK-06` raised — landing sections below the hero may not respond to dark mode; observed, not diagnosed, deliberately not patched | Tracker register |
+| Tracker held at 97% — the Make work closed residuals, not weighted gates | `design-tracker.mjs` |
+
+---
+
+## Baseline 2026-08-20-F — MK-06 resolved, Claude design stream closed
+
+The final baseline. Nothing in the visual system changed; what changed is that
+the last open Make residual was diagnosed rather than left as an observation.
+
+```text
+DESIGN_BASELINE_ID   DESIGN_BASELINE_2026-08-20-F
+DATE                 2026-08-20 (Asia/Manila)
+FIGMA DESIGN         hXJElH4p72KfgAaoUyfNOC · tracker mirror 55:3 / 568:2 / 691:2
+FIGMA MAKE           rP9W9MQlZkyQrUx38TVsFS · Version 39 · pending edits NONE
+                     v37  canonical theme + route adoption (5 files)
+                     v38  landing atrium pinned (1 file)
+                     v39  MK-06 scoped atrium palette pin (1 file)
+                     theme.css sha256
+                     249857a93f0f90425504da286aab4a296445b4f74546e4fbff72dcf30663140d
+                     verified from the saved document after reload.
+                     v39 minted itself once Make's build service recovered — the
+                     save had landed, only the version cut was waiting on a build.
+MAKE THEME           ADOPTED_AND_VERIFIED
+MK-06                CLOSED — premise disproven; model C confirmed
+DESIGN BRANCH        frontend-design-integration
+DESIGN SHA           5677bbf3d279ae6eb8b963ff42fb39a4a46e3fa1
+TRACKER COMPLETION   97% (derived — unchanged; MK-06 is a register residual,
+                     not a weighted gate, and was not allowed to move the number)
+GATE COUNTS          49 VERIFIED · 1 IN_PROGRESS · 0 NEEDS_REVERIFY · 1 BLOCKED
+P0 / P1              0 / 0
+CODEX HANDOFF PATH   docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md
+```
+
+### MK-06, resolved by cascade
+
+DESIGN.md D12 makes the landing's theme behaviour a correctness question, not a
+taste one: light and dark are "equal CURRENT modes", and V-36 forbids
+"mixed-theme frames". V-41 then dictates the method — token and cascade
+diagnosis, explicitly *not* a screenshot.
+
+Applying it: **the lower landing sections do theme.** All 20 colour tokens they
+consume resolve differently in dark than in light. The near-white section that
+raised MK-06 was a frame captured while Make displayed "Live preview loading" —
+a mid-rebuild artefact, and precisely the mistake V-41 is written to prevent.
+
+The diagnosis did surface something real, though smaller: nine atrium rules
+painted from the modal brand palette rather than the pinned `--atrium-*` family.
+None failed contrast in either mode — measured, not assumed — but they drifted on
+a section D41 pins, so a reduced-transparency user would have seen a different
+hero in dark than in light. The pin is now scoped to `.digital-atrium` in the
+generated override: no new literals, no edit to Make's own stylesheet, and those
+four tokens stay correctly modal everywhere else.
+
+```text
+INTENDED MODEL   C — photographic chrome pinned, reading planes theme
+AUTHORITY        DESIGN.md D12 (V-36, V-41) and D41.2
+VERIFIED BY      scripts/design/verify-make-landing-theme.mjs — 31/31 conform
+                   pinned chrome  11 tokens · must NOT move · 11 PASS
+                   reading planes 20 tokens · must move     · 20 PASS
+```

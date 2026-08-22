@@ -1,0 +1,385 @@
+{
+  "schemaVersion": 1,
+  "source": "native-figma-mcp-make-v39",
+  "transportLimitation": "Literal …N tokens truncated… markers are transport artifacts and not byte-complete source.",
+  "resourceCount": 47,
+  "reachableCount": 6,
+  "resources": [
+    {
+      "resource": "src/app/PublicFlows.tsx",
+      "sha256": "7ad2f801c4777f5d062057932f9d1c84ba3a43f9b6c2e3ade823f00e29f61195",
+      "reachableFromProductionEntry": true,
+      "disposition": "recovered_from_verified_make_v39_mirror",
+      "active": "src/frontend/app/PublicFlows.tsx",
+      "proof": "Native prefix 22,746 bytes before marker and suffix 23,424 bytes after marker match the authorized current Make v39 mirror, except terminal newline."
+    },
+    {
+      "resource": "src/app/RequestCenterRoute.tsx",
+      "sha256": "02866bd169e55c24c658a8dbeb8c17eae318f4825601286d9f7f46613b8ff704",
+      "reachableFromProductionEntry": true,
+      "disposition": "recovered_from_verified_make_v39_mirror",
+      "active": "src/frontend/app/RequestCenterRoute.tsx",
+      "proof": "Native prefix 21,611 bytes before marker and suffix 23,051 bytes after marker match the authorized current Make v39 mirror, except terminal newline."
+    },
+    {
+      "resource": "src/assets/production/combinedLockup.ts",
+      "sha256": "5eeca9f428112dda12509598bc0b23055a72928d84cddb8942a682a766eb0df3",
+      "reachableFromProductionEntry": true,
+      "disposition": "replaced_by_accepted_backend_media_contract",
+      "active": "src/frontend/assets/production/combinedLockup.ts",
+      "proof": "Active module exports /brand/combined-lockup."
+    },
+    {
+      "resource": "src/assets/production/currentProductionCover.ts",
+      "sha256": "16a7b687d217dc0d4a3e7cfafd0c2ed010989367c8f94362c1800d43473c66d6",
+      "reachableFromProductionEntry": true,
+      "disposition": "deleted_and_replaced_by_public_advertisement_feed",
+      "active": null,
+      "proof": "Current section fetches GET /api/public/advertisements and uses published imageUrl with altText."
+    },
+    {
+      "resource": "src/assets/production/loginBackground.ts",
+      "sha256": "b25dd839e9c4eb179838b04eba9edf67432271e90aae06e8ffa6960a60067f5d",
+      "reachableFromProductionEntry": true,
+      "disposition": "replaced_by_accepted_backend_media_contract",
+      "active": "src/frontend/assets/production/loginBackground.ts",
+      "proof": "Active module exports /brand/login-background."
+    },
+    {
+      "resource": "src/assets/production/uscLogo.ts",
+      "sha256": "eaa3de372c75f632f2979ed4f534ec4f2704df224d79d87c6b9dda009e4742be",
+      "reachableFromProductionEntry": true,
+      "disposition": "replaced_by_accepted_backend_media_contract",
+      "active": "src/frontend/assets/production/uscLogo.ts",
+      "proof": "Active module exports /brand/usc-logo."
+    },
+    {
+      "resource": "src/imports/1440PxLightAccountProfileIdentityRegionScopeAccountEvidence/index.tsx",
+      "sha256": "3049caf9c2431fb25e3feb665b22299f4d77a0237562d4b94c9a9e03a60e91db",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightAdminOverview/index.tsx",
+      "sha256": "7d5f2949bd6924226c4d7b08bf9292cf60bed5a8f09a058b169855cc2bd76b71",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightInventoryCatalog-1/index.tsx",
+      "sha256": "327378a49c41dbf676276baf3a5a1ba8d8b4f70f7154b92778f9da0a3a09f07b",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightInventoryCatalog-2/index.tsx",
+      "sha256": "e614754f140b4b54d1d62fef3d959292fa7c4d90acaa9571c8580af73c1397c0",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightInventoryCatalog/index.tsx",
+      "sha256": "2a7e1cdd3215bf6b651990566b02489386bd0634c94c47e49d909008e357020e",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightInventoryCatalogLoading-1/index.tsx",
+      "sha256": "bd77f4ca0c89e1c34a4bdce101cabb0d255fa53885454da373fe15c9316e3f0c",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightInventoryCatalogLoading-2/index.tsx",
+      "sha256": "81dc1eb172830ba821435b228a499137fc26e3f2f40e6439765efa87c4668ed7",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightInventoryCatalogLoading/index.tsx",
+      "sha256": "bda36526859e0e586e848bab5a6950cdaec6b2e55ef54a8be306e9c656a79fe8",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightInventoryItem-1/index.tsx",
+      "sha256": "5eae1487dc20de3527cb175702dcf42809dcced8c5e5c954e2a678a7d12210ba",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightInventoryItem-2/index.tsx",
+      "sha256": "bbe1bd0dfc98db70f95d5c7007f4a5ed73f739e70e58a5c277f9146c3f66c24f",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightInventoryItem/index.tsx",
+      "sha256": "c8d218540a4e66d24da738fc855fbad8c795806f87d818de1bfbfd07c1574bcd",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueue-1/index.tsx",
+      "sha256": "f73f80c6368b9f1070e2b0ffa4b32d48d43d429053bc881d4fd0d91e7ac9a554",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueue-2/index.tsx",
+      "sha256": "c92723b35962d13714126fd46a142b86e6106cec6ab2355387f3e3609d3516fb",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueue-3/index.tsx",
+      "sha256": "0c665498a1c98a82c38d47f2d5974db8c5856436f5c9553d01c29f1b1f2105c7",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueue/index.tsx",
+      "sha256": "2b5149165c9c4d584abd249f4ddc2f0b26b8ed621094b9a318ec49a6ba535e6d",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueDenied-1/index.tsx",
+      "sha256": "f363b1af609de8cdd1fa523555b6eb7a6a768475a68c9e544198ffb00eb14d82",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueDenied-2/index.tsx",
+      "sha256": "48e9a54f8799851dc3c6e304358f96bde3615bbb439a46bbc7b054cf06f7929f",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueDenied/index.tsx",
+      "sha256": "0a9271eb361dfe397e8478ba92aa9005445b2aa1dd611c5b47becdb8f59ca83b",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueEmpty-1/index.tsx",
+      "sha256": "6b51fea7633fb33783a7450a5df361f56c5a8f5f68486acace3f1c21bd3f6e2b",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueEmpty-2/index.tsx",
+      "sha256": "954df886a5c366c4ab8df73b69fe22bfe79218d55e15b2fa6023e57dfa59e0e4",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueEmpty-3/index.tsx",
+      "sha256": "215a1788afa181df6d4bff07580513eac08bec715174c6de697c7721f7a06cc2",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueEmpty/index.tsx",
+      "sha256": "fe0852203b792fc306303091cd888d446a5d972055aba72ff3d35c8afdfa9d05",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueLoading-1/index.tsx",
+      "sha256": "026f6a2d527015b5adc0af1ecf368744a6f5f5367032246c5ba92dd173bde12c",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueLoading-2/index.tsx",
+      "sha256": "629c9a1fa5828bcad162fc79b7db4b0cc03053315735c40edb4257da1529f28f",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueLoading-3/index.tsx",
+      "sha256": "f6a92c4d07ef1d9befc0d284a1e7a13e97de1e6ce1c83026bcf7d4d0c7252186",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueLoading/index.tsx",
+      "sha256": "6b8be0c2a5b28efe1f220a2e455f3a564fdc64bfd1659f6fac15ea5315c631d3",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueStale-1/index.tsx",
+      "sha256": "5348d0c14b2ea5396e24f4e760c791d6f2af1cafb4c0e1f304f235719d709aeb",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueStale-2/index.tsx",
+      "sha256": "3847d3fd520b6687592d0ca293853e45111230bf5571206d5138596a2d524bb5",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueStale-3/index.tsx",
+      "sha256": "fcd0ce781a9208a8e0cf677bda27a88cdbe4d2c9e0cfc68a92bcf68d6332ffc5",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/1440PxLightRequestQueueStale/index.tsx",
+      "sha256": "001263e7e058a48c6e30a4a055fe07b3c8282342b168d1fa606cf6061875aa5f",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/390PxLightAccountProfileSingleReadingColumn/index.tsx",
+      "sha256": "8d618f58205bcbd4ae0211f18d8a91ef234f29d36ae77854ad5ef643d72ac541",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/390PxLightAdminOverview/index.tsx",
+      "sha256": "4d87ac35a85d1f8772ddca42bdfe878abcfe98a1d9009be2295b8ae847f1340f",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/390PxLightInventoryCatalog-1/index.tsx",
+      "sha256": "f4e0fc44a414c11d6bd87ddaf2307a9f4b0eb520fdb84482a00c08fa7678183d",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/390PxLightInventoryCatalog-2/index.tsx",
+      "sha256": "1ead7840ebfffaee16493ceceef3c6aec6fc11fa9eb0e9c705c0204761b9cdd7",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/390PxLightInventoryCatalog/index.tsx",
+      "sha256": "c319e7901b1604349ee2590e90f036124b5fab7d9e1f0739f546acee5535a770",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/390PxLightRequestQueue-1/index.tsx",
+      "sha256": "5b539804b230f1581b3f2d07d4e205aa9d60d4c01ac8574f929bffc71c9a530f",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/390PxLightRequestQueue-2/index.tsx",
+      "sha256": "f109013c369b983c6a5cb29dcfc77f86f05dec0fa7f81836658cfeac618618e0",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/390PxLightRequestQueue/index.tsx",
+      "sha256": "79b04a9e45b6946e500d23ba006e8edea288e34a15d6ba360a042b170d0ff794",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/CurrentLandingDesktopAndTablet192014401440Dark1024768/index.tsx",
+      "sha256": "76a9e05b203a27aa6840ee52fe1a3e9e4acd83664d7879157c65e0e349d78cb1",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/CurrentLandingMobileAndDefectStates414390375320390DarkV41V42/index.tsx",
+      "sha256": "a683f8695c64f907fa6265bf034578c28277be39cab76a04bf09496c26a229d4",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    },
+    {
+      "resource": "src/imports/Shell390Mobile/index.tsx",
+      "sha256": "73b98dbdc20fb273f36cb394443ee01698c7ffa2c9513ef04a6589839afd8e94",
+      "reachableFromProductionEntry": false,
+      "disposition": "preserved_incomplete_generated_or_reference_mirror_only",
+      "active": null,
+      "proof": "Native MCP transport inserted a literal truncation marker; this generated/reference source is not runtime-reachable and is not copied into the active production graph."
+    }
+  ]
+}

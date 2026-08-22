@@ -1,0 +1,82 @@
+/* HAU-USC Logistics — Public Portals R3, non-colour tokens.
+
+   COLOUR NO LONGER LIVES HERE. Every colour, glass and background-field token
+   is in ../shared/hau-theme.css, which is generated from
+   scripts/design/theme-source.mjs and is the same file the whole-site prototype
+   loads and the same source the Figma variables are synced from. This file
+   keeps only what is not colour: type, space, radius, motion, layout.
+
+   Do not introduce a raw hex here or in portal.css. If a colour is missing, add
+   it to scripts/design/theme-source.mjs and re-run:
+
+     node scripts/design/build-theme.mjs
+
+   FIGMA CORRESPONDENCE
+   The type/space/radius/motion values below mirror the HAU-USC / Spacing,
+   Radius, Size, Motion and Layout collections in hXJElH4p72KfgAaoUyfNOC. Those
+   collections carry a single Default mode, so unlike colour they do not need a
+   light/dark pair and are declared once. */
+
+:root {
+  /* Type */
+  --font-display: "Bricolage Grotesque", "Bahnschrift", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI Variable", system-ui, sans-serif;
+  --font-wordmark: "Newsreader", "Palatino Linotype", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+
+  /* Space */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px;
+  --s-6: 24px; --s-8: 32px; --s-10: 40px; --s-12: 56px;
+
+  /* Radius */
+  --r-xs: 6px; --r-sm: 10px; --r-md: 14px; --r-lg: 18px; --r-pill: 999px;
+
+  /* Motion — DESIGN.md D13 families */
+  --m-response: 120ms;
+  --m-state: 200ms;
+  --m-surface: 280ms;
+  --m-overlay: 320ms;
+  --m-theme: 240ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout */
+  --content-max: 1240px;
+  --touch-min: 44px;
+}
+
+/* THEME TRANSITION
+   Switching light <-> dark used to repaint instantly, which reads as a flash at
+   the exact moment the eye is adapting. This transitions only the properties
+   that actually carry the theme, and only on the elements that paint a surface
+   — not every node, which is what makes theme animation expensive and janky.
+
+   `.theme-changing` is added by the app for one transition budget and removed
+   again, so the transition never interferes with ordinary interaction: hovering
+   a row a second later is still instant. */
+.theme-changing,
+.theme-changing .surface,
+.theme-changing .glass,
+.theme-changing .on-glass,
+.theme-changing .g0,
+.theme-changing header,
+.theme-changing main,
+.theme-changing section,
+.theme-changing table,
+.theme-changing input,
+.theme-changing select,
+.theme-changing textarea,
+.theme-changing button {
+  transition:
+    background-color var(--m-theme) var(--ease-out),
+    background-image var(--m-theme) var(--ease-out),
+    border-color var(--m-theme) var(--ease-out),
+    color var(--m-theme) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

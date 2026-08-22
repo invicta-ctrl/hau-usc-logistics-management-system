@@ -1,0 +1,1000 @@
+import svgPaths from "./svg-4iyd9l6tom";
+
+function BoldText() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Bold Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Mono:Bold',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#3a2b2e] text-[17px] tracking-[0.34px] uppercase whitespace-nowrap">account.profile</p>
+      </div>
+    </div>
+  );
+}
+
+function Text() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#6b585c] text-[13px] tracking-[-0.15px] w-[390px]">account.profile · populated · 390px · light · Single reading column</p>
+      </div>
+    </div>
+  );
+}
+
+function Container() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Container">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[4px] items-start relative size-full">
+        <BoldText />
+        <Text />
+      </div>
+    </div>
+  );
+}
+
+function Text1() {
+  return (
+    <div className="absolute content-stretch flex flex-col items-start left-[263px] opacity-50 top-[8px]" data-name="Text">
+      <p className="[word-break:break-word] font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#f6e29a] text-[10px] tracking-[1px] uppercase whitespace-nowrap">·</p>
+    </div>
+  );
+}
+
+function Text2() {
+  return (
+    <div className="absolute content-stretch flex flex-col items-start left-[137px] opacity-50 top-[33px]" data-name="Text">
+      <p className="[word-break:break-word] font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#f6e29a] text-[10px] tracking-[1px] uppercase whitespace-nowrap">·</p>
+    </div>
+  );
+}
+
+function Text3() {
+  return (
+    <div className="absolute content-stretch flex flex-col items-start left-[231px] opacity-50 top-[33px]" data-name="Text">
+      <p className="[word-break:break-word] font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#f6e29a] text-[10px] tracking-[1px] uppercase whitespace-nowrap">·</p>
+    </div>
+  );
+}
+
+function Text4() {
+  return (
+    <div className="absolute content-stretch flex flex-col items-start left-[297px] opacity-50 top-[33px]" data-name="Text">
+      <p className="[word-break:break-word] font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#f6e29a] text-[10px] tracking-[1px] uppercase whitespace-nowrap">·</p>
+    </div>
+  );
+}
+
+function Text5() {
+  return (
+    <div className="absolute content-stretch flex flex-col items-start left-[242px] opacity-50 top-[58px]" data-name="Text">
+      <p className="[word-break:break-word] font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#f6e29a] text-[10px] tracking-[1px] uppercase whitespace-nowrap">·</p>
+    </div>
+  );
+}
+
+function Text6() {
+  return (
+    <div className="absolute content-stretch flex flex-col items-start left-[151px] opacity-50 top-[83px]" data-name="Text">
+      <p className="[word-break:break-word] font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#f6e29a] text-[10px] tracking-[1px] uppercase whitespace-nowrap">·</p>
+    </div>
+  );
+}
+
+function Container3() {
+  return (
+    <div className="bg-[#40070a] h-[129px] relative shrink-0 w-full" data-name="Container">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid relative size-full">
+        <p className="[word-break:break-word] absolute font-['IBM_Plex_Mono:SemiBold',sans-serif] leading-[normal] left-[20px] not-italic text-[10px] text-white top-[8px] tracking-[1px] uppercase whitespace-nowrap">PROPOSED DESIGN — NOT IMPLEMENTED</p>
+        <Text1 />
+        <p className="[word-break:break-word] absolute font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] left-[20px] not-italic text-[#f6e29a] text-[10px] top-[33px] tracking-[1px] uppercase whitespace-nowrap">account.profile</p>
+        <Text2 />
+        <p className="[word-break:break-word] absolute font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] left-[156px] not-italic text-[#f6e29a] text-[10px] top-[33px] tracking-[1px] uppercase whitespace-nowrap">populated</p>
+        <Text3 />
+        <p className="[word-break:break-word] absolute font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] left-[250px] not-italic text-[#f6e29a] text-[10px] top-[33px] tracking-[1px] uppercase whitespace-nowrap">390px</p>
+        <Text4 />
+        <p className="[word-break:break-word] absolute font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] left-[20px] not-italic text-[#f6e29a] text-[10px] top-[58px] tracking-[1px] uppercase whitespace-nowrap">Institutional Logistics Ledger</p>
+        <Text5 />
+        <p className="[word-break:break-word] absolute font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] left-[20px] not-italic text-[#f6e29a] text-[10px] top-[83px] tracking-[1px] uppercase whitespace-nowrap">snapshot f5fcfafc</p>
+        <Text6 />
+        <p className="[word-break:break-word] absolute font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] left-[20px] not-italic text-[#f6e29a] text-[10px] top-[108px] tracking-[1px] uppercase whitespace-nowrap">design fixture, not production data</p>
+      </div>
+    </div>
+  );
+}
+
+function BoldText1() {
+  return (
+    <div className="relative shrink-0" data-name="Bold Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:SemiBold',sans-serif] font-semibold leading-[normal] relative shrink-0 text-[#e8b93c] text-[10px] tracking-[1px] uppercase w-[76px]" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Isolated Staging Playground
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text7() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#f6e29a] text-[10px] w-[72px]">0.8.1-playground.1</p>
+      </div>
+    </div>
+  );
+}
+
+function Text8() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#faeecb] text-[10px] tracking-[1px] uppercase w-[53px]" style={{ fontVariationSettings: '"wdth" 100' }}>
+          server-verified
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text9() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#d9bfae] text-[10px] w-[105px]" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Environment, candidate identity and tester capability are decided by the server. Absent from any production artifact.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Container4() {
+  return (
+    <div className="bg-[#40070a] relative shrink-0 w-full" data-name="Container">
+      <div className="flex flex-row items-center size-full">
+        <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex gap-[12px] items-center px-[24px] py-[7px] relative size-full">
+          <BoldText1 />
+          <Text7 />
+          <Text8 />
+          <Text9 />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BoldText2() {
+  return <div className="bg-[#f6e29a] h-[1.5px] relative shrink-0 w-[15px]" data-name="Bold Text" />;
+}
+
+function BoldText3() {
+  return <div className="bg-[#f6e29a] h-[1.5px] relative shrink-0 w-[15px]" data-name="Bold Text" />;
+}
+
+function BoldText4() {
+  return <div className="bg-[#f6e29a] h-[1.5px] relative shrink-0 w-[15px]" data-name="Bold Text" />;
+}
+
+function ItalicText() {
+  return (
+    <div className="relative shrink-0" data-name="Italic Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[3px] items-start relative size-full">
+        <BoldText2 />
+        <BoldText3 />
+        <BoldText4 />
+      </div>
+    </div>
+  );
+}
+
+function Text10() {
+  return (
+    <div className="bg-[#610b0f] h-[40px] relative rounded-[10px] shrink-0" data-name="Text">
+      <div aria-hidden className="absolute border border-[#78141a] border-solid inset-0 pointer-events-none rounded-[10px]" />
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex gap-[8px] items-center px-[17px] py-px relative size-full">
+        <ItalicText />
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:SemiBold',sans-serif] font-semibold leading-[normal] relative shrink-0 text-[#faeecb] text-[13px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Navigate
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text11() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['Newsreader:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#241416] text-[15px] tracking-[-0.15px] whitespace-nowrap">HAU-USC Logistics</p>
+      </div>
+    </div>
+  );
+}
+
+function Text13() {
+  return (
+    <div className="bg-[#610b0f] relative rounded-[16px] shrink-0 size-[32px]" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex items-center justify-center relative size-full">
+        <p className="[word-break:break-word] font-['Newsreader:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#f6e29a] text-[13px] tracking-[-0.15px] whitespace-nowrap">EL</p>
+      </div>
+    </div>
+  );
+}
+
+function Text12() {
+  return (
+    <div className="bg-[#f7f0e2] content-stretch flex items-center p-[3px] relative rounded-[999px] shrink-0" data-name="Text">
+      <div aria-hidden className="absolute border border-[#d8cbb6] border-solid inset-0 pointer-events-none rounded-[999px]" />
+      <Text13 />
+    </div>
+  );
+}
+
+function TextAlign() {
+  return (
+    <div className="flex-[1_0_0] min-w-px relative" data-name="Text:align">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex items-start justify-end relative size-full">
+        <Text12 />
+      </div>
+    </div>
+  );
+}
+
+function Container5() {
+  return (
+    <div className="bg-[#fffdf8] relative shrink-0 w-full" data-name="Container">
+      <div aria-hidden className="absolute border-[#d8cbb6] border-b border-solid inset-0 pointer-events-none" />
+      <div className="flex flex-row items-center size-full">
+        <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex gap-[12px] items-center pb-[13px] pt-[12px] px-[16px] relative size-full">
+          <Text10 />
+          <Text11 />
+          <TextAlign />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Text14() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#6f5a60] text-[11px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Account
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text15() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#6f5a60] text-[11px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          /
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text16() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#4e3a3e] text-[11px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Profile
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Container8() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Container">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex gap-[8px] items-center relative size-full">
+        <Text14 />
+        <Text15 />
+        <Text16 />
+      </div>
+    </div>
+  );
+}
+
+function Heading() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Heading 1">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['Bricolage_Grotesque:Bold',sans-serif] font-bold leading-[33px] relative shrink-0 text-[#241416] text-[30px] tracking-[-0.66px] whitespace-nowrap" style={{ fontVariationSettings: '"opsz" 14, "wdth" 100' }}>
+          Profile
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Paragraph() {
+  return (
+    <div className="max-w-[530.4000244140625px] relative shrink-0 w-full" data-name="Paragraph">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start max-w-[inherit] pt-[8px] relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#6f5a60] text-[13px] tracking-[-0.15px] w-[340px]" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Who you are in this institution, what your account may do, and what it has done.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Container9() {
+  return (
+    <div className="relative shrink-0 w-[340px]" data-name="Container">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start pt-[8px] relative size-full">
+        <Heading />
+        <Paragraph />
+      </div>
+    </div>
+  );
+}
+
+function Container7() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Container">
+      <div aria-hidden className="absolute border-[#e6dcc9] border-b border-solid inset-0 pointer-events-none" />
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start pb-[21px] pt-[24px] px-[24px] relative size-full">
+        <Container8 />
+        <Container9 />
+      </div>
+    </div>
+  );
+}
+
+function Text17() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['Newsreader:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#f6e29a] text-[38px] tracking-[0.76px] whitespace-nowrap">AS</p>
+      </div>
+    </div>
+  );
+}
+
+function Container12() {
+  return (
+    <div className="relative rounded-[18px] shrink-0 size-[116px]" data-name="Container">
+      <div aria-hidden className="absolute bg-[rgba(255,253,248,0.09)] bg-clip-padding border-0 border-[transparent] border-solid inset-0 pointer-events-none rounded-[18px]" />
+      <div aria-hidden className="absolute border border-[#c8992f] border-solid inset-0 pointer-events-none rounded-[18px]" />
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex items-center justify-center p-px relative size-full">
+        <Text17 />
+      </div>
+      <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(246,226,154,0.24)]" />
+    </div>
+  );
+}
+
+function TextMargin() {
+  return (
+    <div className="relative shrink-0" data-name="Text:margin">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start pt-[12px] relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Mono:Regular',sans-serif] leading-[13.5px] not-italic relative shrink-0 text-[#f2d15c] text-[9px] tracking-[0.36px] uppercase w-[116px]">Portrait slot · 512 × 512</p>
+      </div>
+    </div>
+  );
+}
+
+function Container11() {
+  return (
+    <div className="col-1 h-[155px] justify-self-stretch relative row-1 self-center shrink-0" data-name="Container">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <Container12 />
+        <TextMargin />
+      </div>
+    </div>
+  );
+}
+
+function Text18() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#f2d15c] text-[10px] tracking-[1px] uppercase w-[338px]">University Student Council · Department of Logistics</p>
+      </div>
+    </div>
+  );
+}
+
+function Heading1() {
+  return (
+    <div className="h-[41px] relative shrink-0 w-[338px]" data-name="Heading 1">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start pt-[12px] relative size-full">
+        <p className="[word-break:break-word] font-['Bricolage_Grotesque:Bold',sans-serif] font-bold leading-[28.35px] relative shrink-0 text-[27px] text-white tracking-[-0.756px] whitespace-nowrap" style={{ fontVariationSettings: '"opsz" 14, "wdth" 100' }}>
+          Authorized staff member
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Icon() {
+  return (
+    <div className="relative shrink-0 size-[14px]" data-name="Icon">
+      <svg className="absolute block inset-0 size-full" fill="none" height="14" preserveAspectRatio="none" viewBox="0 0 14 14" width="14">
+        <g id="Icon">
+          <path d={svgPaths.p20e1e600} id="Vector" stroke="#F6E29A" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.991667" />
+          <path d={svgPaths.p17466780} id="Vector_2" stroke="#F6E29A" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.991667" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function Text19() {
+  return (
+    <div className="absolute bg-[rgba(232,185,60,0.16)] content-stretch flex gap-[8px] items-center left-0 px-[13px] py-[5px] rounded-[999px] top-0" data-name="Text">
+      <div aria-hidden className="absolute border border-[#c8992f] border-solid inset-0 pointer-events-none rounded-[999px]" />
+      <Icon />
+      <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#f6e29a] text-[11px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+        Administrator
+      </p>
+    </div>
+  );
+}
+
+function Text20() {
+  return (
+    <div className="absolute bg-[rgba(255,253,248,0.07)] content-stretch flex items-center left-[121.86px] px-[13px] py-[5px] rounded-[999px] top-0" data-name="Text">
+      <div aria-hidden className="absolute border border-[rgba(242,209,92,0.3)] border-solid inset-0 pointer-events-none rounded-[999px]" />
+      <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#faeecb] text-[11px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+        Materials committee
+      </p>
+    </div>
+  );
+}
+
+function Text21() {
+  return (
+    <div className="absolute bg-[rgba(255,253,248,0.07)] content-stretch flex items-center left-0 px-[13px] py-[5px] rounded-[999px] top-[32px]" data-name="Text">
+      <div aria-hidden className="absolute border border-[rgba(242,209,92,0.3)] border-solid inset-0 pointer-events-none rounded-[999px]" />
+      <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#faeecb] text-[11px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+        Scope set by the server
+      </p>
+    </div>
+  );
+}
+
+function ItalicText1() {
+  return <div className="bg-[#1f6b41] relative shrink-0 size-[8px]" data-name="Italic Text" />;
+}
+
+function Text22() {
+  return (
+    <div className="absolute bg-[#e2f3e9] content-stretch flex gap-[6px] items-center left-[145.55px] px-[13px] py-[4px] rounded-[999px] top-[32px]" data-name="Text">
+      <div aria-hidden className="absolute border border-[#a8d3ba] border-solid inset-0 pointer-events-none rounded-[999px]" />
+      <ItalicText1 />
+      <p className="[word-break:break-word] font-['IBM_Plex_Sans:SemiBold',sans-serif] font-semibold leading-[normal] relative shrink-0 text-[#1f6b41] text-[11px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+        Active
+      </p>
+    </div>
+  );
+}
+
+function Container14() {
+  return (
+    <div className="h-[56px] relative shrin…15802 tokens truncated… relative shrink-0 text-[#241416] text-[13px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Initials only
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text102() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#6f5a60] text-[10px] tracking-[-0.15px] w-[140px]" style={{ fontVariationSettings: '"wdth" 100' }}>
+          No upload, no stored file, no fake saved state
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text99() {
+  return (
+    <div className="col-1 justify-self-stretch relative row-1 self-stretch shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[3px] items-start relative size-full">
+        <Text100 />
+        <Text101 />
+        <Text102 />
+      </div>
+    </div>
+  );
+}
+
+function Text104() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#6f5a60] text-[10px] tracking-[1px] uppercase whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Short bio
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text105() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:SemiBold',sans-serif] font-semibold leading-[normal] relative shrink-0 text-[#241416] text-[13px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Not offered
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text106() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#6f5a60] text-[10px] tracking-[-0.15px] w-[140px]" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Free text needs a review path before it can appear beside a name
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text103() {
+  return (
+    <div className="col-2 justify-self-stretch relative row-1 self-stretch shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[3px] items-start relative size-full">
+        <Text104 />
+        <Text105 />
+        <Text106 />
+      </div>
+    </div>
+  );
+}
+
+function Container38() {
+  return (
+    <div className="bg-[#f7f0e2] relative rounded-[10px] shrink-0 w-full" data-name="Container">
+      <div aria-hidden className="absolute border border-[#e6dcc9] border-solid inset-0 pointer-events-none rounded-[10px]" />
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid gap-x-[24px] gap-y-[20px] grid grid-cols-[__140px_140px] grid-rows-[_75px] p-[21px] relative size-full">
+        <Text99 />
+        <Text103 />
+      </div>
+    </div>
+  );
+}
+
+function Container37() {
+  return (
+    <div className="opacity-60 relative shrink-0 w-full" data-name="Container">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <Container38 />
+      </div>
+    </div>
+  );
+}
+
+function Text107() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#7d5518] text-[10px] tracking-[-0.15px] w-[346px]">Blocked by: No accepted contract yet covers private profile media: where the file is stored, how long it is kept, who may view it, how it is reviewed before it appears, and how it is removed when a term ends. Until that exists, this page shows initials and stores nothing.</p>
+      </div>
+    </div>
+  );
+}
+
+function Container35() {
+  return (
+    <div className="bg-[#fbeed2] relative rounded-[14px] shrink-0 w-full" data-name="Container">
+      <div aria-hidden className="absolute border border-[#dcbe8a] border-dashed inset-0 pointer-events-none rounded-[14px]" />
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[12px] items-start p-[21px] relative size-full">
+        <Container36 />
+        <BoldText9 />
+        <Text98 />
+        <Container37 />
+        <Text107 />
+      </div>
+    </div>
+  );
+}
+
+function Container25() {
+  return (
+    <div className="col-1 justify-self-stretch relative row-2 self-start shrink-0" data-name="Container">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[24px] items-start relative size-full">
+        <Section4 />
+        <Container35 />
+      </div>
+    </div>
+  );
+}
+
+function Container16() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Container">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid gap-x-[24px] gap-y-[24px] grid grid-cols-[_388px] grid-rows-[__1161px_723px] relative size-full">
+        <Container17 />
+        <Container25 />
+      </div>
+    </div>
+  );
+}
+
+function Text108() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:SemiBold',sans-serif] font-semibold leading-[normal] relative shrink-0 text-[#7d5518] text-[10px] tracking-[1px] uppercase whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Research applied
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text110() {
+  return (
+    <div className="absolute bg-[#610b0f] h-[17px] left-0 rounded-[6px] top-[-1px] w-[33.406px]" data-name="Text">
+      <p className="[word-break:break-word] absolute font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] left-[5px] not-italic text-[#fffdf8] text-[10px] top-[2px] tracking-[-0.15px] whitespace-nowrap">V-24</p>
+    </div>
+  );
+}
+
+function Text111() {
+  return (
+    <div className="absolute bg-[#610b0f] h-[17px] left-[35.86px] rounded-[6px] top-[-1px] w-[33.406px]" data-name="Text">
+      <p className="[word-break:break-word] absolute font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] left-[5px] not-italic text-[#fffdf8] text-[10px] top-[2px] tracking-[-0.15px] whitespace-nowrap">V-35</p>
+    </div>
+  );
+}
+
+function Text112() {
+  return (
+    <div className="absolute bg-[#610b0f] h-[17px] left-[71.72px] rounded-[6px] top-[-1px] w-[50.953px]" data-name="Text">
+      <p className="[word-break:break-word] absolute font-['IBM_Plex_Mono:Regular',sans-serif] leading-[normal] left-[5px] not-italic text-[#fffdf8] text-[10px] top-[2px] tracking-[-0.15px] whitespace-nowrap">PROFILE</p>
+    </div>
+  );
+}
+
+function Text109() {
+  return (
+    <div className="h-[14px] relative shrink-0 w-[345px]" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid relative size-full">
+        <Text110 />
+        <Text111 />
+        <Text112 />
+      </div>
+    </div>
+  );
+}
+
+function Text113() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:SemiBold',sans-serif] font-semibold leading-[0] relative shrink-0 text-[#241416] text-[0px] tracking-[-0.15px] w-[345px]" style={{ fontVariationSettings: '"wdth" 100' }}>
+          <span className="leading-[normal] text-[11px]">Identity gets a region.</span>
+          <span className="font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] text-[#4e3a3e] text-[11px]" style={{ fontVariationSettings: '"wdth" 100' }}>{` The portrait container, name, role and scope sit in one institutional band instead of being the first four rows of a settings form.`}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text114() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:SemiBold',sans-serif] font-semibold leading-[0] relative shrink-0 text-[#241416] text-[0px] tracking-[-0.15px] w-[345px]" style={{ fontVariationSettings: '"wdth" 100' }}>
+          <span className="leading-[normal] text-[11px]">Permissions are stated, never editable here.</span>
+          <span className="font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] text-[#4e3a3e] text-[11px]" style={{ fontVariationSettings: '"wdth" 100' }}>{` Scope is server-decided and changing it is an Accounts and Access action, so the consequence and the record stay together.`}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text115() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:SemiBold',sans-serif] font-semibold leading-[0] relative shrink-0 text-[#241416] text-[0px] tracking-[-0.15px] w-[345px]" style={{ fontVariationSettings: '"wdth" 100' }}>
+          <span className="leading-[normal] text-[11px]">Masked by default.</span>
+          <span className="font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] text-[#4e3a3e] text-[11px]" style={{ fontVariationSettings: '"wdth" 100' }}>{` Contact fields are masked and revealing one is recorded, matching how the staff directory already treats the same data.`}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Text116() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:SemiBold',sans-serif] font-semibold leading-[0] relative shrink-0 text-[#241416] text-[0px] tracking-[-0.15px] w-[345px]" style={{ fontVariationSettings: '"wdth" 100' }}>
+          <span className="leading-[normal] text-[11px]">No faked capability.</span>
+          <span className="font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] text-[#4e3a3e] text-[11px]" style={{ fontVariationSettings: '"wdth" 100' }}>{` Portrait and bio editing is drawn as proposed UX and gated on a private-media contract rather than shown as a control that appears to save.`}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Container39() {
+  return (
+    <div className="bg-[#fcf2cf] relative rounded-br-[10px] rounded-tr-[10px] shrink-0 w-full" data-name="Container">
+      <div aria-hidden className="absolute border-[#e8b93c] border-l-3 border-solid inset-0 pointer-events-none rounded-br-[10px] rounded-tr-[10px]" />
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[8px] items-start pl-[23px] pr-[20px] py-[16px] relative size-full">
+        <Text108 />
+        <Text109 />
+        <Text113 />
+        <Text114 />
+        <Text115 />
+        <Text116 />
+      </div>
+    </div>
+  );
+}
+
+function Container10() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Container">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[24px] items-start relative size-full">
+        <Section />
+        <Container16 />
+        <Container39 />
+      </div>
+    </div>
+  );
+}
+
+function Container6() {
+  return (
+    <div className="flex-[2862.344_0_0] min-h-px relative w-full" data-name="Container">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <Container7 />
+        <Container10 />
+      </div>
+    </div>
+  );
+}
+
+function Icon1() {
+  return (
+    <div className="relative shrink-0 size-[20px]" data-name="Icon">
+      <svg className="absolute block inset-0 size-full" fill="none" height="20" preserveAspectRatio="none" viewBox="0 0 20 20" width="20">
+        <g id="Icon">
+          <path d={svgPaths.p197f87f0} id="Vector" stroke="#6F5A60" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.41667" />
+          <path d="M8 16.9167V12.25H12V16.9167" id="Vector_2" stroke="#6F5A60" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.41667" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function Text118() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <Icon1 />
+      </div>
+    </div>
+  );
+}
+
+function Text117() {
+  return (
+    <div className="flex-[63.188_0_0] h-[56px] min-h-[56px] min-w-px relative" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[3px] items-center justify-center min-h-[inherit] relative size-full">
+        <Text118 />
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#6f5a60] text-[10px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Overview
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Icon2() {
+  return (
+    <div className="relative shrink-0 size-[20px]" data-name="Icon">
+      <svg className="absolute block inset-0 size-full" fill="none" height="20" preserveAspectRatio="none" viewBox="0 0 20 20" width="20">
+        <g id="Icon">
+          <path d={svgPaths.pb3a8bc0} id="Vector" stroke="#6F5A60" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.41667" />
+          <path d="M7 10H13M10 7V13" id="Vector_2" stroke="#6F5A60" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.41667" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function Text120() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <Icon2 />
+      </div>
+    </div>
+  );
+}
+
+function Text119() {
+  return (
+    <div className="flex-[63.203_0_0] h-[56px] min-h-[56px] min-w-px relative" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[3px] items-center justify-center min-h-[inherit] relative size-full">
+        <Text120 />
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#6f5a60] text-[10px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Requests
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Icon3() {
+  return (
+    <div className="relative shrink-0 size-[20px]" data-name="Icon">
+      <svg className="absolute block inset-0 size-full" fill="none" height="20" preserveAspectRatio="none" viewBox="0 0 20 20" width="20">
+        <g id="Icon">
+          <path d={svgPaths.p1fe4a980} id="Vector" stroke="#6F5A60" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.41667" />
+          <path d={svgPaths.p1871da00} id="Vector_2" stroke="#6F5A60" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.41667" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function Text122() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <Icon3 />
+      </div>
+    </div>
+  );
+}
+
+function Text121() {
+  return (
+    <div className="flex-[63.203_0_0] h-[56px] min-h-[56px] min-w-px relative" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[3px] items-center justify-center min-h-[inherit] relative size-full">
+        <Text122 />
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#6f5a60] text-[10px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Lending
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Icon4() {
+  return (
+    <div className="relative shrink-0 size-[20px]" data-name="Icon">
+      <svg className="absolute block inset-0 size-full" fill="none" height="20" preserveAspectRatio="none" viewBox="0 0 20 20" width="20">
+        <g id="Icon">
+          <path d={svgPaths.p2b3c9300} id="Vector" stroke="#6F5A60" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.41667" />
+          <path d={svgPaths.p8463680} id="Vector_2" stroke="#6F5A60" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.41667" />
+          <path d={svgPaths.p1562600} id="Vector_3" stroke="#6F5A60" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.41667" />
+          <path d={svgPaths.p20b04b00} id="Vector_4" stroke="#6F5A60" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.41667" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function Text124() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <Icon4 />
+      </div>
+    </div>
+  );
+}
+
+function Text123() {
+  return (
+    <div className="flex-[63.203_0_0] h-[56px] min-h-[56px] min-w-px relative" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[3px] items-center justify-center min-h-[inherit] relative size-full">
+        <Text124 />
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#6f5a60] text-[10px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Inventory
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Icon5() {
+  return (
+    <div className="relative shrink-0 size-[20px]" data-name="Icon">
+      <svg className="absolute block inset-0 size-full" fill="none" height="20" preserveAspectRatio="none" viewBox="0 0 20 20" width="20">
+        <g id="Icon">
+          <path d={svgPaths.pb3a8bc0} id="Vector" stroke="#6F5A60" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.41667" />
+          <path d={svgPaths.p4247200} id="Vector_2" stroke="#6F5A60" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.41667" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function Text126() {
+  return (
+    <div className="relative shrink-0" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <Icon5 />
+      </div>
+    </div>
+  );
+}
+
+function Text125() {
+  return (
+    <div className="flex-[63.203_0_0] h-[56px] min-h-[56px] min-w-px relative" data-name="Text">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[3px] items-center justify-center min-h-[inherit] relative size-full">
+        <Text126 />
+        <p className="[word-break:break-word] font-['IBM_Plex_Sans:Regular',sans-serif] font-normal leading-[normal] relative shrink-0 text-[#6f5a60] text-[10px] tracking-[-0.15px] whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Release
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Navigation() {
+  return (
+    <div className="bg-[#fffdf8] drop-shadow-[0px_-6px_9px_rgba(64,30,34,0.08)] relative shrink-0 w-full" data-name="Navigation">
+      <div aria-hidden className="absolute border-[#d8cbb6] border-solid border-t inset-0 pointer-events-none" />
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex gap-[8px] items-start pb-[12px] pt-[13px] px-[20px] relative size-full">
+        <Text117 />
+        <Text119 />
+        <Text121 />
+        <Text123 />
+        <Text125 />
+      </div>
+    </div>
+  );
+}
+
+function Container2() {
+  return (
+    <div className="h-[3229.344px] relative shrink-0 w-full" data-name="Container">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start relative size-full">
+        <Container3 />
+        <Container4 />
+        <Container5 />
+        <Container6 />
+        <Navigation />
+      </div>
+    </div>
+  );
+}
+
+function Container1() {
+  return (
+    <div className="bg-[#e9e0d0] h-[3231.344px] relative shrink-0 w-[390px]" data-name="Container">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-start overflow-clip p-px relative rounded-[inherit] size-full">
+        <Container2 />
+      </div>
+      <div aria-hidden className="absolute border border-[#b9ab97] border-solid inset-0 pointer-events-none shadow-[0px_10px_40px_0px_rgba(60,30,34,0.13)]" />
+    </div>
+  );
+}
+
+export default function Component390PxLightAccountProfileSingleReadingColumn() {
+  return (
+    <div className="content-stretch flex flex-col gap-[16px] items-start relative size-full" data-name="390px · light · account.profile — Single reading column">
+      <Container />
+      <Container1 />
+    </div>
+  );
+}

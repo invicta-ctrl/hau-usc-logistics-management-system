@@ -69,14 +69,13 @@ owner-testing environment.
 - Voice: direct, calm, accountable, institutionally grounded, and operational.
 - Oxblood and gold are established identity anchors; any future evolution must
   remain recognizably HAU-USC and requires design-gate approval.
-- The current V5 system and frozen prototype remain the incumbent visual truth
-  until an approved redesign direction replaces or amends them.
+- The accepted live Figma Make source governs current frontend visual and motion
+  intent; repository contracts govern all functional behavior.
 
 ## Evidence on Hand
 
 - Current authoritative visual contract: `DESIGN.md`.
-- Frontend integrity and frozen-source evidence:
-  `docs/V5_FRONTEND_INTEGRITY_BASELINE.md`.
+- Frontend source-recovery evidence is retained under `docs/frontend/`.
 - Accepted Production baseline: v0.8.0 at the repository-recorded accepted SHA.
 - Current exact candidate and environment truth: `.codex/CURRENT.md` and
   `.codex/CURRENT_HANDOFF.md`.

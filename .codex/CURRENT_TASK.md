@@ -1,9 +1,9 @@
 # Current Task — V0.8.4 Branch-Local Preservation Refresh (Complete)
 
 INTENT: BRANCH_PRESERVATION_AND_CONTINUITY_RECONCILIATION
-MODE: COMPLETE_OWNER_AUTHORIZED_PHASE8
-OBJECTIVE: Preserve existing v0.8.4 branch history and refresh it from final v0.8.3 main without implementation; record final-v0.8.3 baseline, Production, protected-ref, and readiness facts; release the separate branch-local lock.
-TARGET: release/v0.8.4-live-operations-performance, final v0.8.3 main 86553349f5c2ebefaa637c30828c560a301f99ba, frozen product candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580, and retained recovery refs.
+MODE: COMPLETE_OWNER_AUTHORIZED_POST_FVR001_BASELINE_REFRESH
+OBJECTIVE: Preserve existing v0.8.4 branch history while inheriting accepted Figma-native main without independent implementation.
+TARGET: release/v0.8.4-live-operations-performance on accepted main f7e5bf83205dbe58b5fb72126a4456747d92e906 while retaining all six previously unique commits and readiness evidence.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md
@@ -18,8 +18,8 @@ LOCK_STATUS: RELEASED
 HANDOFF_STATUS: READY_FOR_HANDOFF
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
-UPSTREAM: origin/release/v0.8.4-live-operations-performance@GIT_HEAD;PUSH_PARITY_VERIFIED
-WORKTREE: D:/Documents/Codex/_verification/v83-final-gate-f8e6337
+UPSTREAM: origin/release/v0.8.4-live-operations-performance@THIS_MERGE_COMMIT;VERIFY_AFTER_PUBLICATION
+WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/v084-live-operations-performance
 WORKTREE_STATE: GIT_STATUS
 RISK: HIGH;LOSSLESS_BRANCH_HISTORY_CONTINUITY_TRUTHFUL_FINAL_V083_BASELINE_AND_PROTECTED_REF_PRESERVATION
 ACTIVE_SCOPE_OVERRIDE: FAST_CLOSE=ACTIVE;V83_S17_CLOSED;OWNER_PRODUCTION_GO=CONSUMED;V084_IMPLEMENTATION=PROHIBITED;FRONTEND_PHASE9_SEPARATE;NO_PROVIDER_OR_PRODUCTION_MUTATION
@@ -51,11 +51,11 @@ STOP_CONDITIONS: Stop the affected operation on wrong Production target, candida
 PHASE_3_4_CHECKPOINT: PASS;PR_25_NORMAL_MERGE=07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e;CI_VERIFY_CODEQL_BROWSER_SMOKE=PASS;CODEQL_99_FALSE_POSITIVE_DISMISSED;P2_PAGINATION_THREADS_DEFERRED_WITHOUT_PRODUCT_CHANGE;F8_APPLICATION_PATH_PARITY=PASS;V083_TAG=PASS;RECOVERY_POINTERS_ROTATED_AND_READBACK=PASS
 PHASE_5_CHECKPOINT: PASS_WITH_PRESERVATION_EXCEPTION;temporary remote refs closed losslessly after unique-history proof; research audit retained by immutable archive tag; primary main checkout clean; v082 product-dirty worktree retained untouched; unregistered generated-only node_modules residual is a tooling-blocked P3 with no Git history or ref loss.
 S17_CLOSEOUT: PASS;Production/main/f8 identity/recovery rotation/lossless hygiene/retained future refs/pushed readback pass; ACTIVE_WRITER=NONE; WRITER_LOCK=RELEASED; HANDOFF_STATUS=READY_FOR_HANDOFF.
-V084_BRANCH_LOCAL_BASELINE: FINAL_V083_MAIN=86553349f5c2ebefaa637c30828c560a301f99ba;FROZEN_F8_APPLICATION_PARITY=PASS;PRODUCTION=v0.8.3_SCHEMA32_0031_0032_SINGLE0032_LEDGER_FK0_PRIVATE_RECOVERY_REUSED_VERIFIED;PROTECTED_MAIN_AND_RECOVERY_REFS=RETAINED
-V084_BRANCH_LOCAL_REFRESH: PASS;NORMAL_FINAL_MAIN_MERGE=05ea4c50a30e75c6b74468ffe7c0a39435dd92c0;FOCUSED_CONTINUITY_GOVERNANCE_AND_DIFF_VALIDATION=PASS;PUSH_READBACK=PASS;ACTIVE_WRITER_NONE;WRITER_LOCK_RELEASED
+V084_BRANCH_LOCAL_BASELINE: ACCEPTED_MAIN=f7e5bf83205dbe58b5fb72126a4456747d92e906;FIGMA_NATIVE_TREE=480cf65cb9ec07fbab729f0588023e120cf3f97a;PRIOR_UNIQUE_COMMITS=6;UNIQUE_READINESS_PACKET=RETAINED
+V084_BRANCH_LOCAL_REFRESH: PASS;NORMAL_ACCEPTED_MAIN_MERGE=THIS_MERGE_COMMIT;UNIQUE_V084_HISTORY_PRESERVED;ACTIVE_WRITER_NONE;WRITER_LOCK_RELEASED
 V084_IMPLEMENTATION: NOT_STARTED;NO_RUNTIME_OR_PROVIDER_MUTATION
-NEXT_ACTION_SCOPE: V83_CLOSED;V084_BRANCH_LOCAL_PREPARATION_COMPLETE;PHASE9_FRONTEND_BRANCH_LOCAL_PREPARATION_ONLY
-NEXT_EXACT_ACTION: Do not reopen v0.8.3 or start v0.8.4 implementation. Take and release a separate frontend-design-integration branch-local lock only under the owner-authorized Phase 9 adoption-intake scope.
+NEXT_ACTION_SCOPE: FVR001_BASELINE_INHERITED;V084_IMPLEMENTATION_NOT_STARTED;NEW_ACCEPTED_AUTHORITY_REQUIRED
+NEXT_EXACT_ACTION: Do not start v0.8.4 implementation; rehydrate from this post-FVR001 baseline only under new accepted authority.
 
 ## Historical source-gate diagnostic record
 

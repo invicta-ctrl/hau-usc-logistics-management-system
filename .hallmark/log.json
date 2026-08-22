@@ -1,0 +1,53 @@
+[
+  {
+    "date": "2026-08-08",
+    "artifact": "prototypes/impeccable-whole-site-redesign-v3/",
+    "genre": "modern-minimal",
+    "macrostructure": "Workbench",
+    "variation": "asymmetric attention field; N3 authenticated rail; N9 public edge bar; Ft2 inline footer",
+    "status": "candidate"
+  },
+  {
+    "date": "2026-08-08",
+    "artifact": "prototypes/impeccable-whole-site-redesign-v4/",
+    "genre": "modern-minimal",
+    "macrostructure": "Map / Diagram",
+    "variation": "Operational Choreography / Route Console; N13 authenticated command pill; N5 public floating bar; Ft5 statement close",
+    "navigation": {
+      "authenticated": "N13 authenticated command pill",
+      "public": "N5 public floating bar"
+    },
+    "footer": "Ft5 statement close",
+    "directionOwner": "v4",
+    "conceptSeed": "surface/operate key 00000004 -> candidate 5 (degraded replay)",
+    "directionPinned": true,
+    "status": "candidate"
+  },
+  {
+    "date": "2026-08-08",
+    "version": "v4.1",
+    "artifact": "prototypes/impeccable-whole-site-redesign-v4/",
+    "amendment": "docs/design/IMPECCABLE_V4_1_FEEDBACK_AMENDMENT.md",
+    "studyArtifact": "prototypes/impeccable-whole-site-redesign-v3/",
+    "designDNA": "docs/design/IMPECCABLE_V3_EXTERNAL_DESIGN_DNA.md",
+    "commands": ["study", "audit", "redesign"],
+    "genre": "modern-minimal",
+    "macrostructure": "Map / Diagram",
+    "variation": "Institutional campus gateway; asymmetric operational brief; production-grounded Request Center; authored celestial/menu/back controls",
+    "navigation": {
+      "authenticated": "N13 route-coded command shell",
+      "public": "N5 floating glass identity bar"
+    },
+    "footer": "Ft5 statement close",
+    "directionOwner": "owner v4.1 override",
+    "conceptSeed": "inherited v4 candidate 5 provenance",
+    "directionPinned": true,
+    "ownerComments": 12,
+    "majorFrontendChanges": 12,
+    "compositionalChanges": 5,
+    "visualDeltaPairs": 8,
+    "hallmarkGates": "58/58 pass",
+    "reviewDisposition": "ship",
+    "status": "verified"
+  }
+]

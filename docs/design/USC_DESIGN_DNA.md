@@ -4,7 +4,7 @@
 
 ## Design Gate status
 
-**PROPOSED — NOT IMPLEMENTATION AUTHORITY.** The current [`DESIGN.md`](../../DESIGN.md) and V5 fingerprint remain authoritative until Earl accepts this direction and authorizes a bounded implementation slice.
+**HISTORICAL PROPOSAL — NOT IMPLEMENTATION AUTHORITY.** This research predates the accepted Figma-native cutover. Current authority is [`DESIGN.md`](../../DESIGN.md).
 
 ## One coherent idea
 
@@ -218,7 +218,7 @@ Tables do not simply become cards. Each module defines a mobile record summary, 
 - Optional visual systems are lazy, code-split, cancellable, and measurable.
 - Avoid persistent blur, huge shadows, layout-thrashing measurement loops, and always-running observers.
 - Reserve media dimensions and use governed optimized assets.
-- Define a baseline from the current V5 artifact before an implementation slice; budgets are deltas against that baseline, not invented absolute claims.
+- At the time of this study, establish measured deltas from the then-current artifact rather than inventing absolute performance claims.
 - A spatial proof must record transferred bytes, startup time, polygon/material/texture counts, frame stability, memory behavior, and fallback behavior.
 
 ## Expression by module
