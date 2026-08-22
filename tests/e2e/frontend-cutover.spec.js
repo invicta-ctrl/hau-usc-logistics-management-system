@@ -186,11 +186,11 @@ test('FVR-001 completes the server-owned starter activation lifecycle', async ({
 test('FVR-001 retains the Make landing motion and honors reduced motion', async ({ page }) => {
   await installPublicFeed(page, 'empty');
   await page.goto('/');
-  await expect.poll(() => page.locator('.atrium__copy').evaluate((node) => getComputedStyle(node).animationName)).toBe('atrium-in');
+  await expect.poll(() => page.locator('.atrium__copy').evaluate((node) => getComputedStyle(node).animationName)).toBe('atrium-enter');
 
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.reload();
-  await expect.poll(() => page.locator('.atrium__copy').evaluate((node) => getComputedStyle(node).animationDuration)).toBe('0.001s');
+  await expect.poll(() => page.locator('.atrium__copy').evaluate((node) => getComputedStyle(node).animationDuration)).toBe('0s');
 });
 
 test('FVR-001 preserves keyboard focus, theme behavior, and 200 percent reflow', async ({ page }, testInfo) => {

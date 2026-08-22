@@ -13,6 +13,7 @@ export default function App() {
       <PreviewIndexPage
         navigate={controller.navigate}
         onClose={preview.closeIndex}
+        onCancelLauncherRestore={preview.cancelLauncherRestore}
         returnFocusRequestedRef={preview.returnFocusRequestedRef}
       />
     );

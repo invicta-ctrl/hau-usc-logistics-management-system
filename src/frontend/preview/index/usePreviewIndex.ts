@@ -46,5 +46,16 @@ export function usePreviewIndex() {
     }
   }, []);
 
-  return { allowed, indexOpen, returnFocusRequestedRef, openIndex, closeIndex };
+  const cancelLauncherRestore = useCallback(() => {
+    returnFocusRequestedRef.current = false;
+  }, []);
+
+  return {
+    allowed,
+    indexOpen,
+    returnFocusRequestedRef,
+    openIndex,
+    closeIndex,
+    cancelLauncherRestore,
+  };
 }

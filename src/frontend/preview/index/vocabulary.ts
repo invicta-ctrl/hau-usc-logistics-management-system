@@ -42,16 +42,16 @@ export const PREVIEW_FILTER_LABELS: Readonly<Record<PreviewFilter, string>> = Ob
 });
 
 export const IMPLEMENTATION_STATUS_LABELS: Readonly<Record<ImplementationStatus, string>> = Object.freeze({
-  ACCEPTED: "Accepted",
-  IN_PROGRESS: "In progress",
-  SURFACE_PREVIEW: "Surface preview",
-  NOT_STARTED: "Not started",
+  ACCEPTED: "ACCEPTED",
+  IN_PROGRESS: "IN PROGRESS",
+  SURFACE_PREVIEW: "SURFACE PREVIEW",
+  NOT_STARTED: "NOT STARTED",
 });
 
 export const BACKEND_STATUS_LABELS: Readonly<Record<BackendStatus, string>> = Object.freeze({
-  REAL_BACKEND: "Real backend",
-  PARTIAL: "Partial",
-  VISUAL_ONLY: "Visual only",
+  REAL_BACKEND: "REAL BACKEND",
+  PARTIAL: "PARTIAL",
+  VISUAL_ONLY: "VISUAL ONLY",
 });
 
 export const ACCESS_REQUIREMENT_LABELS: Readonly<Record<AccessRequirement, string>> = Object.freeze({

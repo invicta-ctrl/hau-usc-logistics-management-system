@@ -15,9 +15,9 @@ import {
 } from "./vocabulary";
 import "./PreviewIndex.css";
 
-function EntryMeta({ label, value }: { label: string; value: string }) {
+function EntryMeta({ label, value, kind }: { label: string; value: string; kind: string }) {
   return (
-    <div className="preview-entry-meta">
+    <div className="preview-entry-meta" data-preview-entry-meta={kind}>
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>
@@ -42,10 +42,10 @@ function PreviewEntryRow({
         <p className="preview-entry-route">{entry.route}</p>
         <p className="preview-entry-description">{entry.description}</p>
         <dl className="preview-entry-metas">
-          <EntryMeta label="Status" value={IMPLEMENTATION_STATUS_LABELS[entry.implementationStatus]} />
-          <EntryMeta label="Backend" value={BACKEND_STATUS_LABELS[entry.backendStatus]} />
-          <EntryMeta label="Access" value={ACCESS_REQUIREMENT_LABELS[entry.access]} />
-          <EntryMeta label="Mode" value={PREVIEW_MODE_LABELS[entry.previewMode]} />
+          <EntryMeta label="Status" value={IMPLEMENTATION_STATUS_LABELS[entry.implementationStatus]} kind="status" />
+          <EntryMeta label="Backend" value={BACKEND_STATUS_LABELS[entry.backendStatus]} kind="backend" />
+          <EntryMeta label="Access" value={ACCESS_REQUIREMENT_LABELS[entry.access]} kind="access" />
+          <EntryMeta label="Mode" value={PREVIEW_MODE_LABELS[entry.previewMode]} kind="mode" />
         </dl>
       </div>
       <div className="preview-entry-actions">
@@ -114,10 +114,12 @@ function SurfacePreview({
 export function PreviewIndexPage({
   navigate,
   onClose,
+  onCancelLauncherRestore,
   returnFocusRequestedRef,
 }: {
   navigate: (route: Route) => void;
   onClose: () => void;
+  onCancelLauncherRestore: () => void;
   returnFocusRequestedRef: { current: boolean };
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -127,10 +129,8 @@ export function PreviewIndexPage({
   const surfaceTriggers = useRef(new Map<string, HTMLButtonElement>());
 
   useEffect(() => {
-    if (!returnFocusRequestedRef.current) {
-      headingRef.current?.focus();
-    }
-  }, [returnFocusRequestedRef]);
+    headingRef.current?.focus();
+  }, []);
 
   const surfaceEntry = useMemo(
     () => (surfaceRoute ? listPreviewRoutes().find((entry) => entry.route === surfaceRoute) ?? null : null),
@@ -145,6 +145,7 @@ export function PreviewIndexPage({
   const groups = useMemo(() => groupPreviewRoutes(visibleEntries), [visibleEntries]);
 
   const openRoute = (entry: PreviewRouteEntry) => {
+    onCancelLauncherRestore();
     onClose();
     navigate(entry.route);
   };
@@ -163,6 +164,7 @@ export function PreviewIndexPage({
   };
 
   const testRealLogin = () => {
+    onCancelLauncherRestore();
     onClose();
     navigate("staff-signin");
   };

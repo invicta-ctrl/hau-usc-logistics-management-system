@@ -62,6 +62,9 @@ test('fails closed on every spoofed version signal regardless of hash, query, or
     await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
     await expect(page.locator('[data-preview-index]')).toHaveCount(0);
     await expect(page.locator('[data-preview-index-launcher]')).toHaveCount(0);
+    await expect(page.locator('[data-preview-surface]')).toHaveCount(0);
+    await expect(page.getByText('Operations overview')).toHaveCount(0);
+    await expect(page.getByText('Preview Module Index')).toHaveCount(0);
   }
 });
 
@@ -75,6 +78,8 @@ test('fails closed when the version endpoint errors', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
   await expect(page.locator('[data-preview-index]')).toHaveCount(0);
   await expect(page.locator('[data-preview-index-launcher]')).toHaveCount(0);
+  await expect(page.locator('[data-preview-surface]')).toHaveCount(0);
+  await expect(page.getByText('Preview Module Index')).toHaveCount(0);
 });
 
 test('renders exactly 15 registry entries, groups, and drives search and all filters', async ({ page }) => {
@@ -88,6 +93,11 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   await expect(page.locator('[data-preview-group="PUBLIC"] [data-preview-route]')).toHaveCount(5);
   await expect(page.locator('[data-preview-group="STAFF"] [data-preview-route]')).toHaveCount(8);
   await expect(page.locator('[data-preview-group="ADMINISTRATION"] [data-preview-route]')).toHaveCount(2);
+
+  await expect(page.locator('[data-preview-route="landing"] [data-preview-entry-meta="status"] dd')).toHaveText('ACCEPTED');
+  await expect(page.locator('[data-preview-route="landing"] [data-preview-entry-meta="backend"] dd')).toHaveText('REAL BACKEND');
+  await expect(page.locator('[data-preview-route="overview"] [data-preview-entry-meta="status"] dd')).toHaveText('SURFACE PREVIEW');
+  await expect(page.locator('[data-preview-route="overview"] [data-preview-entry-meta="backend"] dd')).toHaveText('VISUAL ONLY');
 
   await page.locator('[data-preview-search]').fill('release');
   await expect(page.locator('[data-preview-route]')).toHaveCount(1);
@@ -171,7 +181,7 @@ test('shows a labeled, sanitized, read-only surface preview with no additional A
   expect(requests.filter((request) => request.method !== 'GET')).toEqual([]);
 });
 
-test('restores launcher focus on back and focuses the heading on direct entry', async ({ page }) => {
+test('focuses the heading on entry and restores launcher focus only on Back', async ({ page }) => {
   await installVersion(page, true);
   await installEmptyFeed(page);
 
@@ -184,11 +194,33 @@ test('restores launcher focus on back and focuses the heading on direct entry', 
   await expect(launcher).toBeVisible();
   await launcher.click();
   await expect(page.locator('[data-preview-index]')).toBeVisible();
+  await expect(page.locator('[data-preview-index] h1')).toBeFocused();
   await page.locator('[data-action="back"]').click();
   await expect(launcher).toBeFocused();
 
   const launcherHeight = await launcher.evaluate((element) => element.getBoundingClientRect().height);
   expect(launcherHeight).toBeGreaterThanOrEqual(44);
+});
+
+test('does not focus the reappearing launcher after Open or Test Real Login', async ({ page }) => {
+  await installVersion(page, true);
+  await installEmptyFeed(page);
+
+  await page.goto('/');
+  await page.locator('[data-preview-index-launcher]').click();
+  await expect(page.locator('[data-preview-index]')).toBeVisible();
+  await page.locator('[data-preview-route="landing"] [data-action="open"]').click();
+  await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
+  const launcher = page.locator('[data-preview-index-launcher]');
+  await expect(launcher).toBeVisible();
+  await expect(launcher).not.toBeFocused();
+
+  await launcher.click();
+  await expect(page.locator('[data-preview-index]')).toBeVisible();
+  await page.locator('[data-action="test-login"]').click();
+  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
+  await expect(launcher).toBeVisible();
+  await expect(launcher).not.toBeFocused();
 });
 
 test('honors reduced motion on the preview index surface', async ({ page }) => {

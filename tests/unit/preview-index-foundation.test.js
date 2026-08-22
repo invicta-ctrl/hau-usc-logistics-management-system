@@ -4,12 +4,17 @@ import { isPreviewIndexHash, PREVIEW_INDEX_HASH } from '../../src/frontend/previ
 import { projectPreviewIndexGate } from '../../src/frontend/preview/index/trustedGate';
 import {
   ACCESS_REQUIREMENT,
+  ACCESS_REQUIREMENT_LABELS,
   BACKEND_STATUS,
+  BACKEND_STATUS_LABELS,
   IMPLEMENTATION_STATUS,
+  IMPLEMENTATION_STATUS_LABELS,
   PREVIEW_FILTER,
   PREVIEW_FILTER_LABELS,
   PREVIEW_MODE,
+  PREVIEW_MODE_LABELS,
   ROUTE_GROUP,
+  ROUTE_GROUP_LABELS,
 } from '../../src/frontend/preview/index/vocabulary';
 import { listPreviewRoutes, PREVIEW_INDEX_REGISTRY } from '../../src/frontend/preview/index/registry';
 import {
@@ -85,6 +90,29 @@ describe('preview index trusted gate and registry foundations', () => {
     expect(PREVIEW_FILTER_LABELS.NOT_STARTED).toBe('Not started');
     expect(PREVIEW_FILTER_LABELS.PUBLIC).toBe('Public');
     expect(PREVIEW_FILTER_LABELS.AUTHENTICATED).toBe('Authenticated');
+  });
+
+  it('exposes exact uppercase status and backend display labels', () => {
+    expect(IMPLEMENTATION_STATUS_LABELS).toEqual({
+      ACCEPTED: 'ACCEPTED',
+      IN_PROGRESS: 'IN PROGRESS',
+      SURFACE_PREVIEW: 'SURFACE PREVIEW',
+      NOT_STARTED: 'NOT STARTED',
+    });
+    expect(BACKEND_STATUS_LABELS).toEqual({
+      REAL_BACKEND: 'REAL BACKEND',
+      PARTIAL: 'PARTIAL',
+      VISUAL_ONLY: 'VISUAL ONLY',
+    });
+    expect(ACCESS_REQUIREMENT_LABELS.PUBLIC).toBe('Public');
+    expect(ACCESS_REQUIREMENT_LABELS.AUTHENTICATED).toBe('Authenticated');
+    expect(PREVIEW_MODE_LABELS.REAL_MODULE).toBe('Real module');
+    expect(PREVIEW_MODE_LABELS.SURFACE_PREVIEW).toBe('Surface preview');
+    expect(ROUTE_GROUP_LABELS).toEqual({
+      PUBLIC: 'Public',
+      STAFF: 'Staff',
+      ADMINISTRATION: 'Administration',
+    });
   });
 
   it('registers exactly the live public and auth route inventories without duplicates', () => {
