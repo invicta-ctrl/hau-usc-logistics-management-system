@@ -32,7 +32,7 @@ export function filterPreviewRoutes(
     case "BACKEND_WIRED":
       return entries.filter((entry) => entry.backendStatus === "REAL_BACKEND");
     case "PREVIEW_ONLY":
-      return entries.filter((entry) => entry.backendStatus === "VISUAL_ONLY");
+      return entries.filter((entry) => entry.previewMode === "SURFACE_PREVIEW");
     case "NOT_STARTED":
       return entries.filter((entry) => entry.implementationStatus === "NOT_STARTED");
     case "PUBLIC":

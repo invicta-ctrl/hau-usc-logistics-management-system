@@ -5,10 +5,11 @@ import type {
   PreviewMode,
   RouteGroup,
 } from "./vocabulary";
+import type { Route } from "../../app/appTypes";
 
 export type PreviewRouteEntry = {
   readonly id: string;
-  readonly route: string;
+  readonly route: Route;
   readonly label: string;
   readonly group: RouteGroup;
   readonly description: string;

@@ -55,6 +55,17 @@ describe('preview index trusted gate and registry foundations', () => {
   });
 
   it('defines a complete, exhaustive filter vocabulary', () => {
+    expect(IMPLEMENTATION_STATUS).toEqual([
+      'ACCEPTED',
+      'IN_PROGRESS',
+      'SURFACE_PREVIEW',
+      'NOT_STARTED',
+    ]);
+    expect(BACKEND_STATUS).toEqual(['REAL_BACKEND', 'PARTIAL', 'VISUAL_ONLY']);
+    expect(ACCESS_REQUIREMENT).toEqual(['PUBLIC', 'AUTHENTICATED']);
+    expect(PREVIEW_MODE).toEqual(['REAL_MODULE', 'SURFACE_PREVIEW']);
+    expect(ROUTE_GROUP).toEqual(['PUBLIC', 'STAFF', 'ADMINISTRATION']);
+
     expect(PREVIEW_FILTER).toEqual([
       'ALL',
       'ACCEPTED',
@@ -119,9 +130,9 @@ describe('preview index trusted gate and registry foundations', () => {
     expect(count((entry) => entry.implementationStatus === 'ACCEPTED')).toBe(5);
     expect(count((entry) => entry.implementationStatus === 'SURFACE_PREVIEW')).toBe(10);
     expect(count((entry) => entry.implementationStatus === 'IN_PROGRESS')).toBe(0);
-    expect(count((entry) => entry.implementationStatus === 'PARTIAL')).toBe(0);
     expect(count((entry) => entry.implementationStatus === 'NOT_STARTED')).toBe(0);
     expect(count((entry) => entry.backendStatus === 'REAL_BACKEND')).toBe(5);
+    expect(count((entry) => entry.backendStatus === 'PARTIAL')).toBe(0);
     expect(count((entry) => entry.backendStatus === 'VISUAL_ONLY')).toBe(10);
     expect(count((entry) => entry.access === 'PUBLIC')).toBe(5);
     expect(count((entry) => entry.access === 'AUTHENTICATED')).toBe(10);

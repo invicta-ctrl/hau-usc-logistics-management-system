@@ -1,13 +1,12 @@
 export const IMPLEMENTATION_STATUS = [
   "ACCEPTED",
-  "SURFACE_PREVIEW",
   "IN_PROGRESS",
-  "PARTIAL",
+  "SURFACE_PREVIEW",
   "NOT_STARTED",
 ] as const;
 export type ImplementationStatus = (typeof IMPLEMENTATION_STATUS)[number];
 
-export const BACKEND_STATUS = ["REAL_BACKEND", "VISUAL_ONLY"] as const;
+export const BACKEND_STATUS = ["REAL_BACKEND", "PARTIAL", "VISUAL_ONLY"] as const;
 export type BackendStatus = (typeof BACKEND_STATUS)[number];
 
 export const ACCESS_REQUIREMENT = ["PUBLIC", "AUTHENTICATED"] as const;
