@@ -10,8 +10,8 @@ AGENTS_GOVERNANCE_COMMIT: a7da2e46902273f6724b21dffc5854f11e920c26
 PRODUCT_REPAIR_COMMIT: d5d85d6a9f43dfdbdb6feb790d042b4fd6e17487
 SOL_MODEL: GPT-5.6 Sol Max
 CANONICAL_WRITER: DeepSeek V4 Pro #1 (/root/ds1_fvr02_writer_v3)
-DEEPSEEK_SCOUTS_USED: 0
-OX_ALPHA_REVIEWERS_USED: UNVERIFIED_IN_WRITER_CONTEXT
+DEEPSEEK_SCOUTS_USED: 1 (ds8_regression_test_audit; findings consumed into implementation/tests)
+OX_ALPHA_REVIEWERS_USED: 2 final-phase reviewer attempts; 1 nonresponsive/stopped, 1 completed NO_ACTIONABLE_FINDINGS
 FIGMA_MAKE_RESOURCES_READ: 2
 FIGMA_DESIGN_DOCS_READ: 0
 HERO_MOTION_SOURCE: src/frontend/app/landing/HeroMotion.tsx (poster-first) with live Make v39 `atrium-enter` keyframe
@@ -64,4 +64,4 @@ WRITER_LOCK: RELEASED
 
 ## Model utilization
 
-The Ox-first amendment reserves DeepSeek V4 Pro #1 as the sole canonical writer and Ox Alpha as default read-only reviewers. In this writer's context, exactly zero additional DeepSeek scouts were dispatched. Exact Ox Alpha reviewer attempts/results are not knowable to the writer, so `OX_ALPHA_REVIEWERS_USED` is `UNVERIFIED_IN_WRITER_CONTEXT`; the parent orchestrator should finalize that count after its own audit.
+SOL parent handled orchestration/synthesis; Ox Alpha final phase used two reviewer attempts with roles live-Figma/visual and final diff/receipt audit, accepted findings 0, one no-result and one NO_ACTIONABLE_FINDINGS; DeepSeek V4 Pro children included the sole canonical writer lane plus one regression-test scout, with DeepSeek retained for singular writing and pre-existing specialist work; Ox-first routing respected, no savings/token amounts fabricated.
