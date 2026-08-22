@@ -18,6 +18,7 @@ authority links to keep a directory tidy. Status is declared here instead.
 | Question | Owner |
 |---|---|
 | **Handoff to the next agent** | [CODEX_FRONTEND_DESIGN_HANDOFF.md](CODEX_FRONTEND_DESIGN_HANDOFF.md) — the single implementation/adoption handoff. Read it before anything else in this directory |
+| **Reproducing the Make landing in the product** | [CODEX_LANDING_REPRODUCTION_HANDOFF.md](CODEX_LANDING_REPRODUCTION_HANDOFF.md) — hero environment, the scrim contrast model, atrium pinning and page structure. Source is committed under `output/design/make-landing/`; no external asset is needed. Paired executable prompt: [CODEX_LANDING_REPRODUCTION_PROMPT.md](CODEX_LANDING_REPRODUCTION_PROMPT.md) |
 | Overall design authority — tokens, components, module rules, D-sections | `../../DESIGN.md` |
 | **Progress and completion** | [DESIGN_EXECUTION_TRACKER.md](DESIGN_EXECUTION_TRACKER.md) — the only file permitted to state a percentage, and it is derived, never typed |
 | Production contracts for all five request/lending surfaces, and every drift entry | [PRODUCTION_PORTAL_PARITY_AUDIT.md](PRODUCTION_PORTAL_PARITY_AUDIT.md) |

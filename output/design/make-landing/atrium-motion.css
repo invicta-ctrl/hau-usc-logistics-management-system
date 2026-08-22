@@ -1,0 +1,144 @@
+/* ============================================================================
+   DIGITAL ATRIUM — FULL-BLEED HERO ENVIRONMENT
+
+   The video is the Landing's primary visual identity layer, not a decorative
+   panel on the right. It fills the hero, runs behind the glass top bar, and is
+   read through a scrim that is weighted to the LEFT only — where the copy sits.
+   The right and centre stay open so the cultural animation is actually visible.
+
+   Everything here is decorative and aria-hidden: remove the whole layer and the
+   hero still reads.
+
+   NOTHING LOOPS. The video plays once and holds its final frame. That is what
+   keeps WCAG 2.2.2 out of scope — it governs auto-starting motion that runs
+   past five seconds, not motion that ends — so the Landing owes no pause
+   control and does not carry one. prefers-reduced-motion drops to the poster.
+   ========================================================================= */
+
+.atrium__g0 {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Poster first, always present: it carries the composition on its own and the
+   video is pure enhancement layered over it. Both are full-bleed. */
+.atrium__poster,
+.atrium__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* The plate's strongest weave sits right of centre, so the crop is biased
+     that way rather than centred — a centre crop puts the flattest part of the
+     frame behind the copy and wastes the texture. */
+  object-position: 62% 50%;
+  background-size: cover;
+  background-position: 62% 50%;
+}
+
+.atrium__poster { opacity: 1; }
+
+.atrium__video {
+  opacity: 0;
+  transition: opacity 1200ms var(--ease-out);
+}
+.atrium__video.is-ready { opacity: 1; }
+
+/* ---- Readability scrim -------------------------------------------------
+   Two restrained layers, not one uniform dark block:
+
+   1. a LEFT-WEIGHTED horizontal wash that gives the headline and actions a
+      ground and decays to nothing by ~62% across, so the right half of the
+      frame is genuinely open;
+   2. a very light top-and-bottom vignette that seats the glass bar and the
+      lower edge without touching the middle of the picture.
+
+   The goal is "left text readable, right video expressive" — not a page-wide
+   dimmer. If the whole hero reads uniformly dark, this is wrong. */
+.atrium__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg,
+      rgba(28, 4, 6, 0.9) 0%,
+      rgba(28, 4, 6, 0.78) 22%,
+      rgba(28, 4, 6, 0.5) 42%,
+      rgba(28, 4, 6, 0.18) 56%,
+      rgba(28, 4, 6, 0) 68%),
+    linear-gradient(180deg,
+      rgba(24, 3, 5, 0.88) 0%,
+      rgba(24, 3, 5, 0.62) 9%,
+      rgba(28, 4, 6, 0.16) 22%,
+      rgba(28, 4, 6, 0) 46%,
+      rgba(28, 4, 6, 0.28) 100%);
+}
+
+/* The hero content sits above both media and scrim. */
+.digital-atrium > .atrium__stage { position: relative; z-index: 2; }
+
+/* ---- Glass top bar -----------------------------------------------------
+   A floating institutional rail, not a solid slab. The video stays visible
+   through it: frost carries the legibility, opacity does not. When the plate
+   underneath gets busy the fix is more blur, never more fill. */
+.public-nav--glass {
+  background: rgba(28, 4, 6, 0.3);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  backdrop-filter: blur(18px) saturate(135%);
+  border-bottom: 1px solid rgba(242, 209, 92, 0.16);
+  box-shadow: 0 1px 0 rgba(255, 253, 248, 0.05) inset;
+}
+
+/* Nav controls read as glass too, so the bar is one material rather than a
+   tray holding opaque chips. */
+.nav-glass {
+  background: rgba(255, 253, 248, 0.06);
+  border: 1px solid rgba(242, 209, 92, 0.22);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  backdrop-filter: blur(10px) saturate(120%);
+  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out);
+}
+.nav-glass:hover {
+  background: rgba(255, 253, 248, 0.12);
+  border-color: rgba(242, 209, 92, 0.4);
+}
+
+/* Secondary hero actions: outline glass, clearly subordinate to the one solid
+   primary, and still legible over a moving plate. */
+.hero-action--glass {
+  background: rgba(255, 253, 248, 0.08);
+  border: 1px solid rgba(242, 209, 92, 0.3);
+  -webkit-backdrop-filter: blur(12px) saturate(125%);
+  backdrop-filter: blur(12px) saturate(125%);
+  color: #fffdf8;
+  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out);
+}
+.hero-action--glass:hover {
+  background: rgba(255, 253, 248, 0.15);
+  border-color: rgba(242, 209, 92, 0.5);
+}
+
+@media (max-width: 767px) {
+  /* Phones get the poster only — no forced stream — and a crop that keeps the
+     weave rather than the empty upper field. */
+  .atrium__video { display: none; }
+  .atrium__poster { background-position: 58% 42%; }
+  /* Narrower frame, so the wash has to reach further across to hold the copy. */
+  .atrium__scrim {
+    background:
+      linear-gradient(180deg,
+        rgba(28, 4, 6, 0.72) 0%,
+        rgba(28, 4, 6, 0.58) 40%,
+        rgba(28, 4, 6, 0.42) 70%,
+        rgba(28, 4, 6, 0.6) 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atrium__video { display: none; }
+}

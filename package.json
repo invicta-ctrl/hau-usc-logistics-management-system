@@ -66,7 +66,21 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run check:governance && npm run lint && npm run build && npm run test && npm run check:apps-script && npm run verify:dist && npm run check:cloudflare"
+    "check": "npm run check:governance && npm run lint && npm run build && npm run test && npm run check:apps-script && npm run verify:dist && npm run check:cloudflare",
+    "design:tracker": "node scripts/design/design-tracker.mjs",
+    "design:tracker:check": "node scripts/design/design-tracker.mjs --check",
+    "design:contrast": "node scripts/design/contrast-audit.mjs",
+    "design:theme": "node scripts/design/build-theme.mjs",
+    "design:theme:check": "node scripts/design/build-theme.mjs --check",
+    "design:make-theme": "node scripts/design/build-make-theme.mjs",
+    "design:make-theme:check": "node scripts/design/build-make-theme.mjs --check",
+    "design:make-routes": "node scripts/design/build-make-routes.mjs",
+    "design:make-routes:check": "node scripts/design/build-make-routes.mjs --check",
+    "design:make-verify": "node scripts/design/verify-make-theme.mjs",
+    "design:make-landing": "node scripts/design/verify-make-landing-theme.mjs",
+    "design:figma-tracker": "node scripts/design/figma-tracker-payload.mjs",
+    "design:figma-tracker:check": "node scripts/design/figma-tracker-payload.mjs --check",
+    "design:serve": "node scripts/design/serve.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
