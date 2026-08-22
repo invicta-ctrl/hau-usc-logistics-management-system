@@ -380,3 +380,69 @@ Stop the affected operation when:
 - the accepted work unit is complete.
 
 A blocker on one independent target does not authorize bypassing it. Other independent targets may proceed only when their own gates pass.
+
+## Temporary branch-local Frontend Integration model-router exception
+
+**Authority:** Earl's explicit current instruction, 2026-08-22.
+
+### Scope and non-propagation
+
+- This exception applies **only** to the `invicta-ctrl/hau-usc-logistics-management-system` repository's `frontend-design-integration` branch/worktree and only to Frontend Integration work.
+- This is **not a global configuration**. It does not modify or supersede the canonical Context Vault AGENTS policy outside this branch.
+- It does not apply to `main`, `v0.8.4`, any other HAU-USC Logistics branch/worktree, Astral Bridge, Context Vault, or any other project.
+- Do not copy, synchronize, promote, cherry-pick, or propagate this branch-local appendix into another AGENTS file or branch unless Earl explicitly authorizes that destination.
+- Any future promotion, merge, or fast-forward from `frontend-design-integration` to `main`, `v0.8.4`, or another branch must exclude or revert this temporary AGENTS appendix before propagation. Frontend/product commits may propagate under their own accepted authority; this branch-only routing appendix may not hitchhike with them.
+- The existing managed-replica / byte-identical universal-AGENTS rule is explicitly waived only for this single branch-local `AGENTS.md` while this exception is active. It remains authoritative everywhere else.
+- This exception remains active only until Earl explicitly revokes or replaces it, or the Frontend Integration branch is retired. Normal active project/global model-routing governance resumes afterward.
+
+### Top-level orchestration
+
+- **GPT-5.6 Sol High is the sole top-level orchestrator and final reviewer** for work using this exception.
+- Sol remains read-only as orchestrator/reviewer. It plans, delegates, triages evidence, resolves disagreements, approves or rejects findings and patches, and gives the final verdict.
+- Only Sol may spawn subagents under this exception.
+- Delegation depth is one. DeepSeek V4 Pro and Ox Alpha subagents must not spawn or recursively delegate to other agents.
+- No silent model substitution is allowed.
+
+### Permitted temporary subagents
+
+- Sol may directly use **up to 16 DeepSeek V4 Pro subagents and up to 16 Ox Alpha subagents concurrently** through the configured model router.
+- Preferred initial fan-out is **8 DeepSeek + 8 Ox Alpha**. The remaining 8 + 8 form a reserve pool for independent verification, extra coverage, or focused follow-up when Sol determines it is useful. The full 16 + 16 is authorized when useful; it is not a quota that must be filled.
+- For these DeepSeek/Ox children only, direct model-router dispatch may **bypass `.codex/agents/**` for subagent model/profile selection** and may bypass the legacy Terra/Luna-only subagent model-selection restriction.
+- This bypass applies only to subagent model/profile routing. It does not bypass this `AGENTS.md`, accepted specifications/amendments, `.codex/CURRENT.md`, current task/handoff authority, repository safety rules, writer locks, tests, evidence requirements, security/privacy boundaries, data invariants, deployment gates, or Git preservation rules.
+- Prior Sol/Terra/Luna orchestration language is superseded only to the minimum extent needed to permit these DeepSeek/Ox children on this branch. All non-model governance from those rules remains in force.
+
+### DeepSeek V4 Pro role
+
+- Default role: repository-scale engineering worker/reviewer for code architecture, frontend/backend contract preservation, routing/state analysis, tests and regressions, legacy/dead-code detection, performance/code-quality review, security-boundary review, and Git propagation/preflight analysis.
+- DeepSeek subagents are **read-only by default**.
+- A DeepSeek subagent may write only when Sol explicitly designates it for a bounded implementation task already authorized by an accepted specification/amendment.
+- The canonical worktree retains **one singular integration writer at a time**. Additional DeepSeek writers, when explicitly useful and authorized, require isolated non-overlapping worktrees or bounded patch scopes and may not concurrently edit the same canonical files.
+- This temporary model-routing exception never creates product implementation authority by itself.
+
+### Ox Alpha role
+
+- Ox Alpha is the multimodal frontend/Figma/visual reviewer for visual fidelity, responsive behavior, motion/animation, public/authenticated state presentation, design-system drift, accessibility/interaction presentation, and adversarial UI review.
+- Ox Alpha subagents are **read-only** under this exception.
+- Ox Alpha may inspect source, sanitized visual references, screenshots, and Figma-derived evidence and return findings/proposals. It does not own the canonical writer lock and does not mutate product files.
+
+### Evidence and review funnel
+
+- Subagent output is evidence/proposal, never the final project verdict.
+- Sol decides whether a finding is accepted, rejected, needs independent verification, or needs a bounded repair.
+- Material findings should receive an independent cross-check before implementation when practical, especially visual fidelity, security, backend-contract, data, or propagation findings.
+- Every actionable finding must identify the exact file/component/symbol or visual frame/surface, expected versus actual behavior, reproduction or observation evidence, severity/impact, smallest safe repair, and relevant verification/tests. Visual findings should include screenshot/frame evidence when available.
+- Preferred flow: **subagent observation -> evidence -> Sol triage -> independent verification when warranted -> proposed smallest patch -> Sol review -> one controlled writer -> deterministic tests/visual recheck -> Sol final verdict**.
+- Generic statements such as "looks good" or "all tests seem fine" are not sufficient evidence.
+
+### Privacy and sensitive-data boundary
+
+- Do not provide DeepSeek V4 Pro or Ox Alpha with credentials, API keys, owner credentials, production dumps, raw private D1/R2 data, private institutional/person records, or other secrets merely because model context is inexpensive or large.
+- Use source code, sanitized fixtures, sanitized logs, public/sanitized screenshots, and the minimum bounded project context needed for each delegated lane.
+- Existing repository privacy, security, and provider rules remain authoritative.
+
+### Scope safeguards
+
+- This exception changes **model routing only**.
+- It does not authorize FI-04 or any future feature/slice by itself.
+- It does not authorize backend/API/auth/data/schema/migration/provider semantic changes, Figma writes, Playground mutation, Production deployment, Production data writes, history rewrite, force-push, reset/clean, or discard of unknown work.
+- Implementation still requires current accepted scope. If authority is missing or contradictory, Sol must stop the implementation lane and identify the exact authority gap.
