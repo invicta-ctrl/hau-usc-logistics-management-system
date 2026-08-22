@@ -1,41 +1,54 @@
 # Current Work Pointer — frontend-design-integration
 
 PROGRAM: HAU-USC Logistics
-MILESTONE: FVR-001_ATOMIC_FIGMA_NATIVE_FRONTEND_CUTOVER
-STATUS: FVR001_CLOSED_AT_ATOMIC_PUBLICATION
+MILESTONE: FVR-02_FULL_FRONTEND_RECOVERY_MEDIA_MOTION_INDEX
+STATUS: ACTIVE_FVR02
 BRANCH: frontend-design-integration
-HEAD: GIT_HEAD
-UPSTREAM: origin/frontend-design-integration@THIS_COMMIT;VERIFY_AFTER_PUBLICATION
+HEAD: 320d580eeb3c7c3dcf0500dcfec496bc574c4320
+UPSTREAM: origin/frontend-design-integration@e93e5c97fdb44f85f1b6ac1b578c9014a77b6166
+AHEAD_BEHIND: AHEAD_TWO
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: NONE
-REQUIRED_MODEL: GPT-5.6_TERRA_MAX
-WRITER_LOCK: RELEASED_AT_ATOMIC_PUBLICATION_CHECKPOINT
+WORKTREE_STATE: CLEAN_EXCEPT_PRESERVED_EXCLUDED_UNTracked `.ai-bridge/`
+ACTIVE_WRITER: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v2
+WRITER_LOCK: ACQUIRED
+REQUIRED_MODEL: GPT-5.6_SOL_MAX
+SOL_MAX_ROLE: top-level orchestrator and final reviewer, read-only, writes forbidden
+CANONICAL_WRITER: DeepSeek V4 Pro #1
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr001-atomic-figma-frontend-cutover.md
-ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr001-a1-figma-design-source-limitation.md;.codex/specs/accepted/2026-08-22-fvr001-a2-native-mcp-truncation-recovery.md
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr02-full-frontend-recovery-media-motion-index.md
 
-FUNCTIONAL_AUTHORITY: repository server/Worker/auth/domain/privacy/D1/R2/audit/provider contracts
-FIGMA_MAKE_AUTHORITY: authenticated live Make source for current visual implementation and motion
-FIGMA_DESIGN_AUTHORITY: documentation/reference
-FIGMA_MCP_AUTH: PASS
-FI00_STATUS: PASS
-FI01_STATUS: PASS
-FI02_STATUS: FUNCTIONAL_PASS;VISUAL_PASS
-FI03_STATUS: FUNCTIONAL_PASS;VISUAL_PASS
-FI04_STATUS: NOT_STARTED;REQUIRES_SEPARATE_ACCEPTED_AUTHORITY
+AUTHORITY: Earl instruction -> accepted FVR-02 spec -> live Figma Make implementation/composition/motion/source -> live Figma Design docs/annotations/variables/assets -> accepted backend/API/auth/data/security contracts -> current Figma-native source/tests -> verified mirrors fallback only -> V5 historical archaeology only (never authority).
 
-ADAPTER_RECEIPT: PASS; same-origin cookies, in-memory CSRF, server capability projection, public advertisements, public Request/Lending catalog/options/submit/track, starter activation, account application email verification/submission/status/withdrawal, network/validation errors, and fail-closed incomplete responses are implemented.
-PUBLIC_RESULT_RECEIPT: PASS; receipt and tracking components construct presentation while all identifiers, tracking codes, status, dates, lines, and lifecycle history come from server responses.
-NO_FABRICATED_ACTIVE_STATE: PASS; future authenticated operational fixture modules are not imported or reachable.
-PRE_REMOVAL_TEST_RECEIPT: adapter unit 8/8 PASS; required-width browser cases 45 unaffected PASS plus corrected accessibility/theme/zoom slice 5/5 PASS; build/dist PASS; direct visual inspection PASS.
-GUARDED_PREVIEW: RUNNING_PERSISTENT;http://127.0.0.1:4173;isolated Playground proxy verified; root and public read-only contract smokes HTTP 200; protected unauthenticated status HTTP 401; Production crossover NONE.
-ROLLBACK_TAG: archive/v5-final-before-figma-cutover-2026-08-22
-ROLLBACK_TAG_OBJECT: e75192df374c75e55a559f99679e7e86665052bd
-ROLLBACK_TAG_TARGET: 02f5c9bed4a2f692df32114019f0b0bbfca0fc13
-REMOVAL_RECEIPT: AUTHORIZED_AND_EXECUTED; active legacy implementation, scripts, configs, tests, specifications, plans, documents, generated shareable, and references in the accepted removal set were deleted or rewritten after pre-removal gates passed. Valid guarded-proxy, auth, public-data, password, and result-projection intent was migrated to non-legacy tests.
+FVR001_CUTOVER_COMMIT: f7e5bf83205dbe58b5fb72126a4456747d92e906
+FVR001_STATUS: CLOSED_PUBLISHED
+GOVERNANCE_COMMIT: a7da2e46902273f6724b21dffc5854f11e920c26
+GOVERNANCE_COMMIT_NOTE: branch-local AGENTS appendix, non-propagating
+
+RECLASSIFICATION:
+FI00_STATUS: REVALIDATE
+FI01_STATUS: REVALIDATE
+FI02_FUNCTIONAL_STATUS: PRESERVE_IF_VERIFIED
+FI02_VISUAL_MEDIA_MOTION_STATUS: REOPENED
+FI03_FUNCTIONAL_STATUS: PRESERVE_IF_VERIFIED
+FI03_VISUAL_STATUS: REVALIDATE
+PREVIEW_MODULE_INDEX_STATUS: NOT_IMPLEMENTED
+FI04_STATUS: BLOCKED
+
+MODEL_CONTRACT: GPT-5.6 Sol Max sole read-only orchestrator/final reviewer (Sol writes forbidden, only Sol spawns, depth one, no recursion/substitution); DeepSeek V4 Pro #1 sole canonical writer; DS #2-#16 read-only default; Ox Alpha #1-#16 read-only adversarial reviewers; Terra not default, explicit bounded Sol Max fallback only if DeepSeek cannot safely finish.
+
+FIRST_WAVE: 8 DeepSeek + 8 Ox Alpha total including canonical writer; reserve agents only when evidence warrants.
+
+GUARDED_PREVIEW: http://127.0.0.1:4173 (identity/environment signal needs reverify before use)
 PRODUCTION_DEPLOYMENT: FORBIDDEN
-BLOCKER: NONE_FOR_BRANCH_PUBLICATION;MAIN_AND_V084_PROPAGATION_REMAIN_CONDITIONAL_ON_PRESERVATION_GATES
-HANDOFF_STATUS: CLOSED_ATOMIC_PUBLICATION_READY
-NEXT_EXACT_ACTION: PUBLISH_THIS_COMMIT_VERIFY_REMOTE_PARITY_THEN_CONDITIONALLY_PROMOTE_MAIN_AND_UPDATE_V084_BASELINE
+PRODUCTION_DATA_WRITE: FORBIDDEN
+PROVIDER_WRITE: FORBIDDEN
+FIGMA_WRITE: FORBIDDEN
+BACKEND_SEMANTIC_CHANGE: FORBIDDEN (unless separately amended)
+MIGRATION: FORBIDDEN
+
+ROLLBACK: Git revert product commits; preserve FVR-001 and rollback tag; Playground repair only via recorded existing runbook recovery; no Production/Figma rollback because no writes.
+
+OPEN_RISKS: hero-video authority conflict possible; public media baseline root cause unclassified; Ox Alpha/model route availability unverified; safe existing server-validated Index signal unverified.
+
+NEXT_EXACT_ACTION: dispatch bounded first-wave read-only DeepSeek/Ox audit lanes and inspect current live Figma/localhost/Playground evidence before any repair.
