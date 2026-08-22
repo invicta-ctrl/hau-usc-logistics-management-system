@@ -132,6 +132,28 @@ export function PreviewIndexPage({
     headingRef.current?.focus();
   }, []);
 
+  useEffect(() => {
+    const skipLink = document.querySelector<HTMLAnchorElement>(".skip-link");
+    if (!skipLink) return;
+
+    const activate = (event: Event) => {
+      event.preventDefault();
+      headingRef.current?.focus();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === " ") {
+        activate(event);
+      }
+    };
+
+    skipLink.addEventListener("click", activate);
+    skipLink.addEventListener("keydown", onKeyDown);
+    return () => {
+      skipLink.removeEventListener("click", activate);
+      skipLink.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
   const surfaceEntry = useMemo(
     () => (surfaceRoute ? listPreviewRoutes().find((entry) => entry.route === surfaceRoute) ?? null : null),
     [surfaceRoute],
@@ -170,7 +192,7 @@ export function PreviewIndexPage({
   };
 
   return (
-    <main id="preview-index" className="preview-index" data-preview-index>
+    <main id="main-content" className="preview-index" data-preview-index>
       <div className="preview-index-inner">
         <header className="preview-index-header">
           <div>

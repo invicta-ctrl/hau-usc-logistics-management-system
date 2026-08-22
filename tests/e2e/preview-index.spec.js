@@ -234,3 +234,35 @@ test('honors reduced motion on the preview index surface', async ({ page }) => {
   expect(parseFloat(duration)).toBeGreaterThan(0);
   expect(parseFloat(duration)).toBeLessThan(0.001);
 });
+
+test('keeps skip link on the Index and focuses the heading without changing the hash', async ({ page }) => {
+  await installVersion(page, true);
+  await installEmptyFeed(page);
+  await page.goto('/#/__preview/index');
+  await expect(page.locator('[data-preview-index]')).toBeVisible();
+
+  const skipLink = page.getByRole('link', { name: 'Skip to main content' });
+
+  // Starts off-canvas.
+  const offscreenTop = await skipLink.evaluate((element) => element.getBoundingClientRect().top);
+  expect(offscreenTop).toBeLessThan(0);
+
+  // Reset focus to the document start so Tab reaches the skip link first.
+  await page.evaluate(() => {
+    document.body.setAttribute('tabindex', '-1');
+    document.body.focus();
+  });
+
+  // Tab focuses and brings it into the viewport.
+  await page.keyboard.press('Tab');
+  await expect(skipLink).toBeFocused();
+  await expect
+    .poll(() => skipLink.evaluate((element) => element.getBoundingClientRect().top))
+    .toBeGreaterThanOrEqual(0);
+
+  // Enter keeps the exact Index hash, keeps Index rendered, and focuses the heading.
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/#\/__preview\/index$/u);
+  await expect(page.locator('[data-preview-index]')).toBeVisible();
+  await expect(page.locator('[data-preview-index] h1')).toBeFocused();
+});

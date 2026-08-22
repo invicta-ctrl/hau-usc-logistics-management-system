@@ -1,0 +1,35 @@
+.skip-link {
+  position: fixed;
+  inset-block-start: 0.75rem;
+  inset-inline-start: 0.75rem;
+  z-index: var(--z-modal);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  color: var(--foreground);
+  background: var(--card);
+  box-shadow: var(--glass-shadow-raised);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  transform: translateY(-150%);
+  transition: transform var(--dur-state) var(--ease-out);
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link {
+    transition-duration: 0.01ms !important;
+  }
+}
