@@ -12,7 +12,7 @@ TASK_ROUTING:
 
 OBJECTIVE: Authority/governance activation of the two FVR-02-A2 amendments (Ox-first routing; local preview resilience) followed by the persistent local preview supervisor repair slice. Product changes and the preview Module Index remain out of scope.
 
-SLICE_STATUS: FVR-02-A2 local preview final corrective slice implemented and unit-verified; first (346f4bf), second (ac2d722), third (2d66d9d), fourth (b718ba1), fifth (ee412d4), sixth (9ad2d35), and seventh (adf52f8, runtime-discovered binding defect) passes all failed parent/Ox review; live runtime acceptance deferred to parent.
+SLICE_STATUS: FVR-02-A2 local preview accepted after live runtime verification (correction commit 4cbb921). Prior passes 346f4bf/ac2d722/2d66d9d/b718ba1/ee412d4/9ad2d35/adf52f8 failed parent/Ox review. Next active step: remaining original FVR-02 frontend/media/motion/index implementation.
 
 TARGET: frontend-design-integration worktree; generated frontend artifacts; guarded Playground preview; public media/CurrentSection chain; HeroSection/HeroMotion; preview Module Index/Surface Preview/Test Real Login Flow; local preview supervisor/launcher.
 
@@ -26,7 +26,7 @@ AUTHORITY: Earl current instruction -> accepted FVR-02 spec -> accepted FVR-02-A
 REQUIRED_MODEL: GPT-5.6_SOL_MAX
 ACTIVE_WRITER: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v2
 WRITER_LOCK: ACQUIRED
-PHASE: A2_LOCAL_PREVIEW_REPAIR_THEN_RESUME_FVR02
+PHASE: FVR02_FRONTEND_MEDIA_MOTION_INDEX_IMPLEMENTATION
 
 RECLASSIFICATION: FI-00 REVALIDATE; FI-01 REVALIDATE; FI-02 FUNCTIONAL PRESERVE_IF_VERIFIED; FI-02 VISUAL/MEDIA/MOTION REOPENED; FI-03 FUNCTIONAL PRESERVE_IF_VERIFIED; FI-03 VISUAL REVALIDATE; PREVIEW MODULE INDEX NOT_IMPLEMENTED; FI-04 BLOCKED.
 
@@ -45,7 +45,7 @@ DELEGATION:
 
 MODEL_CONTRACT (A2 Ox-first): Ox Alpha is the default read-only subagent for all safe review/scout/audit domains via openrouter/stealth/ox-alpha; DeepSeek #1 stays canonical writer; additional DeepSeek is exceptional heavy-analysis only with WHY_DEEPSEEK_NOT_OX; fork_turns none/narrow capsules for Ox; no silent substitution; one writer; concurrency ceiling unchanged; Ox writer failover only under separately accepted FVR-02-A1 exhaustion authority.
 
-LISTENER_EVIDENCE: 2026-08-22 read-only observation -> http://127.0.0.1:4173/ NO_LISTENER, HTTP actively refused. No preview started/stopped or external state mutated during this activation.
+LISTENER_EVIDENCE: 2026-08-22 -> initial activation observed http://127.0.0.1:4173/ NO_LISTENER; after parent live acceptance the preview is RUNNING healthy (no machine PIDs/token/port/instance recorded).
 
 STATUS: ACTIVE_FVR02
-NEXT_EXACT_ACTION: parent performs live runtime acceptance of the persistent preview (start/status/restart/stop and owned-child forced exit against the real private manifest), then resume FVR-02 audit-first phases under Ox-first routing.
+NEXT_EXACT_ACTION: resume the remaining original FVR-02 frontend/media/motion/index implementation under Ox-first routing, preserving the known hero-video authority conflict and public-media source/runbook blockers.

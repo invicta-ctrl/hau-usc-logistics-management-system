@@ -3,12 +3,12 @@
 PROGRAM: HAU-USC Logistics
 MILESTONE: FVR-02_FULL_FRONTEND_RECOVERY_MEDIA_MOTION_INDEX
 STATUS: ACTIVE_FVR02
-PHASE: A2_LOCAL_PREVIEW_REPAIR_THEN_RESUME_FVR02
-LOCAL_PREVIEW_REPAIR: FINAL_CORRECTION_UNIT_VERIFIED_PENDING_RUNTIME_ACCEPTANCE;REVIEWED_346f4bf_FAILED;ac2d722_FAILED;2d66d9d_FAILED;b718ba1_FAILED;ee412d4_FAILED;9ad2d35_FAILED;adf52f8_RUNTIME_FAILED
+PHASE: FVR02_FRONTEND_MEDIA_MOTION_INDEX_IMPLEMENTATION
+LOCAL_PREVIEW_REPAIR: ACCEPTED_LIVE_RUNTIME_VERIFIED;CORRECTION_COMMIT_4cbb921;PRIOR_PASSES_346f4bf_ac2d722_2d66d9d_b718ba1_ee412d4_9ad2d35_adf52f8_FAILED
 BRANCH: frontend-design-integration
 HEAD: RESOLVE_FROM_LIVE_GIT_HEAD
 BASELINE_HEAD: RESOLVE_FROM_LIVE_GIT
-LAST_VERIFIED_AHEAD_BEHIND: BEHIND_0_AHEAD_7 (pre-correction; resolve current from live Git)
+LAST_VERIFIED_AHEAD_BEHIND: BEHIND_0_AHEAD_13 (pre-live-acceptance checkpoint; resolve current from live Git)
 UPSTREAM: origin/frontend-design-integration@e93e5c97fdb44f85f1b6ac1b578c9014a77b6166
 AHEAD_BEHIND: RESOLVE_FROM_LIVE_GIT
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
@@ -44,11 +44,11 @@ MODEL_CONTRACT: GPT-5.6 Sol Max sole read-only orchestrator/final reviewer (Sol 
 
 FIRST_WAVE: Ox-first; routine read-only lanes default to Ox Alpha; DeepSeek reserved for the canonical writer and exceptional heavy-analysis lanes; no invented lane IDs or results.
 
-LISTENER_EVIDENCE: 2026-08-22 read-only observation -> http://127.0.0.1:4173/ NO_LISTENER, HTTP actively refused (ERR_CONNECTION_REFUSED). No external mutation performed; no preview started or stopped during this activation.
+LISTENER_EVIDENCE: 2026-08-22 -> initial A2 activation observed http://127.0.0.1:4173/ NO_LISTENER; after parent live acceptance the preview is RUNNING healthy (no machine PIDs/token/port/instance recorded).
 PREVIEW_PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 PREVIEW_RECEIPT: .codex/FVR02_A2_LOCAL_PREVIEW_RECEIPT.md
 
-GUARDED_PREVIEW: http://127.0.0.1:4173 (no healthy listener at A2 activation; identity/environment signal to be reverified by the A2 local preview repair)
+GUARDED_PREVIEW: http://127.0.0.1:4173 RUNNING healthy (parent-verified; leave running)
 PRODUCTION_DEPLOYMENT: FORBIDDEN
 PRODUCTION_DATA_WRITE: FORBIDDEN
 PROVIDER_WRITE: FORBIDDEN
@@ -58,6 +58,6 @@ MIGRATION: FORBIDDEN
 
 ROLLBACK: Git revert product commits; preserve FVR-001 and rollback tag; Playground repair only via recorded existing runbook recovery; no Production/Figma rollback because no writes.
 
-OPEN_RISKS: hero-video authority conflict possible; public media baseline root cause unclassified; Ox Alpha/model route availability to be reverified at dispatch; safe existing server-validated Index signal unverified.
+OPEN_RISKS: hero-video authority conflict (blocker); public-media source/runbook gap (blocker); Ox Alpha/model route availability to be reverified at dispatch; safe existing server-validated Index signal unverified.
 
-NEXT_EXACT_ACTION: parent performs live runtime acceptance of the persistent preview (start/status/restart/stop and owned-child forced exit against the real private manifest), then resume FVR-02 audit-first phases under Ox-first routing.
+NEXT_EXACT_ACTION: resume the remaining original FVR-02 frontend/media/motion/index implementation under Ox-first routing, preserving the known hero-video authority conflict and public-media source/runbook blockers.

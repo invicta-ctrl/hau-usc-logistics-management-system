@@ -1,6 +1,6 @@
 # FVR-02-A2 Local Preview Resilience Receipt
 
-STATUS: IMPLEMENTED_UNIT_VERIFIED_PENDING_RUNTIME_ACCEPTANCE
+STATUS: ACCEPTED_LIVE_RUNTIME_VERIFIED
 OWNER: Earl
 DATE: 2026-08-22
 CANONICAL_WRITER: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v2
@@ -23,7 +23,7 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 - SIXTH_PASS_REVIEW: FAILED static concurrency review (readiness verified only before its awaited fetch, so a stale probe for a replaced child could promote RUNNING; independent atomic renames were unordered so a delayed stale RUNNING write could win after RESTARTING).
 - SEVENTH_PASS_COMMIT: adf52f8f8b7f65ad7b253da6eb17953b4603078a
 - SEVENTH_PASS_REVIEW: runtime-discovered production-binding defect (the first authorized positional-manifest start failed safely before state/listener with `The "path" argument must be of type string. Received an instance of Object`; `claimState`, `clearClaim`, and `safeClearStateIfDead` were assigned directly as defaults but invoked with a mismatched arity, so the state object reached `path.join`). Parent verified state absent and listener count 0.
-- FINAL_CORRECTION: implemented in the final corrective commit. Live runtime acceptance is NOT claimed.
+- FINAL_CORRECTION: implemented in the final corrective commit `4cbb921`. Live runtime acceptance was subsequently performed and PASSED; this receipt records that evidence. No runtime PASS was claimed before the parent executed it.
 
 ## Implemented result
 
@@ -65,9 +65,23 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 
 Windows file-permission note: the state file is created with `0o600` intent; on Windows the inherited user ACL is preserved because deterministic ACL tightening would require risky shell behavior. This is not overclaimed as a cross-platform 0600 guarantee.
 
-## Not performed (pending parent runtime acceptance)
+## Live acceptance evidence (parent-executed, 2026-08-22)
 
-- Live runtime acceptance against the real private manifest (start/status/restart/stop and owned-child forced-exit) was intentionally NOT run in this slice; the parent will perform that after review. No real preview was started or stopped, and no private manifest was read here beyond guarded resolution design.
+No machine PIDs, control port, owner token, instance ID, private manifest path/hostname, or manifest contents are recorded here; only identity-safe outcomes are listed.
+
+- INITIAL_LIVE_ATTEMPT: first authorized positional-manifest start at `adf52f8` failed safely before any state/listener with the production default-binding TypeError (`The "path" argument must be of type string. Received an instance of Object`); parent confirmed state absent and listener count 0. Corrected by `4cbb921`.
+- SECOND_START: persistent start succeeded and reached RUNNING healthy.
+- HTTP_ROOT: 200, HTML with the application marker: PASS.
+- HASH_HERO_ROUTE: `/#hero` browser route: PASS.
+- HMR: `/@vite/client` 200 and live browser WebSocket/HMR: PASS.
+- NO_DUPLICATE: a second start reused the identical supervisor/Vite pair and created no duplicate: PASS.
+- OWNED_CHILD_FORCED_EXIT: exact WMI identity proof (Node executable, repository `vite.js` command, loopback `127.0.0.1:4173` with strictPort, parent supervisor relationship) preceded force-exit of only the owned Vite child; the supervisor remained alive and a new child recovered to healthy/root: PASS.
+- AUTHENTICATED_RESTART: explicit restart produced a new healthy child under the same supervisor: PASS.
+- AUTHENTICATED_STOP: stop removed state, listener, and owned processes and the preview remained stopped beyond the backoff window: PASS.
+- UNKNOWN_LISTENER: a controlled owned dummy listener on 4173 produced the exact `STOP_PORT_4173_OWNERSHIP_UNKNOWN` failure, remained alive and unchanged, and created no preview state; the dummy was terminated only via its owning exec session: PASS.
+- FINAL_PERSISTENT_START: final persistent start succeeded; final status RUNNING healthy; browser `/#hero` and HMR WebSocket reverified; preview left running: PASS.
+- PLAYGROUND_PROXY_GUARD: PASS.
+- PRODUCTION_CROSSOVER: 0.
 
 ## Forbidden-action counters
 
