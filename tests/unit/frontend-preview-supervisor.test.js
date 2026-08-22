@@ -726,4 +726,60 @@ describe('final P1 truth regressions', () => {
       viteArguments: [],
     });
   });
+
+  it('stop during deferred readiness promotion ends STOPPED reason stopped and never starts the health timer', async () => {
+    const { supervisor } = buildSupervisor();
+    let resolveWrite;
+    supervisor.writeState = vi.fn(async () => {
+      await new Promise((resolve) => {
+        resolveWrite = resolve;
+      });
+    });
+    supervisor.clearState = vi.fn(async () => {});
+    supervisor.closeControl = vi.fn(async () => {});
+    supervisor.child = fakeChild(7001);
+    supervisor.startHealthLoop = vi.fn(() => {
+      supervisor.healthTimer = { unref: vi.fn() };
+    });
+    const ready = supervisor.waitReady(1000);
+    await vi.waitFor(() => expect(supervisor.writeState).toHaveBeenCalled());
+    supervisor.requestStop();
+    resolveWrite();
+    await expect(ready).rejects.toThrow('Stop requested during lifecycle state write');
+    expect(supervisor.state).toBe('STOPPED');
+    expect(supervisor.terminationReason).toBe('stopped');
+    expect(supervisor.clearState).toHaveBeenCalled();
+  });
+
+  it('stop during deferred health-tick healthy update ends STOPPED and clears the health timer', async () => {
+    const { supervisor } = buildSupervisor();
+    let resolveWrite;
+    supervisor.writeState = vi.fn(async () => {
+      await new Promise((resolve) => {
+        resolveWrite = resolve;
+      });
+    });
+    supervisor.clearState = vi.fn(async () => {});
+    supervisor.closeControl = vi.fn(async () => {});
+    supervisor.child = fakeChild(7002);
+    supervisor.healthy = false;
+    const tick = supervisor.healthTick();
+    await vi.waitFor(() => expect(supervisor.writeState).toHaveBeenCalled());
+    supervisor.requestStop();
+    resolveWrite();
+    await expect(tick).rejects.toThrow('Stop requested during lifecycle state write');
+    expect(supervisor.state).toBe('STOPPED');
+    expect(supervisor.terminationReason).toBe('stopped');
+  });
+
+  it('stop racing restart-loop selection produces stopped, not loop', async () => {
+    const { supervisor } = buildSupervisor();
+    supervisor.finalize = vi.fn(async () => {});
+    supervisor.isRestartLoop = vi.fn(() => {
+      supervisor.shutdownRequested = true;
+      return true;
+    });
+    await supervisor.performRestart();
+    expect(supervisor.finalize).toHaveBeenCalledWith('stopped', 0);
+  });
 });

@@ -17,6 +17,8 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 - THIRD_PASS_REVIEW: FAILED static acceptance (truthful restart transition before backoff and dead-pid advertisement; readiness-timeout live adopted supervisor cleanup; plus stop-during-backoff race, terminal-loop inspectability, identity-safe bounded logs, and positional manifest CLI form).
 - FOURTH_PASS_COMMIT: b718ba19811946297d715dd7c304809ac7653e0e
 - FOURTH_PASS_REVIEW: FAILED static concurrency review (stop racing async pre-spawn verification and the RESTARTING state write; stop-during-backoff test bypassed the real stop path).
+- FIFTH_PASS_COMMIT: ee412d4e41df487d96571f51a99d430e52f38041
+- FIFTH_PASS_REVIEW: FAILED static concurrency review (readiness promotion and both health-loop writes still used direct raceable state writes; stop-won cleanup did not set in-memory STOPPED/terminationReason; restart-loop selection did not prefer expected stop).
 - FINAL_CORRECTION: implemented in the final corrective commit. Live runtime acceptance is NOT claimed.
 
 ## Implemented result
@@ -40,6 +42,9 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 - `preview:frontend:start`/`restart` accept the owner-facing positional manifest form (`npm run ... -- <absolute-manifest>`) as well as `--manifest`, with Vite args still separated after `--`.
 - A shared stop-wins reconciliation re-checks shutdown after every awaited pre-spawn verification boundary (manifest resolution, port preflight, immediately before spawn) and after every awaited lifecycle state write (post-spawn STARTING and RESTARTING writes). Stop that appears during those windows terminates the owned child, closes the control server, clears state, and aborts the transition, so no untracked child or recreated state survives.
 - `performRestart()` guards against shutdown before any restart mutation/write; a stop that lands mid-restart write is reconciled so the expected-stop terminal cleanup wins.
+- Every externally raceable lifecycle write now routes through the shared stop-wins reconciliation, including readiness promotion (RUNNING) and both health-loop writes (unhealthy→healthy and sustained-health counter reset). The only remaining direct `writeState()` is the initial startup publication inside `run()`, which is non-raceable because signal handlers are installed only after it and no authenticated stop can exist before the owner token/control port is first published.
+- Stop-won cleanup now idempotently establishes in-memory STOPPED + terminationReason `stopped` and clears the health timer, so callers classify it as EXPECTED STOP rather than fatal/start_failed/restart_failed, and the health timer is never started after shutdown wins.
+- Restart-loop selection now prefers expected stop: if shutdown appears before terminal loop preservation, the supervisor finalizes `stopped` instead of retaining a `loop` terminal record.
 - `scripts/start-frontend-playground-preview.mjs` is a thin CLI with `dev` (preserved foreground), `start`, `status`, `restart`, and `stop` modes; persistent `start` preserves `-- <vite args>` and restart reuses the canonical path with re-resolution.
 - `package.json` adds `preview:frontend:start`, `preview:frontend:status`, `preview:frontend:restart`, `preview:frontend:stop`, and keeps `dev:frontend:playground` (now explicit `dev` mode).
 
@@ -47,7 +52,7 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 
 - `git diff --check`: PASS.
 - `node scripts/check-agent-instructions.mjs`: PASS (12 project files).
-- Focused unit: `npx vitest run tests/unit/frontend-preview-supervisor.test.js tests/unit/frontend-playground-guard.test.js`: PASS (2 files, 44 tests).
+- Focused unit: `npx vitest run tests/unit/frontend-preview-supervisor.test.js tests/unit/frontend-playground-guard.test.js`: PASS (2 files, 47 tests).
 - Focused eslint on the three changed JS files: PASS (no findings).
 - `node --check` on both changed scripts: PASS.
 

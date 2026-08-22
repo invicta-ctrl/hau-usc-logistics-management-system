@@ -451,8 +451,14 @@ export class PreviewSupervisor {
   }
 
   async stopWonCleanup() {
+    this.shutdownRequested = true;
+    this.state = 'STOPPED';
+    this.terminationReason = 'stopped';
+    this.healthy = false;
     this.log('info', 'stop won over an in-flight lifecycle transition');
     await this.closeControl();
+    if (this.healthTimer) clearInterval(this.healthTimer);
+    this.healthTimer = null;
     if (this.child && this.child.exitCode === null && !this.child.killed) {
       try {
         if (this.terminateTreeForce) await this.terminateTreeForce(this.child.pid);
@@ -565,7 +571,7 @@ export class PreviewSupervisor {
         this.state = 'RUNNING';
         this.lastHealthyAt = new Date(this.now()).toISOString();
         this.healthySince = this.now();
-        await this.writeState();
+        await this.writeLifecycleState();
         this.log('info', 'preview healthy');
         this.log('info', `vite child ready pid=${this.child?.pid ?? 'unknown'}`);
         return true;
@@ -601,8 +607,13 @@ export class PreviewSupervisor {
     try {
       this.restartCount += 1;
       if (this.isRestartLoop()) {
-        this.log('error', 'PREVIEW_RESTART_LOOP_DETECTED');
-        await this.finalize('loop', 1);
+        if (this.shutdownRequested) {
+          this.log('info', 'stop requested before terminal loop preservation');
+          await this.finalize('stopped', 0);
+        } else {
+          this.log('error', 'PREVIEW_RESTART_LOOP_DETECTED');
+          await this.finalize('loop', 1);
+        }
         return;
       }
       const delay = backoffDelay(this.restartCount);
@@ -631,8 +642,10 @@ export class PreviewSupervisor {
           this.log('info', `vite restart succeeded pid=${this.child?.pid ?? 'unknown'}`);
         }
       } catch (error) {
-        this.log('error', `restart failed: ${error?.message ?? 'unknown'}`);
-        await this.finalize('start_failed', 1);
+        if (!this.shutdownRequested) {
+          this.log('error', `restart failed: ${error?.message ?? 'unknown'}`);
+          await this.finalize('start_failed', 1);
+        }
       }
     } finally {
       this.restarting = false;
@@ -642,7 +655,9 @@ export class PreviewSupervisor {
   startHealthLoop() {
     if (this.healthTimer) return;
     this.healthTimer = setInterval(() => {
-      this.healthTick().catch((error) => this.log('error', `health tick failed: ${error?.message ?? 'unknown'}`));
+      this.healthTick().catch((error) => {
+        if (!this.shutdownRequested) this.log('error', `health tick failed: ${error?.message ?? 'unknown'}`);
+      });
     }, HEALTH_INTERVAL_MS);
     this.healthTimer.unref?.();
   }
@@ -657,11 +672,11 @@ export class PreviewSupervisor {
         this.state = 'RUNNING';
         this.lastHealthyAt = new Date(this.now()).toISOString();
         this.healthySince = this.healthySince ?? this.now();
-        await this.writeState();
+        await this.writeLifecycleState();
       } else if (this.healthySince && this.now() - this.healthySince >= SUSTAINED_HEALTHY_MS) {
         this.restartCount = 0;
         this.restartTimestamps = [];
-        await this.writeState();
+        await this.writeLifecycleState();
       }
       return;
     }
@@ -792,8 +807,10 @@ export class PreviewSupervisor {
       }
       this.startHealthLoop();
     } catch (error) {
-      this.log('error', `fatal: ${error?.message ?? 'unknown'}`);
-      await this.finalize('start_failed', 1);
+      if (!this.shutdownRequested) {
+        this.log('error', `fatal: ${error?.message ?? 'unknown'}`);
+        await this.finalize('start_failed', 1);
+      }
     }
   }
 }

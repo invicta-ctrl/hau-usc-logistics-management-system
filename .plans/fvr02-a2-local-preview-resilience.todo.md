@@ -32,7 +32,7 @@ FVR-02-A2 "Local Preview Resilience / Auto-Recovery Amendment" (accepted: `.code
 
 ## Status
 
-In progress. Only this local-preview slice is active. First-pass 346f4bf0b5e6a78308305393d72385d44f3d98ee, second-pass ac2d7227314acb923a55657f4e7fb09870f8d9b2, third-pass 2d66d9d35b09aa401436b41283f8fd4853e03b95, and fourth-pass b718ba19811946297d715dd7c304809ac7653e0e all failed parent/Ox review; the final corrective commit closed the remaining stop-during-verification and stop-during-restart-write races. Live runtime acceptance is still pending and is not claimed.
+In progress. Only this local-preview slice is active. First-pass 346f4bf0b5e6a78308305393d72385d44f3d98ee, second-pass ac2d7227314acb923a55657f4e7fb09870f8d9b2, third-pass 2d66d9d35b09aa401436b41283f8fd4853e03b95, fourth-pass b718ba19811946297d715dd7c304809ac7653e0e, and fifth-pass ee412d4e41df487d96571f51a99d430e52f38041 all failed parent/Ox review; the final corrective commit closed the remaining readiness/health-loop write races and expected-stop classification gaps. Live runtime acceptance is still pending and is not claimed.
 
 ## Context
 
@@ -158,6 +158,7 @@ None beyond the preview launcher and package scripts.
 - Second pass (ac2d722) closed many gaps but left Windows tree termination unwired in the standalone supervisor, unsafe Vite arg forwarding, stale lifecycle truth across replacement launches, unhealthy-authenticated-start handling, own-claim cleanup on startup failure, identity-bearing control acks, pending-claim PID/port recovery, response-body overflow, and 0600/atomic-update truth.
 - Third pass (2d66d9d) closed the second-pass gaps but left truthful restart transition before backoff/dead-pid advertisement, readiness-timeout live adopted supervisor cleanup, stop-during-restart-backoff race, terminal-loop inspectability, identity-safe bounded logs, and positional manifest CLI form.
 - Fourth pass (b718ba1) closed the third-pass gaps but left stop racing async pre-spawn verification and stop racing the RESTARTING state write.
+- Fifth pass (ee412d4) closed the fourth-pass gaps but left readiness promotion and health-loop writes raceable and stop-won cleanup without in-memory terminal state.
 - Final correction (this active slice) closes the remaining gaps; see `.codex/FVR02_A2_LOCAL_PREVIEW_RECEIPT.md`.
 
 ## Blockers (recorded; not part of this slice)
