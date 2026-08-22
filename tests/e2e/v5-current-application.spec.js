@@ -1651,8 +1651,12 @@ test('light and dark V5 themes remain usable at the configured responsive width'
     'HAU-USC Logistics coordinates equipment and supply services through a governed record—from first request to confirmed return.',
   );
   const heroMedia = page.locator('.landing-hero__institutional-media');
+  const masthead = page.locator('.public--landing .public__bar');
   await expect(page.locator('.landing-current')).toHaveAttribute('data-advertisement-state', 'empty');
   await expect(heroMedia).toBeVisible();
+  await expect(heroMedia).toHaveAttribute('src', /^data:image\/webp;base64,UklGRvB/);
+  await expect(masthead).toBeVisible();
+  await expect(masthead).toHaveCSS('visibility', 'visible');
   await expect(page.locator('.landing-hero__actions .btn--primary')).toHaveText(/Start a logistics request/u);
   await expect(page.getByRole('link', { name: 'Track request', exact: true })).toHaveAttribute(
     'href',
@@ -1698,6 +1702,11 @@ test('light and dark V5 themes remain usable at the configured responsive width'
   await themeToggle.click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('.public--landing .public__wordmark b')).toHaveCSS('color', 'rgb(255, 248, 229)');
+  await expect(page.locator('.landing-current .landing-section-head h2')).toHaveCSS(
+    'color',
+    'rgb(36, 20, 22)',
+  );
   await expectNoHorizontalOverflow(page);
 
   await expect(themeToggle).toHaveAttribute('aria-label', 'Switch to light mode');

@@ -2,7 +2,7 @@
 
 PROGRAM: HAU-USC Logistics
 MILESTONE: FRONTEND_INTEGRATION_LIVE_FIGMA_AUTHORITY_AUDIT_REPAIR
-STATUS: FI02_LIVE_MAKE_VISUAL_REPAIR_COMPLETE
+STATUS: FI02_OWNER_COMPARISON_VISUAL_REPAIR_COMPLETE_AWAITING_OWNER_ROOT_ACCEPTANCE
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
@@ -15,8 +15,8 @@ CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/frontend-integration-live-figma-authority-fi00-fi03-audit-repair-amendment.md
 BLOCKER: FALSE
-HANDOFF_STATUS: READY_FOR_OWNER_ROOT_FI02_ACCEPTANCE
-NEXT_EXACT_ACTION: OWNER_ROOT_ACCEPTANCE_OF_FI02_REPAIR;DO_NOT_START_FI04_AUTOMATICALLY
+HANDOFF_STATUS: FI02_OWNER_ROOT_ACCEPTANCE_READY;FI04_NOT_STARTED
+NEXT_EXACT_ACTION: OWNER_ROOT_REVIEW_FI02_REPAIR_AND_DECIDE_SEPARATE_FI04_AUTHORITY
 
 PROGRAM_BASELINE: v0.8.3 functional contracts remain authoritative
 ADOPTION_BASELINE_HEAD: 32a8ed71e7f6275124e9d734d9a32984bac90a27
@@ -40,7 +40,7 @@ FALLBACK_EXPORTS: PARTIAL_EVIDENCE_ONLY
 
 FI00_STATUS: VERIFIED_NO_OP
 FI01_STATUS: VERIFIED_NO_OP
-FI02_STATUS: FUNCTIONAL_PASS;VISUAL_PASS_REPAIRED_AGAINST_LIVE_MAKE_V39
+FI02_STATUS: FUNCTIONAL_PASS;DIRECT_LOCAL_VISUAL_REPAIR_COMPLETE;OWNER_ROOT_ACCEPTANCE_PENDING
 FI03_STATUS: FUNCTIONAL_PASS;VISUAL_PASS
 FI04_STATUS: READY_FOR_SEPARATE_ACCEPTED_AUTHORITY
 
@@ -56,3 +56,5 @@ FIGMA_WRITE: FORBIDDEN
 PRODUCTION_WRITE: FORBIDDEN
 
 FI02_REOPEN_RECEIPT: 2026-08-22 — Earl rejected the prior FI-02 visual acceptance because localhost structure remained materially stale versus live Make v39. Historical evidence is preserved; the repair receipt in docs/design/FRONTEND_FI00_FI03_LIVE_FIGMA_AUDIT_REGISTER.md supersedes the stale FI02 VISUAL_PASS claim with verified current composition and state-projection evidence.
+FI02_OWNER_COMPARISON_REOPEN_RECEIPT: 2026-08-22 — independent 1440×1000 comparison found the masthead absent from rendered viewport, old `/brand/login-background` hero media, and unreadable dark-theme Current heading. Repair is limited to those Make-v39 deltas.
+FI02_OWNER_COMPARISON_CLOSEOUT: 2026-08-22 — the legacy floating/glass masthead cascade is superseded by a visible 76px (60px compact) maroon Make band; the landing now embeds the exact Make `heroPoster.ts` WebP data URI rather than `/brand/login-background`; dark masthead, Current, hub, and footer foregrounds use verified cream/ink contrast. Direct 1440×1000 and 390×844 light/dark local renders were inspected; focused state, responsive, visual, build, dist, governance, and handoff gates passed. Normal commit/push/readback is the only external write; FI-04 remains unstarted.

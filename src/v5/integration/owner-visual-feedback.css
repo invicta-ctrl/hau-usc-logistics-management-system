@@ -379,6 +379,58 @@
   }
 }
 
+/* FI-02 owner-comparison repair: keep the Make masthead as a visible, fixed
+   76px maroon band directly below development chrome. It deliberately avoids
+   the legacy glass override that made the DOM shell disappear into the hero. */
+.public--landing .public__bar {
+  background: #40070a;
+  display: flex;
+  height: 76px;
+  isolation: isolate;
+  min-height: 76px;
+  position: sticky;
+  top: var(--preview-bar-h, 0px);
+  visibility: visible;
+  z-index: 110;
+}
+
+.public--landing .public__bar::before {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.06), transparent 48%);
+  content: '';
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+}
+
+/* Make's Current panel remains warm paper in both supported themes; pin the
+   contrast-bearing text values instead of inheriting dark surface ink. */
+[data-theme='dark'] .landing-current {
+  background: #fffdf8;
+  color: #241416;
+}
+
+[data-theme='dark'] .landing-current .landing-section-head h2,
+[data-theme='dark'] .landing-current__card h3 {
+  color: #241416;
+}
+
+[data-theme='dark'] .landing-current__card {
+  background: #ffffff;
+  border-color: #e6dcc9;
+}
+
+[data-theme='dark'] .landing-current__summary {
+  color: #6f5a60;
+}
+
+@media (max-width: 720px) {
+  .public--landing .public__bar {
+    height: 60px;
+    min-height: 60px;
+  }
+}
+
 @media (max-width: 390px) {
   .public__marks {
     gap: 4px;
@@ -491,4 +543,24 @@
   .public--landing .landing-hero h1 {
     font-size: clamp(43px, 13vw, 64px);
   }
+}
+
+/* The masthead stays oxblood in both themes, so it must not inherit the dark
+   theme's dark paper token for its primary wordmark. */
+[data-theme='dark'] .public--landing .public__wordmark b {
+  color: #fff8e5;
+}
+
+/* Make keeps the hub and footer oxblood in dark mode too; pin their
+   foregrounds rather than inheriting dark-surface paper into maroon. */
+[data-theme='dark'] .landing-hub,
+[data-theme='dark'] .public__foot--landing {
+  color: #fff8e5;
+}
+
+[data-theme='dark'] .landing-section-head--dark h2,
+[data-theme='dark'] .landing-hub__action,
+[data-theme='dark'] .landing-footer__identity b,
+[data-theme='dark'] .landing-footer__group a {
+  color: #fff8e5;
 }

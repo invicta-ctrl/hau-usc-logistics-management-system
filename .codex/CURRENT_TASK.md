@@ -17,11 +17,12 @@ SCOPE: FI-02 landing/public shell only: Make-v39 hero, Current, Logistics hub an
 OUT_OF_SCOPE: FI-00/FI-01/FI-03/FI-04 source changes; backend/API/auth/data/schema/migration/provider changes; D1/R2/Google writes; Figma writes; Playground or Production deployment; dependency changes; unsupported routes, features, fabricated data, or deletion of historical evidence.
 VERIFICATION: Figma MCP identity and Design access; authenticated browser Make access; bounded visual evidence register; local-preview comparison; route/state contract checks; 320/390/768/1024/1440; supported light/dark; keyboard/focus; reduced motion; 200% zoom; no overflow; applicable accessibility checks; focused tests first; broader invalidated gates once; complete logical diff; normal commit/push/readback.
 STOP_CONDITIONS: Conflicting writer; unexpected dirty work; live Make/Design conflict on a load-bearing fact; unsupported runtime behavior implied by design; required backend/auth/data/migration/provider change; Figma access failure after one supported reauthentication attempt; Make browser access failure; private-data exposure; Production crossover; mandatory verification failure.
-NEXT_EXACT_ACTION: OWNER_ROOT_ACCEPTANCE_OF_FI02_REPAIR;DO_NOT_START_FI04_AUTOMATICALLY
+NEXT_EXACT_ACTION: OWNER_ROOT_REVIEW_FI02_REPAIR_AND_DECIDE_SEPARATE_FI04_AUTHORITY
 
 FUNCTIONAL_BASELINE: v0.8.3 repository and accepted specifications remain functional truth.
 FIGMA_MAKE_ROLE: Primary current visual implementation authority and partial code/reference baseline.
 FIGMA_DESIGN_ROLE: Documentation/reference authority.
 FALLBACK_ROLE: Repository-preserved exports are partial fallback evidence only and must be compared against live Make visuals.
 KNOWN_DEFECT: Earl rejected the prior FI-02 visual acceptance: localhost landing below development chrome remains materially stale versus current live Make v39. This repair supersedes only the prior FI02 VISUAL_PASS claim; FI02 functional truth remains accepted.
-COMPLETED_CLOSEOUT: FI-02 source reconciliation, focused state/unit/E2E checks, 320/390/768/1024/1440 visual matrix, build/dist parity, and continuity evidence passed. Normal commit/push/readback remains required before handoff. FI-00/FI-01/FI-03 history remains preserved. FI-04 must not begin.
+REOPENED_OWNER_COMPARISON: Independent 1440×1000 visual comparison failed FI-02: rendered masthead visibility, Make hero poster, and dark Current contrast are defective. Preserve functional pass and repair those frontend-only deltas. FI-04 must not begin.
+CLOSEOUT: Exact Make WebP poster is embedded from the authenticated Make source; the maroon masthead and supported dark-theme foregrounds were repaired without changing routes or advertisement states. Direct local light/dark desktop/mobile inspection and focused gates passed; owner/root acceptance is pending normal commit/push/readback only.

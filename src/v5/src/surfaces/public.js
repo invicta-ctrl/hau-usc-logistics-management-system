@@ -4,6 +4,7 @@
    supplier evidence, or audit internals. */
 
 import { icon } from '../icons.js';
+import { heroPoster } from './hero-poster.js';
 import {
   backControl,
   esc,
@@ -119,7 +120,7 @@ export function landing({ state } = {}) {
   const announcement = landingAnnouncementPresentation(advertisementState);
   return publicShell(
     `<section class="landing-hero" aria-labelledby="landing-title">
-      <div class="landing-hero__media-slot" aria-hidden="true"><img class="landing-hero__institutional-media" src="/brand/login-background" alt="" /></div>
+      <div class="landing-hero__media-slot" aria-hidden="true"><img class="landing-hero__institutional-media" src="${heroPoster}" alt="" /></div>
       <div class="landing-hero__content">
         <p class="landing-hero__eyebrow">HAU-USC · Institutional Logistics Ledger</p>
         <h1 id="landing-title">Every request. Every handoff. On record.</h1>

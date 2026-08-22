@@ -43,6 +43,8 @@ describe('V5 public landing advertisement state projection', () => {
       expect(markup).toContain('id="logistics"');
       expect(markup).toContain('The Logistics hub');
       expect(markup).toContain('Every step is recorded; the evidence is permanent.');
+      expect(markup).toContain('data:image/webp;base64,UklGRvBZAABXRUJQ');
+      expect(markup).not.toContain('/brand/login-background');
       expect(markup).not.toContain('hau-campus-login-background.jpg');
       expect(markup).not.toContain('landing-hero__media"');
       expect(markup).not.toContain('#/public.register');

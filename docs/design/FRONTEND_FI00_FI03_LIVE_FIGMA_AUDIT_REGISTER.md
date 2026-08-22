@@ -26,7 +26,7 @@ SCOPE: FI-00 through FI-03 only. No Figma, provider, Playground, or Production w
 FI00_RESULT: VERIFIED_NO_OP
 FI01_RESULT: VERIFIED_NO_OP
 FI02_FUNCTIONAL_STATUS: PASS
-FI02_VISUAL_STATUS: PASS (root authenticated Make versus hot-reloaded local comparison)
+FI02_VISUAL_STATUS: HISTORICAL_PASS_SUPERSEDED;DIRECT_LOCAL_REPAIR_COMPLETE;OWNER_ROOT_ACCEPTANCE_PENDING
 FI03_FUNCTIONAL_STATUS: PASS
 FI03_VISUAL_STATUS: PASS (Make-supported sign-in; documentation-constrained verification/application/status retained without invention)
 
@@ -37,6 +37,13 @@ FI03_VISUAL_STATUS: PASS (Make-supported sign-in; documentation-constrained veri
 - **Repair:** public shell and landing now use the Make order and hierarchy—maroon institutional masthead, exact ledger hero lede/actions, Current split composition, oxblood Logistics hub with four real-route tiles and six ledger steps, and institutional footer. `Logistics hub` uses a reduced-motion-safe in-page scroll instead of changing the hash router.
 - **Functional preservation:** Current continues to project loading/populated/empty/error/media-failure only from the existing public advertisement runtime. Dynamic official media keeps its returned alt text; no Make prototype event data or unverified cover asset was copied. Real request/lending/tracking/sign-in routes and the public policy link remain present.
 - **Repair verification:** landing unit 8/8 PASS; scoped ESLint/Prettier/diff check PASS; focused lifecycle E2E 6/6 PASS; full V5 1440 project 32 PASS/7 configured skips; visual matrix 5/5 at 320/390/768/1024/1440 with light/dark capture; final build PASS; deterministic dist parity PASS (`578,452` bytes, sha256 prefix `256f187cbc659b43`).
+
+## FI-02 owner-comparison repair closeout — 2026-08-22
+
+- **Second rejection preserved:** independent owner comparison showed the historical repair receipt was still visually incomplete: the masthead DOM was not visibly rendered in the 1440×1000 viewport, the landing still referenced `/brand/login-background`, and dark-theme foregrounds could collapse into their warm surfaces. The earlier `VISUAL_PASS` remains historical evidence only and is explicitly superseded above.
+- **Bounded correction:** `hero-poster.js` contains the exact `heroPoster.ts` WebP data URI read from authenticated Make source `rP9W9MQlZkyQrUx38TVsFS`; it replaces the landing image only. The landing masthead now has an enforced Make-style maroon 76px band (60px compact) below retained staging chrome. Theme-specific foregrounds keep the masthead, Current, Logistics hub, and footer legible without altering public routes or advertisement-state projection.
+- **Direct visual evidence:** inspected localhost at 1440×1000 and 390×844 in light and dark. Measured masthead: desktop y=71/h=76; mobile y=68/h=60; `display:flex`, `visibility:visible`, `opacity:1`, sticky z-index 110. Current heading is dark ink on warm paper in dark mode; no horizontal overflow at the verified breakpoints.
+- **Repair verification:** landing unit 8/8 PASS; focused lifecycle E2E 1/1 PASS; responsive light/dark E2E 9/9 PASS; visual matrix 5/5 PASS at 320/390/768/1024/1440; direct keyboard drawer/focus, preserved hub hash/focus, reduced-motion, and effective 200%-zoom (720px) checks PASS; Prettier/ESLint PASS; `npm run build`, `npm run verify:dist` (`610,260` bytes, sha256 prefix `bd4dbfc670f8d409`), governance, continuation, and handoff checks PASS.
 
 ## Verification receipt
 
