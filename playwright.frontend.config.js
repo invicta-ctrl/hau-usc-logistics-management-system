@@ -4,7 +4,7 @@ const widths = [320, 390, 768, 1024, 1440];
 
 export default defineConfig({
   testDir: './tests/e2e',
-  testMatch: 'frontend-cutover.spec.js',
+  testMatch: ['frontend-cutover.spec.js', 'preview-index.spec.js'],
   timeout: 30_000,
   fullyParallel: false,
   reporter: [['list'], ['html', { open: 'never' }]],

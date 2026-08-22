@@ -40,3 +40,32 @@ export const PREVIEW_FILTER_LABELS: Readonly<Record<PreviewFilter, string>> = Ob
   PUBLIC: "Public",
   AUTHENTICATED: "Authenticated",
 });
+
+export const IMPLEMENTATION_STATUS_LABELS: Readonly<Record<ImplementationStatus, string>> = Object.freeze({
+  ACCEPTED: "Accepted",
+  IN_PROGRESS: "In progress",
+  SURFACE_PREVIEW: "Surface preview",
+  NOT_STARTED: "Not started",
+});
+
+export const BACKEND_STATUS_LABELS: Readonly<Record<BackendStatus, string>> = Object.freeze({
+  REAL_BACKEND: "Real backend",
+  PARTIAL: "Partial",
+  VISUAL_ONLY: "Visual only",
+});
+
+export const ACCESS_REQUIREMENT_LABELS: Readonly<Record<AccessRequirement, string>> = Object.freeze({
+  PUBLIC: "Public",
+  AUTHENTICATED: "Authenticated",
+});
+
+export const PREVIEW_MODE_LABELS: Readonly<Record<PreviewMode, string>> = Object.freeze({
+  REAL_MODULE: "Real module",
+  SURFACE_PREVIEW: "Surface preview",
+});
+
+export const ROUTE_GROUP_LABELS: Readonly<Record<RouteGroup, string>> = Object.freeze({
+  PUBLIC: "Public",
+  STAFF: "Staff",
+  ADMINISTRATION: "Administration",
+});
