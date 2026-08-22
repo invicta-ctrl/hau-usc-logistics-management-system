@@ -1,4 +1,4 @@
-# Current Bounded Task — FVR-02 A2 activation (authority/governance only)
+# Current Bounded Task — FVR-02 A2 activation and local-preview repair slice
 
 INTENT: FRONTEND_RECOVERY
 MODE: EXECUTE
@@ -10,7 +10,9 @@ TASK_ROUTING:
   SKILLS: lean-ctx+figma+figma-design-to-code+figma-implement-design+figma-implement-motion+impeccable+create-plan
   RISK: HIGH
 
-OBJECTIVE: Authority/governance activation of the two FVR-02-A2 amendments (Ox-first routing; local preview resilience). This activation task does not implement product changes or the preview supervisor; those are the next dispatched work after parent review.
+OBJECTIVE: Authority/governance activation of the two FVR-02-A2 amendments (Ox-first routing; local preview resilience) followed by the persistent local preview supervisor repair slice. Product changes and the preview Module Index remain out of scope.
+
+SLICE_STATUS: FVR-02-A2 local preview supervisor implemented and unit-verified; live runtime acceptance deferred to parent.
 
 TARGET: frontend-design-integration worktree; generated frontend artifacts; guarded Playground preview; public media/CurrentSection chain; HeroSection/HeroMotion; preview Module Index/Surface Preview/Test Real Login Flow; local preview supervisor/launcher.
 
@@ -46,4 +48,4 @@ MODEL_CONTRACT (A2 Ox-first): Ox Alpha is the default read-only subagent for all
 LISTENER_EVIDENCE: 2026-08-22 read-only observation -> http://127.0.0.1:4173/ NO_LISTENER, HTTP actively refused. No preview started/stopped or external state mutated during this activation.
 
 STATUS: ACTIVE_FVR02
-NEXT_EXACT_ACTION: implement FVR-02-A2 local preview resilience (persistent supervised preview preserving the guarded Playground proxy), verify http://127.0.0.1:4173/ and #hero, then resume FVR-02 audit-first phases under Ox-first routing.
+NEXT_EXACT_ACTION: parent performs live runtime acceptance of the persistent preview (start/status/restart/stop and owned-child forced exit against the real private manifest), then resume FVR-02 audit-first phases under Ox-first routing.

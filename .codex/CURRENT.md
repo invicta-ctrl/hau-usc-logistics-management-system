@@ -4,6 +4,7 @@ PROGRAM: HAU-USC Logistics
 MILESTONE: FVR-02_FULL_FRONTEND_RECOVERY_MEDIA_MOTION_INDEX
 STATUS: ACTIVE_FVR02
 PHASE: A2_LOCAL_PREVIEW_REPAIR_THEN_RESUME_FVR02
+LOCAL_PREVIEW_REPAIR: IMPLEMENTED_UNIT_VERIFIED_PENDING_RUNTIME_ACCEPTANCE
 BRANCH: frontend-design-integration
 HEAD: RESOLVE_FROM_LIVE_GIT_HEAD
 BASELINE_HEAD: 842f4c6b4468462928b1b9e6ab9ae98fa80ebbf8
@@ -43,6 +44,8 @@ MODEL_CONTRACT: GPT-5.6 Sol Max sole read-only orchestrator/final reviewer (Sol 
 FIRST_WAVE: Ox-first; routine read-only lanes default to Ox Alpha; DeepSeek reserved for the canonical writer and exceptional heavy-analysis lanes; no invented lane IDs or results.
 
 LISTENER_EVIDENCE: 2026-08-22 read-only observation -> http://127.0.0.1:4173/ NO_LISTENER, HTTP actively refused (ERR_CONNECTION_REFUSED). No external mutation performed; no preview started or stopped during this activation.
+PREVIEW_PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
+PREVIEW_RECEIPT: .codex/FVR02_A2_LOCAL_PREVIEW_RECEIPT.md
 
 GUARDED_PREVIEW: http://127.0.0.1:4173 (no healthy listener at A2 activation; identity/environment signal to be reverified by the A2 local preview repair)
 PRODUCTION_DEPLOYMENT: FORBIDDEN
@@ -56,4 +59,4 @@ ROLLBACK: Git revert product commits; preserve FVR-001 and rollback tag; Playgro
 
 OPEN_RISKS: hero-video authority conflict possible; public media baseline root cause unclassified; Ox Alpha/model route availability to be reverified at dispatch; safe existing server-validated Index signal unverified.
 
-NEXT_EXACT_ACTION: implement FVR-02-A2 local preview resilience (persistent supervised preview preserving the guarded Playground proxy), verify http://127.0.0.1:4173/ and #hero, then resume FVR-02 audit-first phases under Ox-first routing.
+NEXT_EXACT_ACTION: parent performs live runtime acceptance of the persistent preview (start/status/restart/stop and owned-child forced exit against the real private manifest), then resume FVR-02 audit-first phases under Ox-first routing.

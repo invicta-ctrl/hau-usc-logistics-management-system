@@ -6,7 +6,11 @@
   "scripts": {
     "extract:visual": "node scripts/extract-visual-baseline.mjs",
     "dev": "vite",
-    "dev:frontend:playground": "node scripts/start-frontend-playground-preview.mjs",
+    "dev:frontend:playground": "node scripts/start-frontend-playground-preview.mjs dev",
+    "preview:frontend:start": "node scripts/start-frontend-playground-preview.mjs start",
+    "preview:frontend:status": "node scripts/start-frontend-playground-preview.mjs status",
+    "preview:frontend:restart": "node scripts/start-frontend-playground-preview.mjs restart",
+    "preview:frontend:stop": "node scripts/start-frontend-playground-preview.mjs stop",
     "build": "vite build --mode preview && node scripts/create-frontend-shareable.mjs",
     "build:legacy-artifacts": "node scripts/create-shareable.mjs && node scripts/create-apps-script-bundle.mjs",
     "build:cloudflare": "vite build --mode staging --outDir ../.wrangler/build/staging",

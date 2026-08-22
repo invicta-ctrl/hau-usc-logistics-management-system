@@ -1,4 +1,4 @@
-# Current Environment Handoff — FVR-02 A2 activation
+# Current Environment Handoff — FVR-02 A2 activation and local-preview repair
 
 FROM: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v2
 TO: GPT-5.6_SOL_MAX:/root (read-only orchestrator/final reviewer)
@@ -19,8 +19,10 @@ ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr02-a2-ox-first-routing.
 
 STATUS: ACTIVE_FVR02
 PRODUCT_REPAIRS: NONE_YET
-PREVIEW_SUPERVISOR: NOT_YET_IMPLEMENTED (authority/governance activation only)
+PREVIEW_SUPERVISOR: IMPLEMENTED_UNIT_VERIFIED_PENDING_RUNTIME_ACCEPTANCE
 GOVERNANCE_A2_ACTIVATION: COMPLETED_PENDING_PARENT_REVIEW
+PREVIEW_PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
+PREVIEW_RECEIPT: .codex/FVR02_A2_LOCAL_PREVIEW_RECEIPT.md
 EXTERNAL_MUTATIONS: ZERO
 
 RECLASSIFICATION: FI-00 REVALIDATE; FI-01 REVALIDATE; FI-02 FUNCTIONAL PRESERVE_IF_VERIFIED; FI-02 VISUAL/MEDIA/MOTION REOPENED; FI-03 FUNCTIONAL PRESERVE_IF_VERIFIED; FI-03 VISUAL REVALIDATE; PREVIEW MODULE INDEX NOT_IMPLEMENTED; FI-04 BLOCKED.
@@ -31,11 +33,11 @@ LISTENER_EVIDENCE: 2026-08-22 read-only observation -> http://127.0.0.1:4173/ NO
 
 PROHIBITED: Production deployment; Production data write; Playground data write; Figma write; provider write; backend/API/auth/data/schema/migration/provider semantic change; FI-04 start; history rewrite/reset/clean/force-push; mutation of unknown or unrelated work; AGENTS.md universal body and project-policy edits; fabrication of hero video, advertisement records, or media URLs.
 
-NEXT_ACTION: implement FVR-02-A2 local preview resilience (persistent supervised preview preserving the guarded Playground proxy), verify http://127.0.0.1:4173/ and #hero, then resume FVR-02 audit-first phases under Ox-first routing.
+NEXT_ACTION: parent performs live runtime acceptance of the persistent preview (start/status/restart/stop and owned-child forced exit against the real private manifest), then resume FVR-02 audit-first phases under Ox-first routing.
 
 RESUME (compaction-survival labels, truthful):
 COMPACTION_RESUME_SCHEMA: 1
-UPDATED_AT: 2026-08-22T09:50:40Z
+UPDATED_AT: 2026-08-22T10:15:30Z
 PROJECT: HAU-USC Logistics
 REPOSITORY: invicta-ctrl/hau-usc-logistics-management-system
 BRANCH: frontend-design-integration
@@ -54,10 +56,10 @@ COMPLETED_AND_ACCEPTED: FVR-001 cutover f7e5bf83205dbe58b5fb72126a4456747d92e906
 EXTERNAL_STATE: no Figma/Playground/Production/provider writes; guarded preview requires revalidation; 4173 observed NO_LISTENER
 DATABASE_STATE: unchanged; migrations 0; D1/R2 writes 0
 BACKUP_AND_ROLLBACK: Git revert product commits; preserve FVR-001 and rollback tag; Playground repair only via recorded existing runbook recovery; no Production/Figma rollback because no writes
-VERIFICATION_EVIDENCE: exact Git handshake, governance/spec activation, and check-agent-instructions/diff-check only; no product gates claimed
-OPEN_DEFECTS_AND_RISKS: hero authority; media chain; Ox route availability; Index safe signal; 4173 no listener (A2 local preview repair is next)
+VERIFICATION_EVIDENCE: Git handshake, governance/spec activation, check-agent-instructions/diff-check, focused unit (13 tests incl. existing guard), and focused eslint on changed JS; live private-manifest runtime acceptance pending parent
+OPEN_DEFECTS_AND_RISKS: hero authority; media chain; Ox route availability; Index safe signal; local preview code implemented but live runtime acceptance pending
 OWNER_ACTION_REQUIRED: none currently
-NEXT_EXACT_ACTION: implement FVR-02-A2 local preview resilience (persistent supervised preview preserving the guarded Playground proxy), verify http://127.0.0.1:4173/ and #hero, then resume FVR-02 audit-first phases under Ox-first routing.
+NEXT_EXACT_ACTION: parent performs live runtime acceptance of the persistent preview (start/status/restart/stop and owned-child forced exit against the real private manifest), then resume FVR-02 audit-first phases under Ox-first routing.
 DO_NOT_REPEAT_WITHOUT_VERIFICATION: FVR-001 destructive removal/publication; any media population; any commit/push already recorded; any preview start/stop not yet performed
 READ_FIRST: .codex/CURRENT.md; .codex/CURRENT_TASK.md; accepted FVR-02 spec and A2 amendments; .agents/PROJECT_POLICY.md
 OFF_LIMITS: AGENTS.md universal body; PROJECT_POLICY; .ai-bridge/ (preserved excluded untracked); any path outside accepted FVR-02 scope
