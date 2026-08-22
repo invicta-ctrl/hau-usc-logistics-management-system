@@ -2,7 +2,7 @@
 
 PROGRAM: HAU-USC Logistics
 MILESTONE: FRONTEND_INTEGRATION_LIVE_FIGMA_AUTHORITY_AUDIT_REPAIR
-STATUS: FI02_OWNER_COMPARISON_VISUAL_REPAIR_COMPLETE_AWAITING_OWNER_ROOT_ACCEPTANCE
+STATUS: FI02_LANDING_IDENTITY_COMPOSITION_REPAIR_COMPLETE_AWAITING_OWNER_ROOT_ACCEPTANCE
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
@@ -40,7 +40,7 @@ FALLBACK_EXPORTS: PARTIAL_EVIDENCE_ONLY
 
 FI00_STATUS: VERIFIED_NO_OP
 FI01_STATUS: VERIFIED_NO_OP
-FI02_STATUS: FUNCTIONAL_PASS;DIRECT_LOCAL_VISUAL_REPAIR_COMPLETE;OWNER_ROOT_ACCEPTANCE_PENDING
+FI02_STATUS: FUNCTIONAL_PASS;DIRECT_LOCAL_IDENTITY_REPAIR_COMPLETE;OWNER_ROOT_ACCEPTANCE_PENDING
 FI03_STATUS: FUNCTIONAL_PASS;VISUAL_PASS
 FI04_STATUS: READY_FOR_SEPARATE_ACCEPTED_AUTHORITY
 
@@ -58,3 +58,5 @@ PRODUCTION_WRITE: FORBIDDEN
 FI02_REOPEN_RECEIPT: 2026-08-22 — Earl rejected the prior FI-02 visual acceptance because localhost structure remained materially stale versus live Make v39. Historical evidence is preserved; the repair receipt in docs/design/FRONTEND_FI00_FI03_LIVE_FIGMA_AUDIT_REGISTER.md supersedes the stale FI02 VISUAL_PASS claim with verified current composition and state-projection evidence.
 FI02_OWNER_COMPARISON_REOPEN_RECEIPT: 2026-08-22 — independent 1440×1000 comparison found the masthead absent from rendered viewport, old `/brand/login-background` hero media, and unreadable dark-theme Current heading. Repair is limited to those Make-v39 deltas.
 FI02_OWNER_COMPARISON_CLOSEOUT: 2026-08-22 — the legacy floating/glass masthead cascade is superseded by a visible 76px (60px compact) maroon Make band; the landing now embeds the exact Make `heroPoster.ts` WebP data URI rather than `/brand/login-background`; dark masthead, Current, hub, and footer foregrounds use verified cream/ink contrast. Direct 1440×1000 and 390×844 light/dark local renders were inspected; focused state, responsive, visual, build, dist, governance, and handoff gates passed. Normal commit/push/readback is the only external write; FI-04 remains unstarted.
+FI02_IDENTITY_REOPEN_RECEIPT: 2026-08-22 — independent desktop acceptance found a remaining Make-v39 identity hierarchy mismatch: local placed USC and DOL marks before a large wordmark. This bounded repair changes only the landing desktop masthead/footer identity ordering, type scale, divider, and spacing while retaining compact mobile and non-landing public shells.
+FI02_IDENTITY_CLOSEOUT: 2026-08-22 — landing-only markup now follows Make `PublicNavbar`: USC crest → two-line serif University Student Council/Holy Angel University → vertical divider → DOL mark/two-line Department of Logistics. The footer now follows Make `Footer` with only the USC crest and the same two-line identity. Direct 1440×1000 and 390×844 local renders confirm desktop order and preserved mobile crest/theme/hamburger reduction; non-landing publicShell remains shared/unchanged. Narrow semantic, visual, build, dist, governance, and handoff checks passed; FI-04 remains unstarted.

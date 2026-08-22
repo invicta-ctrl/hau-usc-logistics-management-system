@@ -1666,9 +1666,16 @@ test('light and dark V5 themes remain usable at the configured responsive width'
     'href',
     '#/public.signin',
   );
-  await expect(page.locator('.public__bar .public__mark--usc img')).toHaveAttribute('alt', 'USC');
-  await expect(page.locator('.public__bar .public__marks img')).toHaveCount(2);
-  await expect(page.locator('.public__wordmark b')).toHaveText('Holy Angel University Student Council');
+  await expect(page.locator('.landing-brand__crest img')).toHaveAttribute('alt', 'USC');
+  await expect(page.locator('.landing-brand__usc b')).toHaveText('University Student Council');
+  await expect(page.locator('.landing-brand__usc > span')).toHaveText('Holy Angel University');
+  await expect(page.locator('.landing-brand__divider')).toHaveCount(1);
+  await expect(page.locator('.landing-brand__department img')).toHaveAttribute(
+    'alt',
+    'Department of Logistics',
+  );
+  await expect(page.locator('.landing-footer__crest img')).toHaveAttribute('alt', 'USC');
+  await expect(page.locator('.landing-footer__identity .public__mark--dol')).toHaveCount(0);
   await expect(page.locator('.public__foot--landing')).toContainText(
     'Holy Angel University · Angeles City, Pampanga',
   );
@@ -1702,7 +1709,10 @@ test('light and dark V5 themes remain usable at the configured responsive width'
   await themeToggle.click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
-  await expect(page.locator('.public--landing .public__wordmark b')).toHaveCSS('color', 'rgb(255, 248, 229)');
+  await expect(page.locator('.public--landing .landing-brand__usc b')).toHaveCSS(
+    'color',
+    'rgb(255, 255, 255)',
+  );
   await expect(page.locator('.landing-current .landing-section-head h2')).toHaveCSS(
     'color',
     'rgb(36, 20, 22)',

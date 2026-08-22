@@ -62,6 +62,11 @@ describe('V5 public landing advertisement state projection', () => {
     expect(markup).toContain('href="#/public.request-tracking"');
     expect(markup).toContain('href="#/public.signin"');
     expect(markup).toContain('data-act="scroll-to-logistics"');
+    expect(markup).toContain('class="landing-brand__crest"');
+    expect(markup).toContain('<b>University Student Council</b><span>Holy Angel University</span>');
+    expect(markup).toContain('class="landing-brand__divider"');
+    expect(markup).toContain('Department of<br />Logistics');
+    expect(markup).toContain('class="landing-footer__crest"');
     expect(markup).toContain('Privacy Notice and Acceptable Use');
   });
 });

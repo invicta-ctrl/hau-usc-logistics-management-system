@@ -21,6 +21,12 @@ const marks = `<span class="public__marks" aria-label="USC and Department of Log
   <span class="public__mark public__mark--usc"><img src="/brand/usc-logo" alt="USC" /></span>
   <span class="public__mark public__mark--dol"><img src="/brand/dol-logo" alt="Department of Logistics" /></span>
 </span>`;
+const landingIdentity = `<a class="landing-brand" href="#/public.landing" aria-label="HAU-USC home">
+  <span class="landing-brand__crest"><img src="/brand/usc-logo" alt="USC" /></span>
+  <span class="landing-brand__usc"><b>University Student Council</b><span>Holy Angel University</span></span>
+  <span class="landing-brand__department"><span class="landing-brand__divider" aria-hidden="true"></span><img src="/brand/dol-logo" alt="Department of Logistics" /><span>Department of<br />Logistics</span></span>
+</a>`;
+const landingFooterIdentity = `<div class="landing-footer__identity"><span class="landing-footer__crest"><img src="/brand/usc-logo" alt="USC" /></span><span><b>University Student Council</b><small>Holy Angel University</small></span></div>`;
 const serviceDataLabel = `<p class="preview-data-label" role="note">Service-backed workflow <span aria-hidden="true">·</span> protected fields stay private</p>`;
 
 /* Public surfaces are plain render functions with no context argument, so the
@@ -38,9 +44,13 @@ export function publicShell(
 ) {
   return `<div class="public${landing ? ' public--landing' : ''}${signin ? ' public--signin' : ''}">
     <header class="public__bar">
-      <div class="public__brand">${marks}
+      <div class="public__brand">${
+        landing
+          ? landingIdentity
+          : `${marks}
         <span class="public__wordmark"><b>Holy Angel University Student Council</b><span>Department of Logistics</span></span>
-      </div>
+      `
+      }</div>
       ${
         landing
           ? `<nav class="public__navigation" aria-label="Public navigation">
@@ -63,7 +73,7 @@ export function publicShell(
     ${
       landing
         ? `<footer class="public__foot public__foot--landing" aria-label="Site footer">
-            <div class="landing-footer__identity">${marks}<span><b>University Student Council</b><small>Holy Angel University</small></span></div>
+            ${landingFooterIdentity}
             <p class="landing-footer__motto">Laus Deo Semper</p>
             <nav class="landing-footer__group" aria-label="Services"><p>Services</p><a href="#/public.landing" data-act="scroll-to-logistics">Logistics hub <span>Open</span></a></nav>
             <nav class="landing-footer__group" aria-label="Access"><p>Access</p><a href="#/public.request-intake">Start a logistics request</a><a href="#/public.signin">Staff sign in</a><a class="landing-footer__policy" href="#/public.policy">Privacy Notice and Acceptable Use</a></nav>

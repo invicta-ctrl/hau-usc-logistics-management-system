@@ -26,7 +26,7 @@ SCOPE: FI-00 through FI-03 only. No Figma, provider, Playground, or Production w
 FI00_RESULT: VERIFIED_NO_OP
 FI01_RESULT: VERIFIED_NO_OP
 FI02_FUNCTIONAL_STATUS: PASS
-FI02_VISUAL_STATUS: HISTORICAL_PASS_SUPERSEDED;DIRECT_LOCAL_REPAIR_COMPLETE;OWNER_ROOT_ACCEPTANCE_PENDING
+FI02_VISUAL_STATUS: HISTORICAL_PASSES_SUPERSEDED;DIRECT_LOCAL_IDENTITY_REPAIR_COMPLETE;OWNER_ROOT_ACCEPTANCE_PENDING
 FI03_FUNCTIONAL_STATUS: PASS
 FI03_VISUAL_STATUS: PASS (Make-supported sign-in; documentation-constrained verification/application/status retained without invention)
 
@@ -44,6 +44,12 @@ FI03_VISUAL_STATUS: PASS (Make-supported sign-in; documentation-constrained veri
 - **Bounded correction:** `hero-poster.js` contains the exact `heroPoster.ts` WebP data URI read from authenticated Make source `rP9W9MQlZkyQrUx38TVsFS`; it replaces the landing image only. The landing masthead now has an enforced Make-style maroon 76px band (60px compact) below retained staging chrome. Theme-specific foregrounds keep the masthead, Current, Logistics hub, and footer legible without altering public routes or advertisement-state projection.
 - **Direct visual evidence:** inspected localhost at 1440×1000 and 390×844 in light and dark. Measured masthead: desktop y=71/h=76; mobile y=68/h=60; `display:flex`, `visibility:visible`, `opacity:1`, sticky z-index 110. Current heading is dark ink on warm paper in dark mode; no horizontal overflow at the verified breakpoints.
 - **Repair verification:** landing unit 8/8 PASS; focused lifecycle E2E 1/1 PASS; responsive light/dark E2E 9/9 PASS; visual matrix 5/5 PASS at 320/390/768/1024/1440; direct keyboard drawer/focus, preserved hub hash/focus, reduced-motion, and effective 200%-zoom (720px) checks PASS; Prettier/ESLint PASS; `npm run build`, `npm run verify:dist` (`610,260` bytes, sha256 prefix `bd4dbfc670f8d409`), governance, continuation, and handoff checks PASS.
+
+## FI-02 landing identity-composition repair closeout — 2026-08-22
+
+- **Third owner finding preserved:** the visible masthead was still structurally unlike Make `PublicNavbar`: local rendered both marks before a large council wordmark. The repaired exact Make hierarchy is USC crest → `University Student Council` (Newsreader-style serif) / `Holy Angel University` → gold divider → DOL mark / `Department of Logistics`.
+- **Bounded correction:** the new `landing-brand` exists only for `landing: true`; generic `publicShell` pages retain their existing marks and wordmark. At compact width, its USC/DOL text and DOL group are hidden so the verified crest/theme/hamburger mobile arrangement remains intact. The landing footer now matches Make `Footer` identity: a single USC crest and the two-line USC identity, no DOL mark.
+- **Repair verification:** direct localhost inspection at 1440×1000 and 390×844 PASS, including desktop order/spacing and mobile reduction; landing unit 8/8 PASS; responsive light/dark E2E 9/9 PASS; visual matrix 5/5 at 320/390/768/1024/1440 PASS; non-landing public-shell isolation PASS; `npm run build` and `npm run verify:dist` (`612,170` bytes, sha256 prefix `f47ba7f049f9a78b`) PASS. Governance, continuation, handoff, normal commit/push/readback remain required.
 
 ## Verification receipt
 

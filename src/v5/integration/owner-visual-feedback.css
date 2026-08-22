@@ -564,3 +564,109 @@
 [data-theme='dark'] .landing-footer__group a {
   color: #fff8e5;
 }
+
+/* FI-02 identity-composition repair: the Make masthead is not the shared
+   public-shell wordmark. Keep its landing-only crest → USC → divider → DOL
+   hierarchy isolated so pre-authentication pages retain their own identity. */
+.public--landing .public__brand {
+  min-width: 0;
+}
+
+.landing-brand {
+  align-items: center;
+  color: #fff8e5;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.landing-brand__crest,
+.landing-footer__crest {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.landing-brand__crest img {
+  display: block;
+  height: 46px;
+  object-fit: contain;
+  width: 46px;
+}
+
+.landing-brand__usc {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.landing-brand__usc b {
+  color: #ffffff;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.075px;
+  line-height: 18.75px;
+  white-space: nowrap;
+}
+
+.landing-brand__usc > span {
+  color: #f6e29a;
+  font-family: var(--font-body);
+  font-size: 11px;
+  letter-spacing: 0.22px;
+  line-height: 13.75px;
+  white-space: nowrap;
+}
+
+.landing-brand__department {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.landing-brand__divider {
+  background: rgba(242, 209, 92, 0.28);
+  height: 36px;
+  margin-left: 4px;
+  width: 1px;
+}
+
+.landing-brand__department img {
+  display: block;
+  height: 34px;
+  object-fit: contain;
+  width: 34px;
+}
+
+.landing-brand__department > span:last-child {
+  color: #f6e29a;
+  font-family: var(--font-body);
+  font-size: 10px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.landing-footer__identity .landing-footer__crest {
+  display: block;
+}
+
+.landing-footer__crest img {
+  display: block;
+  height: 36px;
+  object-fit: contain;
+  width: 36px;
+}
+
+@media (max-width: 720px) {
+  .landing-brand__usc,
+  .landing-brand__department {
+    display: none;
+  }
+
+  .landing-brand__crest img {
+    height: 40px;
+    width: 40px;
+  }
+}
