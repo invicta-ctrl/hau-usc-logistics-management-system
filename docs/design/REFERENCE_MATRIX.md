@@ -56,7 +56,7 @@ No source owns HAU-USC's identity. Identity remains USC oxblood, gold, warm pape
 | Equal card grid vs editorial asymmetry        | Use predictable rows/tables in operations; use named unequal regions in overviews.                                         |
 | Rich effects vs status semantics              | Status, focus, and confirmation keep exclusive color/motion meanings; decorative effects are exceptional and non-semantic. |
 | 3D wow factor vs operational access           | 2D DOM is authoritative; 3D is lazy, optional, overview-only, and replaceable.                                             |
-| Component marketplace vs current architecture | Rebuild approved principles with current V5 modules and adapters; no framework migration.                                  |
+| Component marketplace vs implementation architecture | Rebuild approved principles within the accepted architecture; do not migrate frameworks from research alone.                                  |
 | Persistent desktop navigation vs mobile space | Transform rail → drawer/tab bar while preserving route and selected state.                                                 |
 
 ## Copyright and dependency decision

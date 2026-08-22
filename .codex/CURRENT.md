@@ -1,62 +1,41 @@
 # Current Work Pointer — frontend-design-integration
 
 PROGRAM: HAU-USC Logistics
-MILESTONE: FRONTEND_INTEGRATION_LIVE_FIGMA_AUTHORITY_AUDIT_REPAIR
-STATUS: FI02_LANDING_IDENTITY_COMPOSITION_REPAIR_COMPLETE_AWAITING_OWNER_ROOT_ACCEPTANCE
-BRANCH: GIT_BRANCH
+MILESTONE: FVR-001_ATOMIC_FIGMA_NATIVE_FRONTEND_CUTOVER
+STATUS: FVR001_CLOSED_AT_ATOMIC_PUBLICATION
+BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
-UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
+UPSTREAM: origin/frontend-design-integration@THIS_COMMIT;VERIFY_AFTER_PUBLICATION
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED
-REQUIRED_MODEL: TERRA_INTEGRATION_WRITER
+REQUIRED_MODEL: GPT-5.6_TERRA_MAX
+WRITER_LOCK: RELEASED_AT_ATOMIC_PUBLICATION_CHECKPOINT
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/frontend-integration-live-figma-authority-fi00-fi03-audit-repair-amendment.md
-BLOCKER: FALSE
-HANDOFF_STATUS: FI02_OWNER_ROOT_ACCEPTANCE_READY;FI04_NOT_STARTED
-NEXT_EXACT_ACTION: OWNER_ROOT_REVIEW_FI02_REPAIR_AND_DECIDE_SEPARATE_FI04_AUTHORITY
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr001-atomic-figma-frontend-cutover.md
+ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr001-a1-figma-design-source-limitation.md;.codex/specs/accepted/2026-08-22-fvr001-a2-native-mcp-truncation-recovery.md
 
-PROGRAM_BASELINE: v0.8.3 functional contracts remain authoritative
-ADOPTION_BASELINE_HEAD: 32a8ed71e7f6275124e9d734d9a32984bac90a27
-ADOPTION_BASELINE_TREE: a38be5e340c63a835793e81e103ef0adc4b3e054
-FI03_IMPLEMENTATION_COMMIT: 3d9a434
-FIGMA_GOVERNANCE_COMMIT: 5b95024
-CONTROLLING_OWNER_TASK: 2026-08-22_LIVE_FIGMA_AUTHORITY_AND_FI00_FI03_AUDIT_REPAIR
-
-FUNCTIONAL_AUTHORITY: Live repository and accepted specifications govern routes, backend/API/auth/data contracts, security, privacy, accessibility requirements, and supported behavior.
-FIGMA_MAKE_AUTHORITY: PRIMARY_CURRENT_VISUAL_IMPLEMENTATION_AND_PARTIAL_CODE_REFERENCE
-FIGMA_MAKE_URL: https://www.figma.com/make/rP9W9MQlZkyQrUx38TVsFS/HAU-USC-Logistics-%E2%80%94-Prototyping?p=f&t=IzRz8zFMhHNpKUHC-0
-FIGMA_DESIGN_AUTHORITY: DOCUMENTATION_AND_REFERENCE
-FIGMA_DESIGN_URL: https://www.figma.com/design/hXJElH4p72KfgAaoUyfNOC/HAU-USC-Logistics-%E2%80%94-Frontend-Design-Lab?node-id=0-1&p=f&t=MoIJxKJbLcfVZnz0-0
+FUNCTIONAL_AUTHORITY: repository server/Worker/auth/domain/privacy/D1/R2/audit/provider contracts
+FIGMA_MAKE_AUTHORITY: authenticated live Make source for current visual implementation and motion
+FIGMA_DESIGN_AUTHORITY: documentation/reference
 FIGMA_MCP_AUTH: PASS
-FIGMA_DESIGN_MCP_ACCESS: PASS_AT_NODE_0_1
-FIGMA_MAKE_MCP_ACCESS: UNSUPPORTED_FILE_TYPE_NOT_AUTH_FAILURE
-FIGMA_MAKE_BROWSER_ACCESS: PASS
-FIGMA_MAKE_CURRENT_LANDING_HEADLINE: Every request. Every handoff. On record.
-WEB_FETCH_FOR_FIGMA: FORBIDDEN_AS_AUTH_BYPASS
-FALLBACK_EXPORTS: PARTIAL_EVIDENCE_ONLY
-
-FI00_STATUS: VERIFIED_NO_OP
-FI01_STATUS: VERIFIED_NO_OP
-FI02_STATUS: FUNCTIONAL_PASS;DIRECT_LOCAL_IDENTITY_REPAIR_COMPLETE;OWNER_ROOT_ACCEPTANCE_PENDING
+FI00_STATUS: PASS
+FI01_STATUS: PASS
+FI02_STATUS: FUNCTIONAL_PASS;VISUAL_PASS
 FI03_STATUS: FUNCTIONAL_PASS;VISUAL_PASS
-FI04_STATUS: READY_FOR_SEPARATE_ACCEPTED_AUTHORITY
+FI04_STATUS: NOT_STARTED;REQUIRES_SEPARATE_ACCEPTED_AUTHORITY
 
-LOCAL_PREVIEW: RUNNING_PERSISTENT
-LOCAL_PREVIEW_URL: http://127.0.0.1:4173
-LOCAL_PREVIEW_MODE: GUARDED_PLAYGROUND_PROXY
-PREVIEW_PRODUCTION_CROSSOVER: NONE
-DEPLOY: NOT_AUTHORIZED
-BACKEND_CHANGE: FORBIDDEN
-MIGRATION: FORBIDDEN
-PROVIDER_CHANGE: FORBIDDEN
-FIGMA_WRITE: FORBIDDEN
-PRODUCTION_WRITE: FORBIDDEN
-
-FI02_REOPEN_RECEIPT: 2026-08-22 — Earl rejected the prior FI-02 visual acceptance because localhost structure remained materially stale versus live Make v39. Historical evidence is preserved; the repair receipt in docs/design/FRONTEND_FI00_FI03_LIVE_FIGMA_AUDIT_REGISTER.md supersedes the stale FI02 VISUAL_PASS claim with verified current composition and state-projection evidence.
-FI02_OWNER_COMPARISON_REOPEN_RECEIPT: 2026-08-22 — independent 1440×1000 comparison found the masthead absent from rendered viewport, old `/brand/login-background` hero media, and unreadable dark-theme Current heading. Repair is limited to those Make-v39 deltas.
-FI02_OWNER_COMPARISON_CLOSEOUT: 2026-08-22 — the legacy floating/glass masthead cascade is superseded by a visible 76px (60px compact) maroon Make band; the landing now embeds the exact Make `heroPoster.ts` WebP data URI rather than `/brand/login-background`; dark masthead, Current, hub, and footer foregrounds use verified cream/ink contrast. Direct 1440×1000 and 390×844 light/dark local renders were inspected; focused state, responsive, visual, build, dist, governance, and handoff gates passed. Normal commit/push/readback is the only external write; FI-04 remains unstarted.
-FI02_IDENTITY_REOPEN_RECEIPT: 2026-08-22 — independent desktop acceptance found a remaining Make-v39 identity hierarchy mismatch: local placed USC and DOL marks before a large wordmark. This bounded repair changes only the landing desktop masthead/footer identity ordering, type scale, divider, and spacing while retaining compact mobile and non-landing public shells.
-FI02_IDENTITY_CLOSEOUT: 2026-08-22 — landing-only markup now follows Make `PublicNavbar`: USC crest → two-line serif University Student Council/Holy Angel University → vertical divider → DOL mark/two-line Department of Logistics. The footer now follows Make `Footer` with only the USC crest and the same two-line identity. Direct 1440×1000 and 390×844 local renders confirm desktop order and preserved mobile crest/theme/hamburger reduction; non-landing publicShell remains shared/unchanged. Narrow semantic, visual, build, dist, governance, and handoff checks passed; FI-04 remains unstarted.
+ADAPTER_RECEIPT: PASS; same-origin cookies, in-memory CSRF, server capability projection, public advertisements, public Request/Lending catalog/options/submit/track, starter activation, account application email verification/submission/status/withdrawal, network/validation errors, and fail-closed incomplete responses are implemented.
+PUBLIC_RESULT_RECEIPT: PASS; receipt and tracking components construct presentation while all identifiers, tracking codes, status, dates, lines, and lifecycle history come from server responses.
+NO_FABRICATED_ACTIVE_STATE: PASS; future authenticated operational fixture modules are not imported or reachable.
+PRE_REMOVAL_TEST_RECEIPT: adapter unit 8/8 PASS; required-width browser cases 45 unaffected PASS plus corrected accessibility/theme/zoom slice 5/5 PASS; build/dist PASS; direct visual inspection PASS.
+GUARDED_PREVIEW: RUNNING_PERSISTENT;http://127.0.0.1:4173;isolated Playground proxy verified; root and public read-only contract smokes HTTP 200; protected unauthenticated status HTTP 401; Production crossover NONE.
+ROLLBACK_TAG: archive/v5-final-before-figma-cutover-2026-08-22
+ROLLBACK_TAG_OBJECT: e75192df374c75e55a559f99679e7e86665052bd
+ROLLBACK_TAG_TARGET: 02f5c9bed4a2f692df32114019f0b0bbfca0fc13
+REMOVAL_RECEIPT: AUTHORIZED_AND_EXECUTED; active legacy implementation, scripts, configs, tests, specifications, plans, documents, generated shareable, and references in the accepted removal set were deleted or rewritten after pre-removal gates passed. Valid guarded-proxy, auth, public-data, password, and result-projection intent was migrated to non-legacy tests.
+PRODUCTION_DEPLOYMENT: FORBIDDEN
+BLOCKER: NONE_FOR_BRANCH_PUBLICATION;MAIN_AND_V084_PROPAGATION_REMAIN_CONDITIONAL_ON_PRESERVATION_GATES
+HANDOFF_STATUS: CLOSED_ATOMIC_PUBLICATION_READY
+NEXT_EXACT_ACTION: PUBLISH_THIS_COMMIT_VERIFY_REMOTE_PARITY_THEN_CONDITIONALLY_PROMOTE_MAIN_AND_UPDATE_V084_BASELINE

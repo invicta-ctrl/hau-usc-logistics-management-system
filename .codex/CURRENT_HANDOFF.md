@@ -1,37 +1,57 @@
-# Current Environment Handoff — Live Figma Authority Repair Gate
+# Current Environment Handoff — FVR-001 post-removal gate
 
-FROM: FI02_LANDING_IDENTITY_COMPOSITION_CLOSEOUT
-TO: OWNER_ROOT_ACCEPTANCE
-BRANCH: GIT_BRANCH
+FROM: TERRA_MAX:/root
+TO: TERRA_MAX:/root
+BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
-UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
+UPSTREAM: origin/frontend-design-integration@THIS_COMMIT;VERIFY_AFTER_PUBLICATION
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: NONE
+WRITER_LOCK: RELEASED_AT_ATOMIC_PUBLICATION_CHECKPOINT
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
-ACCEPTED_SPEC: .codex/specs/active/frontend-integration-live-figma-authority-fi00-fi03-audit-repair-amendment.md
-COMPLETED: FI-02 landing identity closeout is complete. The landing-only desktop masthead follows Make source exactly in semantic order: USC crest, two-line serif University Student Council/Holy Angel University, divider, DOL mark and two-line label. Footer identity now uses only the USC crest plus Make's two-line USC identity. Compact mobile remains crest/theme/hamburger; non-landing publicShell is unchanged; routes and five advertisement states remain intact. FI-04 has not started.
-VALIDATION: PASS — landing unit 8/8; responsive light/dark E2E 9/9; visual matrix 5/5 at 320/390/768/1024/1440; direct 1440×1000 desktop and 390×844 mobile inspection; non-landing public-shell isolation; build and deterministic dist parity.
-EXTERNAL_ACTIONS: Read-only Figma Make source resource; normal Git push/readback only. No Figma write, provider write, database mutation, deployment, migration, Playground write, or Production write.
-BLOCKER: FALSE
-NEXT_EXACT_ACTION: OWNER_ROOT_REVIEW_FI02_REPAIR_AND_DECIDE_SEPARATE_FI04_AUTHORITY
-RESUME_COMMANDS: Rehydrate current records and accepted amendment; verify commit/push parity and clean worktree; do not acquire a writer lock or start FI-04 without separate accepted authority.
-PROHIBITED_ACTIONS: Do not start FI-04; do not use ordinary web fetching for Figma; do not treat Make MCP file-type limits as authentication failure; do not mutate Figma, backend, API, auth, data, migrations, providers, Playground, or Production; do not reset, clean, rebase, force-push, rewrite history, or discard unknown work.
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr001-atomic-figma-frontend-cutover.md
+ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr001-a1-figma-design-source-limitation.md;.codex/specs/accepted/2026-08-22-fvr001-a2-native-mcp-truncation-recovery.md
 
-HANDOFF_STATUS: FI02_OWNER_ROOT_ACCEPTANCE_READY;FI04_NOT_STARTED
-WRITER_LOCK: RELEASED
-LOCK_STATUS: RELEASED
-FIGMA_MCP_AUTH: PASS
-FIGMA_DESIGN_MCP_ACCESS: PASS_AT_NODE_0_1
-FIGMA_MAKE_MCP_ACCESS: UNSUPPORTED_FILE_TYPE_NOT_AUTH_FAILURE
-FIGMA_MAKE_BROWSER_ACCESS: PASS
-FIGMA_MAKE_CURRENT_LANDING_HEADLINE: Every request. Every handoff. On record.
-LOCAL_PREVIEW: RUNNING_PERSISTENT
-LOCAL_PREVIEW_URL: http://127.0.0.1:4173
-PREVIEW_PRODUCTION_CROSSOVER: NONE
-FI00: VERIFIED_NO_OP
-FI01: VERIFIED_NO_OP
-FI02: FUNCTIONAL_PASS;DIRECT_LOCAL_IDENTITY_REPAIR_COMPLETE;OWNER_ROOT_ACCEPTANCE_PENDING
-FI03: FUNCTIONAL_PASS;VISUAL_PASS
-FI04: READY_FOR_SEPARATE_ACCEPTED_AUTHORITY
+COMPLETED: live Figma source recovery; FI-00 through FI-03 implementation; thin backend adapter; real public Request/Lending receipts and tracking; sign-in/session/logout/starter activation; account application verification/submission/status/withdrawal; no-fabricated-active-state isolation; required responsive/accessibility/motion/theme gates; guarded isolated-Playground preview; valid test-intent migration; authorized legacy frontend removal.
+VALIDATION: BUILD_DIST_PASS;UNIT_145_FILES_1038_TESTS_PASS;FRONTEND_E2E_50_OF_50_PASS;FOCUSED_ESLINT_PASS;CLOUDFLARE_DRY_RUN_PASS
+LOCAL_PREVIEW: RUNNING_PERSISTENT at http://127.0.0.1:4173 through the verified isolated-Playground proxy.
+EXTERNAL_ACTIONS: read-only native Figma access, read-only Playground smokes, and normal Git operations only. No provider, database, migration, Figma, Playground, or Production write.
+PENDING: accepted post-removal verification set, complete diff review, atomic commit/push/readback, current-chain closeout, writer-lock release, and conditional clean-lineage propagation.
+BLOCKER: NONE_FOR_BRANCH_PUBLICATION;MAIN_AND_V084_PROPAGATION_REMAIN_CONDITIONAL_ON_PRESERVATION_GATES
+PROHIBITED: Production deployment; FI-04; backend/API/auth/data/schema/migration/provider change; reset/clean/rebase/force-push/history rewrite; mutation of unknown main or parked-worktree changes.
+RESUME_COMMANDS: git status --short; npm.cmd test; npx.cmd playwright test --config playwright.frontend.config.js --workers=1; npm.cmd run cloudflare:dry-run
+PROHIBITED_ACTIONS: PRODUCTION_DEPLOYMENT;FI04_START;BACKEND_SEMANTIC_CHANGE;HISTORY_REWRITE;UNKNOWN_WORK_DISCARD
+NEXT_EXACT_ACTION: PUBLISH_THIS_COMMIT_VERIFY_REMOTE_PARITY_THEN_CONDITIONALLY_PROMOTE_MAIN_AND_UPDATE_V084_BASELINE
+
+FVR001: CLOSED
+FIGMA_NATIVE_FRONTEND: PASS
+THIN_BACKEND_ADAPTER: PASS
+PLAYGROUND_BACKEND_INTEGRATION: PASS
+FI00: PASS
+FI01: PASS
+FI02: PASS
+FI03: PASS
+LANDING_ANIMATION: PASS
+RESPONSIVE: PASS
+ACCESSIBILITY: PASS
+V5_ACTIVE_FILES: 0
+V5_ACTIVE_REFERENCES: 0
+BUILD: PASS
+DIST_VERIFY: PASS
+UNIT: PASS;145_FILES;1038_TESTS
+FRONTEND_E2E: PASS;50_OF_50
+CLOUDFLARE_DRY_RUN: PASS
+BACKEND_CHANGES: 0
+AUTH_SECURITY_CHANGES: 0
+MIGRATIONS: 0
+PROVIDER_WRITES: 0
+PRODUCTION_WRITES: 0
+CUTOVER_COMMIT: THIS_COMMIT
+PUSH_READBACK: VERIFY_ORIGIN_FRONTEND_EQUALS_THIS_COMMIT
+MAIN_PROMOTION: CONDITIONAL_FAST_FORWARD_TO_THIS_COMMIT_AFTER_PRESERVATION_CHECK
+V084_BASELINE_UPDATE: CONDITIONAL_MERGE_OF_ACCEPTED_MAIN_PRESERVING_UNIQUE_V084_HISTORY
+WORKTREE_MAIN: DIRTY_ONLY_BYTE_IDENTICAL_GOVERNANCE_CONTENT_ALREADY_PRESENT_IN_CANDIDATE
+WORKTREE_FRONTEND: GIT_STATUS
+WORKTREE_V084: CLEAN_WITH_UNIQUE_ACCEPTED_HISTORY

@@ -1,0 +1,51 @@
+@import './fonts.css';
+@import 'tailwindcss';
+
+:root {
+  color: #241416;
+  background: #f2eae5;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  --paper: #f2eae5;
+  --paper-light: #fffdf8;
+  --ink: #241416;
+  --muted: #6f5a60;
+  --oxblood: #610b0f;
+  --gold: #e8b93c;
+  --cream: #fff7e6;
+  --glass-border-soft: rgba(242, 209, 92, 0.22);
+  --glass-highlight: rgba(255, 255, 255, 0.2);
+  --glass-shadow-soft: 0 12px 32px rgba(40, 7, 10, 0.14);
+  --glass-blur-soft: blur(18px) saturate(125%);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+}
+
+html.dark { color: #fff7e6; background: #100b0c; }
+html, body, #app { min-height: 100%; margin: 0; }
+body { background: var(--paper); }
+html.dark body { background: #100b0c; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.skip-link { position: absolute; z-index: 100; left: 1rem; top: -4rem; padding: .75rem 1rem; color: #40070a; background: var(--gold); border-radius: .5rem; }
+.skip-link:focus { top: 1rem; }
+.material-g3 { border: 1px solid var(--glass-border-soft); background: rgba(255,253,248,.84); box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-highlight); backdrop-filter: var(--glass-blur-soft); }
+html.dark .material-g3 { background: rgba(43, 23, 27, .9); }
+.auth-gate-status { display: grid; gap: .3rem; padding: .85rem 1rem; border: 1px solid #d1b478; border-radius: .65rem; color: #241416; background: #fff7e6; font-size: .78rem; line-height: 1.45; }
+.auth-gate-status strong, .auth-gate-status span { display: block; }
+.auth-gate-status[data-state="service-error"], .auth-gate-status[data-state="denied"] { border-color: #c35c65; background: #fff0f0; }
+
+.digital-atrium { position: relative; isolation: isolate; min-height: min(760px, 100svh); overflow: clip; color: #fffdf8; background: #40070a; }
+.atrium__stage { position: relative; z-index: 2; width: min(100%, 95rem); min-height: min(760px, 100svh); margin: auto; display: grid; align-items: end; padding: clamp(8rem, 18vw, 14rem) clamp(1.25rem, 7vw, 7rem) clamp(4rem, 9vw, 8rem); box-sizing: border-box; }
+.atrium__copy { max-width: 44rem; animation: atrium-in 700ms var(--ease-out) both; }
+.atrium__institution { margin: 0 0 1rem; color: #f2d15c; font-size: .72rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+.atrium__title { max-width: 13ch; margin: 0; font-family: Newsreader, Georgia, serif; font-size: clamp(3.2rem, 7vw, 6.6rem); font-weight: 600; letter-spacing: -.055em; line-height: .9; }
+.atrium__lede { max-width: 43rem; margin: 1.5rem 0 0; color: rgba(255,253,248,.84); font-size: clamp(1rem, 1.6vw, 1.25rem); line-height: 1.55; }
+.atrium__actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+.atrium__primary, .atrium__secondary { min-height: 3rem; padding: .75rem 1rem; border-radius: .6rem; font-weight: 700; }
+.atrium__primary { border: 1px solid #f2d15c; color: #40070a; background: #f2d15c; }
+.atrium__secondary { border: 1px solid rgba(242,209,92,.42); color: #fffdf8; background: rgba(255,253,248,.08); }
+.atrium__secondary-paths { display: flex; gap: 1.25rem; margin-top: 1.25rem; }
+.atrium__text-action { padding: 0; color: #fffdf8; border: 0; background: transparent; text-decoration: underline; text-underline-offset: .25rem; }
+@keyframes atrium-in { from { opacity: 0; transform: translateY(1.25rem); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 1ms !important; scroll-behavior: auto !important; transition-duration: 1ms !important; } }
+@media (max-width: 767px) { .digital-atrium, .atrium__stage { min-height: 42rem; } .atrium__stage { padding-inline: 1.25rem; } .atrium__title { font-size: clamp(3rem, 14vw, 4.5rem); } }

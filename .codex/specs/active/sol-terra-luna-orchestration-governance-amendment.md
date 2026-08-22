@@ -56,8 +56,6 @@ model-routing statements do not govern a new task after this amendment:
 | Preserved file                                                                 | Historical model-routing wording now superseded             | Still-preserved scope                                         |
 | ------------------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------- |
 | `.codex/specs/active/v0.8.1-design-dna-research-amendment.md`                  | `Required model: CODEX`                                     | Design research and Earl's implementation gate                |
-| `.codex/specs/active/v0.8.1-v5-backend-integration-steer.md`                   | `Required model: CODEX`                                     | V5 backend-integration constraints                            |
-| `.codex/specs/active/v0.8.1-v5-owner-visual-feedback-amendment.md`             | `Required model: CODEX`                                     | Owner visual-feedback boundaries                              |
 | `.codex/specs/active/isolated-staging-playground-and-git-governance.md`        | `Required model: CODEX`                                     | Exact-candidate, staging, production, and recovery safeguards |
 | `.codex/specs/active/v0.8.0-inventory-truth-ledger-lock-slice-1.md`            | `The main Codex agent is the only writer.`                  | Schema-30 inventory/ledger acceptance evidence                |
 | `.codex/specs/active/v0.7.3-rollout-stabilization.md`                          | `One active writer: CODEX.` and the two-read-only-child cap | v0.7.3 no-op intake and stabilization evidence                |

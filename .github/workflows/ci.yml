@@ -50,12 +50,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - name: Run V5 browser smoke
+      - name: Run frontend browser smoke
         shell: bash
         run: |
           mkdir -p .ci-logs
           set +e
-          npm run test:e2e:v5 > .ci-logs/browser-smoke.log 2>&1
+          npm run test:e2e:frontend > .ci-logs/browser-smoke.log 2>&1
           status=$?
           cat .ci-logs/browser-smoke.log
           exit "$status"

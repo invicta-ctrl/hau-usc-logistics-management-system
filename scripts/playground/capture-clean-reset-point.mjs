@@ -117,7 +117,7 @@ async function run() {
   if (!bookmark) throw new Error('Playground clean D1 bookmark was not returned.');
   manifest.d1.cleanBaselineBookmark = bookmark;
   manifest.d1.cleanBaselineBookmarkCapturedAt = new Date().toISOString();
-  const baselineReportPath = path.join(path.dirname(manifestPath), 'playground-clean-baseline-v5-report.json');
+  const baselineReportPath = path.join(path.dirname(manifestPath), 'playground-clean-baseline-report.json');
   const baselineReport = JSON.parse(await readFile(baselineReportPath, 'utf8'));
   manifest.baseline = {
     sourceProductionVersion: baselineReport.sourceProductionVersion,

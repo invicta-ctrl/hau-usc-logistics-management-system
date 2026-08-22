@@ -7,11 +7,11 @@ const root = resolve(import.meta.dirname, '../..');
 const read = (file) => readFile(resolve(root, file), 'utf8');
 
 describe('authoritative release pipeline', () => {
-  it('does not require retired generated Apps Script UI artifacts for a V5 clean checkout', async () => {
+  it('does not require retired generated Apps Script UI artifacts for a Figma frontend checkout', async () => {
     const check = await read('scripts/check-apps-script.mjs');
 
     expect(check).toContain(
-      "const v5WorkerCandidate = applicationIndex.includes('./v5/integration/entry.js')",
+      "const frontendWorkerCandidate = applicationIndex.includes('./frontend/main.jsx')",
     );
     expect(check).toContain('requiredFiles.filter((file) => !generatedAppsScriptFiles.has(file))');
     expect(check).toContain('Legacy generated UI artifacts are not applicable');

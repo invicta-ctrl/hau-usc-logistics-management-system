@@ -1,30 +1,21 @@
-# Current Bounded Task — FI-02 Live Make Landing Reconciliation Repair
+# Current Bounded Task — FVR-001 post-removal verification and delivery
 
-INTENT: FRONTEND_INTEGRATION_REPAIR
+INTENT: FRONTEND_CUTOVER
 MODE: EXECUTE
-OBJECTIVE: Reopen FI-02 only and reconcile #/public.landing below the existing development chrome to live Figma Make v39 without changing valid v0.8.3 functional contracts; FI-04 remains blocked pending owner/root acceptance.
-TARGET: frontend-design-integration worktree; FI-02 public shell, landing composition, directly coupled tests and continuity evidence only.
+OBJECTIVE: Verify and deliver the Figma-native FI-00 through FI-03 frontend while preserving all accepted backend and security contracts.
+TARGET: frontend-design-integration worktree, generated frontend artifacts, branch delivery, and conditional clean-lineage propagation.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/frontend-integration-live-figma-authority-fi00-fi03-audit-repair-amendment.md
-AUTHORITY: Earl current instruction -> AGENTS.md -> .agents/PROJECT_POLICY.md -> this accepted amendment -> live repository functional contracts -> live Figma Make visual authority -> Figma Design documentation/reference.
-REQUIRED_MODEL: TERRA_INTEGRATION_WRITER
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr001-atomic-figma-frontend-cutover.md
+AUTHORITY: Earl current instruction -> AGENTS.md -> .agents/PROJECT_POLICY.md -> accepted FVR-001 specification and amendments -> repository functional contracts -> live Figma Make visual authority.
+REQUIRED_MODEL: GPT-5.6_TERRA_MAX
 ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED
-DELEGATION_LEDGER: .codex/FI_LIVE_FIGMA_AUTHORITY_DELEGATION_LEDGER.md
-RISK: MEDIUM; frontend-only repair with auth-adjacent FI-03 presentation and strict functional-contract preservation.
-SCOPE: FI-02 landing/public shell only: Make-v39 hero, Current, Logistics hub and footer composition; safe #logistics in-page navigation; truthful advertisement state projection; directly coupled tests; bounded visual evidence and continuity correction.
-OUT_OF_SCOPE: FI-00/FI-01/FI-03/FI-04 source changes; backend/API/auth/data/schema/migration/provider changes; D1/R2/Google writes; Figma writes; Playground or Production deployment; dependency changes; unsupported routes, features, fabricated data, or deletion of historical evidence.
-VERIFICATION: Figma MCP identity and Design access; authenticated browser Make access; bounded visual evidence register; local-preview comparison; route/state contract checks; 320/390/768/1024/1440; supported light/dark; keyboard/focus; reduced motion; 200% zoom; no overflow; applicable accessibility checks; focused tests first; broader invalidated gates once; complete logical diff; normal commit/push/readback.
-STOP_CONDITIONS: Conflicting writer; unexpected dirty work; live Make/Design conflict on a load-bearing fact; unsupported runtime behavior implied by design; required backend/auth/data/migration/provider change; Figma access failure after one supported reauthentication attempt; Make browser access failure; private-data exposure; Production crossover; mandatory verification failure.
-NEXT_EXACT_ACTION: OWNER_ROOT_REVIEW_FI02_REPAIR_AND_DECIDE_SEPARATE_FI04_AUTHORITY
-
-FUNCTIONAL_BASELINE: v0.8.3 repository and accepted specifications remain functional truth.
-FIGMA_MAKE_ROLE: Primary current visual implementation authority and partial code/reference baseline.
-FIGMA_DESIGN_ROLE: Documentation/reference authority.
-FALLBACK_ROLE: Repository-preserved exports are partial fallback evidence only and must be compared against live Make visuals.
-KNOWN_DEFECT: Earl rejected the prior FI-02 visual acceptance: localhost landing below development chrome remains materially stale versus current live Make v39. This repair supersedes only the prior FI02 VISUAL_PASS claim; FI02 functional truth remains accepted.
-REOPENED_OWNER_COMPARISON: Independent 1440×1000 visual comparison failed FI-02: rendered masthead visibility, Make hero poster, and dark Current contrast are defective. Preserve functional pass and repair those frontend-only deltas. FI-04 must not begin.
-CLOSEOUT: Exact Make WebP poster is embedded from the authenticated Make source; the maroon masthead and supported dark-theme foregrounds were repaired without changing routes or advertisement states. Direct local light/dark desktop/mobile inspection and focused gates passed; owner/root acceptance is pending normal commit/push/readback only.
-IDENTITY_REOPEN: Independent desktop acceptance found the remaining identity order/type-scale mismatch. This task is limited to a landing-specific desktop identity fragment and coupled footer identity only; mobile and non-landing `publicShell` stay contractually unchanged.
-IDENTITY_CLOSEOUT: Landing-specific Make identity order/type/spacing and footer USC-only identity are repaired; direct desktop/mobile comparison and narrow regression/build/dist gates passed. Owner/root acceptance is pending normal commit/push/readback only.
+RISK: HIGH;DESTRUCTIVE_LEGACY_REMOVAL_ALREADY_AUTHORIZED_AND_EXECUTED;PRODUCTION_FORBIDDEN
+SCOPE: FI-00_THROUGH_FI-03_FIGMA_NATIVE_CUTOVER_AND_ATOMIC_BRANCH_DELIVERY
+IN_SCOPE: one final verification pass; bounded forward repair; complete diff review; one coherent commit; push/readback; current-chain closeout; writer-lock release; conditional main and parked-baseline propagation.
+OUT_OF_SCOPE: FI-04 implementation; backend/API/auth/data/schema/migration/provider semantic change; Figma write; Playground mutation; Production deployment or data write.
+DELIVERABLES: deterministic Figma frontend artifacts, zero active legacy implementation paths/references, green accepted verification, pushed branch, and truthful propagation/handoff state.
+VERIFICATION: install/lockfile integrity; lint with classified exceptions; build; verify:dist; unit; frontend E2E; Cloudflare build/dry-run; guarded Playground read-only smokes; zero-reference inventory; complete diff review.
+STOP_CONDITIONS: unknown dirty work; conflicting writer; security/privacy ambiguity; required backend change; mandatory gate failure without bounded safe repair; Production crossover; inability to preserve separate main-worktree governance changes or parked-branch unique history.
+STATUS: COMPLETE_AT_ATOMIC_PUBLICATION_CHECKPOINT
+NEXT_EXACT_ACTION: PUBLISH_THIS_COMMIT_VERIFY_REMOTE_PARITY_THEN_CONDITIONALLY_PROMOTE_MAIN_AND_UPDATE_V084_BASELINE

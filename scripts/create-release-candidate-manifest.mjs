@@ -17,7 +17,7 @@ export async function createReleaseCandidateManifest() {
     candidate,
     artifacts: {
       cloudflareHtmlSha256: await sha256File('dist/index.html'),
-      shareableHtmlSha256: await sha256File('HAU-USC_Logistics-Prototype-Shareable.html'),
+      shareableHtmlSha256: await sha256File('HAU-USC_Logistics-Frontend-Shareable.html'),
     },
   };
 }

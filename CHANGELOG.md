@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-08-22 — FVR-001 Figma-native frontend cutover
+
+- Replaced the active frontend with the live-Make-derived React implementation for FI-00 through FI-03 while preserving repository backend, auth, privacy, D1/R2, audit, and provider contracts.
+- Added same-origin public Request/Lending catalog, submission, receipt, and tracking integration; server responses remain the only source of record identifiers, private tracking codes, status, and lifecycle history.
+- Added cookie-session sign-in/logout, CSRF-protected starter activation, exact eight-digit email verification, account application submission, private status-token lookup, and supported withdrawal.
+- Removed the retired frontend implementation and its active scripts, configs, tests, specifications, plans, documents, and generated shareable after replacement, rollback, visual, responsive, accessibility, and guarded-Playground gates passed.
+- Production deployment, provider writes, database mutations, migrations, backend semantic changes, and Figma writes remain excluded.
+
 ## Unreleased
 
 ### FI-LIVE-FIGMA-AUTHORITY-01
