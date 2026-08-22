@@ -1237,10 +1237,10 @@ export function createV5Runtime({ backend, app }) {
   function bindAnnouncement() {
     const item = integration.advertisements[0];
     if (!item) return;
-    const section = document.querySelector('.landing-updates');
-    const heading = section?.querySelector('h2');
-    const summary = section?.querySelector('.landing-updates__summary');
-    const link = section?.querySelector('a');
+    const section = document.querySelector('.landing-current');
+    const heading = section?.querySelector('.landing-current__card h3');
+    const summary = section?.querySelector('.landing-current__summary');
+    const link = section?.querySelector('.landing-current__official');
     const title = text(item.title);
     const description = text(item.description, item.summary, item.body);
     const target = text(item.destinationUrl, item.url, item.targetUrl);

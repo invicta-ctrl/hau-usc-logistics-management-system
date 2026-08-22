@@ -2,11 +2,11 @@
 
 ## Current state
 
-### FI-LIVE-FIGMA-AUTHORITY-01 complete
+### FI-02 live Make v39 reconciliation complete — owner/root acceptance pending
 
-- **Scope:** FI-00/FI-01 authority and foundation audit, FI-02 landing/public shell, and FI-03 pre-auth presentation only; FI-04 has not started.
-- **Result:** FI-00 and FI-01 are `VERIFIED_NO_OP`; FI-02 and FI-03 are `FUNCTIONAL_PASS;VISUAL_PASS` against current live Make v39 where implemented and Design documentation where Make explicitly has no built route.
-- **Boundary:** no backend/API/auth/session/data/schema/migration/dependency/provider/Figma/Playground/Production change; the Terra writer lock is released and the branch is ready for a separately authorized FI-04 writer.
+- **Scope:** Earl reopened FI-02 only after rejecting the prior stale visual acceptance. The repair is bounded to `#/public.landing` and public shell composition; FI-04 has not started.
+- **Result:** FI-02 is `FUNCTIONAL_PASS;VISUAL_PASS_REPAIRED_AGAINST_LIVE_MAKE_V39`: masthead/hero, truthful Current projection, Logistics hub/ledger, footer, and real routes now reconcile to the current Make hierarchy. FI-00/FI-01/FI-03 historical results remain preserved.
+- **Boundary:** no backend/API/auth/session/data/schema/migration/dependency/provider/Figma/Playground/Production change; the Terra writer lock is released for owner/root acceptance only, not automatic FI-04 progression.
 
 ### v0.8.3 owner-fast-close release state
 

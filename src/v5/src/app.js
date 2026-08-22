@@ -776,6 +776,17 @@ document.addEventListener('click', (event) => {
     event.preventDefault();
     return togglePasswordVisibility(el, document);
   }
+  if (act === 'scroll-to-logistics') {
+    event.preventDefault();
+    const target = document.getElementById('logistics');
+    if (!target) return;
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block: 'start',
+    });
+    return;
+  }
   if (act === 'go') return go(el.dataset.id);
   if (act.startsWith('go:')) return go(act.slice(3));
   if (act === 'theme') return setTheme(el.dataset.v);

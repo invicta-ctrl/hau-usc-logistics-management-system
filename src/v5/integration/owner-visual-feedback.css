@@ -437,3 +437,58 @@
     transition: none;
   }
 }
+
+/* FI-02 Make v39 supersession: this late-loaded owner layer formerly restored
+   the stale floating masthead and oversized hero. Keep the live composition's
+   attached maroon masthead while surfaces.css owns the section system. */
+.public--landing .public__bar {
+  background: color-mix(in oklch, var(--ox-900) 91%, transparent);
+  border: 0;
+  border-bottom: 1px solid color-mix(in oklch, var(--gold-300) 28%, transparent);
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  max-width: none;
+  min-height: 76px;
+  padding: 12px clamp(20px, 4vw, 56px);
+  width: 100%;
+}
+
+.public--landing .landing-hero {
+  min-height: min(780px, calc(100svh - var(--preview-bar-h, 0px)));
+}
+.public--landing .landing-hero__content {
+  background: transparent;
+  max-width: 1520px;
+  padding: clamp(74px, 10vw, 150px) clamp(20px, 8vw, 132px) clamp(92px, 10vw, 156px);
+  transform: none;
+}
+.public--landing .landing-hero__content::before {
+  display: none;
+}
+.public--landing .landing-hero h1 {
+  font-size: clamp(46px, 6.8vw, 92px);
+  line-height: 0.94;
+  max-width: 11ch;
+}
+.public--landing .landing-hero__content > p {
+  font-size: clamp(16px, 1.45vw, 21px);
+  line-height: 1.55;
+  max-width: 57ch;
+}
+
+@media (max-width: 720px) {
+  .public--landing .public__bar {
+    min-height: 60px;
+    padding: 7px 16px;
+  }
+  .public--landing .landing-hero {
+    min-height: 680px;
+  }
+  .public--landing .landing-hero__content {
+    padding: 48px 20px 72px;
+  }
+  .public--landing .landing-hero h1 {
+    font-size: clamp(43px, 13vw, 64px);
+  }
+}

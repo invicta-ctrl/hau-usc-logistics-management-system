@@ -1,15 +1,15 @@
 # Work Continuation
 
-## FI-LIVE-FIGMA-AUTHORITY-01 current resume block
+## FI-02 live Make v39 repair resume block
 
-- **Milestone:** `FRONTEND_INTEGRATION_LIVE_FIGMA_AUTHORITY_AUDIT_REPAIR`; FI-00 through FI-03 are complete and the branch is in normal Git parity. FI-04 has not started.
+- **Milestone:** `FI02_LIVE_MAKE_VISUAL_REPAIR_COMPLETE`; Earl reopened only FI-02 after rejecting its stale visual acceptance. Owner/root acceptance is next; FI-04 has not started.
 - **Repository/worktree:** `D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration`; branch `frontend-design-integration`; starting adoption SHA `32a8ed71e7f6275124e9d734d9a32984bac90a27`.
 - **Authority:** accepted `.codex/specs/active/frontend-integration-live-figma-authority-fi00-fi03-audit-repair-amendment.md`; authenticated Make v39 is current visual authority; Design is documentation/reference; repository contracts remain functional truth.
-- **Completed result:** FI-00 and FI-01 `VERIFIED_NO_OP`; FI-02 and FI-03 `FUNCTIONAL_PASS;VISUAL_PASS`. The bounded evidence register is `docs/design/FRONTEND_FI00_FI03_LIVE_FIGMA_AUDIT_REGISTER.md`.
-- **Implementation:** landing hero is static Make-aligned logistics composition with a governed institutional asset; truthful published advertisement/media remains in its separate updates region. Sign-in receives Make-aligned presentation only; verification/application/status retain contract-backed behavior because Make v39 has no built screens for them.
-- **Verification:** focused lint/Prettier/diff check PASS; V5 cross-width announcement/media, sign-in, theme, compact-control, and no-overflow matrix PASS at 320/375/390/414/768/1024/1280/1440/1920; visual acceptance PASS at 320/390/768/1024/1440; full unit regression PASS; `npm run build`, `verify:dist`, `check:agents`, `handoff:verify`, and `check:continuation` PASS.
+- **Completed result:** FI-02 `FUNCTIONAL_PASS;VISUAL_PASS_REPAIRED_AGAINST_LIVE_MAKE_V39`; FI-00/FI-01/FI-03 history is preserved. The bounded evidence register is `docs/design/FRONTEND_FI00_FI03_LIVE_FIGMA_AUDIT_REGISTER.md`.
+- **Implementation:** below retained development chrome, public landing now follows Make v39's masthead/hero → Current → Logistics hub → oxblood footer sequence. Current remains a truthful advertisement/media projection; it does not copy unverified prototype cover data. The hash router stays intact and the hub is a reduced-motion-safe in-page action.
+- **Verification:** landing unit 8/8 PASS; scoped ESLint/Prettier/diff check PASS; lifecycle E2E 6/6 PASS; V5 1440 project 32 PASS/7 expected skips; visual matrix 5 PASS at 320/390/768/1024/1440 across light/dark; `npm run build` and `verify:dist` PASS. Governed continuity and normal push/readback remain required.
 - **External boundary:** read-only Figma MCP/Chrome inspection only; no Figma, provider, Playground, Production, deployment, migration, database, or other external write.
-- **Next exact action:** `FI-04_AUTHENTICATED_SHELL_NAVIGATION_PROFILE` only after its accepted authority, clean Git handshake, and a new sole-writer lock. The FI-00 through FI-03 Terra lock is released.
+- **Next exact action:** owner/root accepts FI-02 repair after normal commit/push/readback. Do not start FI-04 automatically. The FI-02 Terra lock is released.
 
 ## Current resume block
 

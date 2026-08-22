@@ -44,7 +44,7 @@ export function publicShell(
         landing
           ? `<nav class="public__navigation" aria-label="Public navigation">
               <a href="#/public.landing" aria-current="page">Home</a>
-              <a href="#/public.request-intake">Logistics hub</a>
+              <a href="#/public.landing" data-act="scroll-to-logistics">Logistics hub</a>
             </nav>`
           : ''
       }
@@ -53,19 +53,26 @@ export function publicShell(
         ${landing ? '<a class="public__signin-link" href="#/public.signin">Staff sign in</a>' : back ? backControl() : ''}
         ${
           landing
-            ? `<details class="public__compact-nav"><summary aria-label="Open public navigation">${icon('menu')}</summary><nav aria-label="Compact public navigation"><a href="#/public.landing" aria-current="page">Home</a><a href="#/public.request-intake">Logistics hub</a><a href="#/public.signin">Staff sign in</a></nav></details>`
+            ? `<details class="public__compact-nav"><summary aria-label="Open public navigation">${icon('menu')}</summary><nav aria-label="Compact public navigation"><a href="#/public.landing" aria-current="page">Home</a><a href="#/public.landing" data-act="scroll-to-logistics">Logistics hub</a><a href="#/public.signin">Staff sign in</a></nav></details>`
             : ''
         }
       </div>
     </header>
     <main class="public__main${wide ? ' public__main--wide' : ''}" id="surface-main" tabindex="-1">${dataLabel ? serviceDataLabel : ''}${inner}</main>
-    <footer class="public__foot">
-      <p class="public__foot-line">Every item moves with a record.</p>
-      <div class="public__foot-meta">
-        <span>HAU-USC <span aria-hidden="true">·</span> © 2026–2027</span>
-        <a href="#/public.policy">Privacy Notice and Acceptable Use</a>
-      </div>
-    </footer>
+    ${
+      landing
+        ? `<footer class="public__foot public__foot--landing" aria-label="Site footer">
+            <div class="landing-footer__identity">${marks}<span><b>University Student Council</b><small>Holy Angel University</small></span></div>
+            <p class="landing-footer__motto">Laus Deo Semper</p>
+            <nav class="landing-footer__group" aria-label="Services"><p>Services</p><a href="#/public.landing" data-act="scroll-to-logistics">Logistics hub <span>Open</span></a></nav>
+            <nav class="landing-footer__group" aria-label="Access"><p>Access</p><a href="#/public.request-intake">Start a logistics request</a><a href="#/public.signin">Staff sign in</a><a class="landing-footer__policy" href="#/public.policy">Privacy Notice and Acceptable Use</a></nav>
+            <p class="landing-footer__place">Holy Angel University <span aria-hidden="true">·</span> Angeles City, Pampanga</p>
+          </footer>`
+        : `<footer class="public__foot">
+            <p class="public__foot-line">Every item moves with a record.</p>
+            <div class="public__foot-meta"><span>HAU-USC <span aria-hidden="true">·</span> © 2026–2027</span><a href="#/public.policy">Privacy Notice and Acceptable Use</a></div>
+          </footer>`
+    }
   </div>`;
 }
 
@@ -116,54 +123,37 @@ export function landing({ state } = {}) {
       <div class="landing-hero__content">
         <p class="landing-hero__eyebrow">HAU-USC · Institutional Logistics Ledger</p>
         <h1 id="landing-title">Every request. Every handoff. On record.</h1>
-        <p>Start a service-backed logistics request, follow it with its private reference, and keep each operational handoff accountable.</p>
+        <p>HAU-USC Logistics coordinates equipment and supply services through a governed record—from first request to confirmed return.</p>
         <div class="landing-hero__actions">
           <a class="btn btn--primary" href="#/public.request-intake">Start a logistics request${icon('arrow-right')}</a>
           <a class="landing-link" href="#/public.lending-intake">Browse public lending${icon('arrow-right', 'icon--sm')}</a>
         </div>
         <p class="landing-hero__utility"><a href="#/public.request-tracking">Track request</a><a href="#/public.signin">Staff sign in</a></p>
       </div>
-      <div class="landing-hero__monogram"><img src="/brand/usc-logo" alt="USC" /></div>
     </section>
 
-    <section class="landing-intro" aria-labelledby="landing-intro-title">
-      <h2 id="landing-intro-title">A calmer public front door for accountable logistics.</h2>
-      <p>Use the official public routes to submit or track a request, borrow reusable equipment, or enter the protected staff workspace.</p>
+    <section class="landing-current" data-advertisement-state="${advertisementState}" aria-busy="${advertisementState === 'loading'}" aria-labelledby="landing-current-title">
+      <div class="landing-section-head"><p class="eyebrow">Current</p><h2 id="landing-current-title">What the council is doing now</h2></div>
+      <div class="landing-current__grid">
+        <div class="landing-current__visual"><span>Official public updates</span><div class="landing-updates__media-slot" hidden></div></div>
+        <article class="landing-current__card"><p class="eyebrow">Current production snapshot</p><h3>${announcement.title}</h3>
+          <p class="landing-current__summary" aria-live="polite">${announcement.summary}</p>${
+            announcement.status
+              ? `
+          <p class="landing-current__status" role="status">${announcement.status}</p>`
+              : ''
+          }<a class="landing-current__official" href="https://www.facebook.com/holyangeluniversitysc" target="_blank" rel="noopener noreferrer">View official page${icon('arrow-right', 'icon--sm')}</a></article>
+      </div>
     </section>
 
-    <nav class="portal-actions" aria-label="Logistics portals">
-      <a class="portal-action portal-action--primary" href="#/public.request-intake">
-        <span class="portal-action__mark">${icon('clipboard')}</span>
-        <span><b>Start a logistics request</b><small>Create a department request through the service-backed workflow.</small></span>
-        ${icon('arrow-right')}
-      </a>
-      <a class="portal-action" href="#/public.lending-intake">
-        <span class="portal-action__mark">${icon('lending')}</span>
-        <span><b>Browse public lending</b><small>Borrow reusable equipment with an accountable return date.</small></span>
-        ${icon('arrow-right')}
-      </a>
-      <a class="portal-action" href="#/public.request-tracking">
-        <span class="portal-action__mark">${icon('search')}</span>
-        <span><b>Track request</b><small>Use the private tracking reference already issued for your request.</small></span>
-        ${icon('arrow-right')}
-      </a>
-      <a class="portal-action" href="#/public.signin">
-        <span class="portal-action__mark">${icon('lock')}</span>
-        <span><b>Staff sign in</b><small>Enter the role-based logistics workspace.</small></span>
-        ${icon('arrow-right')}
-      </a>
-    </nav>
-
-    <section class="landing-updates" data-advertisement-state="${advertisementState}" aria-busy="${advertisementState === 'loading'}" aria-labelledby="landing-updates-title">
-      <div><p class="eyebrow">Published announcements</p><h2 id="landing-updates-title">${announcement.title}</h2>
-        <p class="landing-updates__summary" aria-live="polite">${announcement.summary}</p>${
-          announcement.status
-            ? `
-        <p class="landing-updates__status" role="status">${announcement.status}</p>`
-            : ''
-        }</div>
-      <div class="landing-updates__media-slot" hidden></div>
-      <a class="btn" href="https://www.facebook.com/holyangeluniversitysc" target="_blank" rel="noopener noreferrer">View official page${icon('arrow-right', 'icon--sm')}</a>
+    <section class="landing-hub" id="logistics" tabindex="-1" aria-labelledby="landing-hub-title">
+      <div class="landing-section-head landing-section-head--dark"><p class="eyebrow">Open now</p><div><h2 id="landing-hub-title">The Logistics hub</h2><p>The council’s only specialised service currently running</p></div></div>
+      <div class="landing-hub__grid">
+        <div class="landing-hub__service"><div class="landing-hub__identity"><img src="/brand/dol-logo" alt="" /><span><b>Department of Logistics</b><small>University Student Council</small></span></div><p>Equipment and supplies for council activities. Ask for what an activity needs, borrow reusable items with an agreed return date, and see where your request stands.</p>
+          <nav class="landing-hub__actions" aria-label="Logistics actions"><a class="landing-hub__action landing-hub__action--primary" href="#/public.request-intake"><b>Start a request</b><small>Authorized intake for an activity, office or committee need.</small></a><a class="landing-hub__action" href="#/public.lending-intake"><b>Browse equipment</b><small>See reusable items before signing in to act.</small></a><a class="landing-hub__action" href="#/public.request-tracking"><b>Track a request</b><small>Use your reference. No account needed.</small></a><a class="landing-hub__action" href="#/public.signin"><b>Staff sign in</b><small>Open the authorized logistics workspace.</small></a></nav>
+        </div>
+        <ol class="landing-ledger" aria-label="Logistics request lifecycle"><li><span>01</span><div><b>Request</b><p>Someone states what is needed, what it is for, and when.</p></div></li><li><span>02</span><div><b>Review</b><p>The committee checks scope, stock and timing.</p></div></li><li><span>03</span><div><b>Reserve</b><p>Approved lines are held against inventory.</p></div></li><li><span>04</span><div><b>Release</b><p>Items are handed over and the handover is recorded.</p></div></li><li><span>05</span><div><b>Return</b><p>Borrowed items come back and their condition is noted.</p></div></li><li><span>06</span><div><b>Ledger</b><p>Every step is recorded; the evidence is permanent.</p></div></li></ol>
+      </div>
     </section>`,
     { back: false, wide: true, landing: true, dataLabel: false },
   );

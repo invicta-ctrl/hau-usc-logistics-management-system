@@ -30,6 +30,14 @@ FI02_VISUAL_STATUS: PASS (root authenticated Make versus hot-reloaded local comp
 FI03_FUNCTIONAL_STATUS: PASS
 FI03_VISUAL_STATUS: PASS (Make-supported sign-in; documentation-constrained verification/application/status retained without invention)
 
+## FI-02 visual-acceptance supersession and repair receipt — 2026-08-22
+
+- **Reason reopened:** Earl rejected the prior FI-02 `VISUAL_PASS`: the localhost landing beneath the preserved staging/test banner was still structurally stale against live Make v39. This preserves the historical result while superseding it for FI-02 only.
+- **Live Make evidence read:** `LandingPage`, `HeroSection`, `CurrentSection`, `LogisticsHubSection`, `landingData`, `PublicNavbar`, and `Footer` from Make file `rP9W9MQlZkyQrUx38TVsFS`; no Figma write or asset download occurred.
+- **Repair:** public shell and landing now use the Make order and hierarchy—maroon institutional masthead, exact ledger hero lede/actions, Current split composition, oxblood Logistics hub with four real-route tiles and six ledger steps, and institutional footer. `Logistics hub` uses a reduced-motion-safe in-page scroll instead of changing the hash router.
+- **Functional preservation:** Current continues to project loading/populated/empty/error/media-failure only from the existing public advertisement runtime. Dynamic official media keeps its returned alt text; no Make prototype event data or unverified cover asset was copied. Real request/lending/tracking/sign-in routes and the public policy link remain present.
+- **Repair verification:** landing unit 8/8 PASS; scoped ESLint/Prettier/diff check PASS; focused lifecycle E2E 6/6 PASS; full V5 1440 project 32 PASS/7 configured skips; visual matrix 5/5 at 320/390/768/1024/1440 with light/dark capture; final build PASS; deterministic dist parity PASS (`578,452` bytes, sha256 prefix `256f187cbc659b43`).
+
 ## Verification receipt
 
 - Cross-width public lifecycle, sign-in, and theme matrix: 20 PASS at 320, 375, 390, 414, 768, 1024, 1280, 1440, and 1920 CSS pixels; 16 state-specific skips are expected by the configured browser projects.

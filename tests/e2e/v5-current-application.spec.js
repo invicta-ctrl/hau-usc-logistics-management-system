@@ -86,7 +86,7 @@ test('production identity cannot activate playground chrome or the Index route',
   await page.goto('/#/index');
   await waitForV5(page);
 
-  await expect(page.getByRole('heading', { name: 'Holy Angel University Student Council' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
   await expect(page.locator('.preview-bar')).toHaveCount(0);
   await expect(page.locator('[data-playground-release-identity]')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Isolated Staging Playground Index' })).toHaveCount(0);
@@ -137,7 +137,7 @@ test('invalid release identity cannot activate the Playground cue or owner sessi
   await page.goto('/#/index');
   await waitForV5(page);
 
-  await expect(page.getByRole('heading', { name: 'Holy Angel University Student Council' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
   await expect(page.locator('[data-playground-release-identity]')).toHaveCount(0);
   expect((await integrationStatus(page)).playgroundVerified).toBe(false);
   expect(requests.some(({ pathname }) => pathname === '/api/playground/session')).toBe(false);
@@ -164,12 +164,12 @@ test('published public announcement remains a truthful update without replacing 
 
   await page.goto('/#/public.landing');
   await waitForV5(page);
-  await expect(page.locator('.landing-updates')).toHaveAttribute('data-advertisement-state', 'populated');
+  await expect(page.locator('.landing-current')).toHaveAttribute('data-advertisement-state', 'populated');
   await expect(page.locator('.landing-hero h1')).toHaveText('Every request. Every handoff. On record.');
   await expect(page.locator('.landing-hero__eyebrow')).toHaveText('HAU-USC · Institutional Logistics Ledger');
   await expect(page.locator('.landing-hero__actions .btn--primary')).toHaveText(/Start a logistics request/u);
   await expect(page.locator('.landing-link')).toHaveText(/Browse public lending/u);
-  await expect(page.locator('.landing-updates h2')).toHaveText('Youth Development Day 2026');
+  await expect(page.locator('.landing-current__card h3')).toHaveText('Youth Development Day 2026');
   await expect(page.locator('.landing-updates__media')).toHaveAttribute(
     'alt',
     'Youth Development Day 2026 official event cover',
@@ -193,12 +193,12 @@ test('public landing truthfully projects loading, empty, request-error, and medi
 
   await page.goto('/#/public.landing');
   await waitForV5(page);
-  const updates = page.locator('.landing-updates');
+  const updates = page.locator('.landing-current');
   const institutionalMedia = page.locator('.landing-hero__institutional-media');
   await expect(updates).toHaveAttribute('data-advertisement-state', 'loading');
   await expect(updates).toHaveAttribute('aria-busy', 'true');
-  await expect(updates.getByRole('heading')).toHaveText('Loading official updates');
-  await expect(page.getByRole('link', { name: 'Start a logistics request', exact: true })).toBeVisible();
+  await expect(updates.locator('.landing-current__card h3')).toHaveText('Loading official updates');
+  await expect(page.locator('.landing-hero__actions .btn--primary')).toBeVisible();
   await expect(institutionalMedia).toBeVisible();
 
   delayed.resolve();
@@ -220,8 +220,10 @@ test('public landing truthfully projects loading, empty, request-error, and medi
   await expect(page.locator('.auth-card--signin')).toBeVisible();
   await page.goto('/#/public.landing');
   await expect(updates).toHaveAttribute('data-advertisement-state', 'error');
-  await expect(updates.getByRole('heading')).toHaveText('Updates are temporarily unavailable');
-  await expect(page.getByRole('link', { name: 'Start a logistics request', exact: true })).toBeVisible();
+  await expect(updates.locator('.landing-current__card h3')).toHaveText(
+    'Updates are temporarily unavailable',
+  );
+  await expect(page.locator('.landing-hero__actions .btn--primary')).toBeVisible();
   await expect(institutionalMedia).toBeVisible();
 
   await page.unroute('**/api/public/advertisements');
@@ -247,7 +249,7 @@ test('public landing truthfully projects loading, empty, request-error, and medi
   await expect(updates).toHaveAttribute('data-advertisement-state', 'media-failure');
   await expect(updates).toContainText('The published media could not be loaded.');
   await expect(updates).toContainText('Core public destinations are unaffected.');
-  await expect(page.getByRole('link', { name: 'Start a logistics request', exact: true })).toBeVisible();
+  await expect(page.locator('.landing-hero__actions .btn--primary')).toBeVisible();
   await expect(institutionalMedia).toBeVisible();
   await expect(page.locator('.landing-updates__media-slot')).toBeHidden();
   await expectNoHorizontalOverflow(page);
@@ -1646,10 +1648,10 @@ test('light and dark V5 themes remain usable at the configured responsive width'
   await expect(
     page.locator('.landing-hero__content > p:not(.landing-hero__eyebrow):not(.landing-hero__utility)'),
   ).toHaveText(
-    'Start a service-backed logistics request, follow it with its private reference, and keep each operational handoff accountable.',
+    'HAU-USC Logistics coordinates equipment and supply services through a governed record—from first request to confirmed return.',
   );
   const heroMedia = page.locator('.landing-hero__institutional-media');
-  await expect(page.locator('.landing-updates')).toHaveAttribute('data-advertisement-state', 'empty');
+  await expect(page.locator('.landing-current')).toHaveAttribute('data-advertisement-state', 'empty');
   await expect(heroMedia).toBeVisible();
   await expect(page.locator('.landing-hero__actions .btn--primary')).toHaveText(/Start a logistics request/u);
   await expect(page.getByRole('link', { name: 'Track request', exact: true })).toHaveAttribute(
@@ -1660,10 +1662,12 @@ test('light and dark V5 themes remain usable at the configured responsive width'
     'href',
     '#/public.signin',
   );
-  await expect(page.locator('.landing-hero__monogram img')).toHaveAttribute('alt', 'USC');
-  await expect(page.locator('.public__marks img')).toHaveCount(2);
+  await expect(page.locator('.public__bar .public__mark--usc img')).toHaveAttribute('alt', 'USC');
+  await expect(page.locator('.public__bar .public__marks img')).toHaveCount(2);
   await expect(page.locator('.public__wordmark b')).toHaveText('Holy Angel University Student Council');
-  await expect(page.locator('.public__foot-meta')).toContainText('HAU-USC · © 2026–2027');
+  await expect(page.locator('.public__foot--landing')).toContainText(
+    'Holy Angel University · Angeles City, Pampanga',
+  );
   if (testInfo.project.name === 'v5-chromium-1280') {
     for (const selector of [
       '.landing-hero h1',
