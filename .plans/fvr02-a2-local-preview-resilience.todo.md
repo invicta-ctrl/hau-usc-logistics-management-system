@@ -32,7 +32,7 @@ FVR-02-A2 "Local Preview Resilience / Auto-Recovery Amendment" (accepted: `.code
 
 ## Status
 
-In progress. Only this local-preview slice is active. First-pass commit 346f4bf0b5e6a78308305393d72385d44f3d98ee and second-pass commit ac2d7227314acb923a55657f4e7fb09870f8d9b2 both failed parent/Ox runtime-promotion review; the final corrective commit closed the remaining ownership/lifecycle/termination gaps. Live runtime acceptance is still pending and is not claimed.
+In progress. Only this local-preview slice is active. First-pass 346f4bf0b5e6a78308305393d72385d44f3d98ee, second-pass ac2d7227314acb923a55657f4e7fb09870f8d9b2, and third-pass 2d66d9d35b09aa401436b41283f8fd4853e03b95 all failed parent/Ox review; the final corrective commit closed the remaining restart-truth, readiness-timeout cleanup, stop-during-backoff, terminal-inspectability, logging, and positional-CLI gaps. Live runtime acceptance is still pending and is not claimed.
 
 ## Context
 
@@ -156,6 +156,7 @@ None beyond the preview launcher and package scripts.
 
 - First pass (346f4bf) fixed the launcher/supervisor baseline but left atomic duplicate-start claim, safe stale recovery, authenticated identity, readiness-marker, restart concurrency, storm reset, ownership stop, request bounding, state/token redaction, and Windows tree-kill gaps.
 - Second pass (ac2d722) closed many gaps but left Windows tree termination unwired in the standalone supervisor, unsafe Vite arg forwarding, stale lifecycle truth across replacement launches, unhealthy-authenticated-start handling, own-claim cleanup on startup failure, identity-bearing control acks, pending-claim PID/port recovery, response-body overflow, and 0600/atomic-update truth.
+- Third pass (2d66d9d) closed the second-pass gaps but left truthful restart transition before backoff/dead-pid advertisement, readiness-timeout live adopted supervisor cleanup, stop-during-restart-backoff race, terminal-loop inspectability, identity-safe bounded logs, and positional manifest CLI form.
 - Final correction (this active slice) closes the remaining gaps; see `.codex/FVR02_A2_LOCAL_PREVIEW_RECEIPT.md`.
 
 ## Blockers (recorded; not part of this slice)

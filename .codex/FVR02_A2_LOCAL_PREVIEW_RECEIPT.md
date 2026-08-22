@@ -13,6 +13,8 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 - FIRST_PASS_REVIEW: FAILED parent + Ox runtime-promotion review (atomic duplicate-start claim, safe stale recovery, authenticated identity, readiness marker, restart concurrency, storm reset, stop/ownership, request bounding, state/token redaction, and Windows tree-kill gaps).
 - SECOND_PASS_COMMIT: ac2d7227314acb923a55657f4e7fb09870f8d9b2
 - SECOND_PASS_REVIEW: FAILED parent + Ox runtime-promotion review (Windows tree termination not wired into the standalone supervisor; unsafe Vite arg forwarding; stale lifecycle truth inherited across replacement launches; unhealthy authenticated start treated as already-running; startup failure did not clear its own claim; control acks lacked identity; pending-claim PID/port recovery; response-body overflow; and 0600/atomic-update truth).
+- THIRD_PASS_COMMIT: 2d66d9d35b09aa401436b41283f8fd4853e03b95
+- THIRD_PASS_REVIEW: FAILED static acceptance (truthful restart transition before backoff and dead-pid advertisement; readiness-timeout live adopted supervisor cleanup; plus stop-during-backoff race, terminal-loop inspectability, identity-safe bounded logs, and positional manifest CLI form).
 - FINAL_CORRECTION: implemented in the final corrective commit. Live runtime acceptance is NOT claimed.
 
 ## Implemented result
@@ -30,6 +32,10 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 - Stale recovery checks launcherPid, supervisorPid, and vitePid; never clears while any recorded process is live. Port probe is safe only on exact `closed`; `timeout`/other is ownership-unknown across start, stale clearing, preflight, and waitForStopped.
 - Control response bodies are capped (64 KiB) and fail closed on overflow. State replacement uses atomic temporary-file plus rename with bounded retry so status cannot observe transient invalid JSON as STOPPED.
 - On failed CLI readiness, an authenticated live supervisor is identity-verified and stopped with bounded cleanup; otherwise the claim is preserved and the CLI fails closed. Stop finalizes even if the exit event never arrives and never leaves a live control server/state behind.
+- After any child exit, the supervisor transitions immediately and atomically to a truthful restart/start state before persisting/backoff so no status window advertises RUNNING/healthy=true/old lastHealthyAt/dead vitePid. Stop requested during restart backoff cancels the restart and never spawns a second child.
+- A retained restart-loop terminal snapshot is sanitized (no owner token, no control endpoint, no dead child pid) so status can truthfully report STOPPED + terminationReason; it is removed/cleared only through the normal authenticated/dead-safe paths.
+- Bounded logs include identity-safe Playground verification, Vite child spawn PID, readiness PID, and restart success messages (never hostname, manifest contents, or token).
+- `preview:frontend:start`/`restart` accept the owner-facing positional manifest form (`npm run ... -- <absolute-manifest>`) as well as `--manifest`, with Vite args still separated after `--`.
 - `scripts/start-frontend-playground-preview.mjs` is a thin CLI with `dev` (preserved foreground), `start`, `status`, `restart`, and `stop` modes; persistent `start` preserves `-- <vite args>` and restart reuses the canonical path with re-resolution.
 - `package.json` adds `preview:frontend:start`, `preview:frontend:status`, `preview:frontend:restart`, `preview:frontend:stop`, and keeps `dev:frontend:playground` (now explicit `dev` mode).
 
@@ -37,7 +43,7 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 
 - `git diff --check`: PASS.
 - `node scripts/check-agent-instructions.mjs`: PASS (12 project files).
-- Focused unit: `npx vitest run tests/unit/frontend-preview-supervisor.test.js tests/unit/frontend-playground-guard.test.js`: PASS (2 files, 34 tests).
+- Focused unit: `npx vitest run tests/unit/frontend-preview-supervisor.test.js tests/unit/frontend-playground-guard.test.js`: PASS (2 files, 41 tests).
 - Focused eslint on the three changed JS files: PASS (no findings).
 - `node --check` on both changed scripts: PASS.
 

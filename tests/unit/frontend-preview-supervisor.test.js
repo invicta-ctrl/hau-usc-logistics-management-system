@@ -25,6 +25,7 @@ import {
   decideStart,
   makeControlRequest,
   matchesIdentity,
+  parseCliArgs,
   safeClearStateIfDead,
 } from '../../scripts/start-frontend-playground-preview.mjs';
 
@@ -466,5 +467,197 @@ describe('CLI ownership decisions and control', () => {
       makeControlRequest: vi.fn(async () => ({ status: 200, body: { ok: true } })),
     });
     expect(await cli.doStop()).toBe(0);
+  });
+});
+
+describe('final P1 truth regressions', () => {
+  it('transitions to truthful RESTARTING state with no dead pid before backoff', async () => {
+    const { supervisor, child } = buildSupervisor();
+    let resolveSleep;
+    const sleep = vi.fn(async () => {
+      await new Promise((resolve) => {
+        resolveSleep = resolve;
+      });
+    });
+    supervisor.sleep = sleep;
+    await supervisor.launchChild();
+    child.exitCode = 1;
+    child.handlers.exit(1, null);
+    await vi.waitFor(() => expect(sleep).toHaveBeenCalled());
+    expect(supervisor.state).toBe('RESTARTING');
+    expect(supervisor.healthy).toBe(false);
+    expect(supervisor.child).toBeNull();
+    resolveSleep();
+  });
+
+  it('expected stop during restart backoff never spawns a second child', async () => {
+    const { supervisor, child, spawn } = buildSupervisor();
+    let resolveSleep;
+    const sleep = vi.fn(async () => {
+      await new Promise((resolve) => {
+        resolveSleep = resolve;
+      });
+    });
+    supervisor.sleep = sleep;
+    await supervisor.launchChild();
+    child.exitCode = 1;
+    child.handlers.exit(1, null);
+    await vi.waitFor(() => expect(sleep).toHaveBeenCalled());
+    // Stop while performRestart is blocked in backoff.
+    supervisor.shutdownRequested = true;
+    supervisor.state = 'STOPPED';
+    supervisor.terminationReason = 'stopped';
+    resolveSleep();
+    await vi.waitFor(() => expect(supervisor.restarting).toBe(false));
+    expect(spawn).toHaveBeenCalledTimes(1);
+    expect(supervisor.child).toBeNull();
+  });
+
+  it('finalize loop persists sanitized terminal state without token/control/dead pid', async () => {
+    const { supervisor } = buildSupervisor();
+    supervisor.clearState = vi.fn(async () => {});
+    supervisor.writeTerminalState = vi.fn(async () => {});
+    await supervisor.finalize('loop', 1);
+    expect(supervisor.writeTerminalState).toHaveBeenCalledWith('loop');
+  });
+
+  it('doStatus reports STOPPED + reason for a dead terminal loop snapshot', async () => {
+    const terminal = {
+      instanceId: 'inst',
+      supervisorPid: 999,
+      controlPort: null,
+      ownerToken: null,
+      vitePid: null,
+      state: 'STOPPED',
+      terminationReason: 'loop',
+    };
+    const cli = createCli({
+      readState: vi.fn(async () => terminal),
+      isPidAlive: vi.fn(() => false),
+      probePort: vi.fn(async () => 'closed'),
+    });
+    const out = [];
+    const origStdout = process.stdout.write;
+    process.stdout.write = (s) => {
+      out.push(String(s));
+      return true;
+    };
+    try {
+      expect(await cli.doStatus()).toBe(1);
+    } finally {
+      process.stdout.write = origStdout;
+    }
+    expect(out.join('')).toContain('STOPPED');
+    expect(out.join('')).toContain('loop');
+    expect(out.join('')).not.toContain('OWNERSHIP_UNKNOWN');
+  });
+
+  it('doStart readiness timeout stops a live adopted supervisor and clears its own pending claim', async () => {
+    const readState = vi.fn(async () => null);
+    const controlStatus = vi.fn(async () => ({
+      authenticated: true,
+      body: { ok: true, instanceId: 'inst-1', supervisorPid: 123, controlPort: 45678, healthy: false, vitePid: null },
+    }));
+    const controlAction = vi.fn(async () => ({ authenticated: true }));
+    const clearClaim = vi.fn(async () => {});
+    const clearState = vi.fn(async () => {});
+    // After waitForHealthy gives up (no healthy state observed), cleanupFailedStart
+    // re-reads a live adopted supervisor and must identity-verify + stop it.
+    readState.mockResolvedValue({
+      instanceId: 'inst-1',
+      supervisorPid: 123,
+      controlPort: 45678,
+      ownerToken: 'tok',
+      vitePid: 555,
+      pending: false,
+      healthy: true,
+    });
+    const deps = {
+      readState,
+      isPidAlive: vi.fn(() => true),
+      probePort: vi.fn(async () => 'closed'),
+      claimState: vi.fn(async () => true),
+      clearState,
+      clearClaim,
+      spawn: vi.fn(() => ({ unref: vi.fn(), pid: 900 })),
+      sleep: vi.fn(async () => {}),
+      controlStatus,
+      controlAction,
+      makeControlRequest: vi.fn(async () => ({ status: 200, body: { ok: true } })),
+      resolveManifest: vi.fn(async () => ({ manifestPath: '/m.json', fingerprint: 'fp' })),
+      generateInstanceId: vi.fn(() => 'inst-1'),
+      healthyTimeoutMs: 1,
+      stopTimeoutMs: 1,
+    };
+    const cli = createCli(deps);
+    // After the stop ack, waitForStopped must observe no state so cleanup returns success quickly.
+    let stopPhase = false;
+    readState.mockImplementation(async () => (stopPhase ? null : {
+      instanceId: 'inst-1',
+      supervisorPid: 123,
+      controlPort: 45678,
+      ownerToken: 'tok',
+      vitePid: 555,
+      pending: false,
+      healthy: true,
+    }));
+    controlAction.mockImplementation(async () => {
+      stopPhase = true;
+      return { authenticated: true };
+    });
+    expect(await cli.doStart('/m.json')).toBe(1);
+    expect(controlAction).toHaveBeenCalled();
+    expect(controlAction.mock.calls[0][1]).toBe('stop');
+  });
+
+  it('doStart identity mismatch on readiness timeout fails closed without killing', async () => {
+    const readState = vi.fn(async () => ({
+      instanceId: 'other',
+      supervisorPid: 456,
+      controlPort: 40000,
+      ownerToken: 'tok',
+      vitePid: 555,
+      pending: false,
+    }));
+    const clearClaim = vi.fn(async () => {});
+    const controlAction = vi.fn(async () => ({ authenticated: false }));
+    const deps = {
+      readState,
+      isPidAlive: vi.fn(() => true),
+      probePort: vi.fn(async () => 'closed'),
+      claimState: vi.fn(async () => true),
+      clearState: vi.fn(async () => {}),
+      clearClaim,
+      spawn: vi.fn(() => ({ unref: vi.fn(), pid: 900 })),
+      sleep: vi.fn(async () => {}),
+      controlStatus: vi.fn(async () => ({ authenticated: false })),
+      controlAction,
+      makeControlRequest: vi.fn(async () => ({ status: 200, body: { ok: true } })),
+      resolveManifest: vi.fn(async () => ({ manifestPath: '/m.json', fingerprint: 'fp' })),
+      generateInstanceId: vi.fn(() => 'inst-1'),
+      healthyTimeoutMs: 1,
+      stopTimeoutMs: 1,
+    };
+    const cli = createCli(deps);
+    expect(await cli.doStart('/m.json')).toBe(1);
+    expect(controlAction).not.toHaveBeenCalled();
+  });
+
+  it('parses positional manifest and --manifest forms with -- separated vite args', () => {
+    expect(parseCliArgs(['start', '/abs/manifest.json'])).toEqual({
+      mode: 'start',
+      rawManifestPath: '/abs/manifest.json',
+      viteArguments: [],
+    });
+    expect(parseCliArgs(['start', '--manifest', '/abs/m.json', '--', '--open', 'false'])).toEqual({
+      mode: 'start',
+      rawManifestPath: '/abs/m.json',
+      viteArguments: ['--open', 'false'],
+    });
+    expect(parseCliArgs(['restart', '/abs/m.json'])).toEqual({
+      mode: 'restart',
+      rawManifestPath: '/abs/m.json',
+      viteArguments: [],
+    });
   });
 });

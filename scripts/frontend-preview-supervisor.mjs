@@ -331,6 +331,7 @@ export class PreviewSupervisor {
     this.manifestPath = resolved;
     this.targetOrigin = target.origin;
     this.manifestFingerprint = computeFingerprint(raw);
+    this.log('info', 'playground origin verified');
     return target;
   }
 
@@ -443,6 +444,25 @@ export class PreviewSupervisor {
     });
   }
 
+  async writeTerminalState(reason) {
+    await updateState(this.runtimeRoot, {
+      version: 1,
+      pending: false,
+      instanceId: this.instanceId,
+      supervisorPid: process.pid,
+      controlPort: null,
+      ownerToken: null,
+      vitePid: null,
+      manifestPath: this.manifestPath,
+      manifestFingerprint: this.manifestFingerprint,
+      state: 'STOPPED',
+      healthy: false,
+      restartCount: this.restartCount,
+      lastHealthyAt: this.lastHealthyAt,
+      terminationReason: reason,
+    });
+  }
+
   async preflightPort() {
     const result = await this.probePort(PREVIEW_HOST, PREVIEW_PORT);
     if (result !== 'closed') {
@@ -460,6 +480,9 @@ export class PreviewSupervisor {
 
   async launchChild() {
     if (this.child && this.child.exitCode === null && !this.child.killed) return;
+    if (this.shutdownRequested) {
+      throw new Error('Cannot launch a preview child after shutdown was requested.');
+    }
     await this.resolveManifest(this.manifestPath);
     await this.preflightPort();
     assertSafeViteArguments(this.viteArguments);
@@ -477,6 +500,7 @@ export class PreviewSupervisor {
       },
     );
     this.child = child;
+    this.log('info', `vite child spawned pid=${child.pid}`);
     child.stdout?.on('data', (chunk) => this.log('vite', String(chunk).trimEnd()));
     child.stderr?.on('data', (chunk) => this.log('vite', String(chunk).trimEnd()));
     child.on('error', (error) => this.log('error', `vite spawn error: ${error?.message ?? 'unknown'}`));
@@ -515,6 +539,7 @@ export class PreviewSupervisor {
         this.healthySince = this.now();
         await this.writeState();
         this.log('info', 'preview healthy');
+        this.log('info', `vite child ready pid=${this.child?.pid ?? 'unknown'}`);
         return true;
       }
       await this.sleep(500);
@@ -552,14 +577,29 @@ export class PreviewSupervisor {
         return;
       }
       const delay = backoffDelay(this.restartCount);
+      // Transition immediately and atomically to truthful restart state before
+      // persisting or sleeping; do not advertise the dead child as live.
+      this.child = null;
+      this.resetLifecycle();
+      this.state = 'RESTARTING';
       this.log('info', `scheduling vite restart in ${delay}ms (attempt ${this.restartCount})`);
       await this.writeState();
+      if (this.shutdownRequested) {
+        this.log('info', 'stop requested during restart backoff; canceling restart');
+        return;
+      }
       await this.sleep(delay);
+      if (this.shutdownRequested) {
+        this.log('info', 'stop requested after restart backoff; canceling restart');
+        return;
+      }
       try {
         await this.launchChild();
         const ready = await this.waitReady();
         if (!ready) {
           await this.finalize('start_failed', 1);
+        } else {
+          this.log('info', `vite restart succeeded pid=${this.child?.pid ?? 'unknown'}`);
         }
       } catch (error) {
         this.log('error', `restart failed: ${error?.message ?? 'unknown'}`);
@@ -679,7 +719,6 @@ export class PreviewSupervisor {
     this.state = 'STOPPED';
     this.terminationReason = reason;
     this.healthy = false;
-    await this.writeState();
     await this.closeControl();
     if (this.healthTimer) clearInterval(this.healthTimer);
     this.healthTimer = null;
@@ -691,7 +730,9 @@ export class PreviewSupervisor {
         // best effort; the process may already be gone
       }
     }
-    if (reason !== 'loop') {
+    if (reason === 'loop') {
+      await this.writeTerminalState(reason);
+    } else {
       await this.clearState(this.runtimeRoot);
     }
     this.log('info', `supervisor exiting state=STOPPED reason=${reason}`);

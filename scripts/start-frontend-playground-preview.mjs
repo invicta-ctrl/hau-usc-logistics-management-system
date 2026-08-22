@@ -337,16 +337,40 @@ export function createCli(deps = {}) {
     clearState: deps.clearState ?? clearState,
     clearClaim: deps.clearClaim ?? clearClaim,
     safeClearStateIfDead: deps.safeClearStateIfDead ?? safeClearStateIfDead,
+    resolveManifest: deps.resolveManifest ?? resolveManifest,
+    generateInstanceId: deps.generateInstanceId ?? generateInstanceId,
     sleep: deps.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms))),
+    healthyTimeoutMs: deps.healthyTimeoutMs ?? 30000,
+    stopTimeoutMs: deps.stopTimeoutMs ?? 15000,
   };
 
   const controlStatusBound = deps.controlStatus ?? ((state) => controlStatus(state, bound));
   const controlActionBound = deps.controlAction ?? ((state, action) => controlAction(state, action, bound));
 
+  async function cleanupFailedStart(instanceId) {
+    const state = await bound.readState();
+    if (!state) return 'cleared';
+    if (state.pending === true) {
+      if (state.instanceId === instanceId) {
+        await bound.clearClaim(instanceId);
+        return 'cleared';
+      }
+      return 'mismatch';
+    }
+    if (state.instanceId !== instanceId) return 'mismatch';
+    if (!state.controlPort || !state.ownerToken) return 'mismatch';
+    const status = await controlStatusBound(state);
+    if (!status.authenticated) return 'mismatch';
+    const ack = await controlActionBound(state, 'stop');
+    if (!ack.authenticated) return 'mismatch';
+    const stopped = await waitForStopped(bound, bound.stopTimeoutMs);
+    return stopped ? 'stopped' : 'timeout';
+  }
+
   async function doStart(rawManifestPath, viteArguments = []) {
     assertSafeViteArguments(viteArguments);
-    const { manifestPath, fingerprint } = await resolveManifest(rawManifestPath);
-    const instanceId = generateInstanceId();
+    const { manifestPath, fingerprint } = await bound.resolveManifest(rawManifestPath);
+    const instanceId = bound.generateInstanceId();
     const decision = await decideStart({
       instanceId,
       manifestPath,
@@ -365,7 +389,7 @@ export function createCli(deps = {}) {
       return 1;
     }
     if (decision.decision === 'in-flight') {
-      const ready = await waitForHealthy(decision.instanceId, { ...bound, controlStatus: controlStatusBound });
+      const ready = await waitForHealthy(decision.instanceId, { ...bound, controlStatus: controlStatusBound }, bound.healthyTimeoutMs);
       if (ready) {
         process.stdout.write(`Already running: supervisor ${ready.supervisorPid}, vite ${ready.vitePid}, healthy=true\n`);
         return 0;
@@ -381,10 +405,16 @@ export function createCli(deps = {}) {
       process.stderr.write(`Failed to launch supervisor: ${error?.message ?? 'unknown'}\n`);
       return 1;
     }
-    const ready = await waitForHealthy(instanceId, { ...bound, controlStatus: controlStatusBound });
+    const ready = await waitForHealthy(instanceId, { ...bound, controlStatus: controlStatusBound }, bound.healthyTimeoutMs);
     if (!ready) {
-      await bound.clearClaim(instanceId);
-      process.stderr.write('The preview did not become RUNNING and healthy within the readiness window.\n');
+      const cleanup = await cleanupFailedStart(instanceId);
+      if (cleanup === 'mismatch') {
+        process.stderr.write(`${OWNERSHIP_UNKNOWN}\n`);
+      } else if (cleanup === 'timeout') {
+        process.stderr.write('The owned supervisor did not stop within the cleanup window.\n');
+      } else {
+        process.stderr.write('The preview did not become RUNNING and healthy within the readiness window.\n');
+      }
       return 1;
     }
     process.stdout.write(
@@ -471,13 +501,13 @@ export function createCli(deps = {}) {
       return 1;
     }
     if (rawManifestPath) {
-      const resolved = await resolveManifest(rawManifestPath);
+      const resolved = await bound.resolveManifest(rawManifestPath);
       if (state.manifestFingerprint && state.manifestFingerprint !== resolved.fingerprint) {
         process.stderr.write('Refusing restart: manifest content differs from the running instance.\n');
         return 1;
       }
     } else if (state.manifestPath) {
-      await resolveManifest(state.manifestPath);
+      await bound.resolveManifest(state.manifestPath);
     }
     const oldVitePid = state.vitePid;
     const ack = await controlActionBound(state, 'restart');
@@ -496,7 +526,7 @@ export function createCli(deps = {}) {
 
   async function doForeground(rawManifestPath, viteArguments) {
     assertSafeViteArguments(viteArguments);
-    const { target } = await resolveManifest(rawManifestPath);
+    const { target } = await bound.resolveManifest(rawManifestPath);
     const vite = path.join(repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
     process.stdout.write('Starting the Figma-native loopback preview with a verified isolated-playground proxy.\n');
     const child = bound.spawn(
@@ -522,15 +552,25 @@ export function createCli(deps = {}) {
   return { doStart, doStatus, doStop, doRestart, doForeground };
 }
 
+export function parseCliArgs(argv) {
+  const [mode, ...rest] = argv;
+  const separatorIndex = rest.indexOf('--');
+  const beforeSeparator = separatorIndex >= 0 ? rest.slice(0, separatorIndex) : rest;
+  const viteArguments = separatorIndex >= 0 ? rest.slice(separatorIndex + 1) : [];
+  const manifestFlagIndex = beforeSeparator.indexOf('--manifest');
+  const rawManifestPath =
+    manifestFlagIndex >= 0
+      ? beforeSeparator[manifestFlagIndex + 1] ?? null
+      : beforeSeparator.find((token) => !token.startsWith('-')) ?? null;
+  return { mode, rawManifestPath, viteArguments };
+}
+
 export async function runCli(argv = process.argv.slice(2), deps = {}) {
   const cli = createCli(deps);
-  const [mode, ...rest] = argv;
+  const { mode, rawManifestPath, viteArguments } = parseCliArgs(argv);
   if (mode === 'dev') {
-    return cli.doForeground(rest[0], rest.slice(1));
+    return cli.doForeground(rawManifestPath, viteArguments);
   }
-  const manifestIndex = rest.indexOf('--manifest');
-  const rawManifestPath = manifestIndex >= 0 ? rest[manifestIndex + 1] : null;
-  const viteArguments = rest.includes('--') ? rest.slice(rest.indexOf('--') + 1) : [];
   switch (mode) {
     case 'start':
       return cli.doStart(rawManifestPath, viteArguments);
