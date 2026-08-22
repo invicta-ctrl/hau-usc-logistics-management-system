@@ -1,4 +1,4 @@
-# Current Bounded Task — FVR-02 full frontend recovery activation
+# Current Bounded Task — FVR-02 A2 activation (authority/governance only)
 
 INTENT: FRONTEND_RECOVERY
 MODE: EXECUTE
@@ -6,40 +6,44 @@ TASK_ROUTING:
   PRIMARY: SOFTWARE_FEATURE/FRONTEND_RECOVERY
   SECONDARY: BUG_FIX/TESTING/GOVERNANCE/FIGMA_DESIGN_TO_CODE/MOTION/ACCESSIBILITY
   MODE: EXECUTE
-  TARGET: frontend-design-integration worktree, Figma-native frontend, public media chain, hero motion, preview Module Index
+  TARGET: frontend-design-integration worktree, Figma-native frontend, public media chain, hero motion, preview Module Index, local preview supervisor
   SKILLS: lean-ctx+figma+figma-design-to-code+figma-implement-design+figma-implement-motion+impeccable+create-plan
   RISK: HIGH
 
-OBJECTIVE: Re-audit FI-00 through FI-03 against current live Figma, resolve the hero media/motion authority gap, populate safe preview media only when a missing Playground baseline is the proven cause, and build a secure preview-only Module Index without touching backend/auth/data/schema/provider semantics.
+OBJECTIVE: Authority/governance activation of the two FVR-02-A2 amendments (Ox-first routing; local preview resilience). This activation task does not implement product changes or the preview supervisor; those are the next dispatched work after parent review.
 
-TARGET: frontend-design-integration worktree; generated frontend artifacts; guarded Playground preview; public media/CurrentSection chain; HeroSection/HeroMotion; preview Module Index/Surface Preview/Test Real Login Flow.
+TARGET: frontend-design-integration worktree; generated frontend artifacts; guarded Playground preview; public media/CurrentSection chain; HeroSection/HeroMotion; preview Module Index/Surface Preview/Test Real Login Flow; local preview supervisor/launcher.
 
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr02-full-frontend-recovery-media-motion-index.md
+ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr02-a2-ox-first-routing.md;.codex/specs/accepted/2026-08-22-fvr02-a2-local-preview-resilience.md
 
-AUTHORITY: Earl current instruction -> accepted FVR-02 spec -> live Figma Make (implementation/composition/motion/source) -> live Figma Design (docs/annotations/variables/assets) -> accepted backend/API/auth/data/security contracts -> current Figma-native source/tests -> verified mirrors fallback only -> V5 historical archaeology only.
+AUTHORITY: Earl current instruction -> accepted FVR-02 spec -> accepted FVR-02-A2 amendments -> live Figma Make (implementation/composition/motion/source) -> live Figma Design (docs/annotations/variables/assets) -> accepted backend/API/auth/data/security contracts -> current Figma-native source/tests -> verified mirrors fallback only -> V5 historical archaeology only.
 
 REQUIRED_MODEL: GPT-5.6_SOL_MAX
 ACTIVE_WRITER: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v2
 WRITER_LOCK: ACQUIRED
+PHASE: A2_LOCAL_PREVIEW_REPAIR_THEN_RESUME_FVR02
 
 RECLASSIFICATION: FI-00 REVALIDATE; FI-01 REVALIDATE; FI-02 FUNCTIONAL PRESERVE_IF_VERIFIED; FI-02 VISUAL/MEDIA/MOTION REOPENED; FI-03 FUNCTIONAL PRESERVE_IF_VERIFIED; FI-03 VISUAL REVALIDATE; PREVIEW MODULE INDEX NOT_IMPLEMENTED; FI-04 BLOCKED.
 
-IN_SCOPE: FI-00 -> FI-03 re-audit and bounded repair; hero media/motion authority resolution; safe Playground-only public media population only when proven within existing runbook; preview-only Module Index/Surface Preview/Test Real Login Flow; responsive/accessibility/motion confirmation; focused and broad verification; Git delivery and durable receipt.
+IN_SCOPE (this activation): author the two accepted A2 amendment specs; update the branch-local AGENTS.md appendix for Ox-first routing; update current-chain records; two path-limited commits.
 
-OUT_OF_SCOPE: FI-04 and any later slice; backend/API/auth/data/schema/migration/provider semantic change; Figma write; Production deployment; Production data write; history rewrite/force-push/reset/clean; mutation of unknown or unrelated work; AGENTS.md and project-policy edits.
+OUT_OF_SCOPE (this activation): implementing the preview supervisor, product/FI repairs, media population, or Module Index; backend/API/auth/data/schema/migration/provider semantic change; Figma write; Production deployment; Production data write; history rewrite/force-push/reset/clean; mutation of unknown or unrelated work; `.ai-bridge/`; AGENTS.md universal body; PROJECT_POLICY.
 
-DELIVERABLES: truthful re-audit residual register with P0/P1/P2; resolved hero media/motion (or explicit FVR02_VIDEO_AUTHORITY_CONFLICT); classified public media chain root cause; secure preview Module Index with positive Playground and negative Production gates; green accepted verification; pushed branch with readback; durable FVR-02 receipt.
+DELIVERABLES: branch-local AGENTS.md Ox-first appendix; two self-contained accepted A2 amendment specs; corrected current-chain records; two isolated commits with verified path sets; passing governance check and git diff --check.
 
-VERIFICATION: residual register closeout (P0=0, P1=0, unwaived P2=0); FI-00 authority/V5 zero-active; FI-01 exact Figma fonts/tokens/colors/gold/theme/spacing/radii/borders/shadows/glass/gradients/motion/easing/breakpoints/focus/icons/assets; FI-02 real backend receipts no fabricated state; FI-03 sign-in/activation/verification/application/status/withdrawal truth and security; hero normal-motion playback/poster/reduced-motion; public media API/URL/Current states; Index search/filter/Surface Preview/real login/Production negative; responsive 320/390/768/1024/1440; 200% zoom/keyboard/focus/no horizontal overflow; build/dist verify/focused unit/frontend E2E/Cloudflare dry run where required/guarded preview.
+VERIFICATION: `scripts/check-agent-instructions.mjs` pass; `git diff --check` pass; exact commit path sets (AGENTS.md only; then amendments + CURRENT* only); status showing only preserved `.ai-bridge/` afterward.
 
-STOP_CONDITIONS: conflicting active writer; unknown dirty work; missing or contradictory authority; live-source failure unresolved; required backend/auth/data/schema/migration/provider semantic change; Production crossover; unsafe Playground mutation without rollback; mandatory verification failure; Ox/model route unavailable for required gate; hero authority conflict; Index safe-signal absence.
+STOP_CONDITIONS: conflicting active writer; unknown dirty work; missing or contradictory authority; live-source failure unresolved; required backend/auth/data/schema/migration/provider semantic change; Production crossover; unsafe Playground mutation without rollback; mandatory verification failure; Ox/model route unavailable for a required gate; hero authority conflict; Index safe-signal absence; scope expansion beyond authority/governance activation.
 
 DELEGATION:
-- AGENT: DeepSeek V4 Pro #1 (/root/ds1_fvr02_writer_v2); MODEL: DeepSeek V4 Pro; ROLE: canonical frontend writer; MODE: WRITE; SCOPE: accepted FVR-02 repairs and current-chain records; OWNED_PATHS: canonical frontend source, directly coupled tests, preview tooling, current-chain records, FVR-02 spec; EXCLUDED: AGENTS.md, PROJECT_POLICY, product/plan/source outside accepted scope, commits/pushes unless authorized, Figma/provider/Playground/Production writes; STATUS: ACTIVE_FVR02.
+- AGENT: DeepSeek V4 Pro #1 (/root/ds1_fvr02_writer_v2); MODEL: DeepSeek V4 Pro; ROLE: canonical frontend writer; MODE: WRITE; SCOPE: accepted FVR-02 repairs, preview supervisor (next dispatched work), and current-chain records; OWNED_PATHS: canonical frontend source, directly coupled tests, preview tooling, current-chain records, FVR-02 spec and amendments; EXCLUDED: AGENTS.md universal body, PROJECT_POLICY, product/plan/source outside accepted scope, commits/pushes unless authorized, Figma/provider/Playground/Production writes; STATUS: ACTIVE_FVR02.
 
-FIRST_WAVE_LANES (placeholders only; no invented IDs or results): DeepSeek #2-#16 read-only audit lanes and Ox Alpha #1-#16 read-only visual/motion/a11y adversarial lanes are to be dispatched by Sol Max; canonical writer participates as one of the first-wave lanes; each lane reports bounded read-only evidence for Sol Max triage.
+MODEL_CONTRACT (A2 Ox-first): Ox Alpha is the default read-only subagent for all safe review/scout/audit domains via openrouter/stealth/ox-alpha; DeepSeek #1 stays canonical writer; additional DeepSeek is exceptional heavy-analysis only with WHY_DEEPSEEK_NOT_OX; fork_turns none/narrow capsules for Ox; no silent substitution; one writer; concurrency ceiling unchanged; Ox writer failover only under separately accepted FVR-02-A1 exhaustion authority.
+
+LISTENER_EVIDENCE: 2026-08-22 read-only observation -> http://127.0.0.1:4173/ NO_LISTENER, HTTP actively refused. No preview started/stopped or external state mutated during this activation.
 
 STATUS: ACTIVE_FVR02
-NEXT_EXACT_ACTION: dispatch bounded first-wave read-only DeepSeek/Ox audit lanes and inspect current live Figma/localhost/Playground evidence before any repair.
+NEXT_EXACT_ACTION: implement FVR-02-A2 local preview resilience (persistent supervised preview preserving the guarded Playground proxy), verify http://127.0.0.1:4173/ and #hero, then resume FVR-02 audit-first phases under Ox-first routing.

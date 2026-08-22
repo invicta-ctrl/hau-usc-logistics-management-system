@@ -1,56 +1,64 @@
-# Current Environment Handoff — FVR-02 activation
+# Current Environment Handoff — FVR-02 A2 activation
 
 FROM: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v2
 TO: GPT-5.6_SOL_MAX:/root (read-only orchestrator/final reviewer)
 BRANCH: frontend-design-integration
-HEAD: 320d580eeb3c7c3dcf0500dcfec496bc574c4320
+HEAD: RESOLVE_FROM_LIVE_GIT_HEAD
+BASELINE_HEAD: 842f4c6b4468462928b1b9e6ab9ae98fa80ebbf8
 UPSTREAM: origin/frontend-design-integration@e93e5c97fdb44f85f1b6ac1b578c9014a77b6166
-AHEAD_BEHIND: AHEAD_TWO
+AHEAD_BEHIND: BEHIND_0_AHEAD_3
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: CLEAN_EXCEPT_PRESERVED_EXCLUDED_UNTracked `.ai-bridge/`
 ACTIVE_WRITER: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v2
 WRITER_LOCK: ACQUIRED
+PHASE: A2_LOCAL_PREVIEW_REPAIR_THEN_RESUME_FVR02
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr02-full-frontend-recovery-media-motion-index.md
+ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr02-a2-ox-first-routing.md;.codex/specs/accepted/2026-08-22-fvr02-a2-local-preview-resilience.md
 
 STATUS: ACTIVE_FVR02
 PRODUCT_REPAIRS: NONE_YET
-GOVERNANCE_SPEC_ACTIVATION: COMPLETED_PENDING_PARENT_REVIEW
+PREVIEW_SUPERVISOR: NOT_YET_IMPLEMENTED (authority/governance activation only)
+GOVERNANCE_A2_ACTIVATION: COMPLETED_PENDING_PARENT_REVIEW
 EXTERNAL_MUTATIONS: ZERO
 
 RECLASSIFICATION: FI-00 REVALIDATE; FI-01 REVALIDATE; FI-02 FUNCTIONAL PRESERVE_IF_VERIFIED; FI-02 VISUAL/MEDIA/MOTION REOPENED; FI-03 FUNCTIONAL PRESERVE_IF_VERIFIED; FI-03 VISUAL REVALIDATE; PREVIEW MODULE INDEX NOT_IMPLEMENTED; FI-04 BLOCKED.
 
-COMPLETED_BASELINE: FVR-001 cutover f7e5bf83205dbe58b5fb72126a4456747d92e906 closed/published; branch governance a7da2e46902273f6724b21dffc5854f11e920c26 present branch-local; accepted FVR-02 spec committed at 320d580eeb3c7c3dcf0500dcfec496bc574c4320.
+COMPLETED_BASELINE: FVR-001 cutover f7e5bf83205dbe58b5fb72126a4456747d92e906 closed/published; branch governance a7da2e46902273f6724b21dffc5854f11e920c26 present branch-local; FVR-02 spec committed at 320d580eeb3c7c3dcf0500dcfec496bc574c4320; current-chain activation committed at 842f4c6b4468462928b1b9e6ab9ae98fa80ebbf8.
 
-PROHIBITED: Production deployment; Production data write; Figma write; backend/API/auth/data/schema/migration/provider semantic change; FI-04 start; history rewrite/reset/clean/force-push; mutation of unknown or unrelated work; AGENTS.md and project-policy edits; fabrication of hero video, advertisement records, or media URLs.
+LISTENER_EVIDENCE: 2026-08-22 read-only observation -> http://127.0.0.1:4173/ NO_LISTENER, HTTP actively refused (ERR_CONNECTION_REFUSED). No preview started/stopped or external state mutated during this activation.
 
-NEXT_ACTION: dispatch bounded first-wave read-only DeepSeek/Ox audit lanes and inspect current live Figma/localhost/Playground evidence before any repair.
+PROHIBITED: Production deployment; Production data write; Playground data write; Figma write; provider write; backend/API/auth/data/schema/migration/provider semantic change; FI-04 start; history rewrite/reset/clean/force-push; mutation of unknown or unrelated work; AGENTS.md universal body and project-policy edits; fabrication of hero video, advertisement records, or media URLs.
+
+NEXT_ACTION: implement FVR-02-A2 local preview resilience (persistent supervised preview preserving the guarded Playground proxy), verify http://127.0.0.1:4173/ and #hero, then resume FVR-02 audit-first phases under Ox-first routing.
 
 RESUME (compaction-survival labels, truthful):
 COMPACTION_RESUME_SCHEMA: 1
-UPDATED_AT: 2026-08-22T09:23:10Z
+UPDATED_AT: 2026-08-22T09:50:40Z
 PROJECT: HAU-USC Logistics
 REPOSITORY: invicta-ctrl/hau-usc-logistics-management-system
 BRANCH: frontend-design-integration
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-REPOSITORY_HEAD: 320d580eeb3c7c3dcf0500dcfec496bc574c4320
+REPOSITORY_HEAD: RESOLVE_FROM_LIVE_GIT_HEAD
+BASELINE_HEAD: 842f4c6b4468462928b1b9e6ab9ae98fa80ebbf8
 UPSTREAM_HEAD: e93e5c97fdb44f85f1b6ac1b578c9014a77b6166
 VERIFIED_THROUGH_COMMIT: f7e5bf83205dbe58b5fb72126a4456747d92e906
 DEPLOYED_RUNTIME: UNCHANGED; Production out of scope; guarded Playground preview identity/environment must be reverified
 HANDOFF_METADATA_HEAD: PENDING_THIS_CURRENT_CHAIN_COMMIT; resolve from live Git HEAD
 ACTIVE_SPEC: .codex/specs/accepted/2026-08-22-fvr02-full-frontend-recovery-media-motion-index.md
-ACTIVE_STEP_OR_PHASE: FVR02_AUDIT_FIRST
+ACTIVE_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr02-a2-ox-first-routing.md;.codex/specs/accepted/2026-08-22-fvr02-a2-local-preview-resilience.md
+ACTIVE_STEP_OR_PHASE: A2_LOCAL_PREVIEW_REPAIR_THEN_RESUME_FVR02
 STATUS: ACTIVE
-COMPLETED_AND_ACCEPTED: FVR-001 cutover f7e5bf83205dbe58b5fb72126a4456747d92e906; branch governance a7da2e46902273f6724b21dffc5854f11e920c26; FVR-02 spec 320d580eeb3c7c3dcf0500dcfec496bc574c4320
-EXTERNAL_STATE: no Figma/Playground/Production/provider writes; guarded preview requires revalidation
+COMPLETED_AND_ACCEPTED: FVR-001 cutover f7e5bf83205dbe58b5fb72126a4456747d92e906; branch governance a7da2e46902273f6724b21dffc5854f11e920c26; FVR-02 spec 320d580eeb3c7c3dcf0500dcfec496bc574c4320; current-chain activation 842f4c6b4468462928b1b9e6ab9ae98fa80ebbf8
+EXTERNAL_STATE: no Figma/Playground/Production/provider writes; guarded preview requires revalidation; 4173 observed NO_LISTENER
 DATABASE_STATE: unchanged; migrations 0; D1/R2 writes 0
 BACKUP_AND_ROLLBACK: Git revert product commits; preserve FVR-001 and rollback tag; Playground repair only via recorded existing runbook recovery; no Production/Figma rollback because no writes
-VERIFICATION_EVIDENCE: exact Git handshake and governance/spec checks only; no product gates claimed
-OPEN_DEFECTS_AND_RISKS: hero authority; media chain; Ox route availability; Index safe signal
+VERIFICATION_EVIDENCE: exact Git handshake, governance/spec activation, and check-agent-instructions/diff-check only; no product gates claimed
+OPEN_DEFECTS_AND_RISKS: hero authority; media chain; Ox route availability; Index safe signal; 4173 no listener (A2 local preview repair is next)
 OWNER_ACTION_REQUIRED: none currently
-NEXT_EXACT_ACTION: dispatch bounded first-wave read-only DeepSeek/Ox audit lanes and inspect current live Figma/localhost/Playground evidence before any repair.
-DO_NOT_REPEAT_WITHOUT_VERIFICATION: FVR-001 destructive removal/publication; any media population; any commit/push already recorded
-READ_FIRST: .codex/CURRENT.md; .codex/CURRENT_TASK.md; accepted FVR-02 spec; .agents/PROJECT_POLICY.md
-OFF_LIMITS: AGENTS.md; PROJECT_POLICY; .ai-bridge/ (preserved excluded untracked); any path outside accepted FVR-02 scope
+NEXT_EXACT_ACTION: implement FVR-02-A2 local preview resilience (persistent supervised preview preserving the guarded Playground proxy), verify http://127.0.0.1:4173/ and #hero, then resume FVR-02 audit-first phases under Ox-first routing.
+DO_NOT_REPEAT_WITHOUT_VERIFICATION: FVR-001 destructive removal/publication; any media population; any commit/push already recorded; any preview start/stop not yet performed
+READ_FIRST: .codex/CURRENT.md; .codex/CURRENT_TASK.md; accepted FVR-02 spec and A2 amendments; .agents/PROJECT_POLICY.md
+OFF_LIMITS: AGENTS.md universal body; PROJECT_POLICY; .ai-bridge/ (preserved excluded untracked); any path outside accepted FVR-02 scope
 SECRETS_AND_PRIVATE_DATA: referenced outside Git; not recorded here

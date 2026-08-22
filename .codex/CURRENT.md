@@ -3,10 +3,12 @@
 PROGRAM: HAU-USC Logistics
 MILESTONE: FVR-02_FULL_FRONTEND_RECOVERY_MEDIA_MOTION_INDEX
 STATUS: ACTIVE_FVR02
+PHASE: A2_LOCAL_PREVIEW_REPAIR_THEN_RESUME_FVR02
 BRANCH: frontend-design-integration
-HEAD: 320d580eeb3c7c3dcf0500dcfec496bc574c4320
+HEAD: RESOLVE_FROM_LIVE_GIT_HEAD
+BASELINE_HEAD: 842f4c6b4468462928b1b9e6ab9ae98fa80ebbf8
 UPSTREAM: origin/frontend-design-integration@e93e5c97fdb44f85f1b6ac1b578c9014a77b6166
-AHEAD_BEHIND: AHEAD_TWO
+AHEAD_BEHIND: BEHIND_0_AHEAD_3
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: CLEAN_EXCEPT_PRESERVED_EXCLUDED_UNTracked `.ai-bridge/`
 ACTIVE_WRITER: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v2
@@ -17,8 +19,9 @@ CANONICAL_WRITER: DeepSeek V4 Pro #1
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr02-full-frontend-recovery-media-motion-index.md
+ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr02-a2-ox-first-routing.md;.codex/specs/accepted/2026-08-22-fvr02-a2-local-preview-resilience.md
 
-AUTHORITY: Earl instruction -> accepted FVR-02 spec -> live Figma Make implementation/composition/motion/source -> live Figma Design docs/annotations/variables/assets -> accepted backend/API/auth/data/security contracts -> current Figma-native source/tests -> verified mirrors fallback only -> V5 historical archaeology only (never authority).
+AUTHORITY: Earl instruction -> accepted FVR-02 spec -> accepted FVR-02-A2 amendments -> live Figma Make implementation/composition/motion/source -> live Figma Design docs/annotations/variables/assets -> accepted backend/API/auth/data/security contracts -> current Figma-native source/tests -> verified mirrors fallback only -> V5 historical archaeology only (never authority).
 
 FVR001_CUTOVER_COMMIT: f7e5bf83205dbe58b5fb72126a4456747d92e906
 FVR001_STATUS: CLOSED_PUBLISHED
@@ -35,11 +38,13 @@ FI03_VISUAL_STATUS: REVALIDATE
 PREVIEW_MODULE_INDEX_STATUS: NOT_IMPLEMENTED
 FI04_STATUS: BLOCKED
 
-MODEL_CONTRACT: GPT-5.6 Sol Max sole read-only orchestrator/final reviewer (Sol writes forbidden, only Sol spawns, depth one, no recursion/substitution); DeepSeek V4 Pro #1 sole canonical writer; DS #2-#16 read-only default; Ox Alpha #1-#16 read-only adversarial reviewers; Terra not default, explicit bounded Sol Max fallback only if DeepSeek cannot safely finish.
+MODEL_CONTRACT: GPT-5.6 Sol Max sole read-only orchestrator/final reviewer (Sol writes forbidden, only Sol spawns, depth one, no recursion/substitution). DeepSeek V4 Pro #1 sole canonical writer. Ox Alpha is the default read-only subagent for all safe review/scout/audit domains via explicit model override openrouter/stealth/ox-alpha; additional DeepSeek is exceptional heavy-analysis only with a one-sentence WHY_DEEPSEEK_NOT_OX. fork_turns none/narrow capsules for Ox; no silent substitution; one writer; non-propagation unchanged; actual runtime concurrency ceiling unchanged; Ox writer failover only under separately accepted FVR-02-A1 exhaustion authority.
 
-FIRST_WAVE: 8 DeepSeek + 8 Ox Alpha total including canonical writer; reserve agents only when evidence warrants.
+FIRST_WAVE: Ox-first; routine read-only lanes default to Ox Alpha; DeepSeek reserved for the canonical writer and exceptional heavy-analysis lanes; no invented lane IDs or results.
 
-GUARDED_PREVIEW: http://127.0.0.1:4173 (identity/environment signal needs reverify before use)
+LISTENER_EVIDENCE: 2026-08-22 read-only observation -> http://127.0.0.1:4173/ NO_LISTENER, HTTP actively refused (ERR_CONNECTION_REFUSED). No external mutation performed; no preview started or stopped during this activation.
+
+GUARDED_PREVIEW: http://127.0.0.1:4173 (no healthy listener at A2 activation; identity/environment signal to be reverified by the A2 local preview repair)
 PRODUCTION_DEPLOYMENT: FORBIDDEN
 PRODUCTION_DATA_WRITE: FORBIDDEN
 PROVIDER_WRITE: FORBIDDEN
@@ -49,6 +54,6 @@ MIGRATION: FORBIDDEN
 
 ROLLBACK: Git revert product commits; preserve FVR-001 and rollback tag; Playground repair only via recorded existing runbook recovery; no Production/Figma rollback because no writes.
 
-OPEN_RISKS: hero-video authority conflict possible; public media baseline root cause unclassified; Ox Alpha/model route availability unverified; safe existing server-validated Index signal unverified.
+OPEN_RISKS: hero-video authority conflict possible; public media baseline root cause unclassified; Ox Alpha/model route availability to be reverified at dispatch; safe existing server-validated Index signal unverified.
 
-NEXT_EXACT_ACTION: dispatch bounded first-wave read-only DeepSeek/Ox audit lanes and inspect current live Figma/localhost/Playground evidence before any repair.
+NEXT_EXACT_ACTION: implement FVR-02-A2 local preview resilience (persistent supervised preview preserving the guarded Playground proxy), verify http://127.0.0.1:4173/ and #hero, then resume FVR-02 audit-first phases under Ox-first routing.
