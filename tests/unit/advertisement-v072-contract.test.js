@@ -77,6 +77,16 @@ class FakeDatabase {
       valuesRows = valuesRows.filter((record) => record.audience === values[0]);
     if (sql.includes("status = 'ACTIVE'"))
       valuesRows = valuesRows.filter((record) => record.status === 'ACTIVE');
+    if (sql.includes('archived_at IS NULL'))
+      valuesRows = valuesRows.filter((record) => record.archived_at == null);
+    if (sql.includes('publish_at IS NULL OR publish_at <='))
+      valuesRows = valuesRows.filter(
+        (record) => record.publish_at == null || record.publish_at <= values[1],
+      );
+    if (sql.includes('expire_at IS NULL OR expire_at >'))
+      valuesRows = valuesRows.filter(
+        (record) => record.expire_at == null || record.expire_at > values[1],
+      );
     return { results: valuesRows };
   }
 
@@ -508,5 +518,84 @@ describe('v0.7.2 advertisement contracts', () => {
       code: 'ADVERTISEMENT_NOT_FOUND',
     });
     expect(db.prepareCalls.some((sql) => sql.includes('audience = ?1'))).toBe(true);
+  });
+
+  it('lists only active announcements inside their publish and expiry windows', async () => {
+    const db = new FakeDatabase([
+      row({ id: 'ADV-NOW', audience: 'PUBLIC', status: 'ACTIVE', publish_at: null, expire_at: null }),
+      row({
+        id: 'ADV-FUTURE',
+        audience: 'PUBLIC',
+        status: 'ACTIVE',
+        publish_at: '2026-08-04T00:00:00.000Z',
+        expire_at: null,
+      }),
+      row({
+        id: 'ADV-EXPIRED',
+        audience: 'PUBLIC',
+        status: 'ACTIVE',
+        publish_at: null,
+        expire_at: '2026-08-02T00:00:00.000Z',
+      }),
+      row({
+        id: 'ADV-ARCHIVED',
+        audience: 'PUBLIC',
+        status: 'ACTIVE',
+        publish_at: null,
+        expire_at: null,
+        archived_at: NOW,
+      }),
+    ]);
+    const service = createPublicAdvertisementService({ db, bucket: new FakeBucket(), clock: { now: () => NOW } });
+    const result = await service.list();
+    expect(result.items.map((item) => item.id)).toEqual(['ADV-NOW']);
+  });
+
+  it('exposes an image URL only when a valid media key exists and never leaks the key', async () => {
+    const missingKey = row({ id: 'ADV-MISSING', audience: 'PUBLIC', status: 'ACTIVE' });
+    delete missingKey.image_asset_key;
+    const db = new FakeDatabase([
+      row({ id: 'ADV-IMG', audience: 'PUBLIC', status: 'ACTIVE', image_asset_key: 'advertisements/one.png' }),
+      row({ id: 'ADV-BLANK', audience: 'PUBLIC', status: 'ACTIVE', image_asset_key: '   ' }),
+      row({ id: 'ADV-NULL', audience: 'PUBLIC', status: 'ACTIVE', image_asset_key: null }),
+      missingKey,
+    ]);
+    const service = createPublicAdvertisementService({ db, bucket: new FakeBucket(), clock: { now: () => NOW } });
+    const result = await service.list();
+    const byId = Object.fromEntries(result.items.map((item) => [item.id, item]));
+    expect(byId['ADV-IMG'].imageUrl).toBe('/media/advertisements/ADV-IMG');
+    expect(byId['ADV-BLANK'].imageUrl).toBeNull();
+    expect(byId['ADV-NULL'].imageUrl).toBeNull();
+    expect(byId['ADV-MISSING'].imageUrl).toBeNull();
+    for (const item of result.items) {
+      expect(item).not.toHaveProperty('image_asset_key');
+      expect(JSON.stringify(item)).not.toContain('one.png');
+    }
+  });
+
+  it('serves a valid image and rejects missing or invalid media', async () => {
+    const bucket = new FakeBucket();
+    bucket.objects.set('catalog/advertisements/one.png', new Uint8Array([0x89, 0x50, 0x4e, 0x47]));
+    const db = new FakeDatabase([
+      row({ id: 'ADV-IMG', audience: 'PUBLIC', status: 'ACTIVE', image_asset_key: 'advertisements/one.png' }),
+      row({ id: 'ADV-MISSING', audience: 'PUBLIC', status: 'ACTIVE', image_asset_key: 'advertisements/absent.png' }),
+      row({ id: 'ADV-INVALID', audience: 'PUBLIC', status: 'ACTIVE', image_asset_key: 'bad..key' }),
+    ]);
+    const service = createPublicAdvertisementService({ db, bucket, clock: { now: () => NOW } });
+
+    const response = await service.image('ADV-IMG');
+    expect(response).toBeInstanceOf(Response);
+    expect(response.headers.get('cache-control')).toBe(
+      'public, max-age=300, stale-while-revalidate=600',
+    );
+
+    await expect(service.image('ADV-MISSING')).rejects.toMatchObject({
+      code: 'ADVERTISEMENT_ASSET_MISSING',
+      status: 404,
+    });
+    await expect(service.image('ADV-INVALID')).rejects.toMatchObject({
+      code: 'ADVERTISEMENT_ASSET_INVALID',
+      status: 404,
+    });
   });
 });

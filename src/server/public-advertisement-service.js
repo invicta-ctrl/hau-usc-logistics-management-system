@@ -25,6 +25,8 @@ function safeAudience(value = 'PUBLIC') {
 }
 
 function publicDto(row) {
+  const hasImage =
+    typeof row.image_asset_key === 'string' && row.image_asset_key.trim() !== '';
   return {
     id: row.id,
     title: row.title,
@@ -34,7 +36,7 @@ function publicDto(row) {
     destinationUrl: row.destination_url,
     audience: safeAudience(row.audience),
     revision: Number.isSafeInteger(Number(row.revision)) ? Number(row.revision) : 1,
-    imageUrl: `/media/advertisements/${encodeURIComponent(row.id)}`,
+    imageUrl: hasImage ? `/media/advertisements/${encodeURIComponent(row.id)}` : null,
   };
 }
 
@@ -49,7 +51,7 @@ export function createPublicAdvertisementService({ db, bucket, clock = Date } = 
     const result = await db
       .prepare(
         `SELECT id, title, description, alt_text, call_to_action, destination_url
-                , audience, revision
+                , audience, revision, image_asset_key
          FROM public_advertisements
          WHERE audience = ?1 AND status = 'ACTIVE' AND archived_at IS NULL
            AND (publish_at IS NULL OR publish_at <= ?2)

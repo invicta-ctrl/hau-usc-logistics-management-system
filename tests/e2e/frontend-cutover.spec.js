@@ -362,3 +362,23 @@ test('FVR-001 account application preserves 8-digit verification and private sta
   await expect(page.getByText('WITHDRAWN')).toBeVisible();
   expect(withdrawalAuthorization).toBe('Bearer private-status-token-1234567890');
 });
+
+test('FVR-001 Current falls back to media-error when the image request fails', async ({ page }) => {
+  await installPublicFeed(page);
+  await page.route('**/media/advertisements/**', (route) => route.fulfill({
+    status: 404,
+    contentType: 'image/png',
+    body: '',
+  }));
+  await page.goto('/');
+  await expect(page.getByRole('article').getByText(
+    'This announcement image is temporarily unavailable. You can still read the published announcement details.',
+  )).toBeVisible();
+});
+
+test('FVR-001 renders the poster-only hero with no autoplay video element', async ({ page }) => {
+  await installPublicFeed(page, 'empty');
+  await page.goto('/');
+  await expect(page.locator('.atrium__poster')).toHaveCount(1);
+  await expect(page.locator('.atrium__video')).toHaveCount(0);
+});

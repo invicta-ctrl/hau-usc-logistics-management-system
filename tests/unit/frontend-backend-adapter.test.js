@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { AUTH_ROUTES } from '../../src/frontend/app/appRoutes';
 import { FrontendApiError, FrontendBackend } from '../../src/frontend/integration/backend.ts';
 import { isRouteAuthorized } from '../../src/frontend/integration/routeAccess.ts';
 
@@ -112,6 +113,38 @@ describe('Figma frontend backend adapter', () => {
     expect(isRouteAuthorized(user, 'request-center')).toBe(true);
     expect(isRouteAuthorized(user, 'inventory')).toBe(false);
     expect(isRouteAuthorized(user, 'profile')).toBe(true);
+  });
+
+  it('table-drives the full auth-route inventory against its capability contract', () => {
+    const expectedCapability = {
+      overview: 'view.internal',
+      inventory: 'view.inventory',
+      'request-center': 'view.request',
+      lending: 'view.internal',
+      release: 'fulfillment.release',
+      restocking: 'view.inventory',
+      procurement: 'view.internal',
+      events: 'event.manage',
+      administration: 'access.admin',
+      profile: null,
+    };
+    expect(Object.keys(expectedCapability).sort()).toEqual([...AUTH_ROUTES].sort());
+
+    const holder = (capability) => ({
+      accountId: 'ACC-ROUTE',
+      displayName: 'Route Tester',
+      roleId: 'STAFF',
+      capabilities: capability ? [capability] : [],
+    });
+
+    for (const [route, required] of Object.entries(expectedCapability)) {
+      if (required) {
+        expect(isRouteAuthorized(holder(required), route), `${route} grants its capability`).toBe(true);
+        expect(isRouteAuthorized(holder(), route), `${route} withholds without its capability`).toBe(false);
+      } else {
+        expect(isRouteAuthorized(holder(), route), `${route} needs no extra capability`).toBe(true);
+      }
+    }
   });
 
   it('projects public catalog, submission, and tracking responses without inventing receipt state', async () => {
