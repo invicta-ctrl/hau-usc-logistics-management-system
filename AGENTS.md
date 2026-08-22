@@ -397,32 +397,33 @@ A blocker on one independent target does not authorize bypassing it. Other indep
 
 ### Top-level orchestration
 
-- **GPT-5.6 Sol High is the sole top-level orchestrator and final reviewer** for work using this exception.
-- Sol remains read-only as orchestrator/reviewer. It plans, delegates, triages evidence, resolves disagreements, approves or rejects findings and patches, and gives the final verdict.
+- **GPT-5.6 Sol Max is the sole top-level orchestrator and final reviewer** for work using this exception.
+- Sol remains read-only as orchestrator/reviewer. It plans, delegates, triages evidence, resolves disagreements, approves or rejects findings and patches, and gives the final verdict. **Sol writes are forbidden**: Sol never directly edits any repository file; it only routes, reviews, and adjudicates.
 - Only Sol may spawn subagents under this exception.
-- Delegation depth is one. DeepSeek V4 Pro and Ox Alpha subagents must not spawn or recursively delegate to other agents.
+- Delegation depth is one. DeepSeek V4 Pro and Ox Alpha subagents must not spawn or recursively delegate to other agents. No recursive delegation is permitted.
 - No silent model substitution is allowed.
 
 ### Permitted temporary subagents
 
-- Sol may directly use **up to 16 DeepSeek V4 Pro subagents and up to 16 Ox Alpha subagents concurrently** through the configured model router.
-- Preferred initial fan-out is **8 DeepSeek + 8 Ox Alpha**. The remaining 8 + 8 form a reserve pool for independent verification, extra coverage, or focused follow-up when Sol determines it is useful. The full 16 + 16 is authorized when useful; it is not a quota that must be filled.
+- Sol may directly use **up to 16 DeepSeek V4 Pro subagents (DeepSeek #1-#16) and up to 16 Ox Alpha subagents (Ox #1-#16) concurrently** through the configured model router.
+- Preferred initial fan-out is **8 DeepSeek + 8 Ox Alpha**, and this count **includes the canonical frontend writer**. The remaining 8 + 8 form a reserve pool for independent verification, extra coverage, or focused follow-up when Sol determines it is useful. The full 16 + 16 is authorized when useful; it is not a quota that must be filled.
 - For these DeepSeek/Ox children only, direct model-router dispatch may **bypass `.codex/agents/**` for subagent model/profile selection** and may bypass the legacy Terra/Luna-only subagent model-selection restriction.
 - This bypass applies only to subagent model/profile routing. It does not bypass this `AGENTS.md`, accepted specifications/amendments, `.codex/CURRENT.md`, current task/handoff authority, repository safety rules, writer locks, tests, evidence requirements, security/privacy boundaries, data invariants, deployment gates, or Git preservation rules.
+- **Terra is not the default frontend writer.** Terra may serve only as an explicit Sol Max escalation fallback for **one bounded, accepted frontend implementation task**, and only when DeepSeek V4 Pro cannot safely complete that task. Terra otherwise has no frontend writing role under this exception.
 - Prior Sol/Terra/Luna orchestration language is superseded only to the minimum extent needed to permit these DeepSeek/Ox children on this branch. All non-model governance from those rules remains in force.
 
 ### DeepSeek V4 Pro role
 
 - Default role: repository-scale engineering worker/reviewer for code architecture, frontend/backend contract preservation, routing/state analysis, tests and regressions, legacy/dead-code detection, performance/code-quality review, security-boundary review, and Git propagation/preflight analysis.
-- DeepSeek subagents are **read-only by default**.
-- A DeepSeek subagent may write only when Sol explicitly designates it for a bounded implementation task already authorized by an accepted specification/amendment.
+- **The canonical frontend writer model is DeepSeek V4 Pro.** Exactly one DeepSeek V4 Pro subagent holds the canonical frontend writer lock at a time, and the default canonical frontend writer is **DeepSeek V4 Pro #1**.
+- DeepSeek #1 is the default canonical frontend writer. **DeepSeek #2-#16 are read-only by default**; Sol may designate one of them to write only for a bounded implementation task already authorized by an accepted specification/amendment.
 - The canonical worktree retains **one singular integration writer at a time**. Additional DeepSeek writers, when explicitly useful and authorized, require isolated non-overlapping worktrees or bounded patch scopes and may not concurrently edit the same canonical files.
 - This temporary model-routing exception never creates product implementation authority by itself.
 
 ### Ox Alpha role
 
 - Ox Alpha is the multimodal frontend/Figma/visual reviewer for visual fidelity, responsive behavior, motion/animation, public/authenticated state presentation, design-system drift, accessibility/interaction presentation, and adversarial UI review.
-- Ox Alpha subagents are **read-only** under this exception.
+- Ox Alpha subagents (**Ox #1-#16**) are **all read-only** under this exception. None of them writes.
 - Ox Alpha may inspect source, sanitized visual references, screenshots, and Figma-derived evidence and return findings/proposals. It does not own the canonical writer lock and does not mutate product files.
 
 ### Evidence and review funnel
