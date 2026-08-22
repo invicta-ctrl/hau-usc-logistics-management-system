@@ -16,6 +16,7 @@ import {
   createTreeTerminator,
   generateInstanceId,
   generateOwnerToken,
+  readState,
   safeTokenEqual,
 } from '../../scripts/frontend-preview-supervisor.mjs';
 import {
@@ -781,5 +782,119 @@ describe('final P1 truth regressions', () => {
     });
     await supervisor.performRestart();
     expect(supervisor.finalize).toHaveBeenCalledWith('stopped', 0);
+  });
+});
+
+describe('lifecycle generation and persistence ordering', () => {
+  function buildRealSupervisor(dir) {
+    const child = fakeChild(1000 + Math.floor(Math.random() * 1000));
+    const supervisor = new PreviewSupervisor({
+      spawn: vi.fn(() => child),
+      fetch: vi.fn(async () => htmlResponse()),
+      sleep: vi.fn(async () => {}),
+      now: () => Date.now(),
+      logger: { write: vi.fn() },
+      runtimeRoot: dir,
+      probePort: vi.fn(async () => 'closed'),
+      isPidAlive: () => true,
+      terminateTree: null,
+      terminateTreeForce: null,
+    });
+    supervisor.resolveManifest = vi.fn(async () => {
+      supervisor.manifestPath = '/private/manifest.json';
+      supervisor.targetOrigin = 'https://frontend-staging.example.test';
+      supervisor.manifestFingerprint = 'fingerprint';
+    });
+    supervisor.preflightPort = vi.fn(async () => {});
+    supervisor.ownerToken = 'test-token';
+    supervisor.instanceId = 'test-instance';
+    return { supervisor, child };
+  }
+
+  it('stale RUNNING write cannot overwrite a newer generation', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'fvr02-preview-'));
+    try {
+      const { supervisor } = buildRealSupervisor(dir);
+      await supervisor.launchChild();
+      supervisor.healthy = true;
+      supervisor.state = 'RUNNING';
+      const staleWrite = supervisor.writeState();
+      supervisor.bumpGeneration();
+      await staleWrite;
+      const state = await readState(dir);
+      expect(state.state).toBe('STARTING');
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('later RESTARTING write wins over a queued stale RUNNING write', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'fvr02-preview-'));
+    try {
+      const { supervisor } = buildRealSupervisor(dir);
+      await supervisor.launchChild();
+      supervisor.healthy = true;
+      supervisor.state = 'RUNNING';
+      const stale = supervisor.writeState();
+      supervisor.child = null;
+      supervisor.resetLifecycle();
+      supervisor.state = 'RESTARTING';
+      supervisor.bumpGeneration();
+      const restart = supervisor.writeState();
+      await Promise.all([stale, restart]);
+      const state = await readState(dir);
+      expect(state.state).toBe('RESTARTING');
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('stop clear remains final under queued prior writes', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'fvr02-preview-'));
+    try {
+      const { supervisor } = buildRealSupervisor(dir);
+      await supervisor.launchChild();
+      supervisor.healthy = true;
+      supervisor.state = 'RUNNING';
+      const stale = supervisor.writeState();
+      await supervisor.finalize('stopped', 0);
+      await stale;
+      expect(await readState(dir)).toBeNull();
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('does not promote RUNNING from a stale probe after the old child exits', async () => {
+    const { supervisor } = buildSupervisor();
+    let resolveFetch;
+    supervisor.fetchImpl = vi.fn(() => new Promise((resolve) => {
+      resolveFetch = resolve;
+    }));
+    const childA = fakeChild(100);
+    supervisor.child = childA;
+    supervisor.childGeneration = 1;
+    const probe = supervisor.verifyReady(childA);
+    supervisor.child = null;
+    supervisor.childGeneration = 2;
+    resolveFetch(htmlResponse());
+    expect(await probe).toBe(false);
+  });
+
+  it('waitReady fails when its expected child is replaced', async () => {
+    const { supervisor } = buildSupervisor();
+    const childA = fakeChild(100);
+    supervisor.child = childA;
+    supervisor.childGeneration = 1;
+    let resolveFetch;
+    supervisor.fetchImpl = vi.fn(() => new Promise((resolve) => {
+      resolveFetch = resolve;
+    }));
+    const ready = supervisor.waitReady(500);
+    await vi.waitFor(() => expect(supervisor.fetchImpl).toHaveBeenCalled());
+    supervisor.child = null;
+    supervisor.childGeneration = 2;
+    resolveFetch(htmlResponse());
+    expect(await ready).toBe(false);
   });
 });

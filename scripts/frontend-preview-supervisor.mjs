@@ -305,6 +305,9 @@ export class PreviewSupervisor {
     this.healthTimer = null;
     this.terminationReason = null;
     this.logLines = [];
+    this.generation = 0;
+    this.childGeneration = 0;
+    this.writeChain = Promise.resolve();
   }
 
   log(level, message) {
@@ -426,7 +429,8 @@ export class PreviewSupervisor {
   }
 
   async writeState() {
-    await updateState(this.runtimeRoot, {
+    const gen = this.generation;
+    const payload = {
       version: 1,
       pending: false,
       instanceId: this.instanceId,
@@ -441,6 +445,31 @@ export class PreviewSupervisor {
       restartCount: this.restartCount,
       lastHealthyAt: this.lastHealthyAt,
       terminationReason: this.terminationReason,
+    };
+    return this.serializeWrite(async () => {
+      if (gen !== this.generation) return false;
+      await updateState(this.runtimeRoot, payload);
+      return true;
+    });
+  }
+
+  bumpGeneration() {
+    this.generation += 1;
+    return this.generation;
+  }
+
+  serializeWrite(task) {
+    const run = this.writeChain.then(task, task);
+    this.writeChain = run.catch(() => {});
+    return run;
+  }
+
+  async clearStateFinal() {
+    this.bumpGeneration();
+    const gen = this.generation;
+    return this.serializeWrite(async () => {
+      if (gen !== this.generation) return;
+      await this.clearState(this.runtimeRoot);
     });
   }
 
@@ -467,7 +496,7 @@ export class PreviewSupervisor {
         // best effort; the process may already be gone
       }
     }
-    await this.clearState(this.runtimeRoot);
+    await this.clearStateFinal();
   }
 
   async writeLifecycleState() {
@@ -479,7 +508,9 @@ export class PreviewSupervisor {
   }
 
   async writeTerminalState(reason) {
-    await updateState(this.runtimeRoot, {
+    this.bumpGeneration();
+    const gen = this.generation;
+    const payload = {
       version: 1,
       pending: false,
       instanceId: this.instanceId,
@@ -494,6 +525,10 @@ export class PreviewSupervisor {
       restartCount: this.restartCount,
       lastHealthyAt: this.lastHealthyAt,
       terminationReason: reason,
+    };
+    return this.serializeWrite(async () => {
+      if (gen !== this.generation) return;
+      await updateState(this.runtimeRoot, payload);
     });
   }
 
@@ -521,6 +556,8 @@ export class PreviewSupervisor {
     this.throwIfShutdown();
     assertSafeViteArguments(this.viteArguments);
     this.resetLifecycle();
+    this.bumpGeneration();
+    this.childGeneration += 1;
     this.log('info', 'launching vite child');
     const vite = path.join(this.repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
     const child = this.spawn(
@@ -546,32 +583,42 @@ export class PreviewSupervisor {
     await this.writeLifecycleState();
   }
 
-  async verifyReady() {
-    if (!this.child || this.child.exitCode !== null) return false;
+  async verifyReady(expectedChild = this.child) {
+    const child = expectedChild;
+    if (!child || child.exitCode !== null) return false;
+    const generation = this.childGeneration;
     let response;
     try {
       response = await this.fetchImpl(PREVIEW_URL, { signal: AbortSignal.timeout(2000) });
     } catch {
       return false;
     }
+    if (this.child !== child || child.exitCode !== null || this.childGeneration !== generation) return false;
     if (!response.ok) return false;
     const contentType = String(response.headers?.get?.('content-type') ?? '').toLowerCase();
     if (!contentType.includes('text/html')) return false;
     const body = await response.text();
+    if (this.child !== child || child.exitCode !== null || this.childGeneration !== generation) return false;
     return body.includes(APP_HTML_MARKER);
   }
 
   async waitReady(timeoutMs = READY_TIMEOUT_MS) {
     const deadline = this.now() + timeoutMs;
+    const expectedChild = this.child;
+    const generation = this.childGeneration;
     while (this.now() < deadline) {
       if (this.shutdownRequested) return false;
+      if (this.child !== expectedChild || this.childGeneration !== generation) return false;
       if (this.child && this.child.exitCode !== null) return false;
-      if (await this.verifyReady()) {
+      if (await this.verifyReady(expectedChild)) {
+        if (this.child !== expectedChild || this.childGeneration !== generation) return false;
+        if (this.shutdownRequested) return false;
         this.healthy = true;
         this.state = 'RUNNING';
         this.lastHealthyAt = new Date(this.now()).toISOString();
         this.healthySince = this.now();
         await this.writeLifecycleState();
+        if (this.child !== expectedChild || this.childGeneration !== generation) return false;
         this.log('info', 'preview healthy');
         this.log('info', `vite child ready pid=${this.child?.pid ?? 'unknown'}`);
         return true;
@@ -622,6 +669,7 @@ export class PreviewSupervisor {
       this.child = null;
       this.resetLifecycle();
       this.state = 'RESTARTING';
+      this.bumpGeneration();
       this.log('info', `scheduling vite restart in ${delay}ms (attempt ${this.restartCount})`);
       await this.writeLifecycleState();
       if (this.shutdownRequested) {
@@ -664,7 +712,11 @@ export class PreviewSupervisor {
 
   async healthTick() {
     if (this.shutdownRequested || this.restarting) return;
-    const ready = await this.verifyReady();
+    const expectedChild = this.child;
+    const generation = this.childGeneration;
+    const ready = await this.verifyReady(expectedChild);
+    if (this.child !== expectedChild || this.childGeneration !== generation) return;
+    if (this.shutdownRequested || this.restarting) return;
     if (ready) {
       this.healthFailures = 0;
       if (!this.healthy) {
@@ -777,7 +829,7 @@ export class PreviewSupervisor {
     if (reason === 'loop') {
       await this.writeTerminalState(reason);
     } else {
-      await this.clearState(this.runtimeRoot);
+      await this.clearStateFinal();
     }
     this.log('info', `supervisor exiting state=STOPPED reason=${reason}`);
     process.exitCode = exitCode;
