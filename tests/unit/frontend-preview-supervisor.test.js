@@ -499,18 +499,84 @@ describe('final P1 truth regressions', () => {
       });
     });
     supervisor.sleep = sleep;
+    supervisor.clearState = vi.fn(async () => {});
+    supervisor.closeControl = vi.fn(async () => {});
     await supervisor.launchChild();
     child.exitCode = 1;
     child.handlers.exit(1, null);
     await vi.waitFor(() => expect(sleep).toHaveBeenCalled());
-    // Stop while performRestart is blocked in backoff.
-    supervisor.shutdownRequested = true;
-    supervisor.state = 'STOPPED';
-    supervisor.terminationReason = 'stopped';
+    // Stop while performRestart is blocked in backoff, via the real path.
+    supervisor.requestStop();
     resolveSleep();
     await vi.waitFor(() => expect(supervisor.restarting).toBe(false));
+    expect(supervisor.state).toBe('STOPPED');
+    expect(supervisor.terminationReason).toBe('stopped');
     expect(spawn).toHaveBeenCalledTimes(1);
     expect(supervisor.child).toBeNull();
+  });
+
+  it('stop during pre-spawn manifest verification prevents any child spawn', async () => {
+    const { supervisor, spawn } = buildSupervisor();
+    let resolveManifest;
+    supervisor.resolveManifest = vi.fn(async () => {
+      await new Promise((resolve) => {
+        resolveManifest = resolve;
+      });
+    });
+    supervisor.clearState = vi.fn(async () => {});
+    supervisor.closeControl = vi.fn(async () => {});
+    const launch = supervisor.launchChild();
+    // Stop while resolveManifest is deferred.
+    supervisor.shutdownRequested = true;
+    resolveManifest();
+    await expect(launch).rejects.toThrow('Stop requested');
+    expect(spawn).not.toHaveBeenCalled();
+    expect(supervisor.child).toBeNull();
+  });
+
+  it('stop racing the RESTARTING state write keeps state cleared and spawns nothing', async () => {
+    const { supervisor, child, spawn } = buildSupervisor();
+    await supervisor.launchChild();
+    let resolveWrite;
+    supervisor.writeState = vi.fn(async () => {
+      await new Promise((resolve) => {
+        resolveWrite = resolve;
+      });
+    });
+    supervisor.clearState = vi.fn(async () => {});
+    supervisor.closeControl = vi.fn(async () => {});
+    child.exitCode = 1;
+    child.handlers.exit(1, null);
+    await vi.waitFor(() => expect(supervisor.writeState).toHaveBeenCalled());
+    // Stop while the RESTARTING state write is in flight.
+    supervisor.requestStop();
+    resolveWrite();
+    await vi.waitFor(() => expect(supervisor.restarting).toBe(false));
+    expect(supervisor.state).toBe('STOPPED');
+    expect(spawn).toHaveBeenCalledTimes(1);
+    expect(supervisor.child).toBeNull();
+  });
+
+  it('stop racing the post-spawn launch write clears state and kills the replacement child', async () => {
+    const { supervisor } = buildSupervisor();
+    const spawned = fakeChild(9001);
+    let resolveWrite;
+    supervisor.spawn = vi.fn(() => spawned);
+    supervisor.writeState = vi.fn(async () => {
+      await new Promise((resolve) => {
+        resolveWrite = resolve;
+      });
+    });
+    supervisor.clearState = vi.fn(async () => {});
+    supervisor.closeControl = vi.fn(async () => {});
+    const launch = supervisor.launchChild();
+    await vi.waitFor(() => expect(supervisor.spawn).toHaveBeenCalled());
+    supervisor.shutdownRequested = true;
+    spawned.exitCode = 1;
+    resolveWrite();
+    await expect(launch).rejects.toThrow('Stop requested during lifecycle state write');
+    expect(supervisor.clearState).toHaveBeenCalled();
+    expect(supervisor.child.exitCode).not.toBeNull();
   });
 
   it('finalize loop persists sanitized terminal state without token/control/dead pid', async () => {

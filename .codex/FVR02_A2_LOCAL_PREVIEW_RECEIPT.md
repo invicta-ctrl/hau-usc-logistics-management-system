@@ -15,6 +15,8 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 - SECOND_PASS_REVIEW: FAILED parent + Ox runtime-promotion review (Windows tree termination not wired into the standalone supervisor; unsafe Vite arg forwarding; stale lifecycle truth inherited across replacement launches; unhealthy authenticated start treated as already-running; startup failure did not clear its own claim; control acks lacked identity; pending-claim PID/port recovery; response-body overflow; and 0600/atomic-update truth).
 - THIRD_PASS_COMMIT: 2d66d9d35b09aa401436b41283f8fd4853e03b95
 - THIRD_PASS_REVIEW: FAILED static acceptance (truthful restart transition before backoff and dead-pid advertisement; readiness-timeout live adopted supervisor cleanup; plus stop-during-backoff race, terminal-loop inspectability, identity-safe bounded logs, and positional manifest CLI form).
+- FOURTH_PASS_COMMIT: b718ba19811946297d715dd7c304809ac7653e0e
+- FOURTH_PASS_REVIEW: FAILED static concurrency review (stop racing async pre-spawn verification and the RESTARTING state write; stop-during-backoff test bypassed the real stop path).
 - FINAL_CORRECTION: implemented in the final corrective commit. Live runtime acceptance is NOT claimed.
 
 ## Implemented result
@@ -36,6 +38,8 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 - A retained restart-loop terminal snapshot is sanitized (no owner token, no control endpoint, no dead child pid) so status can truthfully report STOPPED + terminationReason; it is removed/cleared only through the normal authenticated/dead-safe paths.
 - Bounded logs include identity-safe Playground verification, Vite child spawn PID, readiness PID, and restart success messages (never hostname, manifest contents, or token).
 - `preview:frontend:start`/`restart` accept the owner-facing positional manifest form (`npm run ... -- <absolute-manifest>`) as well as `--manifest`, with Vite args still separated after `--`.
+- A shared stop-wins reconciliation re-checks shutdown after every awaited pre-spawn verification boundary (manifest resolution, port preflight, immediately before spawn) and after every awaited lifecycle state write (post-spawn STARTING and RESTARTING writes). Stop that appears during those windows terminates the owned child, closes the control server, clears state, and aborts the transition, so no untracked child or recreated state survives.
+- `performRestart()` guards against shutdown before any restart mutation/write; a stop that lands mid-restart write is reconciled so the expected-stop terminal cleanup wins.
 - `scripts/start-frontend-playground-preview.mjs` is a thin CLI with `dev` (preserved foreground), `start`, `status`, `restart`, and `stop` modes; persistent `start` preserves `-- <vite args>` and restart reuses the canonical path with re-resolution.
 - `package.json` adds `preview:frontend:start`, `preview:frontend:status`, `preview:frontend:restart`, `preview:frontend:stop`, and keeps `dev:frontend:playground` (now explicit `dev` mode).
 
@@ -43,7 +47,7 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 
 - `git diff --check`: PASS.
 - `node scripts/check-agent-instructions.mjs`: PASS (12 project files).
-- Focused unit: `npx vitest run tests/unit/frontend-preview-supervisor.test.js tests/unit/frontend-playground-guard.test.js`: PASS (2 files, 41 tests).
+- Focused unit: `npx vitest run tests/unit/frontend-preview-supervisor.test.js tests/unit/frontend-playground-guard.test.js`: PASS (2 files, 44 tests).
 - Focused eslint on the three changed JS files: PASS (no findings).
 - `node --check` on both changed scripts: PASS.
 

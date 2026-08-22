@@ -444,6 +444,34 @@ export class PreviewSupervisor {
     });
   }
 
+  throwIfShutdown() {
+    if (this.shutdownRequested) {
+      throw new Error('Stop requested; lifecycle transition canceled.');
+    }
+  }
+
+  async stopWonCleanup() {
+    this.log('info', 'stop won over an in-flight lifecycle transition');
+    await this.closeControl();
+    if (this.child && this.child.exitCode === null && !this.child.killed) {
+      try {
+        if (this.terminateTreeForce) await this.terminateTreeForce(this.child.pid);
+        else if (typeof this.child.kill === 'function') this.child.kill('SIGTERM');
+      } catch {
+        // best effort; the process may already be gone
+      }
+    }
+    await this.clearState(this.runtimeRoot);
+  }
+
+  async writeLifecycleState() {
+    await this.writeState();
+    if (this.shutdownRequested) {
+      await this.stopWonCleanup();
+      throw new Error('Stop requested during lifecycle state write.');
+    }
+  }
+
   async writeTerminalState(reason) {
     await updateState(this.runtimeRoot, {
       version: 1,
@@ -480,11 +508,11 @@ export class PreviewSupervisor {
 
   async launchChild() {
     if (this.child && this.child.exitCode === null && !this.child.killed) return;
-    if (this.shutdownRequested) {
-      throw new Error('Cannot launch a preview child after shutdown was requested.');
-    }
+    this.throwIfShutdown();
     await this.resolveManifest(this.manifestPath);
+    this.throwIfShutdown();
     await this.preflightPort();
+    this.throwIfShutdown();
     assertSafeViteArguments(this.viteArguments);
     this.resetLifecycle();
     this.log('info', 'launching vite child');
@@ -509,7 +537,7 @@ export class PreviewSupervisor {
         this.log('error', `exit handler failed: ${error?.message ?? 'unknown'}`);
       });
     });
-    await this.writeState();
+    await this.writeLifecycleState();
   }
 
   async verifyReady() {
@@ -568,6 +596,7 @@ export class PreviewSupervisor {
 
   async performRestart() {
     if (this.restarting) return;
+    this.throwIfShutdown();
     this.restarting = true;
     try {
       this.restartCount += 1;
@@ -583,7 +612,7 @@ export class PreviewSupervisor {
       this.resetLifecycle();
       this.state = 'RESTARTING';
       this.log('info', `scheduling vite restart in ${delay}ms (attempt ${this.restartCount})`);
-      await this.writeState();
+      await this.writeLifecycleState();
       if (this.shutdownRequested) {
         this.log('info', 'stop requested during restart backoff; canceling restart');
         return;
