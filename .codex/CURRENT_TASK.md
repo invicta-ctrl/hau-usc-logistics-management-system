@@ -12,7 +12,7 @@ TASK_ROUTING:
 
 OBJECTIVE: Authority/governance activation of the two FVR-02-A2 amendments (Ox-first routing; local preview resilience) followed by the persistent local preview supervisor repair slice. Product changes and the preview Module Index remain out of scope.
 
-SLICE_STATUS: FVR-02-A2 local preview supervisor implemented and unit-verified; live runtime acceptance deferred to parent.
+SLICE_STATUS: FVR-02-A2 local preview first pass (346f4bf) failed parent/Ox runtime-promotion review; follow-up corrective slice implemented and unit-verified; live runtime acceptance deferred to parent.
 
 TARGET: frontend-design-integration worktree; generated frontend artifacts; guarded Playground preview; public media/CurrentSection chain; HeroSection/HeroMotion; preview Module Index/Surface Preview/Test Real Login Flow; local preview supervisor/launcher.
 

@@ -32,7 +32,7 @@ FVR-02-A2 "Local Preview Resilience / Auto-Recovery Amendment" (accepted: `.code
 
 ## Status
 
-Todo. Only this local-preview slice is active. Later FVR-02 product/UI/verification stages are pending.
+In progress. Only this local-preview slice is active. First-pass commit 346f4bf0b5e6a78308305393d72385d44f3d98ee failed parent/Ox runtime-promotion review; a follow-up corrective commit closed the ownership/lifecycle gaps. Live runtime acceptance is still pending and is not claimed.
 
 ## Context
 
@@ -151,6 +151,11 @@ None beyond the preview launcher and package scripts.
 - [x] Focused eslint passes on changed JS.
 - [x] `scripts/check-agent-instructions.mjs` passes.
 - [x] No product/backend/auth/schema/Figma/Production change.
+
+## Correction record
+
+- First pass (346f4bf) fixed the launcher/supervisor baseline but left atomic duplicate-start claim, safe stale recovery, authenticated identity, readiness-marker, restart concurrency, storm reset, ownership stop, request bounding, state/token redaction, and Windows tree-kill gaps.
+- Follow-up correction (this active slice) closes those gaps; see `.codex/FVR02_A2_LOCAL_PREVIEW_RECEIPT.md`.
 
 ## Blockers (recorded; not part of this slice)
 
