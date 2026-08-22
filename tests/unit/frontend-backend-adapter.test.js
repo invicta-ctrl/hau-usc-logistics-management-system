@@ -223,4 +223,39 @@ describe('Figma frontend backend adapter', () => {
     }));
     expect(validationFailure).toBeInstanceOf(FrontendApiError);
   });
+
+  it('projects the version endpoint to only a strict trusted playground boolean', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      response({
+        ok: true,
+        correlationId: 'request-1',
+        playground: true,
+        database: { schemaVersion: '12', latestMigration: '0001_init' },
+        release: 'v0.8.3',
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const backend = new FrontendBackend();
+
+    await expect(backend.version()).resolves.toEqual({ playground: true });
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/version');
+    expect(fetchMock.mock.calls[0][1]).toEqual(expect.objectContaining({ method: 'GET' }));
+  });
+
+  it.each([false, null, 'true', 'yes', 1, 0, { valueOf: () => true }, []])(
+    'fails closed on a spoofed playground value %p',
+    async (playground) => {
+      const fetchMock = vi.fn().mockResolvedValue(response({ ok: true, playground }));
+      vi.stubGlobal('fetch', fetchMock);
+      const backend = new FrontendBackend();
+      await expect(backend.version()).resolves.toEqual({ playground: false });
+    },
+  );
+
+  it('fails closed when the playground field is missing entirely', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response({ ok: true, correlationId: 'request-2' }));
+    vi.stubGlobal('fetch', fetchMock);
+    const backend = new FrontendBackend();
+    await expect(backend.version()).resolves.toEqual({ playground: false });
+  });
 });

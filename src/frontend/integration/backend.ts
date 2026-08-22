@@ -12,6 +12,10 @@ export type FrontendSession = {
   csrfToken: string;
 };
 
+export type FrontendVersion = {
+  playground: boolean;
+};
+
 export type PublicLendingItem = {
   id: string;
   productId: string;
@@ -182,6 +186,11 @@ export class FrontendBackend {
       }
       throw error;
     }
+  }
+
+  async version(signal?: AbortSignal): Promise<FrontendVersion> {
+    const payload = await this.request("/api/version", { method: "GET", signal });
+    return { playground: payload.playground === true };
   }
 
   async login(accessId: string, password: string): Promise<{ session: FrontendSession | null; activationRequired: boolean; activationExpiresAt: string }> {
