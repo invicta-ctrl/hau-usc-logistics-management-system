@@ -4,9 +4,10 @@ FROM: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v2
 TO: GPT-5.6_SOL_MAX:/root (read-only orchestrator/final reviewer)
 BRANCH: frontend-design-integration
 HEAD: RESOLVE_FROM_LIVE_GIT_HEAD
-BASELINE_HEAD: 842f4c6b4468462928b1b9e6ab9ae98fa80ebbf8
+BASELINE_HEAD: RESOLVE_FROM_LIVE_GIT
 UPSTREAM: origin/frontend-design-integration@e93e5c97fdb44f85f1b6ac1b578c9014a77b6166
-AHEAD_BEHIND: BEHIND_0_AHEAD_3
+AHEAD_BEHIND: RESOLVE_FROM_LIVE_GIT
+LAST_VERIFIED_AHEAD_BEHIND: BEHIND_0_AHEAD_7 (pre-correction; resolve current from live Git)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: CLEAN_EXCEPT_PRESERVED_EXCLUDED_UNTracked `.ai-bridge/`
 ACTIVE_WRITER: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v2
@@ -19,7 +20,7 @@ ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr02-a2-ox-first-routing.
 
 STATUS: ACTIVE_FVR02
 PRODUCT_REPAIRS: NONE_YET
-PREVIEW_SUPERVISOR: FIRST_PASS_346f4bf_FAILED_REVIEW;FOLLOWUP_CORRECTION_UNIT_VERIFIED_PENDING_RUNTIME_ACCEPTANCE
+PREVIEW_SUPERVISOR: FINAL_CORRECTION_UNIT_VERIFIED_PENDING_RUNTIME_ACCEPTANCE;FIRST_PASS_346f4bf_FAILED;SECOND_PASS_ac2d722_FAILED
 GOVERNANCE_A2_ACTIVATION: COMPLETED_PENDING_PARENT_REVIEW
 PREVIEW_PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 PREVIEW_RECEIPT: .codex/FVR02_A2_LOCAL_PREVIEW_RECEIPT.md
@@ -37,13 +38,13 @@ NEXT_ACTION: parent performs live runtime acceptance of the persistent preview (
 
 RESUME (compaction-survival labels, truthful):
 COMPACTION_RESUME_SCHEMA: 1
-UPDATED_AT: 2026-08-22T10:36:49Z
+UPDATED_AT: 2026-08-22T11:05:00Z
 PROJECT: HAU-USC Logistics
 REPOSITORY: invicta-ctrl/hau-usc-logistics-management-system
 BRANCH: frontend-design-integration
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 REPOSITORY_HEAD: RESOLVE_FROM_LIVE_GIT_HEAD
-BASELINE_HEAD: 842f4c6b4468462928b1b9e6ab9ae98fa80ebbf8
+BASELINE_HEAD: RESOLVE_FROM_LIVE_GIT
 UPSTREAM_HEAD: e93e5c97fdb44f85f1b6ac1b578c9014a77b6166
 VERIFIED_THROUGH_COMMIT: f7e5bf83205dbe58b5fb72126a4456747d92e906
 DEPLOYED_RUNTIME: UNCHANGED; Production out of scope; guarded Playground preview identity/environment must be reverified
@@ -56,7 +57,7 @@ COMPLETED_AND_ACCEPTED: FVR-001 cutover f7e5bf83205dbe58b5fb72126a4456747d92e906
 EXTERNAL_STATE: no Figma/Playground/Production/provider writes; guarded preview requires revalidation; 4173 observed NO_LISTENER
 DATABASE_STATE: unchanged; migrations 0; D1/R2 writes 0
 BACKUP_AND_ROLLBACK: Git revert product commits; preserve FVR-001 and rollback tag; Playground repair only via recorded existing runbook recovery; no Production/Figma rollback because no writes
-VERIFICATION_EVIDENCE: Git handshake, check-agent-instructions/diff-check, focused unit (29 tests incl. existing guard), focused eslint on changed JS; first-pass commit 346f4bf failed parent/Ox review and follow-up correction was applied; live private-manifest runtime acceptance pending parent
+VERIFICATION_EVIDENCE: Git handshake, check-agent-instructions/diff-check, focused unit (34 tests incl. existing guard), focused eslint on changed JS; first (346f4bf) and second (ac2d722) passes failed parent/Ox review and the final correction was applied; live private-manifest runtime acceptance pending parent
 OPEN_DEFECTS_AND_RISKS: hero authority; media chain; Ox route availability; Index safe signal; local preview code corrected but live runtime acceptance pending
 OWNER_ACTION_REQUIRED: none currently
 NEXT_EXACT_ACTION: parent performs live runtime acceptance of the persistent preview (start/status/restart/stop and owned-child forced exit against the real private manifest), then resume FVR-02 audit-first phases under Ox-first routing.

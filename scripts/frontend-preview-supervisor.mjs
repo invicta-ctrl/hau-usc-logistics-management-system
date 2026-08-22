@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { appendFileSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { mkdir, open, readFile, rm } from 'node:fs/promises';
+import { mkdir, open, readFile, rename, rm } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { connect } from 'node:net';
 import path from 'node:path';
@@ -21,6 +21,7 @@ export const SUSTAINED_HEALTHY_MS = 30000;
 export const READY_TIMEOUT_MS = 30000;
 export const CONTROL_TIMEOUT_MS = 3000;
 export const OWNERSHIP_UNKNOWN = 'STOP_PORT_4173_OWNERSHIP_UNKNOWN';
+export const CHILD_GRACE_MS = 3000;
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -59,6 +60,30 @@ export function safeTokenEqual(left, right) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+const UNSAFE_VITE_FLAGS = new Set([
+  '--host',
+  '--port',
+  '--strictPort',
+  '--config',
+  '-c',
+  '--mode',
+  '-m',
+  '--base',
+]);
+
+export function assertSafeViteArguments(args = []) {
+  for (const arg of args) {
+    if (typeof arg !== 'string') {
+      throw new Error('Vite arguments must be strings.');
+    }
+    const flag = arg.split('=', 1)[0];
+    if (UNSAFE_VITE_FLAGS.has(flag)) {
+      throw new Error(`Unsafe Vite argument rejected: ${arg}`);
+    }
+  }
+  return args;
+}
+
 export function buildWindowsTreeKillArgs(pid) {
   return ['/PID', String(pid), '/T'];
 }
@@ -67,29 +92,88 @@ export function buildWindowsTreeForceKillArgs(pid) {
   return ['/PID', String(pid), '/T', '/F'];
 }
 
-async function writeStateFile(root, state, flags) {
+export function createTreeTerminator(spawnFn = spawn) {
+  function runTaskkill(args) {
+    return new Promise((resolve, reject) => {
+      let child;
+      try {
+        child = spawnFn('taskkill.exe', args, { windowsHide: true, stdio: 'ignore' });
+      } catch (error) {
+        reject(error);
+        return;
+      }
+      child.once('error', reject);
+      child.once('exit', (code) => resolve(code ?? 1));
+    });
+  }
+  return {
+    terminateTree(pid) {
+      return runTaskkill(buildWindowsTreeKillArgs(pid));
+    },
+    terminateTreeForce(pid) {
+      return runTaskkill(buildWindowsTreeForceKillArgs(pid));
+    },
+  };
+}
+
+export function recordedPids(state) {
+  const pids = [];
+  for (const key of ['launcherPid', 'supervisorPid', 'vitePid']) {
+    const value = state?.[key];
+    if (Number.isInteger(value) && value > 0) pids.push(value);
+  }
+  return pids;
+}
+
+export function anyPidAlive(state, isAlive = isPidAlive) {
+  return recordedPids(state).some((pid) => isAlive(pid));
+}
+
+export function allPidsDead(state, isAlive = isPidAlive) {
+  return recordedPids(state).every((pid) => !isAlive(pid));
+}
+
+async function renameAtomic(tmp, target) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      await rename(tmp, target);
+      return;
+    } catch (error) {
+      if (attempt === 4) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+  }
+}
+
+export async function claimState(root, state) {
   await mkdir(runtimeDirPath(root), { recursive: true });
   const target = stateFilePath(root);
-  const handle = await open(target, flags, 0o600);
+  let handle;
+  try {
+    handle = await open(target, 'wx', 0o600);
+  } catch (error) {
+    if (error?.code === 'EEXIST') return false;
+    throw error;
+  }
+  try {
+    await handle.writeFile(JSON.stringify(state, null, 2), 'utf8');
+    return true;
+  } finally {
+    await handle.close().catch(() => {});
+  }
+}
+
+export async function updateState(root, state) {
+  await mkdir(runtimeDirPath(root), { recursive: true });
+  const target = stateFilePath(root);
+  const temporary = `${target}.tmp-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const handle = await open(temporary, 'w', 0o600);
   try {
     await handle.writeFile(JSON.stringify(state, null, 2), 'utf8');
   } finally {
     await handle.close();
   }
-}
-
-export async function claimState(root, state) {
-  try {
-    await writeStateFile(root, state, 'wx');
-    return true;
-  } catch (error) {
-    if (error?.code === 'EEXIST') return false;
-    throw error;
-  }
-}
-
-export async function updateState(root, state) {
-  await writeStateFile(root, state, 'w');
+  await renameAtomic(temporary, target);
 }
 
 export async function readState(root = repoRoot) {
@@ -184,8 +268,22 @@ export class PreviewSupervisor {
     this.probePort = deps.probePort ?? probePort;
     this.isPidAlive = deps.isPidAlive ?? isPidAlive;
     this.clearState = deps.clearState ?? clearState;
-    this.terminateTree = deps.terminateTree ?? null;
-    this.terminateTreeForce = deps.terminateTreeForce ?? null;
+    this.clearClaim = deps.clearClaim ?? clearClaim;
+    const treeTerminator = deps.createTreeTerminator
+      ? deps.createTreeTerminator(this.spawn)
+      : createTreeTerminator(this.spawn);
+    this.terminateTree =
+      deps.terminateTree !== undefined
+        ? deps.terminateTree
+        : process.platform === 'win32'
+          ? treeTerminator.terminateTree
+          : null;
+    this.terminateTreeForce =
+      deps.terminateTreeForce !== undefined
+        ? deps.terminateTreeForce
+        : process.platform === 'win32'
+          ? treeTerminator.terminateTreeForce
+          : null;
     this.ownerToken = null;
     this.instanceId = null;
 
@@ -275,6 +373,16 @@ export class PreviewSupervisor {
     };
   }
 
+  ackBody(action) {
+    return {
+      ok: true,
+      instanceId: this.instanceId,
+      supervisorPid: process.pid,
+      controlPort: this.controlPort,
+      action,
+    };
+  }
+
   writeJson(res, status, body) {
     res.writeHead(status, { 'content-type': 'application/json' });
     res.end(JSON.stringify(body));
@@ -307,8 +415,9 @@ export class PreviewSupervisor {
         this.writeJson(res, 405, { ok: false, reason: 'method-not-allowed' });
         return;
       }
-      this.writeJson(res, 200, { ok: true });
-      if (pathname === '/__stop') this.requestStop();
+      const action = pathname === '/__stop' ? 'stop' : 'restart';
+      this.writeJson(res, 200, this.ackBody(action));
+      if (action === 'stop') this.requestStop();
       else this.requestRestart();
       return;
     }
@@ -336,16 +445,25 @@ export class PreviewSupervisor {
 
   async preflightPort() {
     const result = await this.probePort(PREVIEW_HOST, PREVIEW_PORT);
-    if (result === 'open') {
+    if (result !== 'closed') {
       throw new Error(OWNERSHIP_UNKNOWN);
     }
+  }
+
+  resetLifecycle() {
+    this.healthy = false;
+    this.healthySince = null;
+    this.healthFailures = 0;
+    this.lastHealthyAt = null;
+    this.state = 'STARTING';
   }
 
   async launchChild() {
     if (this.child && this.child.exitCode === null && !this.child.killed) return;
     await this.resolveManifest(this.manifestPath);
     await this.preflightPort();
-    this.state = 'STARTING';
+    assertSafeViteArguments(this.viteArguments);
+    this.resetLifecycle();
     this.log('info', 'launching vite child');
     const vite = path.join(this.repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
     const child = this.spawn(
@@ -394,7 +512,7 @@ export class PreviewSupervisor {
         this.healthy = true;
         this.state = 'RUNNING';
         this.lastHealthyAt = new Date(this.now()).toISOString();
-        this.healthySince = this.healthySince ?? this.now();
+        this.healthySince = this.now();
         await this.writeState();
         this.log('info', 'preview healthy');
         return true;
@@ -498,18 +616,25 @@ export class PreviewSupervisor {
   async killOwnedChild() {
     const child = this.child;
     if (!child || child.exitCode !== null) return;
-    const graceMs = 3000;
     try {
-      if (typeof child.kill === 'function' && !child.killed) child.kill('SIGTERM');
-      const deadline = this.now() + graceMs;
-      while (this.now() < deadline && child.exitCode === null) {
-        await this.sleep(100);
-      }
-      if (child.exitCode === null && this.terminateTreeForce) {
-        await this.terminateTreeForce(child.pid);
+      if (this.terminateTree) {
+        await this.terminateTree(child.pid);
+      } else if (typeof child.kill === 'function' && !child.killed) {
+        child.kill('SIGTERM');
       }
     } catch (error) {
-      this.log('error', `owned child termination error: ${error?.message ?? 'unknown'}`);
+      this.log('error', `owned child graceful termination error: ${error?.message ?? 'unknown'}`);
+    }
+    const deadline = this.now() + CHILD_GRACE_MS;
+    while (this.now() < deadline && child.exitCode === null) {
+      await this.sleep(100);
+    }
+    if (child.exitCode === null && this.terminateTreeForce) {
+      try {
+        await this.terminateTreeForce(child.pid);
+      } catch (error) {
+        this.log('error', `owned child forced termination error: ${error?.message ?? 'unknown'}`);
+      }
     }
   }
 
@@ -532,10 +657,13 @@ export class PreviewSupervisor {
     }
     await this.killOwnedChild();
     // The child exit handler calls finalize('stopped') because shutdownRequested is set.
-    // Guard in case the exit event never fires (defensive bounded wait).
+    // Fall back if the exit event never arrives, so no control server/state is left behind.
     const deadline = this.now() + 10000;
     while (this.now() < deadline && this.controlServer) {
       await this.sleep(100);
+    }
+    if (this.controlServer) {
+      await this.finalize('stopped', 0);
     }
   }
 
@@ -557,7 +685,8 @@ export class PreviewSupervisor {
     this.healthTimer = null;
     if (this.child && this.child.exitCode === null && !this.child.killed) {
       try {
-        this.child.kill('SIGTERM');
+        if (this.terminateTreeForce) await this.terminateTreeForce(this.child.pid);
+        else if (typeof this.child.kill === 'function') this.child.kill('SIGTERM');
       } catch {
         // best effort; the process may already be gone
       }
@@ -570,11 +699,18 @@ export class PreviewSupervisor {
   }
 
   async run(manifestPathArg, instanceId) {
-    await this.resolveManifest(manifestPathArg);
-    this.ownerToken = generateOwnerToken();
-    await this.adoptClaim(instanceId);
-    await this.startControlServer();
-    await this.writeState();
+    try {
+      await this.resolveManifest(manifestPathArg);
+      this.ownerToken = generateOwnerToken();
+      await this.adoptClaim(instanceId);
+      await this.startControlServer();
+      await this.writeState();
+    } catch (error) {
+      await this.clearClaim(this.runtimeRoot, instanceId);
+      this.log('error', `startup failed: ${error?.message ?? 'unknown'}`);
+      process.exitCode = 1;
+      return;
+    }
     this.log('info', `supervisor started pid=${process.pid} instance=${instanceId} token-present`);
     this.installSignalHandlers();
     try {

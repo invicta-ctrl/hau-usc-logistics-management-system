@@ -9,6 +9,8 @@ import {
   OWNERSHIP_UNKNOWN,
   PREVIEW_HOST,
   PREVIEW_PORT,
+  allPidsDead,
+  assertSafeViteArguments,
   claimState,
   clearClaim,
   clearState,
@@ -21,6 +23,7 @@ import {
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const supervisorScript = path.join(repoRoot, 'scripts', 'frontend-preview-supervisor.mjs');
+const MAX_CONTROL_BODY = 64 * 1024;
 
 export async function resolveManifest(rawManifestPath) {
   if (!rawManifestPath || !path.isAbsolute(rawManifestPath)) {
@@ -47,6 +50,7 @@ export function makeControlRequest(port, options, httpRequest = request) {
     requestPath,
     method = 'GET',
     timeoutMs = 3000,
+    maxBody = MAX_CONTROL_BODY,
   } = options;
   return new Promise((resolve) => {
     let settled = false;
@@ -71,8 +75,22 @@ export function makeControlRequest(port, options, httpRequest = request) {
         },
         (res) => {
           const chunks = [];
-          res.on('data', (chunk) => chunks.push(chunk));
+          let size = 0;
+          let overflow = false;
+          res.on('data', (chunk) => {
+            size += chunk.length;
+            if (size > maxBody) {
+              overflow = true;
+              res.destroy();
+              return;
+            }
+            chunks.push(chunk);
+          });
           res.on('end', () => {
+            if (overflow) {
+              finish({ status: res.statusCode, body: null, error: 'control response too large' });
+              return;
+            }
             const raw = Buffer.concat(chunks).toString('utf8');
             let body = null;
             let parseError = false;
@@ -95,12 +113,12 @@ export function makeControlRequest(port, options, httpRequest = request) {
   });
 }
 
-function authenticatedBody(state, result) {
-  if (!result || result.status !== 200 || !result.body?.ok) return false;
+export function matchesIdentity(state, body) {
+  if (!body || !body.ok) return false;
   return (
-    result.body.instanceId === state.instanceId &&
-    String(result.body.supervisorPid) === String(state.supervisorPid) &&
-    result.body.controlPort === state.controlPort
+    body.instanceId === state.instanceId &&
+    String(body.supervisorPid) === String(state.supervisorPid) &&
+    body.controlPort === state.controlPort
   );
 }
 
@@ -117,7 +135,47 @@ export async function controlStatus(state, deps) {
     },
     deps.httpRequest,
   );
-  return { authenticated: authenticatedBody(state, result), body: result.body ?? null, result };
+  return { authenticated: matchesIdentity(state, result.body), body: result.body ?? null, result };
+}
+
+export async function controlAction(state, action, deps) {
+  const result = await deps.makeControlRequest(
+    state.controlPort,
+    {
+      token: state.ownerToken,
+      instanceId: state.instanceId,
+      supervisorPid: state.supervisorPid,
+      requestPath: action === 'stop' ? '/__stop' : '/__restart',
+      method: 'POST',
+      timeoutMs: deps.controlTimeoutMs,
+    },
+    deps.httpRequest,
+  );
+  return { authenticated: matchesIdentity(state, result.body) && result.body?.action === action, result };
+}
+
+function recordedPids(state) {
+  const pids = [];
+  for (const key of ['launcherPid', 'supervisorPid', 'vitePid']) {
+    const value = state?.[key];
+    if (Number.isInteger(value) && value > 0) pids.push(value);
+  }
+  return pids;
+}
+
+export async function safeClearStateIfDead(deps, state) {
+  const port = await deps.probePort(PREVIEW_HOST, PREVIEW_PORT);
+  if (port !== 'closed') return false;
+  const pids = recordedPids(state);
+  if (pids.length === 0) {
+    await deps.clearState();
+    return true;
+  }
+  if (pids.every((pid) => !deps.isPidAlive(pid))) {
+    await deps.clearState();
+    return true;
+  }
+  return false;
 }
 
 export async function decideStart(deps) {
@@ -127,16 +185,26 @@ export async function decideStart(deps) {
     const existing = await deps.readState();
     if (existing?.controlPort && existing?.ownerToken && existing?.instanceId) {
       const status = await deps.controlStatus(existing);
-      if (status.authenticated) return { decision: 'already-running', state: existing };
+      if (status.authenticated && status.body?.healthy === true && status.body?.vitePid) {
+        return { decision: 'already-running', state: existing };
+      }
+      if (status.authenticated) {
+        return { decision: 'in-flight', instanceId: existing.instanceId };
+      }
     }
     return { decision: 'ownership-unknown', error: OWNERSHIP_UNKNOWN };
   }
+  if (initial !== 'closed') {
+    return { decision: 'ownership-unknown', error: OWNERSHIP_UNKNOWN };
+  }
 
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     const claimed = await deps.claimState({
       version: 1,
       instanceId: deps.instanceId,
       pending: true,
+      claimedAt: Date.now(),
+      launcherPid: process.pid,
       manifestPath: deps.manifestPath,
       manifestFingerprint: deps.manifestFingerprint,
       state: 'STARTING',
@@ -150,23 +218,34 @@ export async function decideStart(deps) {
 
     const existing = await deps.readState();
     if (!existing) continue;
-    if (existing.pending) return { decision: 'in-flight', instanceId: existing.instanceId };
+    if (existing.pending) {
+      const port = await probe(PREVIEW_HOST, PREVIEW_PORT);
+      if (port !== 'closed') return { decision: 'in-flight', instanceId: existing.instanceId };
+      if (allPidsDead(existing, deps.isPidAlive)) {
+        await deps.clearState();
+        continue;
+      }
+      return { decision: 'in-flight', instanceId: existing.instanceId };
+    }
 
     if (existing.controlPort && existing.ownerToken && existing.instanceId) {
       const status = await deps.controlStatus(existing);
-      if (status.authenticated) return { decision: 'already-running', state: existing };
-      const alive = deps.isPidAlive(existing.supervisorPid);
+      if (status.authenticated) {
+        if (status.body?.healthy === true && status.body?.vitePid) {
+          return { decision: 'already-running', state: existing };
+        }
+        return { decision: 'in-flight', instanceId: existing.instanceId };
+      }
       const port = await probe(PREVIEW_HOST, PREVIEW_PORT);
-      if (!alive && port !== 'open') {
+      if (port === 'closed' && allPidsDead(existing, deps.isPidAlive)) {
         await deps.clearState();
         continue;
       }
       return { decision: 'ownership-unknown', error: OWNERSHIP_UNKNOWN };
     }
 
-    const alive = deps.isPidAlive(existing.supervisorPid);
     const port = await probe(PREVIEW_HOST, PREVIEW_PORT);
-    if (!alive && port !== 'open') {
+    if (port === 'closed' && allPidsDead(existing, deps.isPidAlive)) {
       await deps.clearState();
       continue;
     }
@@ -187,19 +266,19 @@ export function spawnDetachedSupervisor(manifestPath, instanceId, viteArguments,
 
 async function waitForHealthy(instanceId, deps, timeoutMs = 30000) {
   const deadline = Date.now() + timeoutMs;
-  let lastHealthy = false;
+  let healthyCount = 0;
   while (Date.now() < deadline) {
     const state = await deps.readState();
     if (state && state.instanceId === instanceId && !state.pending && state.controlPort && state.ownerToken) {
       const status = await deps.controlStatus(state);
       if (status.authenticated && status.body?.healthy === true && status.body?.vitePid) {
-        if (lastHealthy) return state;
-        lastHealthy = true;
+        healthyCount += 1;
+        if (healthyCount >= 2) return state;
         await deps.sleep(400);
         continue;
       }
     }
-    lastHealthy = false;
+    healthyCount = 0;
     await deps.sleep(250);
   }
   return null;
@@ -207,6 +286,7 @@ async function waitForHealthy(instanceId, deps, timeoutMs = 30000) {
 
 async function waitForNewPidHealthy(instanceId, oldVitePid, deps, timeoutMs = 30000) {
   const deadline = Date.now() + timeoutMs;
+  let healthyCount = 0;
   while (Date.now() < deadline) {
     const state = await deps.readState();
     if (state && state.instanceId === instanceId && state.controlPort && state.ownerToken) {
@@ -217,9 +297,13 @@ async function waitForNewPidHealthy(instanceId, oldVitePid, deps, timeoutMs = 30
         status.body?.vitePid &&
         status.body.vitePid !== oldVitePid
       ) {
-        return state;
+        healthyCount += 1;
+        if (healthyCount >= 2) return state;
+        await deps.sleep(400);
+        continue;
       }
     }
+    healthyCount = 0;
     await deps.sleep(250);
   }
   return null;
@@ -230,7 +314,7 @@ async function waitForStopped(deps, timeoutMs = 15000) {
   while (Date.now() < deadline) {
     const state = await deps.readState();
     const port = await deps.probePort(PREVIEW_HOST, PREVIEW_PORT);
-    if (!state && port !== 'open') return true;
+    if (!state && port === 'closed') return true;
     await deps.sleep(250);
   }
   return false;
@@ -252,12 +336,15 @@ export function createCli(deps = {}) {
     claimState: deps.claimState ?? claimState,
     clearState: deps.clearState ?? clearState,
     clearClaim: deps.clearClaim ?? clearClaim,
+    safeClearStateIfDead: deps.safeClearStateIfDead ?? safeClearStateIfDead,
     sleep: deps.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms))),
   };
 
   const controlStatusBound = deps.controlStatus ?? ((state) => controlStatus(state, bound));
+  const controlActionBound = deps.controlAction ?? ((state, action) => controlAction(state, action, bound));
 
   async function doStart(rawManifestPath, viteArguments = []) {
+    assertSafeViteArguments(viteArguments);
     const { manifestPath, fingerprint } = await resolveManifest(rawManifestPath);
     const instanceId = generateInstanceId();
     const decision = await decideStart({
@@ -269,7 +356,7 @@ export function createCli(deps = {}) {
     });
     if (decision.decision === 'already-running') {
       process.stdout.write(
-        `Already running: supervisor ${decision.state.supervisorPid}, vite ${decision.state.vitePid}, healthy=${decision.state.healthy}\n`,
+        `Already running: supervisor ${decision.state.supervisorPid}, vite ${decision.state.vitePid}, healthy=true\n`,
       );
       return 0;
     }
@@ -286,7 +373,14 @@ export function createCli(deps = {}) {
       process.stderr.write('A start was already in flight but did not become healthy in time.\n');
       return 1;
     }
-    const supervisorPid = spawnDetachedSupervisor(manifestPath, instanceId, viteArguments, bound);
+    let supervisorPid;
+    try {
+      supervisorPid = spawnDetachedSupervisor(manifestPath, instanceId, viteArguments, bound);
+    } catch (error) {
+      await bound.clearClaim(instanceId);
+      process.stderr.write(`Failed to launch supervisor: ${error?.message ?? 'unknown'}\n`);
+      return 1;
+    }
     const ready = await waitForHealthy(instanceId, { ...bound, controlStatus: controlStatusBound });
     if (!ready) {
       await bound.clearClaim(instanceId);
@@ -301,8 +395,16 @@ export function createCli(deps = {}) {
 
   async function doStatus() {
     const state = await bound.readState();
-    if (!state || !state.controlPort || !state.ownerToken) {
+    if (!state) {
       process.stdout.write('Status: STOPPED\n');
+      return 1;
+    }
+    if (!state.controlPort || !state.ownerToken) {
+      if (allPidsDead(state, bound.isPidAlive) && (await bound.probePort(PREVIEW_HOST, PREVIEW_PORT)) === 'closed') {
+        process.stdout.write(`Status: ${state.state ?? 'STOPPED'} terminationReason=${state.terminationReason ?? 'unknown'}\n`);
+        return 1;
+      }
+      process.stdout.write(`${OWNERSHIP_UNKNOWN}\n`);
       return 1;
     }
     const status = await controlStatusBound(state);
@@ -319,23 +421,31 @@ export function createCli(deps = {}) {
 
   async function doStop() {
     const state = await bound.readState();
-    if (!state || !state.controlPort || !state.ownerToken) {
+    if (!state) {
       process.stdout.write('No preview state; nothing to stop.\n');
       return 0;
     }
-    const result = await bound.makeControlRequest(
-      state.controlPort,
-      {
-        token: state.ownerToken,
-        instanceId: state.instanceId,
-        supervisorPid: state.supervisorPid,
-        requestPath: '/__stop',
-        method: 'POST',
-        timeoutMs: controlTimeoutMs,
-      },
-      httpRequestImpl,
-    );
-    if (!result || result.status !== 200 || !result.body?.ok) {
+    if (!state.controlPort || !state.ownerToken) {
+      const cleared = await bound.safeClearStateIfDead(state);
+      if (cleared) {
+        process.stdout.write('Stale preview state cleared (all recorded processes dead, port closed).\n');
+        return 0;
+      }
+      process.stdout.write(`${OWNERSHIP_UNKNOWN}\n`);
+      return 1;
+    }
+    const status = await controlStatusBound(state);
+    if (!status.authenticated) {
+      const cleared = await bound.safeClearStateIfDead(state);
+      if (cleared) {
+        process.stdout.write('Stale preview state cleared (all recorded processes dead, port closed).\n');
+        return 0;
+      }
+      process.stdout.write(`${OWNERSHIP_UNKNOWN}\n`);
+      return 1;
+    }
+    const ack = await controlActionBound(state, 'stop');
+    if (!ack.authenticated) {
       process.stderr.write('Stop was not acknowledged by the authenticated supervisor.\n');
       return 1;
     }
@@ -367,23 +477,11 @@ export function createCli(deps = {}) {
         return 1;
       }
     } else if (state.manifestPath) {
-      // Re-resolve and re-verify the canonical path recorded in authenticated state.
       await resolveManifest(state.manifestPath);
     }
     const oldVitePid = state.vitePid;
-    const result = await bound.makeControlRequest(
-      state.controlPort,
-      {
-        token: state.ownerToken,
-        instanceId: state.instanceId,
-        supervisorPid: state.supervisorPid,
-        requestPath: '/__restart',
-        method: 'POST',
-        timeoutMs: controlTimeoutMs,
-      },
-      httpRequestImpl,
-    );
-    if (!result || result.status !== 200 || !result.body?.ok) {
+    const ack = await controlActionBound(state, 'restart');
+    if (!ack.authenticated) {
       process.stderr.write('Restart was not acknowledged by the authenticated supervisor.\n');
       return 1;
     }
@@ -397,6 +495,7 @@ export function createCli(deps = {}) {
   }
 
   async function doForeground(rawManifestPath, viteArguments) {
+    assertSafeViteArguments(viteArguments);
     const { target } = await resolveManifest(rawManifestPath);
     const vite = path.join(repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
     process.stdout.write('Starting the Figma-native loopback preview with a verified isolated-playground proxy.\n');

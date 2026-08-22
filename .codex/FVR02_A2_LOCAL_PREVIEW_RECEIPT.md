@@ -11,17 +11,25 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 
 - FIRST_PASS_COMMIT: 346f4bf0b5e6a78308305393d72385d44f3d98ee
 - FIRST_PASS_REVIEW: FAILED parent + Ox runtime-promotion review (atomic duplicate-start claim, safe stale recovery, authenticated identity, readiness marker, restart concurrency, storm reset, stop/ownership, request bounding, state/token redaction, and Windows tree-kill gaps).
-- FOLLOWUP_CORRECTION: implemented in a follow-up commit; this receipt is corrected accordingly. Live runtime acceptance is NOT claimed.
+- SECOND_PASS_COMMIT: ac2d7227314acb923a55657f4e7fb09870f8d9b2
+- SECOND_PASS_REVIEW: FAILED parent + Ox runtime-promotion review (Windows tree termination not wired into the standalone supervisor; unsafe Vite arg forwarding; stale lifecycle truth inherited across replacement launches; unhealthy authenticated start treated as already-running; startup failure did not clear its own claim; control acks lacked identity; pending-claim PID/port recovery; response-body overflow; and 0600/atomic-update truth).
+- FINAL_CORRECTION: implemented in the final corrective commit. Live runtime acceptance is NOT claimed.
 
 ## Implemented result
 
 - `scripts/frontend-preview-supervisor.mjs` adds a `PreviewSupervisor` that owns exactly one Vite child, re-runs `resolvePrivatePath` plus `parsePlaygroundOrigin` plus `verifyPlaygroundOrigin` before every initial/restart launch, preflights port 4173, and auto-restarts owned unexpected exits with bounded backoff 1/2/4/8/15s and a restart-loop stop.
-- Start ownership uses an exclusive `wx` claim bound to a random `instanceId`; exactly one supervisor wins, and a caller cleans only its own failed claim.
-- Loopback-only control endpoint (`127.0.0.1`, ephemeral port) requires a random owner token plus matching `instanceId`, `supervisorPid`, and `controlPort`; the token is stored only in the ignored 0600 `.codex/runtime/local-preview/state.json` and never appears in argv/log/stdout.
-- Readiness requires repeated HTTP 2xx with `text/html` content-type and the stable `<div id="app">` marker while the owned child remains alive.
-- Restart flows through a single child-exit path with a `restarting` lock; explicit restart replaces one child and waits for a new healthy pid. Restart history resets only after a sustained healthy interval; terminal loop state remains inspectable.
-- Stop finalizes even with a dead/absent child and, on Windows, uses argument-array `taskkill` tree-kill (grace first, force only after grace). No PID is ever composed into a shell string.
-- Control and health requests are bounded; non-JSON/non-2xx fail closed. Stop/restart return nonzero on non-2xx or `{ok:false}`.
+- Start ownership uses an exclusive `wx` claim bound to a random `instanceId` plus `claimedAt` and `launcherPid`; exactly one supervisor wins, and a caller clears only its own failed pending claim.
+- Loopback-only control endpoint requires a random owner token plus matching `instanceId`, `supervisorPid`, and `controlPort`; status/restart/stop acks are identity-bearing and validated. The token is stored only in the ignored restrictive-mode state file and never appears in argv/log/stdout.
+- Windows tree termination is wired into the standalone supervisor through a default `taskkill.exe` factory using argument arrays, `windowsHide: true`, no shell, graceful `/T` then `/T /F` only after bounded grace, against the proved in-memory child PID. POSIX uses direct owned-child termination.
+- Forwarded Vite args are validated so host/port/strictPort/config/mode/base (and short aliases) cannot override isolation; the guard applies to both persistent and foreground paths.
+- Lifecycle truth is reset before every replacement launch (`healthy=false`, `healthySince=null`, state STARTING, health failures reset, new pid persisted). `waitForNewPidHealthy` requires repeated authenticated healthy observations.
+- `already-running` is success only for authenticated healthy=true with a live vitePid; authenticated STARTING/unhealthy becomes in-flight and waits for repeated health.
+- Initial startup failure clears only its own pending claim; the supervisor `run` pre-control phase and CLI spawn exceptions both clean up.
+- Pending claims record `claimedAt` + `launcherPid`; in-flight waits run only while a recorded PID is alive; a pending claim clears only when all recorded PIDs are provably dead AND the port probe is definitively `closed`. `timeout` is fail-closed and never clear-on-age.
+- Stale/terminal status truthfully reports authenticated STARTING and keeps a dead terminal loop record readable as STOPPED+reason; stop clears only provably-dead/no-listener stale or terminal state, otherwise ownership-unknown.
+- Stale recovery checks launcherPid, supervisorPid, and vitePid; never clears while any recorded process is live. Port probe is safe only on exact `closed`; `timeout`/other is ownership-unknown across start, stale clearing, preflight, and waitForStopped.
+- Control response bodies are capped (64 KiB) and fail closed on overflow. State replacement uses atomic temporary-file plus rename with bounded retry so status cannot observe transient invalid JSON as STOPPED.
+- On failed CLI readiness, an authenticated live supervisor is identity-verified and stopped with bounded cleanup; otherwise the claim is preserved and the CLI fails closed. Stop finalizes even if the exit event never arrives and never leaves a live control server/state behind.
 - `scripts/start-frontend-playground-preview.mjs` is a thin CLI with `dev` (preserved foreground), `start`, `status`, `restart`, and `stop` modes; persistent `start` preserves `-- <vite args>` and restart reuses the canonical path with re-resolution.
 - `package.json` adds `preview:frontend:start`, `preview:frontend:status`, `preview:frontend:restart`, `preview:frontend:stop`, and keeps `dev:frontend:playground` (now explicit `dev` mode).
 
@@ -29,7 +37,7 @@ PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
 
 - `git diff --check`: PASS.
 - `node scripts/check-agent-instructions.mjs`: PASS (12 project files).
-- Focused unit: `npx vitest run tests/unit/frontend-preview-supervisor.test.js tests/unit/frontend-playground-guard.test.js`: PASS (2 files, 29 tests).
+- Focused unit: `npx vitest run tests/unit/frontend-preview-supervisor.test.js tests/unit/frontend-playground-guard.test.js`: PASS (2 files, 34 tests).
 - Focused eslint on the three changed JS files: PASS (no findings).
 - `node --check` on both changed scripts: PASS.
 
@@ -51,5 +59,5 @@ Windows file-permission note: the state file is created with `0o600` intent; on 
 
 ## Known limitations
 
-- A concurrent duplicate `start` racing a fresh start is guarded by the stale-state refusal and Vite `--strictPort`; the CLI never force-kills an unknown listener.
+- A concurrent duplicate `start` racing a fresh start is guarded by the exclusive `wx` claim and Vite `--strictPort`; the CLI never force-kills an unknown listener.
 - Windows detached-process semantics use `detached: true`, `stdio: 'ignore'`, and `child.unref()`.

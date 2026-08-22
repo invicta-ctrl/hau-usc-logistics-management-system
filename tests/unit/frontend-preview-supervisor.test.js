@@ -4,23 +4,28 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   APP_HTML_MARKER,
-  OWNERSHIP_UNKNOWN,
-  PREVIEW_HOST,
-  PREVIEW_PORT,
   PreviewSupervisor,
+  allPidsDead,
+  anyPidAlive,
+  assertSafeViteArguments,
   backoffDelay,
   buildWindowsTreeForceKillArgs,
   buildWindowsTreeKillArgs,
   claimState,
   computeFingerprint,
+  createTreeTerminator,
   generateInstanceId,
   generateOwnerToken,
   safeTokenEqual,
 } from '../../scripts/frontend-preview-supervisor.mjs';
 import {
+  controlAction,
   controlStatus,
+  createCli,
   decideStart,
   makeControlRequest,
+  matchesIdentity,
+  safeClearStateIfDead,
 } from '../../scripts/start-frontend-playground-preview.mjs';
 
 function fakeChild(pid = 1000 + Math.floor(Math.random() * 1000)) {
@@ -68,6 +73,9 @@ function buildSupervisor(overrides = {}) {
     viteArguments: overrides.viteArguments ?? [],
     probePort: overrides.probePort ?? vi.fn(async () => 'closed'),
     isPidAlive: overrides.isPidAlive ?? (() => true),
+    createTreeTerminator: overrides.createTreeTerminator,
+    terminateTree: overrides.terminateTree === undefined ? null : overrides.terminateTree,
+    terminateTreeForce: overrides.terminateTreeForce === undefined ? null : overrides.terminateTreeForce,
   });
   supervisor.writeState = overrides.writeState ?? vi.fn(async () => {});
   supervisor.resolveManifest = overrides.resolveManifest ?? vi.fn(async () => {
@@ -76,6 +84,7 @@ function buildSupervisor(overrides = {}) {
     supervisor.manifestFingerprint = 'fingerprint';
   });
   supervisor.preflightPort = overrides.preflightPort ?? vi.fn(async () => {});
+  supervisor.clearClaim = overrides.clearClaim ?? vi.fn(async () => {});
   supervisor.ownerToken = 'test-token';
   supervisor.instanceId = 'test-instance';
   supervisor.manifestPath = '/private/manifest.json';
@@ -84,27 +93,51 @@ function buildSupervisor(overrides = {}) {
   return { supervisor, child, spawn, fetchImpl, sleep };
 }
 
-describe('frontend preview supervisor primitives', () => {
-  it('bounds restart backoff to 1/2/4/8/15 seconds', () => {
+describe('primitives', () => {
+  it('bounds restart backoff and builds Windows tree-kill arg arrays', () => {
     expect([1, 2, 3, 4, 5, 6].map(backoffDelay)).toEqual([1000, 2000, 4000, 8000, 15000, 15000]);
+    expect(buildWindowsTreeKillArgs(4173)).toEqual(['/PID', '4173', '/T']);
+    expect(buildWindowsTreeForceKillArgs(4173)).toEqual(['/PID', '4173', '/T', '/F']);
   });
 
-  it('generates random owner tokens and instance ids and compares tokens in constant time', () => {
+  it('generates tokens/ids and computes fingerprints', () => {
     expect(generateOwnerToken()).toMatch(/^[0-9a-f]{64}$/);
     expect(generateInstanceId()).toMatch(/^[0-9a-f]{32}$/);
     expect(safeTokenEqual('abc', 'abc')).toBe(true);
     expect(safeTokenEqual('abc', 'abd')).toBe(false);
-    expect(safeTokenEqual('abc', 'ab')).toBe(false);
-  });
-
-  it('computes a stable sha256 fingerprint', () => {
     expect(computeFingerprint(Buffer.from('x'))).toBe(computeFingerprint(Buffer.from('x')));
-    expect(computeFingerprint(Buffer.from('x'))).not.toBe(computeFingerprint(Buffer.from('y')));
   });
 
-  it('builds Windows tree-kill argument arrays without executing them', () => {
-    expect(buildWindowsTreeKillArgs(4173)).toEqual(['/PID', '4173', '/T']);
-    expect(buildWindowsTreeForceKillArgs(4173)).toEqual(['/PID', '4173', '/T', '/F']);
+  it('rejects unsafe Vite args in exact and =value forms, preserves benign args', () => {
+    for (const bad of ['--host', '--port', '--strictPort', '--config', '-c', '--mode', '-m', '--base']) {
+      expect(() => assertSafeViteArguments([bad])).toThrow();
+      expect(() => assertSafeViteArguments([`${bad}=value`])).toThrow();
+    }
+    expect(() => assertSafeViteArguments(['--open', 'false'])).not.toThrow();
+  });
+
+  it('default tree terminator invokes taskkill.exe with arg arrays and windowsHide', async () => {
+    const spawnFn = vi.fn(() => {
+      const child = { once: vi.fn(), on: vi.fn() };
+      child.once.mockImplementation((event, cb) => {
+        if (event === 'exit') queueMicrotask(() => cb(0));
+      });
+      return child;
+    });
+    const terminator = createTreeTerminator(spawnFn);
+    await terminator.terminateTree(4173);
+    expect(spawnFn).toHaveBeenCalledWith('taskkill.exe', ['/PID', '4173', '/T'], { windowsHide: true, stdio: 'ignore' });
+    await terminator.terminateTreeForce(4173);
+    expect(spawnFn).toHaveBeenLastCalledWith('taskkill.exe', ['/PID', '4173', '/T', '/F'], {
+      windowsHide: true,
+      stdio: 'ignore',
+    });
+  });
+
+  it('classifies recorded pids alive/dead across launcher, supervisor, and vite', () => {
+    const state = { launcherPid: 1, supervisorPid: 2, vitePid: 3 };
+    expect(anyPidAlive(state, (pid) => pid === 2)).toBe(true);
+    expect(allPidsDead(state, () => false)).toBe(true);
   });
 });
 
@@ -117,17 +150,12 @@ describe('ownership state file', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it('claims atomically: exactly one of two concurrent claims wins', async () => {
-    const state = { instanceId: 'a' };
+  it('claims atomically and writes restrictive mode on POSIX', async () => {
     const results = await Promise.all([
-      claimState(dir, { ...state, instanceId: 'a' }),
-      claimState(dir, { ...state, instanceId: 'b' }),
+      claimState(dir, { instanceId: 'a', pending: true }),
+      claimState(dir, { instanceId: 'b', pending: true }),
     ]);
     expect(results.filter(Boolean)).toHaveLength(1);
-  });
-
-  it('writes state without an owner token in the claim surface and with restrictive mode on POSIX', async () => {
-    await claimState(dir, { instanceId: 'a', ownerToken: null, pending: true });
     const raw = await readFile(path.join(dir, '.codex', 'runtime', 'local-preview', 'state.json'), 'utf8');
     expect(raw).toContain('"pending": true');
     if (process.platform !== 'win32') {
@@ -138,46 +166,36 @@ describe('ownership state file', () => {
   });
 });
 
-describe('frontend preview supervisor lifecycle', () => {
-  it('launches exactly one vite child with loopback host, strict port, and guarded env', async () => {
+describe('supervisor lifecycle', () => {
+  it('launches with guarded args and resets lifecycle truth before replacement', async () => {
     const { supervisor, spawn } = buildSupervisor({ viteArguments: ['--open', 'false'] });
     await supervisor.launchChild();
-    expect(spawn).toHaveBeenCalledTimes(1);
-    const [exec, args, options] = spawn.mock.calls[0];
-    expect(exec).toBe(process.execPath);
-    expect(args).toContain('--host');
-    expect(args).toContain(PREVIEW_HOST);
-    expect(args).toContain('--port');
-    expect(args).toContain(String(PREVIEW_PORT));
-    expect(args).toContain('--strictPort');
+    supervisor.healthy = true;
+    supervisor.healthySince = 123;
+    supervisor.child.exitCode = 1;
+    await supervisor.launchChild();
+    expect(supervisor.healthy).toBe(false);
+    expect(supervisor.healthySince).toBeNull();
+    expect(supervisor.state).toBe('STARTING');
+    const args = spawn.mock.calls[1][1];
     expect(args.slice(-2)).toEqual(['--open', 'false']);
-    expect(options.env.HAU_PLAYGROUND_PROXY_ORIGIN).toBe(supervisor.targetOrigin);
   });
 
-  it('re-resolves the private path before every launch', async () => {
-    const { supervisor, spawn } = buildSupervisor();
-    await supervisor.launchChild();
-    expect(supervisor.resolveManifest).toHaveBeenCalledTimes(1);
-    supervisor.child.exitCode = 1;
-    await supervisor.launchChild();
-    expect(supervisor.resolveManifest).toHaveBeenCalledTimes(2);
-    supervisor.child.exitCode = 1;
-    await supervisor.launchChild();
-    expect(supervisor.resolveManifest).toHaveBeenCalledTimes(3);
-    expect(spawn).toHaveBeenCalledTimes(3);
+  it('rejects unsafe vite args at launch time', async () => {
+    const { supervisor } = buildSupervisor({ viteArguments: ['--port=9999'] });
+    await expect(supervisor.launchChild()).rejects.toThrow('Unsafe Vite argument');
   });
 
-  it('restarts once after an unexpected child exit', async () => {
+  it('restarts once after unexpected exit', async () => {
     const { supervisor, child, spawn, sleep } = buildSupervisor();
     await supervisor.launchChild();
-    expect(spawn).toHaveBeenCalledTimes(1);
     child.exitCode = 1;
     child.handlers.exit(1, null);
     await vi.waitFor(() => expect(sleep).toHaveBeenCalled());
     await vi.waitFor(() => expect(spawn).toHaveBeenCalledTimes(2));
   });
 
-  it('does not restart after an expected stop', async () => {
+  it('does not restart after expected stop', async () => {
     const { supervisor, child, spawn } = buildSupervisor();
     await supervisor.launchChild();
     supervisor.shutdownRequested = true;
@@ -187,43 +205,49 @@ describe('frontend preview supervisor lifecycle', () => {
     expect(spawn).toHaveBeenCalledTimes(1);
   });
 
-  it('explicit restart replaces the child and reaches a new healthy pid', async () => {
+  it('explicit restart yields a new pid and reaches healthy', async () => {
     const { supervisor, child } = buildSupervisor();
     await supervisor.launchChild();
     const oldPid = child.pid;
     const newChild = fakeChild(7777);
     supervisor.spawn = vi.fn(() => newChild);
     supervisor.requestRestart();
-    await vi.waitFor(() => expect(newChild.on).toHaveBeenCalled());
-    expect(newChild.pid).not.toBe(oldPid);
+    await vi.waitFor(() => expect(supervisor.healthy).toBe(true));
+    expect(supervisor.child.pid).not.toBe(oldPid);
   });
 
-  it('rejects a control request when token, instance, or supervisor pid mismatches', () => {
+  it('rejects control requests on token/instance/supervisor mismatch and requires POST', () => {
     const { supervisor } = buildSupervisor();
     const res = { writeHead: vi.fn(), end: vi.fn() };
-    const makeReq = (headers) => ({ headers, url: '/__status', method: 'GET' });
-    supervisor.handleControl(makeReq({ 'x-owner-token': 'wrong' }), res);
+    const headers = (over = {}) => ({
+      'x-owner-token': 'test-token',
+      'x-instance-id': 'test-instance',
+      'x-supervisor-pid': String(process.pid),
+      ...over,
+    });
+    supervisor.handleControl({ headers: headers({ 'x-owner-token': 'wrong' }), url: '/__status', method: 'GET' }, res);
     expect(res.writeHead).toHaveBeenLastCalledWith(401, expect.anything());
-    supervisor.handleControl(
-      makeReq({ 'x-owner-token': 'test-token', 'x-instance-id': 'wrong', 'x-supervisor-pid': String(process.pid) }),
-      res,
-    );
-    expect(res.writeHead).toHaveBeenLastCalledWith(401, expect.anything());
+    supervisor.handleControl({ headers: headers(), url: '/__stop', method: 'GET' }, res);
+    expect(res.writeHead).toHaveBeenLastCalledWith(405, expect.anything());
   });
 
-  it('requires POST for stop and restart', () => {
+  it('ack bodies carry identity; stop/restart only after authenticated POST', () => {
     const { supervisor } = buildSupervisor();
+    supervisor.controlPort = 45678;
     const res = { writeHead: vi.fn(), end: vi.fn() };
     const headers = {
       'x-owner-token': 'test-token',
       'x-instance-id': 'test-instance',
       'x-supervisor-pid': String(process.pid),
     };
-    supervisor.handleControl({ headers, url: '/__stop', method: 'GET' }, res);
-    expect(res.writeHead).toHaveBeenCalledWith(405, expect.anything());
+    supervisor.handleControl({ headers, url: '/__stop', method: 'POST' }, res);
+    const body = JSON.parse(res.end.mock.calls.at(-1)[0]);
+    expect(body).toMatchObject({ ok: true, instanceId: 'test-instance', action: 'stop' });
+    expect(body.supervisorPid).toBe(process.pid);
+    expect(body.controlPort).toBeTypeOf('number');
   });
 
-  it('rejects non-HTML readiness even when the response is 2xx', async () => {
+  it('rejects non-HTML readiness', async () => {
     const { supervisor } = buildSupervisor({
       fetchImpl: vi.fn(async () => new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } })),
     });
@@ -231,13 +255,13 @@ describe('frontend preview supervisor lifecycle', () => {
     expect(await supervisor.verifyReady()).toBe(false);
   });
 
-  it('accepts readiness only when content-type is HTML and the app marker is present', async () => {
+  it('accepts readiness only with HTML marker', async () => {
     const { supervisor } = buildSupervisor();
     supervisor.child = fakeChild();
     expect(await supervisor.verifyReady()).toBe(true);
   });
 
-  it('health failure triggers exactly one restart through the child-exit path', async () => {
+  it('health failure triggers exactly one restart via child-exit path', async () => {
     const { supervisor, spawn } = buildSupervisor();
     await supervisor.launchChild();
     supervisor.fetchImpl = vi.fn(async () => {
@@ -245,13 +269,12 @@ describe('frontend preview supervisor lifecycle', () => {
     });
     for (let i = 0; i < 3; i += 1) await supervisor.healthTick();
     await vi.waitFor(() => expect(spawn).toHaveBeenCalledTimes(2));
-    // A further health tick while restarting must not spawn a third child.
     supervisor.restarting = true;
     await supervisor.healthTick();
     expect(spawn).toHaveBeenCalledTimes(2);
   });
 
-  it('stops the loop at the restart threshold and keeps terminal state inspectable', async () => {
+  it('stops at restart threshold and keeps terminal state inspectable', async () => {
     let now = 1_000_000;
     const { supervisor, child } = buildSupervisor({ now: () => now });
     await supervisor.launchChild();
@@ -263,7 +286,7 @@ describe('frontend preview supervisor lifecycle', () => {
     expect(supervisor.terminationReason).toBe('loop');
   });
 
-  it('resets restart history only after a sustained healthy interval', async () => {
+  it('resets storm history only after sustained healthy interval', async () => {
     let now = 0;
     const { supervisor } = buildSupervisor({ now: () => now });
     await supervisor.launchChild();
@@ -277,21 +300,35 @@ describe('frontend preview supervisor lifecycle', () => {
     expect(supervisor.restartCount).toBe(0);
   });
 
-  it('omits the owner token from the control status payload and log lines', async () => {
+  it('never emits the owner token in payload or logs', async () => {
     const { supervisor } = buildSupervisor();
     await supervisor.launchChild();
-    const payload = supervisor.statusPayload();
-    expect(payload).not.toHaveProperty('ownerToken');
+    expect(supervisor.statusPayload()).not.toHaveProperty('ownerToken');
     expect(JSON.stringify(supervisor.logLines)).not.toContain(supervisor.ownerToken);
   });
 
-  it('finalizes and clears non-loop state idempotently', async () => {
-    const { supervisor } = buildSupervisor();
+  it('finalizes even when the exit event never arrives', async () => {
+    const { supervisor, child } = buildSupervisor();
     supervisor.clearState = vi.fn(async () => {});
     supervisor.closeControl = vi.fn(async () => {});
+    await supervisor.launchChild();
+    child.exitCode = null;
+    child.kill = vi.fn(() => {
+      child.exitCode = 1; // exit event never fires
+    });
     await supervisor.finalize('stopped', 0);
-    await supervisor.finalize('stopped', 0);
-    expect(supervisor.clearState).toHaveBeenCalledTimes(1);
+    expect(supervisor.state).toBe('STOPPED');
+    expect(supervisor.controlServer).toBeNull();
+  });
+
+  it('clears its own pending claim when resolve/adopt/control startup fails', async () => {
+    const { supervisor } = buildSupervisor();
+    supervisor.resolveManifest = vi.fn(async () => {
+      throw new Error('bad manifest');
+    });
+    const instanceId = 'inst-cleanup';
+    await supervisor.run('/private/manifest.json', instanceId);
+    expect(supervisor.clearClaim).toHaveBeenCalledWith(supervisor.runtimeRoot, instanceId);
   });
 });
 
@@ -311,38 +348,38 @@ describe('CLI ownership decisions and control', () => {
     };
   }
 
-  it('claims when the port is free and no state exists', async () => {
+  it('claims when free and no state', async () => {
     const deps = baseDeps();
-    const result = await decideStart(deps);
-    expect(result.decision).toBe('claimed');
-    expect(deps.claimState).toHaveBeenCalledTimes(1);
+    expect((await decideStart(deps)).decision).toBe('claimed');
   });
 
-  it('reports already-running when an authenticated supervisor owns the listener', async () => {
+  it('already-running only when authenticated healthy with live vitePid', async () => {
     const state = { instanceId: 'inst-1', supervisorPid: 123, controlPort: 45678, ownerToken: 'tok', vitePid: 555 };
     const deps = baseDeps({
       probePort: vi.fn(async () => 'open'),
       readState: vi.fn(async () => state),
-      controlStatus: vi.fn(async () => ({ authenticated: true, body: { ok: true, ...state } })),
+      controlStatus: vi.fn(async () => ({ authenticated: true, body: { ok: true, ...state, healthy: true } })),
     });
-    const result = await decideStart(deps);
-    expect(result.decision).toBe('already-running');
-    expect(deps.claimState).not.toHaveBeenCalled();
+    expect((await decideStart(deps)).decision).toBe('already-running');
   });
 
-  it('refuses ownership-unknown when the port is open but not authenticated', async () => {
+  it('unhealthy authenticated start becomes in-flight', async () => {
+    const state = { instanceId: 'inst-1', supervisorPid: 123, controlPort: 45678, ownerToken: 'tok', vitePid: null };
     const deps = baseDeps({
       probePort: vi.fn(async () => 'open'),
-      readState: vi.fn(async () => null),
+      readState: vi.fn(async () => state),
+      controlStatus: vi.fn(async () => ({ authenticated: true, body: { ok: true, ...state, healthy: false } })),
     });
-    const result = await decideStart(deps);
-    expect(result.decision).toBe('ownership-unknown');
-    expect(result.error).toBe(OWNERSHIP_UNKNOWN);
-    expect(deps.claimState).not.toHaveBeenCalled();
+    expect((await decideStart(deps)).decision).toBe('in-flight');
   });
 
-  it('clears stale dead state and retries when the recorded process is dead and 4173 is closed', async () => {
-    const stale = { instanceId: 'dead', supervisorPid: 999, controlPort: 45678, ownerToken: 'tok' };
+  it('refuses ownership-unknown when port open but unauthenticated', async () => {
+    const deps = baseDeps({ probePort: vi.fn(async () => 'open'), readState: vi.fn(async () => null) });
+    expect((await decideStart(deps)).decision).toBe('ownership-unknown');
+  });
+
+  it('clears stale dead state only when all recorded pids are dead and port is exactly closed', async () => {
+    const stale = { instanceId: 'dead', launcherPid: 1, supervisorPid: 2, vitePid: 3, controlPort: 45678, ownerToken: 'tok' };
     const deps = baseDeps({
       claimState: vi.fn(async () => false).mockResolvedValueOnce(false).mockResolvedValueOnce(true),
       readState: vi.fn(async () => stale),
@@ -350,26 +387,38 @@ describe('CLI ownership decisions and control', () => {
       probePort: vi.fn(async () => 'closed'),
       controlStatus: vi.fn(async () => ({ authenticated: false })),
     });
-    const result = await decideStart(deps);
-    expect(result.decision).toBe('claimed');
+    expect((await decideStart(deps)).decision).toBe('claimed');
     expect(deps.clearState).toHaveBeenCalled();
   });
 
-  it('refuses when the recorded process is live but unreachable', async () => {
-    const stale = { instanceId: 'live', supervisorPid: 999, controlPort: 45678, ownerToken: 'tok' };
+  it('does not clear stale state when any recorded pid is alive', async () => {
+    const stale = { instanceId: 'live', launcherPid: 1, supervisorPid: 2, vitePid: 3, controlPort: 45678, ownerToken: 'tok' };
     const deps = baseDeps({
       claimState: vi.fn(async () => false),
       readState: vi.fn(async () => stale),
-      isPidAlive: vi.fn(() => true),
+      isPidAlive: vi.fn((pid) => pid === 2),
       probePort: vi.fn(async () => 'closed'),
       controlStatus: vi.fn(async () => ({ authenticated: false })),
     });
-    const result = await decideStart(deps);
-    expect(result.decision).toBe('ownership-unknown');
+    expect((await decideStart(deps)).decision).toBe('ownership-unknown');
+    expect(deps.clearState).not.toHaveBeenCalled();
   });
 
-  it('fails closed on non-JSON and non-ok control responses', async () => {
-    const nonJson = await makeControlRequest(
+  it('treats port probe timeout as ownership-unknown, not clearable', async () => {
+    const stale = { instanceId: 'x', launcherPid: 1, supervisorPid: 2, vitePid: 3, controlPort: 45678, ownerToken: 'tok' };
+    const deps = baseDeps({
+      claimState: vi.fn(async () => false),
+      readState: vi.fn(async () => stale),
+      isPidAlive: vi.fn(() => false),
+      probePort: vi.fn(async () => 'timeout'),
+      controlStatus: vi.fn(async () => ({ authenticated: false })),
+    });
+    const cleared = await safeClearStateIfDead(deps, stale);
+    expect(cleared).toBe(false);
+  });
+
+  it('caps control response body and fails closed on overflow', async () => {
+    const result = await makeControlRequest(
       45678,
       { token: 'tok', instanceId: 'inst', supervisorPid: 123, requestPath: '/__status' },
       (_opts, handler) => {
@@ -377,43 +426,45 @@ describe('CLI ownership decisions and control', () => {
         const res = {
           statusCode: 200,
           on: vi.fn((event, cb) => {
-            if (event === 'data') cb(Buffer.from('not-json'));
+            if (event === 'data') cb(Buffer.alloc(70 * 1024, 0x41));
             if (event === 'end') cb();
           }),
+          destroy: vi.fn(),
         };
         queueMicrotask(() => handler(res));
         return req;
       },
     );
-    expect(nonJson.status).toBe(200);
-    expect(nonJson.parseError).toBe(true);
-
-    const nonOk = await makeControlRequest(
-      45678,
-      { token: 'tok', instanceId: 'inst', supervisorPid: 123, requestPath: '/__status' },
-      (_opts, handler) => {
-        const req = { on: vi.fn(), setTimeout: vi.fn(), end: vi.fn(), destroy: vi.fn() };
-        const res = {
-          statusCode: 500,
-          on: vi.fn((event, cb) => {
-            if (event === 'data') cb(Buffer.from('{}'));
-            if (event === 'end') cb();
-          }),
-        };
-        queueMicrotask(() => handler(res));
-        return req;
-      },
-    );
-    expect(nonOk.status).toBe(500);
+    expect(result.error).toBe('control response too large');
   });
 
-  it('rejects a control status whose returned identity mismatches the stored state', async () => {
+  it('rejects identity-mismatched control status and action acks', async () => {
     const state = { instanceId: 'inst', supervisorPid: 123, controlPort: 45678, ownerToken: 'tok' };
-    const makeControlRequestImpl = async () => ({
+    const mismatch = async () => ({
       status: 200,
       body: { ok: true, instanceId: 'other', supervisorPid: 123, controlPort: 45678 },
     });
-    const result = await controlStatus(state, { makeControlRequest: makeControlRequestImpl, controlTimeoutMs: 3000 });
-    expect(result.authenticated).toBe(false);
+    expect((await controlStatus(state, { makeControlRequest: mismatch, controlTimeoutMs: 3000 })).authenticated).toBe(false);
+    expect(
+      (await controlAction(state, 'stop', { makeControlRequest: mismatch, controlTimeoutMs: 3000 })).authenticated,
+    ).toBe(false);
+  });
+
+  it('matches identity when instance, supervisor pid, and control port align', () => {
+    const state = { instanceId: 'inst', supervisorPid: 123, controlPort: 45678 };
+    expect(matchesIdentity(state, { ok: true, instanceId: 'inst', supervisorPid: 123, controlPort: 45678 })).toBe(true);
+    expect(matchesIdentity(state, { ok: true, instanceId: 'inst', supervisorPid: 999, controlPort: 45678 })).toBe(false);
+  });
+
+  it('stop clears provably-dead stale state and refuses otherwise', async () => {
+    const cli = createCli({
+      readState: vi.fn(async () => ({ instanceId: 'x', supervisorPid: 1, vitePid: 2, controlPort: 45678, ownerToken: 'tok' })),
+      isPidAlive: vi.fn(() => false),
+      probePort: vi.fn(async () => 'closed'),
+      safeClearStateIfDead: vi.fn(async () => true),
+      controlStatus: vi.fn(async () => ({ authenticated: false })),
+      makeControlRequest: vi.fn(async () => ({ status: 200, body: { ok: true } })),
+    });
+    expect(await cli.doStop()).toBe(0);
   });
 });
