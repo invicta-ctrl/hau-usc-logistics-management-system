@@ -10,7 +10,7 @@ ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr02-full-frontend-recovery-med
 ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr02-a2-ox-first-routing.md;.codex/specs/accepted/2026-08-22-fvr02-a2-local-preview-resilience.md
 AUTHORITY: Earl current instruction -> accepted FVR-02 spec -> accepted FVR-02-A2 amendments -> live Figma Make source -> accepted backend/API/auth/data contracts -> verified repository state.
 REQUIRED_MODEL: GPT-5.6_SOL_MAX
-ACTIVE_WRITER: DEEPSEEK_V4_PRO:/root/ds1_fvr02_writer_v3
+ACTIVE_WRITER: DEEPSEEK_V4_PRO:/root/ds1_fvr02_closeout_v4
 WRITER_LOCK: ACQUIRED
 PHASE: FVR02_FRONTEND_MEDIA_MOTION_INDEX_IMPLEMENTATION
 RISK: HIGH
