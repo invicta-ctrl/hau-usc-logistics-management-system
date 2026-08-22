@@ -8,14 +8,14 @@ LOCAL_PREVIEW_REPAIR: ACCEPTED_LIVE_RUNTIME_VERIFIED;CORRECTION_COMMIT_4cbb921;P
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
 BASELINE_HEAD: RESOLVE_FROM_LIVE_GIT
-LAST_VERIFIED_AHEAD_BEHIND: BEHIND_0_AHEAD_22 (post-final-batch checkpoint; resolve current from live Git)
-UPSTREAM: origin/frontend-design-integration@e93e5c97fdb44f85f1b6ac1b578c9014a77b6166
-AHEAD_BEHIND: BEHIND_0_AHEAD_22
+LAST_VERIFIED_AHEAD_BEHIND: RESOLVE_FROM_LIVE_GIT
+UPSTREAM: origin/frontend-design-integration
+AHEAD_BEHIND: RESOLVE_FROM_LIVE_GIT
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: DIRTY_EXCEPT_PRESERVED_EXCLUDED_UNTracked `.ai-bridge/`
-ACTIVE_WRITER: DEEPSEEK_V4_PRO:/root/ds1_fvr02_closeout_v4
-WRITER_LOCK: ACQUIRED
-HANDOFF_STATUS: TRANSFERRING
+ACTIVE_WRITER: NONE
+WRITER_LOCK: RELEASED
+HANDOFF_STATUS: READY_FOR_HANDOFF
 REQUIRED_MODEL: GPT-5.6_SOL_MAX
 SOL_MAX_ROLE: top-level orchestrator and final reviewer, read-only, writes forbidden
 CANONICAL_WRITER: DeepSeek V4 Pro #1
@@ -62,5 +62,6 @@ ROLLBACK: Git revert product commits; preserve FVR-001 and rollback tag; Playgro
 BLOCKER: FVR02_VIDEO_AUTHORITY_CONFLICT (live Make v39 exposes no hero video source; poster-only is intentional and no source was fabricated) plus FVR02_PUBLIC_MEDIA_BLOCKED (prior seed advertisement expired 2026-08-01, referenced R2 object missing, no accepted seed/upload runbook, no media mutation authorized).
 
 OPEN_RISKS: hero-video authority conflict (blocker); public-media source/runbook gap (blocker).
+CONNECTOR_SESSION: Figma Make v39 and Design page-04 media evidence re-verified read-only via authenticated Chrome; the running-app Figma connector session remained stale-auth at closeout (OAuth completed), so no live connector read was completed this turn.
 
 NEXT_EXACT_ACTION: Parent orchestrator final acceptance review of the FVR-02 final batch; FI-04 not ready/not advanced; preview remains RUNNING at 4173 (do not restart/stop).
