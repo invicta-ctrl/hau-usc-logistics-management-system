@@ -173,18 +173,22 @@ provider state.
 | Authority | Identity |
 |---|---|
 | Figma Design | `hXJElH4p72KfgAaoUyfNOC` — 28 pages. Current-authority board: page `55:3`, board `568:2`, R3-A1 block `733:2` |
-| Figma Make | `rP9W9MQlZkyQrUx38TVsFS` — **Version 39**. See below. |
+| Figma Make | `rP9W9MQlZkyQrUx38TVsFS` — **Version 40** (R3-A1; previous 39) |
 | Repository Make mirror | `output/design/make-adoption/`, `output/design/make-preservation/`, `output/design/figma-make-source/`, `prototypes/public-portals-r3/figma-make/` |
 | Registers | `docs/design/FIGMA_MAKE_SOURCE_REGISTER.md`, `docs/design/FIGMA_BASELINE_REGISTER.md` |
 
-**Figma Make synchronization status is incomplete.** R3-A1 applied the public
-request reconciliation to eight Make source files, but the provider save did not
-complete — Figma reported it could not reconnect — so **no new Make version was
-minted and Make remains at Version 39**. The exact changeset is tabulated in
-`.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md` and is reproducible from that
-table alone. Until that save lands and is read back, treat Make v39 as carrying
-the *old* public request entry, and treat this file plus the Figma Design
-current lane as the authority for the corrected model.
+**Figma Make is synchronized and verified.** R3-A1 applied the public request
+reconciliation to eight Make source files and saved them: **Version 39 → Version
+40**, zero pending edits after a full reload, provider version-history entry
+"8 edited files — Version 40". Exercised live: "Start a logistics request"
+reaches "PUBLIC REQUEST · NO SIGN-IN — Request Center", and "Staff sign in"
+reaches a separate staff sign-in page. The exact changeset is tabulated in
+`.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`.
+
+**The repository Make mirror is not yet refreshed.** `output/design/figma-make-source/`
+still holds the v39 state, so it does not yet satisfy R3-A1 §12's requirement that
+the mirror match the live saved source. That refresh, with per-file bytes and
+sha256, is the next mechanical step and is recorded in the receipt.
 
 ## Codex adoption workflow
 
@@ -212,7 +216,7 @@ current lane as the authority for the corrected model.
 
 ## Known residuals
 
-- Figma Make save pending provider reconnection (above).
+- Repository Make mirror still at v39; refresh to the saved v40 source (above).
 - `.impeccable/design.json` is stale from the pre-cutover v4.1 design; see
   FE-R3-010 / FE-R3-011 in `docs/frontend/WORKFLOW_ARCHITECTURE.md`.
 - 54 colours on design page 15 were restored by inference in the 2026-08-19
@@ -221,8 +225,8 @@ current lane as the authority for the corrected model.
 
 ## Stale if
 
-This file is stale if R3-A1 is superseded; if the Make save lands and its real
-version is not recorded here; if `docs/frontend/WORKFLOW_ARCHITECTURE.md` or the
+This file is stale if R3-A1 is superseded; if the live Make version is not 40 and
+that is not recorded here; if `docs/frontend/WORKFLOW_ARCHITECTURE.md` or the
 Figma Design current lane stops agreeing with the workflow model above; or if
 FI-04 workspaces become runnable and are still described here as unexposed.
 

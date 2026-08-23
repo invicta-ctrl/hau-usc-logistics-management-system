@@ -14,13 +14,13 @@ CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md
 
-COMPLETED: Adopted the R3-A1 bounded design-provider write authority as an accepted amendment and reconciled the `.codex` records that previously said `FIGMA_WRITE: FORBIDDEN`. Resolved both provider identities live. Reconciled the live Figma Design current-authority lane: added R3-A1 block `733:2` to authority board `568:2` on page `55:3`, corrected the board freshness line `568:4`, rewrote module-index `680:13` so the public Request Center and internal Request Hub are distinct, repaired dangling pointers in `680:16`, and renamed page-40 frame `300:2` to the internal Request Hub. Applied the public-request reconciliation to eight live Figma Make source files. Rewrote `DESIGN.md` to the post-R3-A1 authority model. Corrected the D24.0 citation in `docs/frontend/WORKFLOW_ARCHITECTURE.md`.
+COMPLETED: Adopted the R3-A1 bounded design-provider write authority as an accepted amendment and reconciled the `.codex` records that previously said `FIGMA_WRITE: FORBIDDEN`. Resolved both provider identities live. Reconciled the live Figma Design current-authority lane: added R3-A1 block `733:2` to authority board `568:2` on page `55:3`, corrected the board freshness line `568:4`, rewrote module-index `680:13` so the public Request Center and internal Request Hub are distinct, repaired dangling pointers in `680:16`, and renamed page-40 frame `300:2` to the internal Request Hub. Applied the public-request reconciliation to eight live Figma Make source files and saved them: Version 39 -> Version 40. Rewrote `DESIGN.md` to the post-R3-A1 authority model. Corrected the D24.0 citation in `docs/frontend/WORKFLOW_ARCHITECTURE.md`.
 
-VALIDATION: Figma Design writes were read back — a full-board text scan returns zero remaining "Staff Request Center" strings on the authority board, and blocks `733:2` were screenshotted after each edit. `npm run check:agents`, `npm run check:continuation` and `npm run handoff:verify` passed before the governance commit. `git diff --check` clean. Remote readback confirmed 0 ahead / 0 behind at the governance checkpoint. The Figma Make changeset is NOT validated: it is unsaved, so no version readback, no re-hash, and no prototype exercise was possible.
+VALIDATION: Figma Design writes were read back — a full-board text scan returns zero remaining "Staff Request Center" strings on the authority board, and blocks `733:2` were screenshotted after each edit. `npm run check:agents`, `npm run check:continuation` and `npm run handoff:verify` passed before the governance commit. `git diff --check` clean. Remote readback confirmed 0 ahead / 0 behind at the governance checkpoint. The Figma Make changeset IS validated: after a full reload the provider reports Version 40, zero pending edits, and a version-history entry "8 edited files - Version 40". Behaviourally exercised in the live prototype: "Start a logistics request" reaches "PUBLIC REQUEST - NO SIGN-IN / Request Center" carrying "You do not need a HAU-USC Logistics account, staff sign-in, activation, or approval to submit", and "Staff sign in" reaches a separate staff sign-in page. HeroSection.tsx was re-read from the provider and is byte-identical to the repository file except Make's omitted terminal newline.
 
-EXTERNAL_ACTIONS: Live Figma Design writes to `hXJElH4p72KfgAaoUyfNOC` (authorized by R3-A1). Live Figma Make edits to `rP9W9MQlZkyQrUx38TVsFS` staged but NOT saved. Git commit and push to `origin/frontend-design-integration`. No Playground, Production, `main`, backend, schema, migration, D1/R2, deployment, or other provider action.
+EXTERNAL_ACTIONS: Live Figma Design writes to `hXJElH4p72KfgAaoUyfNOC` (authorized by R3-A1). Live Figma Make edits to `rP9W9MQlZkyQrUx38TVsFS`, saved as Version 40. Git commit and push to `origin/frontend-design-integration`. No Playground, Production, `main`, backend, schema, migration, D1/R2, deployment, or other provider action.
 
-BLOCKER: R3A1_MAKE_SAVE_BLOCKED. The Figma Make save did not complete; Figma reported "Some changes won't be synced until Figma is able to reconnect" and showed a disconnected-cloud indicator. Make is still Version 39. The eight-file changeset exists only as client-side pending edits in a browser tab that was deliberately left open, not reloaded and not discarded. The full changeset is tabulated in `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md` and is reproducible from that table alone.
+BLOCKER: NONE for the provider synchronization. The first Make save attempt stalled on a Figma reconnect failure; Figma reconnected and the save landed as Version 40, verified after reload. OUTSTANDING, non-blocking: the repository Make mirror at `output/design/figma-make-source/` is still at v39 and must be refreshed to the saved v40 source with recorded bytes and sha256 per file; `.impeccable/design.json` is still the stale pre-cutover v4.1 sidecar; the post-sync Impeccable and Hallmark audits and the documentation reconciliation manifest are not done.
 
 ## Provider identity
 
@@ -31,8 +31,8 @@ BLOCKER: R3A1_MAKE_SAVE_BLOCKED. The Figma Make save did not complete; Figma rep
 | FIGMA_DESIGN_MODULE_INDEX | `680:13` |
 | FIGMA_MAKE_FILE | `rP9W9MQlZkyQrUx38TVsFS` |
 | FIGMA_MAKE_PREVIOUS_VERSION | 39 |
-| FIGMA_MAKE_CURRENT_VERSION | **39 — unchanged; R3-A1 save did not land** |
-| MAKE_PENDING_EDITS | 8 files, unsaved |
+| FIGMA_MAKE_CURRENT_VERSION | **40** — saved and verified |
+| MAKE_PENDING_EDITS | 0 after reload |
 | REPOSITORY_BASELINE_COMMIT | `e30fbff` (R3 public-entry repair) |
 
 ## Design-to-code traceability
@@ -77,9 +77,9 @@ PREVIEW_GUARD: `vite.config.js` installs the Playground proxy only when `HAU_PLA
 
 RESUME_COMMANDS: `git status --short`; `git rev-parse HEAD`; `git rev-list --left-right --count HEAD...@{u}`; `npm run check:agents`; `npm run check:continuation`; `npm run handoff:verify`.
 
-PROHIBITED_ACTIONS: Playground, Production or `main` writes, merges, promotion or deployment; backend/API/auth semantic change; schema or migration; D1/R2 writes; provider writes other than the two canonical design files named by R3-A1; exposing FI-04 staff workspaces; marking any FI-04 surface implementation-verified; touching `.ai-bridge/`; history rewrite, reset, clean or force-push; discarding or reloading away the unsaved Figma Make pending edits.
+PROHIBITED_ACTIONS: Playground, Production or `main` writes, merges, promotion or deployment; backend/API/auth semantic change; schema or migration; D1/R2 writes; provider writes other than the two canonical design files named by R3-A1; exposing FI-04 staff workspaces; marking any FI-04 surface implementation-verified; touching `.ai-bridge/`; history rewrite, reset, clean or force-push.
 
-NEXT_EXACT_ACTION: Codex adopts the R3-A1 synchronized design into src/frontend/ and the local frontend preview, verifies against the updated Figma Design current-authority references, and separately retries the blocked Figma Make save and records its real version; Playground, Production and main remain untouched.
+NEXT_EXACT_ACTION: Codex adopts the R3-A1 synchronized design into src/frontend/ and the local frontend preview, verifies against the updated Figma Design and Figma Make v40 references, and refreshes the repository Make source mirror to the saved v40 source with recorded hashes; Playground, Production and main remain untouched.
 
 ---
 
@@ -115,10 +115,12 @@ Figma Design hXJElH4p72KfgAaoUyfNOC current-authority lane
   page 55:3 -> board 568:2 -> R3-A1 block 733:2
   module index 680:13
   page 40 public.request 626:2 / internal Request Hub 300:2
-Figma Make rP9W9MQlZkyQrUx38TVsFS at Version 39
-  NOTE: v39 still carries the OLD public request entry because the
-  R3-A1 save did not land. DESIGN.md and the Figma Design current lane
-  are authoritative for the corrected model until that save is verified.
+Figma Make rP9W9MQlZkyQrUx38TVsFS at Version 40 (previous 39)
+  Saved and verified: 8 files changed, 0 pending edits after reload.
+  Public "Start a logistics request" reaches the public Request Center;
+  "Staff sign in" reaches a separate staff sign-in page.
+  NOTE: the repository mirror output/design/figma-make-source/ is still
+  at v39 and must be refreshed to the saved v40 source.
 
 PREVIEW:
 local frontend preview only
@@ -139,7 +141,9 @@ FIRST_ACTION:
 Resolve live HEAD and confirm 0 ahead / 0 behind. Start the local preview.
 Implement and confirm the R3-A1 traceability items in priority order,
 starting with R3A1-REQUEST-PUBLIC-ENTRY, comparing each against the updated
-Figma references. Then retry the blocked Figma Make save, verify the real
-new version and pending-edit count, and record both in
+Figma references. Then refresh output/design/figma-make-source/ from the
+saved Figma Make v40 source - read each of the eight changed files verbatim
+from the provider rather than assuming the repository src/frontend/ copy is
+identical - and record bytes and sha256 per file in
 docs/design/FIGMA_MAKE_SOURCE_REGISTER.md.
 ```

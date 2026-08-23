@@ -175,8 +175,9 @@ destinations once write authority was granted.
 **Superseded by R3-A1.** That authority was granted. R3-A1 authorizes bounded
 writes to those two design files and nothing else, and performed them: the Figma
 Design current-authority lane is reconciled, and the eight-file Make changeset was
-applied. The Make **save did not complete** — Figma could not reconnect — so Make
-is still Version 39 and that changeset is unsaved. Until the save lands and is
-read back, treat Make v39 as carrying the old public request entry, and treat
-`DESIGN.md` plus the Figma Design current lane as authoritative for the corrected
-model. See `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`.
+applied and **saved as Version 40** (previous 39), verified after a full reload
+with zero pending edits. Exercised live: "Start a logistics request" reaches the
+public Request Center, and "Staff sign in" reaches a separate staff sign-in page.
+The repository Make mirror at `output/design/figma-make-source/` is still at v39
+and its refresh is outstanding. See
+`.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`.

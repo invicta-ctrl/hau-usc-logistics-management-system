@@ -15,7 +15,7 @@ FIGMA_DESIGN_FILE        hXJElH4p72KfgAaoUyfNOC
 FIGMA_DESIGN_BASELINE_ID DESIGN_BASELINE_2026-08-20-F
 FIGMA_DESIGN_VERSION     content identity only; the bridge cannot name a native version
 FIGMA_MAKE_FILE          rP9W9MQlZkyQrUx38TVsFS
-FIGMA_MAKE_VERSION       Version 39 - see the R3-A1 section: 8 files edited, UNSAVED
+FIGMA_MAKE_VERSION       Version 40 (R3-A1; previous 39) - see the R3-A1 section
                          v37 canonical theme + route adoption   5 files
                          v38 landing atrium pinned              1 file
                          v39 MK-06 scoped atrium palette pin    1 file
@@ -28,9 +28,10 @@ MAKE_SOURCE_STATUS       RECOVERABLE_FROM_GIT
 LIVE_PROVIDER_RECHECK    READ available via get_design_context; WRITE only via the
                          Make editor in a browser (see the correction above)
 VERIFIED                 2026-08-21, sha256 recomputed from the working tree
-                         2026-08-23 R3-A1: live version re-read as 39; hashes NOT
-                         recomputed because nothing new was saved
-FIGMA_MAKE_WRITES        0 saved (8 files edited, save blocked - see R3-A1 section)
+                         2026-08-23 R3-A1: live version verified as 40 after full
+                         reload, pending edits 0; hashes for the 8 changed files
+                         NOT yet recomputed - mirror refresh outstanding
+FIGMA_MAKE_WRITES        1 saved (v40, 8 files - see R3-A1 section)
 FIGMA_DESIGN_WRITES      R3-A1 reconciled the current-authority lane; see
                          .codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md
 ```
@@ -189,25 +190,24 @@ sha256sum output/design/make-adoption/theme.css
 ```text
 AMENDMENT               .codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md
 PREVIOUS_VERSION        39
-CURRENT_VERSION         39   (UNCHANGED - the provider save did not land)
+CURRENT_VERSION         40   (SAVED AND VERIFIED after full reload)
 PENDING_EDITS_BEFORE    NONE (verified on open, so nothing unknown was swept in)
-PENDING_EDITS_AFTER     8 files, UNSAVED
-FILES_CHANGED           8
-SOURCE_SNAPSHOT         NOT UPDATED - there is no saved provider state to mirror
+PENDING_EDITS_AFTER     0    (verified after full reload)
+FILES_CHANGED           8    (provider label: "8 edited files - Version 40")
+SOURCE_SNAPSHOT         NOT YET UPDATED - output/design/figma-make-source/ is at v39
 ROLLBACK_SNAPSHOT       unchanged (output/design/make-preservation/, v36 captures)
-HASHES                  NOT RECOMPUTED - nothing saved to hash
-FIGMA_MAKE_WRITE        AUTHORIZED_BY_R3_A1, APPLIED_IN_EDITOR, SAVE_BLOCKED
-BLOCKER                 Figma reported "Some changes won't be synced until Figma is
-                        able to reconnect"; a disconnected-cloud indicator was shown.
+HASHES                  NOT YET RECOMPUTED for the 8 changed files
+FIGMA_MAKE_WRITE        AUTHORIZED_BY_R3_A1, APPLIED, SAVED AS v40
+BEHAVIOUR_VERIFIED      public "Start a logistics request" -> PUBLIC REQUEST CENTER;
+                        "Staff sign in" -> separate staff sign-in page
 CODEX_ADOPTION_POINTER  .codex/CURRENT_HANDOFF.md
 ```
 
 ### Why this section exists
 
-The eight-file changeset lives only as client-side pending edits in an open Make
-browser tab. The authoritative, reproducible description of that changeset is the
-table in `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`. If the browser state is
-lost, re-apply from that table — it is complete.
+The v40 save landed, but the repository mirror has not caught up. Until it does,
+this register records *what* changed; the authoritative description is the table
+in `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`.
 
 ### Changed provider files (all under `src/app/`)
 
@@ -221,18 +221,28 @@ lost, re-apply from that table — it is complete.
 so FE-R3-002's capability-gate half has no counterpart there. Rationale is in the
 receipt.
 
-### Required steps once Figma reconnects
+### Required next steps (mirror refresh)
 
-1. Confirm the 8 pending edits are still listed with the deltas in the receipt.
-2. Save; wait for a real version bump.
-3. Reload; verify the new version and `PENDING_EDITS = 0`.
-4. Re-read and re-hash the 8 files; update `MAKE_SOURCE_SNAPSHOT` and the hash
-   table above, and add a new `FIGMA_BASELINE_REGISTER` baseline.
-5. Exercise the prototype: public "Start a logistics request" must reach the
-   public Request Center; "Staff sign in" must stay a separate staff entry.
+Steps 1-3 and 5 are DONE: the save landed as v40, pending edits are 0 after
+reload, and both the public and staff paths were exercised in the live prototype.
+
+Outstanding is the mirror refresh:
+
+1. For each of the 8 files, read
+   `file://figma/make/source/rP9W9MQlZkyQrUx38TVsFS/<path>` and write it verbatim
+   into `output/design/figma-make-source/<path>`.
+2. Do NOT assume the repository `src/frontend/` copy is identical. It is for
+   `HeroSection.tsx` (modulo Make's omitted terminal newline), but
+   `LandingPage.tsx`, `LogisticsHubSection.tsx` and `PublicFlows.tsx` differ in
+   formatting, and `PublicFlows.tsx` carries a different header comment.
+3. Record bytes and sha256 per file here, and add a successor baseline to
+   `docs/design/FIGMA_BASELINE_REGISTER.md`.
+
+Known provider hash: `src/app/landing/HeroSection.tsx` (no terminal newline)
+sha256 `556327163556ce208a0ffbc66eaa2eba8ac6a15ac31541d32e747cb88f6c153a`.
 
 ### STALE IF
 
-- a live Make reload reports a version other than 39;
-- the pending-edit count is neither 8 nor 0;
-- the save lands and this section still says `CURRENT_VERSION 39`.
+- a live Make reload reports a version other than 40;
+- the pending-edit count is not 0;
+- the mirror is refreshed and this section still says the snapshot is at v39.

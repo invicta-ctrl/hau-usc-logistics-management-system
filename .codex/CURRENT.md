@@ -2,7 +2,7 @@
 
 PROGRAM: HAU-USC Logistics
 MILESTONE: R3_A1_DESIGN_AUTHORITY_SYNCHRONIZATION
-STATUS: IN_PROGRESS_R3A1_MAKE_SAVE_BLOCKED
+STATUS: R3A1_PROVIDER_SYNC_COMPLETE_MIRROR_REFRESH_OUTSTANDING
 PHASE: R3A1_DESIGN_SYNC_THEN_CODEX_PREVIEW_ADOPTION
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
@@ -27,7 +27,7 @@ AUTHORITY: Earl instruction -> accepted R3-A1 amendment -> accepted backend/API/
 ## Provider write authority after R3-A1
 
 FIGMA_DESIGN_WRITE: AUTHORIZED_AND_PERFORMED_BY_R3_A1
-FIGMA_MAKE_WRITE: AUTHORIZED_BY_R3_A1_SAVE_PENDING_PROVIDER_RECONNECT
+FIGMA_MAKE_WRITE: AUTHORIZED_AND_COMPLETED_BY_R3_A1
 OTHER_PROVIDER_WRITE: FORBIDDEN
 PLAYGROUND_WRITE: FORBIDDEN
 PRODUCTION_WRITE: FORBIDDEN
@@ -44,7 +44,7 @@ are not rewritten.
 ## R3-A1 state
 
 FIGMA_DESIGN_STATUS: RECONCILED. Authority board page 55:3 / board 568:2 now carries R3-A1 block 733:2; module index 680:13 distinguishes the public Request Center from the internal Request Hub; page 40 frame 300:2 renamed to the internal Request Hub; dangling pointers in 680:16 repaired. Read back and screenshotted.
-FIGMA_MAKE_STATUS: EIGHT_FILES_EDITED_SAVE_NOT_COMPLETED. Make remains at Version 39. Figma reported it could not reconnect. Edits are held as client-side pending edits; the full changeset is tabulated in the R3-A1 receipt and is reproducible from it.
+FIGMA_MAKE_STATUS: SAVED_AND_VERIFIED. Version 39 -> **Version 40**, 8 files changed, pending edits 0 after reload. Behaviourally verified in the live prototype: public "Start a logistics request" reaches "PUBLIC REQUEST - NO SIGN-IN / Request Center", and "Staff sign in" reaches a separate staff sign-in page. The repository Make mirror at output/design/figma-make-source/ is still at v39 and must be refreshed.
 DESIGN_MD_STATUS: REWRITTEN to the post-R3-A1 authority model.
 WORKFLOW_ARCHITECTURE_STATUS: CITATION_CORRECTED and pointed at R3-A1.
 IMPECCABLE_SIDECAR_STATUS: STALE — not yet refreshed (FE-R3-010 / FE-R3-011).
@@ -75,6 +75,6 @@ LOCAL_PREVIEW_URL: http://127.0.0.1:5199
 LOCAL_PREVIEW_VERIFIED: 2026-08-23 — no listener on 4173 or 5199, confirming the preview is not running.
 FRONTEND_E2E_COMMAND: `npx playwright test --config playwright.frontend.config.js` (its own webServer binds 127.0.0.1:4174)
 
-BLOCKER: R3A1_MAKE_SAVE_BLOCKED — the Figma Make provider save did not complete because Figma could not reconnect; Make is still Version 39 and the eight-file changeset is unsaved. Secondary: FVR-02 media blockers unchanged; FI-04 not started.
+BLOCKER: NONE for the R3-A1 provider synchronization — it completed and was verified. The first save attempt stalled on a Figma reconnect failure; Figma reconnected and the save landed as Version 40, confirmed after a full reload. Outstanding non-blocking work: refresh the repository Make mirror to v40 with hashes, refresh the stale `.impeccable/design.json`, and run the post-sync Impeccable and Hallmark audits. FVR-02 media blockers unchanged and untouched; FI-04 not started.
 
-NEXT_EXACT_ACTION: Codex adopts the R3-A1 synchronized design into src/frontend/ and the local frontend preview, verifies against the updated Figma Design current-authority references, and separately retries the blocked Figma Make save and records its real version; Playground, Production and main remain untouched.
+NEXT_EXACT_ACTION: Codex adopts the R3-A1 synchronized design into src/frontend/ and the local frontend preview, verifies against the updated Figma Design and Figma Make v40 references, and refreshes the repository Make source mirror to the saved v40 source with recorded hashes; Playground, Production and main remain untouched.

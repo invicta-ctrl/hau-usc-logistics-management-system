@@ -599,14 +599,14 @@ VERIFIED BY      scripts/design/verify-make-landing-theme.mjs — 31/31 conform
 
 ```text
 DESIGN_BASELINE_ID:      DESIGN_BASELINE_2026-08-23-R3A1
-STATUS:                  PARTIAL — Figma Design current-authority lane reconciled;
-                         Figma Make save BLOCKED on provider reconnection
+STATUS:                  PARTIAL — Figma Design lane reconciled; Figma Make saved
+                         and verified at v40; repository mirror refresh outstanding
 DESIGN BRANCH:           frontend-design-integration
 ACCEPTED AMENDMENT:      .codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md
 REPOSITORY BASELINE:     e30fbff (R3 public-entry repair)
 FIGMA FILE:              hXJElH4p72KfgAaoUyfNOC
 FIGMA PAGES:             28 — re-verified live via use_figma
-FIGMA MAKE:              rP9W9MQlZkyQrUx38TVsFS — Version 39, 8 files edited, UNSAVED
+FIGMA MAKE:              rP9W9MQlZkyQrUx38TVsFS — Version 40 (previous 39), 8 files, saved
 IMPLEMENTATION READY:    NO for FI-04; the public lane is already implemented at e30fbff
 ```
 
@@ -650,6 +650,6 @@ quoted D24.0 for Request; that citation is superseded by `DESIGN.md`.
 
 ### STALE IF
 
-- the Figma Make save lands and no successor baseline records the real version;
+- the repository Make mirror is refreshed to v40 and no successor baseline records it;
 - board `568:2` loses block `733:2`, or `680:13` reverts to "Staff Request Center";
 - `DESIGN.md` and this register stop agreeing on the provider identities.
