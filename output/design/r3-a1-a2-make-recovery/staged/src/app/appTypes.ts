@@ -4,11 +4,10 @@
  *   B. AUTH REQUESTER    External Request Center, eligible USC requester.
  *   C. AUTH DOL          Main Logistics Hub, internal capability gated.
  *
- * CHECKPOINT A is additive on purpose: "request" stays in PublicSubRoute for now
- * so every existing caller still type-checks. Checkpoint B removes it in the same
- * save as the callers that stop using it.
+ * `PublicSubRoute` no longer carries "request". The logistics Request Center is
+ * not public; it is `external-request`, which requires a session.
  */
-export type PublicSubRoute = "request" | "tracking" | "borrow";
+export type PublicSubRoute = "tracking" | "borrow";
 
 /** Context B. Requires a session and a server-derived eligible requester. */
 export type RequesterRoute = "external-request";

@@ -41,3 +41,32 @@ when the keystrokes were sent) and left a `new-file.tsx`; both were corrected
 before saving — one by reverting, one by an explicit context-menu Rename. Any
 `new-file.tsx` in a diff is a rename that silently failed and must be fixed
 before Save.
+
+
+---
+
+## Checkpoint B — staged, not yet applied
+
+Checkpoint B is the switch: it removes `"request"` from `PublicSubRoute` in the
+same save as the callers that stop using it, so the project compiles before and
+after.
+
+| provider path | change |
+|---|---|
+| `src/app/appTypes.ts` | drops `"request"` from `PublicSubRoute` (supersedes the Checkpoint A copy) |
+| `src/app/useAppController.ts` | first-class entry intent; `goHome` preserves the session; `openLogisticsHub`; persona-driven simulation |
+| `src/app/AppRouteRenderer.tsx` | routes `external-request`; passes `onHome` into the public chrome |
+| `src/app/auth/StaffSignInPage.tsx` | new lede; Activate account; Forgot password; truthful denial actions; persona picker |
+| `src/app/landing/LandingPage.tsx` · `HeroSection.tsx` · `LogisticsHubSection.tsx` | CTAs carry `EXTERNAL_REQUEST_CENTER` intent and state the staff gate on the control |
+| `src/app/public/Footer.tsx` · `PublicNavbar.tsx` · `PublicMobileDrawer.tsx` | same CTA change; one semantic Home |
+| `src/styles/index.css` | `.atrium__action--stacked` / `.atrium__action-note` for the hero access notes |
+
+### What the previous prototype hid
+
+The old `handleSignIn` granted `capabilities: [...AUTH_ROUTES]` — every
+capability — to whoever signed in. Every routing decision was therefore trivially
+"authorized", which made the entire question the owner is asking invisible in the
+prototype. Each persona now carries a realistic capability set drawn from
+`src/domain/permissions.js`, so the prototype can actually demonstrate a non-DOL
+requester routing differently from DOL staff, and an ineligible account being
+refused.
