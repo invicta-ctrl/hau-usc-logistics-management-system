@@ -380,3 +380,59 @@ The older per-file grading in this register — "byte-verified",
 "structure-verified", "reconstructed and grep-verified" — described how confident
 an MCP-read reconstruction was. That vocabulary no longer applies: every file in
 the current mirror is a provider export byte. `FE-R3-015` is **CLOSED**.
+
+
+---
+
+## CURRENT — Version 44, R3-A1-A2 complete
+
+`PROVIDER_VERSION: 44` · `MAKE_PENDING_EDITS: 0` · `TRUNCATION_MARKERS: 0`
+
+The mirror at `output/design/figma-make-source/` is rebuilt from the provider
+`Download code` export at **Version 44**, preserved verbatim at
+`output/design/make-provider-export-v44/` with a 212-file manifest.
+
+Archive sha256 `1c58a56dbbf0b9908f5713aa98a7658a6fc63a8e5eff918892da4cf29d0a7609`.
+
+### Version trail
+
+| Version | Contents |
+|---|---|
+| 40 | R3-A1 baseline |
+| 41 | `PublicFlows.tsx` — public Request Center removed, lending tab set, Home rename |
+| 42 | Checkpoint A — `appTypes`, `appRoutes`, and the new `entryIntent.ts`, `auth/VerificationCodeField.tsx`, `auth/AccountRecoveryPanel.tsx`, `request/ExternalRequestCenter.tsx` |
+| 44 | Checkpoint B — `useAppController`, `AppRouteRenderer`, `StaffSignInPage`, the three landing files, the three public-chrome files, `appTypes` switch, `styles/index.css` |
+
+### Readback — all 16 changed files verified byte-identical
+
+Every file R3-A1-A2 touched was compared with `cmp` between the Version 44
+provider export and the staged source under
+`output/design/r3-a1-a2-make-recovery/staged/`. **16 of 16 MATCH.**
+
+`src/app/PublicFlows.tsx` agrees three ways at
+sha256 `165aa1c626775b0330f0b2bdb6dd30a70fe940d7bca753712172d903ee1c2765` —
+live editor document, preserved recovery artifact, and provider export.
+
+### Model checks against the saved provider source
+
+| Check | Result |
+|---|---|
+| `view === "Request Center"` in `PublicFlows.tsx` | **0** |
+| Lending tab set | `["Lending Center", "Track lending", "Lending policy"]` |
+| `Public front door` anywhere in `src/app/` | **0** |
+| `external-request` route in `appTypes.ts` | present |
+| `EntryIntent` with `EXTERNAL_REQUEST_CENTER` | present |
+| `goHome` preserves the session | present |
+| `Open Logistics Hub` in the requester surface | present |
+| `No password yet? Activate account` | present |
+| `Forgot password?` | present |
+| 8-digit `pattern="[0-9]{8}"` field | present |
+| `capabilities: [...AUTH_ROUTES]` blanket grant | **removed** — the only remaining occurrence is the doc comment explaining why it was wrong |
+
+### A note on the save behaviour, for whoever does this next
+
+The Save control is not a reliable signal. It span for roughly fifteen minutes on
+a save that had already landed, and Figma was separately serving an **outdated
+client** that could not save at all until the "Reload to continue" prompt was
+accepted. Decide provider state by reloading a **separate** session and reading
+the version, never by watching the button.

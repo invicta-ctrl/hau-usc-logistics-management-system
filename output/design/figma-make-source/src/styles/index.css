@@ -177,6 +177,26 @@ html,body,#root{max-width:100%;overflow-x:clip}
   transform: translateY(1px);
 }
 
+/* R3-A1-A2. The two hero actions now carry their access rule on the control
+   itself, so a student does not discover the staff gate only after committing
+   to the flow. The note wraps at narrow widths rather than overflowing. */
+.atrium__action--stacked {
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-block: 0.5rem;
+  line-height: 1.2;
+  white-space: normal;
+  text-align: center;
+}
+
+.atrium__action-note {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  opacity: 0.78;
+  text-wrap: balance;
+}
+
 .atrium__secondary-paths {
   width: 100%;
   display: grid;
@@ -789,7 +809,27 @@ html,body,#root{max-width:100%;overflow-x:clip}
   .atrium__actions { width: auto; flex-direction: row; align-items: center; }
   .atrium__primary,
   .atrium__secondary { width: auto; }
-  .atrium__secondary-paths { grid-template-columns: repeat(3, minmax(0, auto)); align-items: center; }
+  /* R3-A1-A2. The two hero actions now carry their access rule on the control
+   itself, so a student does not discover the staff gate only after committing
+   to the flow. The note wraps at narrow widths rather than overflowing. */
+.atrium__action--stacked {
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-block: 0.5rem;
+  line-height: 1.2;
+  white-space: normal;
+  text-align: center;
+}
+
+.atrium__action-note {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  opacity: 0.78;
+  text-wrap: balance;
+}
+
+.atrium__secondary-paths { grid-template-columns: repeat(3, minmax(0, auto)); align-items: center; }
   .atrium__path { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; }
   .atrium__path::before { content: ""; position: absolute; inset-inline: 8%; inset-block-start: 1.35rem; height: 1px; background: var(--atrium-edge); }
   .atrium__path-step { padding: 2.4rem 0.2rem 0; border-left: 0; text-align: center; }

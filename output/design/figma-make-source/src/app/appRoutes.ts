@@ -16,8 +16,8 @@ export const AUTH_ROUTES: AuthRoute[] = [
 export const AUTH_ROUTE_INTENT_LABELS: Record<AuthRoute, string> = {
   overview: "Operations overview",
   inventory: "Inventory",
-  "request-center": "Staff Request Center",
-  lending: "Lending Hub",
+  "request-center": "Internal Request Hub",
+  lending: "Internal Lending Hub",
   release: "Release Desk",
   restocking: "Restocking",
   procurement: "Procurement",

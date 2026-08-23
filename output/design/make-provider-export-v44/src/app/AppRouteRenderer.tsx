@@ -15,6 +15,7 @@ import { OverviewRoute } from "./overview/OverviewRoute";
 import { Footer } from "./public/Footer";
 import { PublicNavbar } from "./public/PublicNavbar";
 import { ProfileRoute } from "./profile/ProfileRoute";
+import { ExternalRequestCenter } from "./request/ExternalRequestCenter";
 import { AuthenticatedShell } from "./shell/AuthenticatedShell";
 
 export function AppRouteRenderer({ controller }: { controller: AppController }) {
@@ -23,17 +24,39 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
     route,
     session,
     authState,
+    entryIntent,
     intendedRoute,
+    denialReason,
+    requesterMode,
     previewOutcome,
     setPreviewOutcome,
     navigate,
-    requireAuth,
+    requireExternalRequest,
+    openLogisticsHub,
     goHome,
     handleSignIn,
     handleSignOut,
     toggleTheme,
   } = controller;
 
+  /* Context B — External Request Center. Only reachable with a session; the
+   * controller routes here exclusively through `resolvePostAuthDestination`, so
+   * an unauthenticated user can never land on it. */
+  if (route === "external-request" && session) {
+    return (
+      <ExternalRequestCenter
+        session={session}
+        dark={dark}
+        onToggleTheme={toggleTheme}
+        onHome={goHome}
+        onOpenLogisticsHub={openLogisticsHub}
+        onSignOut={handleSignOut}
+        requesterMode={requesterMode}
+      />
+    );
+  }
+
+  /* Context C — Main Logistics Hub. */
   if (session && isAuthRoute(route)) {
     return (
       <AuthenticatedShell
@@ -76,7 +99,12 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
         dark={dark}
         onToggle={toggleTheme}
         authState={authState}
+        entryIntent={entryIntent}
         intendedRoute={intendedRoute}
+        denialReason={denialReason}
+        session={session}
+        onOpenExternalRequest={requireExternalRequest}
+        onSignOut={handleSignOut}
         previewOutcome={previewOutcome}
         onPreviewOutcome={setPreviewOutcome}
       />
@@ -85,15 +113,15 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: dark ? "#40070a" : "#f2eae5" }}>
-      <PublicNavbar dark={dark} onToggle={toggleTheme} onNavigate={navigate} />
+      <PublicNavbar dark={dark} onToggle={toggleTheme} onNavigate={navigate} onHome={goHome} />
 
       {route !== "landing" ? (
         <PublicFlows route={route as PublicSubRoute} onBack={goHome} dark={dark} onNavigate={navigate} />
       ) : (
-        <LandingPage onNavigate={navigate} onRequireAuth={requireAuth} />
+        <LandingPage onNavigate={navigate} onRequireExternalRequest={requireExternalRequest} />
       )}
 
-      {route === "landing" && <Footer onNavigate={navigate} />}
+      {route === "landing" && <Footer onNavigate={navigate} onHome={goHome} />}
     </div>
   );
 }

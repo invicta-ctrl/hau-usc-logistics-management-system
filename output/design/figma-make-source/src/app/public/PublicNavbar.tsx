@@ -11,20 +11,26 @@ export function PublicNavbar({
   dark,
   onToggle,
   onNavigate,
+  onHome,
 }: {
   dark: boolean;
   onToggle: () => void;
   onNavigate: (r: Route) => void;
+  /* R3A1A2-HOME-ROUTING. One semantic Home for every surface: land, scroll to
+     top, close transient chrome, keep the session. Never a sign-out. */
+  onHome: () => void;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <>
       <header className="sticky top-0 z-30 w-full public-nav--glass">
         <div className="flex items-center gap-5 px-5 md:px-8 py-[14px] md:py-[17px] max-w-[1520px] mx-auto w-full">
-          <a
-            href="#hero"
+          <button
+            type="button"
+            onClick={onHome}
             className="flex items-center gap-3 shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e8b93c] rounded-sm"
             aria-label="HAU-USC home"
+            style={{ background: "none" }}
           >
             <UscMark size={46} />
             <span className="hidden sm:flex flex-col">
@@ -41,7 +47,7 @@ export function PublicNavbar({
                 Department of<br />Logistics
               </span>
             </span>
-          </a>
+          </button>
 
           <nav className="hidden lg:flex items-center gap-5 flex-1 justify-end" aria-label="Site navigation">
             {NAV_LINKS.map((link) => <NavLink key={link.href} {...link} />)}
@@ -76,6 +82,7 @@ export function PublicNavbar({
       </header>
 
       <PublicMobileDrawer
+        onHome={onHome}
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
         dark={dark}

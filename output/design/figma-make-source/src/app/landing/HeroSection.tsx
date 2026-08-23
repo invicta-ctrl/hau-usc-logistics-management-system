@@ -5,8 +5,10 @@ import HeroMotion from "./HeroMotion";
 
 export function HeroSection({
   onNavigate,
+  onRequireExternalRequest,
 }: {
   onNavigate: (route: Route) => void;
+  onRequireExternalRequest: () => void;
 }) {
   return (
     <section
@@ -35,21 +37,28 @@ export function HeroSection({
           </p>
 
           <div className="atrium__actions">
+            {/* R3A1A2-REQUEST-AUTH-GATE. The External Request Center is for
+                verified USC staff and officers, so this control leads to staff
+                sign-in first and carries the EXTERNAL_REQUEST_CENTER intent
+                through it. The label says so, rather than letting a student
+                discover the gate only after committing to the flow. */}
             <button
               type="button"
-              className="atrium__primary"
-              aria-label="Start a logistics request in the public Request Center. No sign-in needed."
-              onClick={() => onNavigate("request")}
+              className="atrium__primary atrium__action--stacked"
+              aria-label="Start a logistics request. Staff sign-in required for USC staff and officers."
+              onClick={onRequireExternalRequest}
             >
               Start a logistics request
+              <span className="atrium__action-note">USC staff sign-in required</span>
             </button>
 
             <button
               type="button"
-              className="atrium__secondary hero-action--glass"
+              className="atrium__secondary hero-action--glass atrium__action--stacked"
               onClick={() => onNavigate("borrow")}
             >
               Browse public lending
+              <span className="atrium__action-note">No sign-in needed</span>
             </button>
           </div>
 
@@ -62,7 +71,7 @@ export function HeroSection({
               className="atrium__text-action"
               onClick={() => onNavigate("tracking")}
             >
-              Track request
+              Track lending
             </button>
 
             <button

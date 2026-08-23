@@ -3,8 +3,10 @@ import { UscMark } from "../brand/BrandMarks";
 
 export function Footer({
   onNavigate,
+  onHome,
 }: {
   onNavigate: (r: Route) => void;
+  onHome: () => void;
 }) {
   return (
     <footer className="w-full" style={{ background: "#40070a", borderTop: "1px solid rgba(242,209,92,0.16)" }} aria-label="Site footer">
@@ -52,11 +54,18 @@ export function Footer({
               Access
             </p>
             <button
-              onClick={() => onNavigate("request")}
+              onClick={() => onNavigate("external-request")}
               className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
               style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", background: "#e8b93c", color: "#40070a", minHeight: 40, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
             >
               Start a logistics request
+            </button>
+            <button
+              onClick={onHome}
+              className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
+              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 40, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
+            >
+              Home
             </button>
             <button
               onClick={() => onNavigate("staff-signin")}

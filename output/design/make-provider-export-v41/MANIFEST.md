@@ -1,5 +1,13 @@
 # Figma Make provider export - manifest
 
+> **SUPERSEDED BY THE VERSION 44 EXPORT.** This capture closed `FE-R3-015` by
+> proving the mirror could be rebuilt from real provider bytes. Its 208 extracted
+> files were removed once `output/design/make-provider-export-v44/` superseded
+> them — keeping two full copies of the same project in the repository is bloat,
+> not evidence. The per-file table below is the durable record of what was
+> captured, and the bytes remain recoverable from git history.
+
+
 PROVIDER_FILE: `rP9W9MQlZkyQrUx38TVsFS` - HAU-USC Logistics / Prototyping
 PROVIDER_VERSION: **41**
 EXPORT_METHOD: Figma Make code view -> "Download code" -> zip, extracted verbatim
