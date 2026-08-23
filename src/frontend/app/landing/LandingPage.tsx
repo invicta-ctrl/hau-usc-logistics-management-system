@@ -12,10 +12,7 @@ export function LandingPage({
 }) {
   return (
     <main id="main-content" className="flex flex-col flex-1">
-      <HeroSection
-        onNavigate={onNavigate}
-        onRequireAuth={onRequireAuth}
-      />
+      <HeroSection onNavigate={onNavigate} />
 
       <CurrentSection />
 

@@ -74,17 +74,89 @@ test('FVR-001 Current preserves intentional empty and request-error states', asy
   await expect(page.getByRole('article').getByText('Current announcements are temporarily unavailable. Please try again shortly.')).toBeVisible();
 });
 
-test('FVR-001 uses the same-origin cookie session contract before opening a protected route', async ({ page }) => {
+// Regression guard for the R3 public-access defect: every public "Start a
+// logistics request" CTA used to call requireAuth('request-center'), which sent
+// public requesters to the staff sign-in wall and left the public Request
+// Center — the accepted no-login intake surface under DESIGN.md D24.0 — with no
+// entry point anywhere on the public site. The session contract itself is still
+// covered where it belongs, by preview-index.spec.js opening a STAFF route.
+test('R3 public request intake opens from the public front door with no sign-in and no session probe', async ({ page }) => {
   await installPublicFeed(page, 'empty');
-  await page.route('**/api/auth/session', (route) => route.fulfill({
-    status: 401,
-    contentType: 'application/json',
-    body: JSON.stringify({ code: 'SESSION_REQUIRED', message: 'Sign in to continue.' }),
-  }));
+  installPublicIntakeContracts(page);
+  let sessionProbes = 0;
+  await page.route('**/api/auth/session', (route) => {
+    sessionProbes += 1;
+    return route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 'SESSION_REQUIRED', message: 'Sign in to continue.' }),
+    });
+  });
+
   await page.goto('/');
-  await page.getByRole('button', { name: 'Start a logistics request in the Staff Request Center' }).click();
-  await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible();
-  await expect(page.getByText('Sign in required')).toBeVisible();
+  await page.getByRole('button', { name: /^Start a logistics request in the public Request Center/u }).click();
+
+  await expect(page.getByRole('heading', { name: 'Request Center', exact: true })).toBeVisible();
+  await expect(page.getByText('No account and no sign-in needed')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toHaveCount(0);
+  expect(sessionProbes).toBe(0);
+});
+
+test('R3 the Logistics hub primary tile also opens public intake rather than staff sign-in', async ({ page }) => {
+  await installPublicFeed(page, 'empty');
+  installPublicIntakeContracts(page);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Start a request', exact: false }).first().click();
+
+  await expect(page.getByRole('heading', { name: 'Request Center', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toHaveCount(0);
+});
+
+test('R3 the mobile drawer request CTA opens public intake', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'frontend-320' && testInfo.project.name !== 'frontend-390', 'drawer is only presented below the lg breakpoint');
+  await installPublicFeed(page, 'empty');
+  installPublicIntakeContracts(page);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Open navigation menu' }).click();
+  const drawer = page.getByRole('dialog', { name: 'Navigation menu' });
+  await drawer.getByRole('button', { name: 'Start a logistics request', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'Request Center', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toHaveCount(0);
+});
+
+test('R3 generic staff sign-in does not pre-commit to a capability-gated destination', async ({ page }) => {
+  await installPublicFeed(page, 'empty');
+  // A real staff account that simply lacks view.request must still be signed in
+  // by the generic "Staff sign in" entry, not denied against Staff Request Center.
+  await page.route('**/api/auth/login', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      state: 'AUTHENTICATED',
+      csrfToken: 'csrf-release-only',
+      user: {
+        accountId: 'ACC-RELEASE',
+        displayName: 'Release Desk Officer',
+        authorization: {
+          active: true,
+          mappingStatus: 'MAPPED',
+          roleId: 'STAFF',
+          capabilities: ['fulfillment.release'],
+        },
+      },
+    }),
+  }));
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByLabel('Identifier').fill('release.officer');
+  await page.getByLabel('Password', { exact: true }).fill('service-verified-password');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+
+  await expect(page.getByText('Access authorized')).toBeVisible();
+  await expect(page.getByText('Access denied')).toHaveCount(0);
 });
 
 test('FVR-001 confirms sign-in without exposing future authenticated fixture routes', async ({ page }) => {

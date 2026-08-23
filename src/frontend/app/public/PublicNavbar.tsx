@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Menu } from "lucide-react";
-import type { AuthRoute, Route } from "../appTypes";
+import type { Route } from "../appTypes";
 import { DolMark, UscMark } from "../brand/BrandMarks";
 import { ThemeToggle } from "../brand/ThemeToggle";
 import { NavLink } from "./NavLink";
@@ -11,12 +11,10 @@ export function PublicNavbar({
   dark,
   onToggle,
   onNavigate,
-  onRequireAuth,
 }: {
   dark: boolean;
   onToggle: () => void;
   onNavigate: (r: Route) => void;
-  onRequireAuth: (r: AuthRoute) => void;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
@@ -83,7 +81,6 @@ export function PublicNavbar({
         dark={dark}
         onToggleTheme={onToggle}
         onNavigate={onNavigate}
-        onRequireAuth={onRequireAuth}
       />
     </>
   );

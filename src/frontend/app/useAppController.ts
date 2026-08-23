@@ -92,8 +92,12 @@ export function useAppController() {
     moveTo("landing");
   }, [moveTo]);
 
+  // `target` is null for a generic staff sign-in. A successful sign-in with no
+  // requested destination is authorized on the strength of the session alone;
+  // only a request for a specific protected route is checked against that
+  // route's server-derived capability.
   const handleSignIn = useCallback(async (accessId: string, password: string) => {
-    const target = intendedRoute ?? "overview";
+    const target = intendedRoute;
     setAuthError(null);
     setAuthState("loading");
     try {
@@ -113,7 +117,7 @@ export function useAppController() {
       const nextSession = projectSession(result.session.user);
       setSession(nextSession);
       setActivationExpiresAt("");
-      if (nextSession.capabilities.includes(target)) {
+      if (!target || nextSession.capabilities.includes(target)) {
         setAuthState("authorized");
         setIntendedRoute(target);
       } else {
@@ -131,7 +135,7 @@ export function useAppController() {
     password: string,
     confirmPassword: string,
   ) => {
-    const target = intendedRoute ?? "overview";
+    const target = intendedRoute;
     setAuthError(null);
     setAuthState("loading");
     try {
@@ -139,7 +143,7 @@ export function useAppController() {
       const nextSession = projectSession(activated.user);
       setSession(nextSession);
       setActivationExpiresAt("");
-      if (nextSession.capabilities.includes(target)) {
+      if (!target || nextSession.capabilities.includes(target)) {
         setAuthState("authorized");
         setIntendedRoute(target);
       } else {

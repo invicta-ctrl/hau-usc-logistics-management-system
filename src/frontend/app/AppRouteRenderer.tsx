@@ -61,15 +61,15 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: dark ? "#40070a" : "#f2eae5" }}>
-      <PublicNavbar dark={dark} onToggle={toggleTheme} onNavigate={navigate} onRequireAuth={requireAuth} />
+      <PublicNavbar dark={dark} onToggle={toggleTheme} onNavigate={navigate} />
 
       {route !== "landing" ? (
-        <PublicFlows route={route as PublicSubRoute} onBack={goHome} dark={dark} onRequireAuth={requireAuth} />
+        <PublicFlows route={route as PublicSubRoute} onBack={goHome} dark={dark} onNavigate={navigate} />
       ) : (
         <LandingPage onNavigate={navigate} onRequireAuth={requireAuth} />
       )}
 
-      {route === "landing" && <Footer onNavigate={navigate} onRequireAuth={requireAuth} />}
+      {route === "landing" && <Footer onNavigate={navigate} />}
     </div>
   );
 }

@@ -10,10 +10,10 @@ export function LogisticsHubSection({
   onRequireAuth: (r: AuthRoute) => void;
 }) {
   const actionTiles: { label: string; sub: string; route: Route | AuthRoute; primary: boolean; protected?: boolean }[] = [
-    { label: "Start a request",    sub: "Authorized intake for an activity, office or committee need.", route: "request-center", primary: true, protected: true },
-    { label: "Browse equipment",  sub: "See reusable items before signing in to act.",                    route: "borrow",         primary: false },
-    { label: "Track a request",   sub: "Use your reference. No account needed.",                          route: "tracking",       primary: false },
-    { label: "Staff sign in",     sub: "Open the authorized logistics workspace.",                       route: "staff-signin",   primary: false },
+    { label: "Start a request",    sub: "Say what an activity, office or committee needs. No account needed.", route: "request",      primary: true },
+    { label: "Browse equipment",  sub: "See reusable items and ask to borrow. No account needed.",             route: "borrow",       primary: false },
+    { label: "Track a request",   sub: "Use your reference. No account needed.",                               route: "tracking",     primary: false },
+    { label: "Staff sign in",     sub: "Open the authorized logistics workspace.",                             route: "staff-signin", primary: false },
   ];
 
   return (

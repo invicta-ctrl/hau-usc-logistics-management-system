@@ -17,9 +17,11 @@
  *   mount public catalogs and POST to /api/public/lending and /api/public/request.
  *   DESIGN.md D24.0 records this as OWNER-LOCKED.
  *
- *   onRequireAuth is retained in the props type for compatibility but is only
- *   used for genuinely protected destinations (staff sign-in), never to gate
- *   public intake.
+ *   The "Staff sign in" control navigates to the sign-in page directly. It must
+ *   not call requireAuth with a capability-gated target: a generic sign-in link
+ *   that pre-commits to a destination denies otherwise-valid staff accounts
+ *   that simply lack that one capability. requireAuth is for the case where the
+ *   user asked for a specific protected destination, which no public control does.
  *
  * BACKEND BOUNDARY
  *   Visual structure comes from Make. Catalog, option, submission, receipt,
@@ -91,12 +93,12 @@ const apiMessage = (error: unknown) => error instanceof FrontendApiError
 const newClientRequestId = () => `frontend-${crypto.randomUUID()}`;
 
 export default function PublicFlows({
-  route, onBack, dark, onRequireAuth,
+  route, onBack, dark, onNavigate,
 }: {
   route: Route;
   onBack: () => void;
   dark: boolean;
-  onRequireAuth: (route: "request-center" | "lending") => void;
+  onNavigate: (route: "staff-signin") => void;
 }) {
   const initial: View =
     route === "borrow" ? "Lending Center" : route === "tracking" ? "Track a record" : "Request Center";
@@ -396,7 +398,7 @@ export default function PublicFlows({
             {next}
           </button>
         ))}
-        <button type="button" className="leave" onClick={() => onRequireAuth("request-center")}>
+        <button type="button" className="leave" onClick={() => onNavigate("staff-signin")}>
           Staff sign in
         </button>
       </nav>

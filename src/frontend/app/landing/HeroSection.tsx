@@ -1,14 +1,12 @@
 import type { CSSProperties } from "react";
 
-import type { AuthRoute, Route } from "../appTypes";
+import type { Route } from "../appTypes";
 import HeroMotion from "./HeroMotion";
 
 export function HeroSection({
   onNavigate,
-  onRequireAuth,
 }: {
   onNavigate: (route: Route) => void;
-  onRequireAuth: (route: AuthRoute) => void;
 }) {
   return (
     <section
@@ -40,8 +38,8 @@ export function HeroSection({
             <button
               type="button"
               className="atrium__primary"
-              aria-label="Start a logistics request in the Staff Request Center"
-              onClick={() => onRequireAuth("request-center")}
+              aria-label="Start a logistics request in the public Request Center. No sign-in needed."
+              onClick={() => onNavigate("request")}
             >
               Start a logistics request
             </button>
