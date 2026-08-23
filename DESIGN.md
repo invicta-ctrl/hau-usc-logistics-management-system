@@ -71,7 +71,7 @@ rounded:
 ## Authority hierarchy
 
 1. Earl's current explicit instruction, then the accepted specification and its
-   approved amendments. The current amendment is **R3-A1**.
+   approved amendments. The current amendment is **R3-A1-A2**.
 2. **Repository backend, API, auth, data, security and provider contracts** are
    the sole *functional* authority: authorization, capabilities, request
    semantics, state transitions, inventory truth, privacy, and data ownership.
@@ -98,75 +98,107 @@ SUPERSEDED, PROTOTYPE, CONTRACT-GATED — and those words are authoritative.
 Neither the design authorities nor the functional contracts may be inferred from
 one another.
 
-## R3 public / staff workflow architecture
+## R3-A1-A2 three-context workflow architecture
 
-This is the model every layer must agree with. It is the reason R3-A1 exists.
+This is the model every layer must agree with.
 
 ```text
-Start a logistics request
-        |
-        v
-PUBLIC REQUEST CENTER            Staff Sign In
-NO STAFF LOGIN REQUIRED                |
-        |                              v
-        |                    AUTHENTICATED STAFF ENTRY
-        |                              |
-        |                              v
-        |                    CAPABILITY-GATED INTERNAL WORKSPACES
-        |                              |
-        v                              v
-   canonical request  --------->  INTERNAL REQUEST HUB
-   + request lines                     |
-        |                              +--> Inventory / reservation path
-        |                              +--> Procurement / receiving path
-        |                              +--> Release path
-        v
-   requester-safe tracking projection
+A. PUBLIC                    B. AUTHENTICATED REQUESTER      C. AUTHENTICATED DOL
+   Public Lending Hub           External Request Center         Main Logistics Hub
+   no staff sign-in             USC staff/officer sign-in       DOL/internal capability
+                                no Main Hub authority implied
+
+   Browse / borrow              Start a logistics request       Staff Sign In (generic)
+        |                              |                              |
+        |                              v                              v
+        |                       STAFF SIGN IN  <-------------  identity gateway
+        |                       entryIntent preserved                 |
+        |                              |                              |
+        v                              v                              v
+   CANONICAL LENDING RECORD     CANONICAL REQUEST          capability-appropriate home
+        |                              |                              |
+        v                              v                              |
+   INTERNAL LENDING HUB  <----  INTERNAL REQUEST HUB  <----------------+
+   DOL review / approval /      DOL operational processing
+   custody / return
 ```
 
-One canonical request and its request lines sit underneath both surfaces. There
-is no second request system.
+One canonical record per business object sits underneath both sides. There is no
+second request system and no second lending system.
 
-### Public Request Center
+### Owner correction — 2026-08-23
 
-PUBLIC. No normal staff login. Offers **New Request** and **Track Existing
-Request**. It must never expose internal staff operations.
+> **SUPERSEDED BY R3-A1-A2.** Every current-authority statement in this file that
+> described the logistics **Request Center** as public / no-login is no longer
+> current. The owner has corrected the product policy: the External Request
+> Center is for verified USC staff and officers and requires authentication.
 
-The precise authority for the no-login model is:
+The superseded reading was not a mistake in reasoning — it was faithful to
+`D06 — Product / Route Inventory` (`/request` = *Public request intake*),
+production `public-requester-portal.js` at `0.8.2 / c316e047` (no session check,
+no sign-in gate, no authorization branch), and the accepted `/api/public/request`
+Worker contract. Those artifacts still say what they say; they are now historical
+for this question, and `docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md`
+`ACCESS_MODEL_DRIFT` / `PL-01` is resolved in the opposite direction from the one
+it anticipated.
 
-- `D06 — Product / Route Inventory` records `/request` as *Public request
-  intake* and `/request#request-tracking` as *Public request tracking*.
-- Production `public-requester-portal.js` at `0.8.2 / c316e047` contains **no
-  session check, no sign-in gate and no authorization branch**; the contrary
-  design state is logged as `ACCESS_MODEL_DRIFT` / `PL-01` in
-  `docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md`.
-- The accepted public request Worker contract exposes `/api/public/request`.
+**D24.0 is not superseded.** It is the OWNER-LOCKED no-login model for the
+**Public Lending Center** and remains current. The R3-A1 correction of record —
+that `.codex/R3_PUBLIC_STAFF_BOUNDARY_RECEIPT.md` mis-cited D24.0 as the *Request*
+authority — stands, and is now moot for Request, which is no longer public at all.
 
-**Correction of record.** `.codex/R3_PUBLIC_STAFF_BOUNDARY_RECEIPT.md` cites
-`DESIGN.md` D24.0 as the OWNER-LOCKED authority for the *public Request Center*.
-D24.0 is the OWNER-LOCKED no-login model for the **Public Lending Center**. It is
-the correct analogous precedent but it is not the Request citation. Use the three
-sources above for Request. The historical receipt is preserved as written; this
-paragraph supersedes its citation.
+### A. Public Lending Hub
 
-### Internal Request Hub
+PUBLIC, and owner-locked so (`D24.0`). No account, sign-in, activation or
+approval is needed to browse, borrow, or track. Audience: Angelite students, USC
+staff and officers, and DOL staff, as equal borrower classes. Items are pens,
+pencils, calculators, sewing kits, cutters, brooms, small tools, reusable
+supplies, and other currently published lending items.
 
-INTERNAL. Staff session required and capability-gated. It is a distinct surface
-from the Public Request Center, over the same canonical request. `D23.0` records
-it as a submission form with the review queue appended, gated on the
-`request.review` capability, with a per-line route decision and no pre-selected
-default (RV-01.6).
+Tab set: **Home · Lending Center · Track lending · Lending policy · Staff Sign In.**
+`Request Center` is absent by design — a public tab leading to an authenticated
+surface is a false access promise.
 
-A generic **Staff Sign In** authenticates a session; it must not pre-commit to
-one capability-gated destination. Pre-committing denies otherwise-valid staff
-accounts that simply lack that one capability.
+Borrower verification and staff authentication remain different concepts.
+Borrower type never produces a session, role, or capability.
 
-### Lending boundary
+### B. External Request Center
 
-Borrower verification and staff authentication are different concepts. The
-Public Lending Center requires no login (`D24.0`, OWNER-LOCKED) and serves USC
-Staff/Officers and Angelite students as equal borrower classes. The internal
-Office Lending Hub (`D24.1`) is authenticated and capability-gated.
+AUTHENTICATED. For verified USC staff and officers with legitimate USC
+operational needs: inventory and pantry restocking, office inventory, food
+requirements, event materials and food, event logistics, venue requirements and
+support, logistical materials, and activity support.
+
+Ordinary students must not reach it merely because they can reach Public Lending.
+Eligibility is server-derived from `request.create` and served by the
+authenticated `/api/portal/request` contract, which scopes every read and write
+to the session account. It is **not** the public wizard behind a login screen.
+
+### C. Internal Request Hub and Internal Lending Hub
+
+INTERNAL. Staff session required and capability-gated. Distinct surfaces from
+their external counterparts, over the same canonical records. `D23.0` records the
+Request Hub as a submission form with the review queue appended, gated on
+`request.review`, with a per-line route decision and no pre-selected default
+(RV-01.6). `D24.1` records the internal Office Lending Hub.
+
+**Vocabulary, fixed by R3-A1-A2.** The name *Request Center* belongs to context B.
+The internal DOL surface is the *Request Hub*.
+
+### Generic Staff Sign In
+
+An identity gateway belonging to no context. It authenticates a session and must
+not pre-commit to one capability-gated destination — pre-committing denies
+otherwise-valid staff accounts that simply lack that one capability.
+
+Destination depends on **entry intent plus capability**: an internal operator
+reaches a capability-appropriate Main Logistics Hub home; an eligible non-DOL
+requester reaches the External Request Center. DOL staff who explicitly opened
+the External Request Center stay there in requester mode, keeping their
+operational identity and gaining an `Open Logistics Hub` shortcut.
+
+`docs/frontend/ROUTING.md` is the control-level contract. Home is Home, not
+logout, on every surface. "Public front door" is not current product copy.
 
 ### Module and action ownership
 
@@ -187,10 +219,17 @@ FI-00 through FI-03 are implemented in `src/frontend/`:
 - light/dark presentation, keyboard focus, semantic states, and no horizontal
   overflow.
 
-R3 additionally repaired the public request entry: the hero, footer, mobile
-drawer and Logistics-hub tile now route to the public `request` route, the hero
-accessible name states the public no-sign-in model, and `PublicFlows` navigates
-to `staff-signin` directly. Repository baseline commit: `e30fbff`.
+R3-A1-A2 replaced the public request entry with the authenticated one. The hero,
+footer, mobile drawer and Logistics-hub tile now carry
+`entryIntent = EXTERNAL_REQUEST_CENTER` through the identity gateway and state
+the staff requirement on the control itself; `PublicFlows` owns public lending
+only; and `request/ExternalRequestCenter.tsx` binds to `/api/portal/request`.
+Home preserves the session on every surface.
+
+> **SUPERSEDED BY R3-A1-A2.** The R3 repair — "the hero, footer, mobile drawer
+> and Logistics-hub tile now route to the public `request` route, and the hero
+> accessible name states the public no-sign-in model", baseline `e30fbff` — was
+> correct under the authority R3 held and is preserved here as history.
 
 **Authenticated operational workspaces begin in FI-04 and are not exposed.**
 `AuthenticatedShell` is not mounted and the staff route components are orphaned.

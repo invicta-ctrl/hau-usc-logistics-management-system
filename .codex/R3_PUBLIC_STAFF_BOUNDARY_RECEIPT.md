@@ -1,5 +1,13 @@
 # R3 receipt — frontend public/staff boundary audit and public-access repair
 
+> **SUPERSEDED BY R3-A1-A2 — 2026-08-23.** This receipt records its own task
+> truthfully and is preserved unchanged below. The owner has since corrected the
+> product policy: the logistics Request Center is **not** public. Any statement
+> here that the Request Center is public / no-login is historical, not current.
+> Current authority: `.codex/specs/accepted/2026-08-23-r3-a1-a2-owner-routing-identity-three-context.md`,
+> `docs/frontend/ROUTING.md`, `.codex/R3_A1_A2_ROUTING_IDENTITY_RECEIPT.md`.
+> `DESIGN.md` D24.0 — OWNER-LOCKED no-login Public **Lending** — is not superseded.
+
 DATE: 2026-08-23
 EXECUTOR: Claude Code (Opus 5)
 AUTHORITY: Earl's R3 owner-directed frontend-only instruction (2026-08-23)
