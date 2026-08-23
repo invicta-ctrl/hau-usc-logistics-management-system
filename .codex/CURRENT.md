@@ -47,7 +47,10 @@ FIGMA_DESIGN_STATUS: RECONCILED. Authority board page 55:3 / board 568:2 now car
 FIGMA_MAKE_STATUS: SAVED_AND_VERIFIED. Version 39 -> **Version 40**, 8 files changed, pending edits 0 after reload. Behaviourally verified in the live prototype: public "Start a logistics request" reaches "PUBLIC REQUEST - NO SIGN-IN / Request Center", and "Staff sign in" reaches a separate staff sign-in page. The repository Make mirror at output/design/figma-make-source/ has been refreshed to v40 with per-file sha256 recorded in docs/design/FIGMA_MAKE_SOURCE_REGISTER.md.
 DESIGN_MD_STATUS: REWRITTEN to the post-R3-A1 authority model.
 WORKFLOW_ARCHITECTURE_STATUS: CITATION_CORRECTED and pointed at R3-A1.
-IMPECCABLE_SIDECAR_STATUS: STALE — not yet refreshed (FE-R3-010 / FE-R3-011).
+IMPECCABLE_SIDECAR_STATUS: REFRESHED. Rebuilt at schemaVersion 2 from scripts/design/theme-source.mjs and the shipped theme.css; DESIGN.md frontmatter now carries a machine-readable colors/typography/rounded block. Impeccable detector over the eight public components: 27 findings -> 7. FE-R3-010 CLOSED; FE-R3-011 re-scoped.
+HALLMARK_STATUS: AUDITED read-only, 0 critical / 1 major / 3 minor. Record in docs/design/HALLMARK_IMPECCABLE_CLOSURE.md, third bounded pass.
+DOCUMENTATION_MANIFEST: docs/frontend/R3_A1_DOCUMENTATION_RECONCILIATION_MANIFEST.md — 313 tracked doc-like files swept, 0 current contradictions remaining in documentation.
+OPEN_IMPLEMENTATION_FINDING: FE-R3-012 — src/frontend/app/appRoutes.ts:19 still labels the internal route "Staff Request Center", surfaced by auth/StaffSignInPage.tsx:41. Product-source edit; Codex work.
 
 ## Correction of record
 
@@ -75,6 +78,6 @@ LOCAL_PREVIEW_URL: http://127.0.0.1:5199
 LOCAL_PREVIEW_VERIFIED: 2026-08-23 — no listener on 4173 or 5199, confirming the preview is not running.
 FRONTEND_E2E_COMMAND: `npx playwright test --config playwright.frontend.config.js` (its own webServer binds 127.0.0.1:4174)
 
-BLOCKER: NONE for the R3-A1 provider synchronization — it completed and was verified. The first save attempt stalled on a Figma reconnect failure; Figma reconnected and the save landed as Version 40, confirmed after a full reload. Outstanding non-blocking work: refresh the stale `.impeccable/design.json`, run the post-sync Impeccable and Hallmark audits, and write the documentation reconciliation manifest. FVR-02 media blockers unchanged and untouched; FI-04 not started.
+BLOCKER: NONE for the R3-A1 provider synchronization — it completed and was verified. The first save attempt stalled on a Figma reconnect failure; Figma reconnected and the save landed as Version 40, confirmed after a full reload. Outstanding non-blocking work: FE-R3-012 (the "Staff Request Center" label in frontend source), FE-R3-011 (7 radius advisories and the missing type ramp), and the optional visual workflow diagram. All are product-source or design-build work rather than design-authority work. FVR-02 media blockers unchanged and untouched; FI-04 not started.
 
 NEXT_EXACT_ACTION: Codex adopts the R3-A1 synchronized design into src/frontend/ and the local frontend preview and verifies it against the updated Figma Design and Figma Make v40 references; Playground, Production and main remain untouched.

@@ -1,170 +1,272 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-08T14:00:00.000Z",
+  "generatedAt": "2026-08-23T00:00:00.000Z",
   "title": "Design System: HAU-USC Logistics Management System",
+  "source": {
+    "note": "Rebuilt by R3-A1 from the current shipped design authority. Supersedes the 2026-08-08 sidecar, which described the pre-cutover V4.1 system and contained none of the current identity anchors.",
+    "canonicalTokenSource": "scripts/design/theme-source.mjs",
+    "generatedCss": "src/frontend/styles/theme.css",
+    "designAuthority": "DESIGN.md",
+    "acceptedAmendment": ".codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md",
+    "figmaDesign": "hXJElH4p72KfgAaoUyfNOC",
+    "figmaMake": "rP9W9MQlZkyQrUx38TVsFS Version 40"
+  },
   "extensions": {
     "colorMeta": {
-      "oxblood-900": { "role": "primary", "displayName": "Deep Oxblood", "canonical": "oklch(22% 0.085 22)", "tonalRamp": ["oklch(15% 0.085 22)", "oklch(22% 0.085 22)", "oklch(30% 0.085 22)", "oklch(38% 0.085 22)", "oklch(48% 0.085 22)", "oklch(60% 0.085 22)", "oklch(76% 0.085 22)", "oklch(92% 0.085 22)"] },
-      "oxblood-800": { "role": "primary", "displayName": "Route Oxblood", "canonical": "oklch(30% 0.12 22)", "tonalRamp": ["oklch(15% 0.12 22)", "oklch(22% 0.12 22)", "oklch(30% 0.12 22)", "oklch(38% 0.12 22)", "oklch(48% 0.12 22)", "oklch(60% 0.12 22)", "oklch(76% 0.12 22)", "oklch(92% 0.12 22)"] },
-      "oxblood-700": { "role": "primary", "displayName": "Signal Oxblood", "canonical": "oklch(37% 0.135 22)", "tonalRamp": ["oklch(15% 0.135 22)", "oklch(24% 0.135 22)", "oklch(37% 0.135 22)", "oklch(46% 0.135 22)", "oklch(56% 0.135 22)", "oklch(68% 0.135 22)", "oklch(80% 0.135 22)", "oklch(92% 0.135 22)"] },
-      "oxblood-600": { "role": "primary", "displayName": "Active Oxblood", "canonical": "oklch(44% 0.13 22)", "tonalRamp": ["oklch(16% 0.13 22)", "oklch(26% 0.13 22)", "oklch(38% 0.13 22)", "oklch(44% 0.13 22)", "oklch(56% 0.13 22)", "oklch(68% 0.13 22)", "oklch(80% 0.13 22)", "oklch(92% 0.13 22)"] },
-      "oxblood-500": { "role": "primary", "displayName": "Lifted Oxblood", "canonical": "oklch(52% 0.12 22)", "tonalRamp": ["oklch(18% 0.12 22)", "oklch(30% 0.12 22)", "oklch(42% 0.12 22)", "oklch(52% 0.12 22)", "oklch(62% 0.12 22)", "oklch(72% 0.12 22)", "oklch(84% 0.12 22)", "oklch(94% 0.12 22)"] },
-      "gold-700": { "role": "secondary", "displayName": "Deep Gold", "canonical": "oklch(48% 0.09 82)", "tonalRamp": ["oklch(15% 0.09 82)", "oklch(24% 0.09 82)", "oklch(36% 0.09 82)", "oklch(48% 0.09 82)", "oklch(60% 0.09 82)", "oklch(72% 0.09 82)", "oklch(84% 0.09 82)", "oklch(95% 0.09 82)"] },
-      "gold-600": { "role": "secondary", "displayName": "Route Gold", "canonical": "oklch(58% 0.105 82)", "tonalRamp": ["oklch(16% 0.105 82)", "oklch(28% 0.105 82)", "oklch(42% 0.105 82)", "oklch(58% 0.105 82)", "oklch(68% 0.105 82)", "oklch(78% 0.105 82)", "oklch(88% 0.105 82)", "oklch(96% 0.105 82)"] },
-      "gold-500": { "role": "secondary", "displayName": "Active Gold", "canonical": "oklch(69% 0.115 82)", "tonalRamp": ["oklch(18% 0.115 82)", "oklch(32% 0.115 82)", "oklch(48% 0.115 82)", "oklch(62% 0.115 82)", "oklch(69% 0.115 82)", "oklch(78% 0.115 82)", "oklch(88% 0.115 82)", "oklch(96% 0.115 82)"] },
-      "gold-400": { "role": "secondary", "displayName": "Bright Gold", "canonical": "oklch(77% 0.1 82)", "tonalRamp": ["oklch(20% 0.1 82)", "oklch(36% 0.1 82)", "oklch(52% 0.1 82)", "oklch(66% 0.1 82)", "oklch(77% 0.1 82)", "oklch(84% 0.1 82)", "oklch(91% 0.1 82)", "oklch(97% 0.1 82)"] },
-      "gold-300": { "role": "secondary", "displayName": "Pale Gold", "canonical": "oklch(84% 0.075 82)", "tonalRamp": ["oklch(22% 0.075 82)", "oklch(40% 0.075 82)", "oklch(58% 0.075 82)", "oklch(72% 0.075 82)", "oklch(84% 0.075 82)", "oklch(90% 0.075 82)", "oklch(95% 0.075 82)", "oklch(98% 0.075 82)"] },
-      "gold-200": { "role": "secondary", "displayName": "Soft Gold", "canonical": "oklch(91% 0.045 82)", "tonalRamp": ["oklch(24% 0.045 82)", "oklch(44% 0.045 82)", "oklch(62% 0.045 82)", "oklch(76% 0.045 82)", "oklch(88% 0.045 82)", "oklch(91% 0.045 82)", "oklch(95% 0.045 82)", "oklch(98% 0.045 82)"] },
-      "gold-100": { "role": "secondary", "displayName": "Gold Mist", "canonical": "oklch(96% 0.02 82)", "tonalRamp": ["oklch(28% 0.02 82)", "oklch(48% 0.02 82)", "oklch(66% 0.02 82)", "oklch(80% 0.02 82)", "oklch(90% 0.02 82)", "oklch(94% 0.02 82)", "oklch(96% 0.02 82)", "oklch(99% 0.02 82)"] },
-      "canvas": { "role": "neutral", "displayName": "Warm Canvas", "canonical": "oklch(94% 0.012 70)", "tonalRamp": ["oklch(15% 0.012 70)", "oklch(28% 0.012 70)", "oklch(42% 0.012 70)", "oklch(58% 0.012 70)", "oklch(72% 0.012 70)", "oklch(84% 0.012 70)", "oklch(90% 0.012 70)", "oklch(94% 0.012 70)"] },
-      "paper": { "role": "neutral", "displayName": "Working Paper", "canonical": "oklch(98.5% 0.008 70)", "tonalRamp": ["oklch(17% 0.008 70)", "oklch(30% 0.008 70)", "oklch(44% 0.008 70)", "oklch(60% 0.008 70)", "oklch(74% 0.008 70)", "oklch(86% 0.008 70)", "oklch(94% 0.008 70)", "oklch(98.5% 0.008 70)"] },
-      "paper-2": { "role": "neutral", "displayName": "Inset Paper", "canonical": "oklch(96.5% 0.012 70)", "tonalRamp": ["oklch(18% 0.012 70)", "oklch(32% 0.012 70)", "oklch(48% 0.012 70)", "oklch(64% 0.012 70)", "oklch(78% 0.012 70)", "oklch(88% 0.012 70)", "oklch(94% 0.012 70)", "oklch(96.5% 0.012 70)"] },
-      "paper-3": { "role": "neutral", "displayName": "Overlay White", "canonical": "oklch(99% 0.006 70)", "tonalRamp": ["oklch(20% 0.006 70)", "oklch(36% 0.006 70)", "oklch(52% 0.006 70)", "oklch(68% 0.006 70)", "oklch(80% 0.006 70)", "oklch(90% 0.006 70)", "oklch(96% 0.006 70)", "oklch(99% 0.006 70)"] },
-      "cream": { "role": "neutral", "displayName": "Cream Wash", "canonical": "oklch(93% 0.027 76)", "tonalRamp": ["oklch(20% 0.027 76)", "oklch(34% 0.027 76)", "oklch(50% 0.027 76)", "oklch(66% 0.027 76)", "oklch(78% 0.027 76)", "oklch(86% 0.027 76)", "oklch(93% 0.027 76)", "oklch(97% 0.027 76)"] },
-      "ink": { "role": "neutral", "displayName": "Operational Ink", "canonical": "oklch(19% 0.018 22)", "tonalRamp": ["oklch(12% 0.018 22)", "oklch(19% 0.018 22)", "oklch(28% 0.018 22)", "oklch(40% 0.018 22)", "oklch(54% 0.018 22)", "oklch(68% 0.018 22)", "oklch(82% 0.018 22)", "oklch(94% 0.018 22)"] },
-      "ink-2": { "role": "neutral", "displayName": "Secondary Ink", "canonical": "oklch(34% 0.018 22)", "tonalRamp": ["oklch(14% 0.018 22)", "oklch(26% 0.018 22)", "oklch(34% 0.018 22)", "oklch(46% 0.018 22)", "oklch(60% 0.018 22)", "oklch(74% 0.018 22)", "oklch(86% 0.018 22)", "oklch(96% 0.018 22)"] },
-      "muted": { "role": "neutral", "displayName": "Muted Ink", "canonical": "oklch(44% 0.014 22)", "tonalRamp": ["oklch(16% 0.014 22)", "oklch(28% 0.014 22)", "oklch(44% 0.014 22)", "oklch(56% 0.014 22)", "oklch(68% 0.014 22)", "oklch(78% 0.014 22)", "oklch(88% 0.014 22)", "oklch(96% 0.014 22)"] },
-      "line": { "role": "neutral", "displayName": "Hairline", "canonical": "oklch(85% 0.015 70)", "tonalRamp": ["oklch(22% 0.015 70)", "oklch(36% 0.015 70)", "oklch(50% 0.015 70)", "oklch(64% 0.015 70)", "oklch(74% 0.015 70)", "oklch(85% 0.015 70)", "oklch(92% 0.015 70)", "oklch(97% 0.015 70)"] },
-      "line-strong": { "role": "neutral", "displayName": "Strong Rule", "canonical": "oklch(72% 0.021 70)", "tonalRamp": ["oklch(20% 0.021 70)", "oklch(34% 0.021 70)", "oklch(48% 0.021 70)", "oklch(60% 0.021 70)", "oklch(72% 0.021 70)", "oklch(82% 0.021 70)", "oklch(90% 0.021 70)", "oklch(96% 0.021 70)"] },
-      "line-hair": { "role": "neutral", "displayName": "Quiet Hairline", "canonical": "oklch(91% 0.012 70)", "tonalRamp": ["oklch(24% 0.012 70)", "oklch(40% 0.012 70)", "oklch(56% 0.012 70)", "oklch(70% 0.012 70)", "oklch(82% 0.012 70)", "oklch(91% 0.012 70)", "oklch(96% 0.012 70)", "oklch(99% 0.012 70)"] }
+      "oxblood-deep": {
+        "role": "primary",
+        "displayName": "Oxblood Deep",
+        "purpose": "The institutional anchor. Public navbar, footer, dark-mode ground, primary-button ink.",
+        "tonalRamp": ["#40070a", "#610b0f", "#78141a", "#8d1f28", "#a62835", "#b8535d", "#c4626c", "#e3aeb3"]
+      },
+      "oxblood-mid": {
+        "role": "primary",
+        "displayName": "Oxblood Mid",
+        "purpose": "Secondary oxblood structure and borders on dark fields."
+      },
+      "gold-canonical": {
+        "role": "accent",
+        "displayName": "Canonical Gold",
+        "canonical": "#d4af37",
+        "ownerLocked": true,
+        "purpose": "OWNER-LOCKED per DESIGN.md D08.0. Not derived, not negotiable. Marks active controls, focus and selection — never routine labels.",
+        "tonalRamp": ["#7d5518", "#a37426", "#c8992f", "#d4af37", "#e6d088", "#f0e2b4", "#f7efd5", "#faf1de"]
+      },
+      "gold-dark-mode": {
+        "role": "accent",
+        "displayName": "Gold, dark mode",
+        "canonical": "#e1c671",
+        "purpose": "Dark mode lifts the canonical gold toward paper because #D4AF37 sits too close to the dark surfaces to carry a decisive accent. Same hue, more light."
+      },
+      "accent-text": {
+        "role": "accent",
+        "displayName": "Accent Text",
+        "canonical": "#7d5518",
+        "purpose": "Gold-family text on light working surfaces. Measures 5.46:1 on the composited G2 pane. gold/400 measured 1.52:1 and failed AA, which is why this token exists.",
+        "darkValue": "#c9a45f"
+      },
+      "paper-warm": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "purpose": "The working surface. Public and authentication surfaces sit here.",
+        "tonalRamp": ["#e5dac7", "#efe5d7", "#f2eae5", "#f7f0e2", "#f7f1e8", "#fbf6f0", "#fcf2cf", "#fffdf8"]
+      },
+      "ink-deep": {
+        "role": "neutral",
+        "displayName": "Ink Deep",
+        "canonical": "#241416",
+        "purpose": "Primary reading ink. Oxblood-charcoal rather than #000 — at L* 16 on an L* 95.4 plane it measures 13:1, and going blacker buys only glare."
+      },
+      "ink-mid": {
+        "role": "neutral",
+        "displayName": "Ink Mid",
+        "canonical": "#6f5a60",
+        "purpose": "Secondary and muted operational copy."
+      },
+      "border-warm": {
+        "role": "border",
+        "displayName": "Border Warm",
+        "canonical": "#d1b478",
+        "purpose": "Gold-family control borders. WCAG 2.2 1.4.11 requires 3:1 for anything identifying a control, measured against every surface it can sit on."
+      },
+      "border-paper": {
+        "role": "border",
+        "displayName": "Border Paper",
+        "canonical": "#e6dcc9",
+        "purpose": "Quiet structural separation on paper surfaces."
+      }
+    },
+    "surfaceLadder": {
+      "note": "Declared as INTENT — a target CIE L*, chroma and hue — not as hex. Hex is the output. One step up the ladder means the same perceived distance in light and dark.",
+      "light": {
+        "hue": 80,
+        "chromaDirection": "decreases up the ladder, so the cream lives in the environment and the reading plane stays near-neutral",
+        "steps": [
+          { "name": "ground", "L": 87.4, "purpose": "environmental canvas; never carries reading content" },
+          { "name": "inset", "L": 91.6, "purpose": "recess inside the work plane: filter bars, table headers, disabled regions" },
+          { "name": "work", "L": 95.4, "purpose": "primary reading and operational plane; tables, forms, records" },
+          { "name": "raised", "L": 97.3, "purpose": "temporary elevation: floating cards, popovers" },
+          { "name": "overlay", "L": 98.5, "purpose": "dialogs, command palette, context panels" }
+        ]
+      },
+      "dark": {
+        "hue": 20,
+        "chromaDirection": "increases up the ladder, so rising out of the ground reads as moving toward the institution rather than toward grey",
+        "note": "Nothing approaches #000: the darkest surface is L* 8.6, which keeps large dark fields legible instead of crushed.",
+        "steps": [
+          { "name": "ground", "L": 8.6 },
+          { "name": "inset", "L": 11.8 },
+          { "name": "work", "L": 15.2 },
+          { "name": "raised", "L": 19.0 },
+          { "name": "overlay", "L": 22.4 }
+        ]
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Route Display", "purpose": "Page titles and major public statements." },
-      "headline": { "displayName": "Operational Headline", "purpose": "Authenticated page heads and public landing headings." },
-      "title": { "displayName": "Surface Title", "purpose": "Section, detail, and portal-card titles." },
-      "body": { "displayName": "Plain Operations Body", "purpose": "Labels, tables, forms, and explanatory copy." },
-      "label": { "displayName": "Route Label", "purpose": "Uppercase metadata, route codes, and compact navigation descriptors." },
-      "control": { "displayName": "Action Control", "purpose": "Buttons and interactive controls." },
-      "wordmark": { "displayName": "Institutional Wordmark", "purpose": "The HAU-USC name only." },
-      "numeral": { "displayName": "Tabular Numeral", "purpose": "Attention values and quantities only." }
+      "display": {
+        "displayName": "Display",
+        "fontFamily": "'Bricolage Grotesque', system-ui, sans-serif",
+        "purpose": "Display face. Section and hero headings that carry institutional weight."
+      },
+      "editorial": {
+        "displayName": "Editorial",
+        "fontFamily": "'Newsreader', Georgia, serif",
+        "purpose": "Editorial hero face and institutional wordmarks. Used where the product speaks as the University Student Council."
+      },
+      "body": {
+        "displayName": "Body / Operational",
+        "fontFamily": "'IBM Plex Sans', system-ui, sans-serif",
+        "purpose": "Operational copy, controls and labels. The face an operator reads for a whole shift."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "fontFamily": "'IBM Plex Mono', ui-monospace, monospace",
+        "purpose": "Reference codes, tracking codes, eyebrow labels and any value that must be transcribed exactly."
+      }
     },
     "shadows": [
-      { "name": "quiet-float", "value": "0 2px 8px var(--shadow-color)", "purpose": "Low-level command and public-bar separation from the canvas." },
-      { "name": "rail-command", "value": "0 14px 36px var(--shadow-color)", "purpose": "Authenticated rail and command layer." },
-      { "name": "overlay-depth", "value": "0 24px 64px var(--shadow-color-strong)", "purpose": "Drawer, dialog, menu, and mobile tabbar elevation." }
+      { "name": "glass-shadow-soft-light", "value": "0 12px 28px color-mix(in oklch, var(--ink-deep) 12%, transparent)", "purpose": "Institutional Glass, resting elevation on light surfaces." },
+      { "name": "glass-shadow-raised-light", "value": "0 20px 48px color-mix(in oklch, var(--ink-deep) 20%, transparent)", "purpose": "Institutional Glass, raised elevation on light surfaces." },
+      { "name": "glass-shadow-soft-dark", "value": "0 6px 20px rgba(0, 0, 0, 0.26)", "purpose": "Institutional Glass, resting elevation on dark surfaces." },
+      { "name": "glass-shadow-raised-dark", "value": "0 14px 36px rgba(0, 0, 0, 0.36)", "purpose": "Institutional Glass, raised elevation on dark surfaces." }
     ],
+    "glass": {
+      "note": "Institutional Glass is localised to layers that earn it, never a wash over the whole application. Second generation: fill up, blur down at every step.",
+      "blur": [
+        { "name": "glass-blur-soft", "value": "blur(10px) saturate(112%)" },
+        { "name": "glass-blur-raised", "value": "blur(16px) saturate(118%)" }
+      ],
+      "blurLadder": [16, 22, 30, 36]
+    },
     "motion": [
-      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Default route and state arrival easing." },
-      { "name": "ease-in", "value": "cubic-bezier(0.7, 0, 0.84, 0)", "purpose": "Short route and overlay exit easing." },
-      { "name": "instant", "value": "110ms", "purpose": "Press, focus, and small feedback." },
-      { "name": "small", "value": "150ms", "purpose": "Component and active-indicator movement." },
-      { "name": "surface", "value": "240ms", "purpose": "Route and state surface transitions." },
-      { "name": "overlay", "value": "300ms", "purpose": "Drawer, dialog, menu, and overlay entry." },
-      { "name": "reveal", "value": "420ms", "purpose": "Finite staged arrival and route resolution." },
-      { "name": "reduced-motion", "value": "prefers-reduced-motion: reduce -> 1ms, one iteration, no transforms", "purpose": "Preserves state and accessible announcements while removing movement." }
+      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Default easing for entrances and anything arriving." },
+      { "name": "ease-in", "value": "cubic-bezier(0.7, 0, 0.84, 0)", "purpose": "Exits and dismissals." },
+      { "name": "ease-in-out", "value": "cubic-bezier(0.65, 0, 0.35, 1)", "purpose": "Reversible state changes." },
+      { "name": "dur-response", "value": "120ms", "purpose": "Direct manipulation feedback: press, hover, focus." },
+      { "name": "dur-state", "value": "200ms", "purpose": "State transitions on a control." },
+      { "name": "dur-surface", "value": "280ms", "purpose": "Surface and panel movement." },
+      { "name": "dur-narrative", "value": "400ms", "purpose": "Staggered entrance choreography on the public landing only." }
     ],
+    "shapes": {
+      "radiusBase": "0.625rem",
+      "scale": [
+        { "name": "sm", "value": "calc(var(--radius) - 4px)" },
+        { "name": "md", "value": "calc(var(--radius) - 2px)" },
+        { "name": "lg", "value": "var(--radius)" },
+        { "name": "xl", "value": "calc(var(--radius) + 4px)" }
+      ]
+    },
     "breakpoints": [
-      { "name": "split-to-drawer", "value": "1180px", "purpose": "Queue detail leaves the split pane." },
-      { "name": "rail-drawer", "value": "1023px", "purpose": "Authenticated rail moves off-canvas." },
-      { "name": "attention-grid", "value": "900px", "purpose": "Attention band becomes a 2x2 grid." },
-      { "name": "mobile", "value": "767px", "purpose": "Full-width push, tabbar, sticky action bar, and stacked public routes." },
-      { "name": "priority-columns", "value": "560px", "purpose": "Second-priority queue columns leave." },
-      { "name": "narrow", "value": "380px", "purpose": "Final tightening hides nonessential labels only." }
+      { "name": "xs", "value": "320px" },
+      { "name": "sm", "value": "375px" },
+      { "name": "mobile", "value": "390px" },
+      { "name": "mobile-lg", "value": "414px" },
+      { "name": "tablet", "value": "768px" },
+      { "name": "laptop", "value": "1024px" },
+      { "name": "desktop", "value": "1440px" },
+      { "name": "wide", "value": "1920px" }
     ]
   },
   "components": [
     {
-      "name": "Route Console Command Bar",
-      "kind": "nav",
-      "refersTo": "nav-active",
-      "description": "Authenticated command line with kinetic navigation, route identity, named search, celestial theme state, notifications, and account context.",
-      "html": "<div class='ds-command-bar'><button class='ds-command-menu' type='button' aria-label='Open navigation'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 7h16M4 12h16M4 17h16' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg></button><span class='ds-command-route'><small>O-04</small><b>Request review</b></span><button class='ds-command-search' type='button'><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='10.5' cy='10.5' r='5.5' fill='none' stroke='currentColor' stroke-width='1.8'/><path d='m15 15 5 5' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg><span>Search routes</span><kbd>Cmd K</kbd></button><button class='ds-command-account' type='button' aria-label='Open account'>LO</button></div>",
-      "css": ".ds-command-bar{display:grid;grid-template-columns:auto minmax(110px,220px) minmax(160px,1fr) auto;align-items:center;gap:12px;min-height:82px;padding:0 20px;background:var(--paper,oklch(98.5% .008 70));border-bottom:1px solid var(--line-hair,oklch(91% .012 70));box-shadow:0 8px 24px var(--shadow-color,rgba(54,25,30,.14));color:var(--ink,oklch(19% .018 22));font-family:var(--font-body,'IBM Plex Sans Local',sans-serif)}.ds-command-menu,.ds-command-account{display:inline-grid;place-items:center;min-height:46px;border:1px solid var(--anchor,oklch(30% .12 22));border-radius:5px 16px 5px 16px;background:var(--anchor,oklch(30% .12 22));color:var(--anchor-ink,oklch(96% .02 82));font-weight:700}.ds-command-menu{width:46px}.ds-command-menu svg{width:18px;height:18px}.ds-command-account{width:46px;border-radius:5px 16px 5px 16px}.ds-command-route{display:grid;gap:2px;min-width:0}.ds-command-route small{color:var(--anchor,oklch(30% .12 22));font-size:10px;letter-spacing:.1em}.ds-command-route b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.ds-command-search{display:flex;align-items:center;gap:10px;min-width:0;max-width:620px;min-height:46px;padding:0 8px 0 16px;border:1px solid var(--line-strong,oklch(72% .021 70));border-radius:999px;background:var(--paper-2,oklch(96.5% .012 70));color:var(--muted,oklch(44% .014 22));text-align:left}.ds-command-search span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-command-search svg{width:18px;height:18px}.ds-command-search kbd{padding:4px 7px;border:1px solid var(--line,oklch(85% .015 70));border-radius:6px;background:var(--paper,oklch(98.5% .008 70));font:10px var(--font-body,'IBM Plex Sans Local',sans-serif;color:var(--ink-2,oklch(34% .018 22))}.ds-command-menu:hover,.ds-command-account:hover,.ds-command-search:hover{transform:translateY(-1px);border-color:var(--anchor-line,var(--line-strong))}.ds-command-menu:focus-visible,.ds-command-account:focus-visible,.ds-command-search:focus-visible{outline:3px solid var(--gold-500,oklch(69% .115 82));outline-offset:3px}@media (max-width:767px){.ds-command-bar{grid-template-columns:auto minmax(0,1fr) auto;min-height:68px;padding:0 10px}.ds-command-route{display:none}.ds-command-search{justify-content:center;padding:0;width:46px}.ds-command-search span,.ds-command-search kbd{display:none}}"
-    },
-    {
-      "name": "Primary Route Button",
+      "name": "Primary Action",
       "kind": "button",
-      "refersTo": "button-primary",
-      "description": "The one decisive action on a work surface, with a small acknowledgement nudge.",
-      "html": "<button class='ds-btn-primary' type='button'>Accept and reserve <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h13m-5-5 5 5-5 5' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg></button>",
-      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:8px 14px;border:1px solid var(--oxblood-800,oklch(30% .12 22));border-radius:5px 16px 5px 16px;background:var(--oxblood-800,oklch(30% .12 22));color:var(--gold-100,oklch(96% .02 82));font:700 14px/1.2 var(--font-body,'IBM Plex Sans Local',sans-serif);transition:background-color 110ms cubic-bezier(.16,1,.3,1),border-color 110ms cubic-bezier(.16,1,.3,1),transform 110ms cubic-bezier(.16,1,.3,1)}.ds-btn-primary svg{width:18px;height:18px}.ds-btn-primary:hover{background:var(--oxblood-700,oklch(37% .135 22));border-color:var(--oxblood-700,oklch(37% .135 22));transform:translateY(-1px)}.ds-btn-primary:active{transform:translateY(.5px)}.ds-btn-primary:focus-visible{outline:3px solid var(--gold-500,oklch(69% .115 82));outline-offset:3px}@media (prefers-reduced-motion:reduce){.ds-btn-primary{transition-duration:1ms}.ds-btn-primary:hover,.ds-btn-primary:active{transform:none}}"
+      "refersTo": "atrium__primary",
+      "description": "The single primary action on a public surface. Gold field, oxblood ink. Used for 'Start a logistics request'.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\" aria-label=\"Start a logistics request in the public Request Center. No sign-in needed.\">Start a logistics request</button>",
+      "css": ".ds-btn-primary { min-height: 48px; border-radius: 0.625rem; padding-inline: 1.25rem; display: inline-flex; align-items: center; justify-content: center; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; line-height: 1; white-space: nowrap; color: #40070a; background: #e8b93c; border: 1px solid #d1b478; transition: transform 120ms cubic-bezier(0.16,1,0.3,1), opacity 200ms cubic-bezier(0.16,1,0.3,1), background-color 200ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-primary:hover { opacity: 0.9; } .ds-btn-primary:active { transform: translateY(1px); opacity: 0.75; } .ds-btn-primary:focus-visible { outline: 2px solid #e8b93c; outline-offset: 2px; }"
     },
     {
-      "name": "Quiet Route Button",
+      "name": "Secondary Action (Glass)",
       "kind": "button",
-      "refersTo": "button-quiet",
-      "description": "A quiet secondary or return action that keeps the primary route legible.",
-      "html": "<button class='ds-btn-quiet' type='button'>Ask for information</button>",
-      "css": ".ds-btn-quiet{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:8px 14px;border:1px solid transparent;border-radius:5px 16px 5px 16px;background:transparent;color:var(--ink-2,oklch(34% .018 22));font:700 14px/1.2 var(--font-body,'IBM Plex Sans Local',sans-serif);transition:background-color 110ms cubic-bezier(.16,1,.3,1),border-color 110ms cubic-bezier(.16,1,.3,1),transform 110ms cubic-bezier(.16,1,.3,1)}.ds-btn-quiet:hover{border-color:var(--line,oklch(85% .015 70));background:var(--paper,oklch(98.5% .008 70));transform:translateY(-1px)}.ds-btn-quiet:active{transform:translateY(.5px)}.ds-btn-quiet:focus-visible{outline:3px solid var(--gold-500,oklch(69% .115 82));outline-offset:3px}@media (prefers-reduced-motion:reduce){.ds-btn-quiet{transition-duration:1ms}.ds-btn-quiet:hover,.ds-btn-quiet:active{transform:none}}"
+      "refersTo": "atrium__secondary",
+      "description": "Companion action on the public hero. Institutional Glass rather than a second gold field, so gold stays scarce.",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">Browse public lending</button>",
+      "css": ".ds-btn-secondary { min-height: 48px; border-radius: 0.625rem; padding-inline: 1.25rem; display: inline-flex; align-items: center; justify-content: center; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; line-height: 1; color: #faeecb; background: rgba(120,20,26,0.55); backdrop-filter: blur(10px) saturate(112%); border: 1px solid rgba(242,209,92,0.28); box-shadow: 0 6px 20px rgba(0,0,0,0.26); transition: transform 120ms cubic-bezier(0.16,1,0.3,1), background-color 200ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-secondary:hover { background: rgba(141,31,40,0.62); } .ds-btn-secondary:focus-visible { outline: 2px solid #e8b93c; outline-offset: 2px; }"
     },
     {
-      "name": "Status Chip",
+      "name": "Text Action",
+      "kind": "button",
+      "refersTo": "atrium__text-action",
+      "description": "Quiet tertiary path. 'Track request' and 'Staff sign in' sit here so neither competes with public intake.",
+      "html": "<button class=\"ds-btn-text\" type=\"button\">Staff sign in</button>",
+      "css": ".ds-btn-text { min-height: 44px; padding-inline: 0.5rem; display: inline-flex; align-items: center; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; line-height: 1; color: #faeecb; background: none; border: none; border-radius: 0.625rem; text-underline-offset: 4px; transition: opacity 200ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-text:hover { text-decoration: underline; opacity: 0.9; } .ds-btn-text:focus-visible { outline: 2px solid #e8b93c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Public Access Banner",
+      "kind": "card",
+      "refersTo": "public-access-banner",
+      "description": "States the public no-login contract at the top of the Request and Lending centres. This is product truth, not decoration: the public service never places authentication in front of intake.",
+      "html": "<div class=\"ds-access\"><p class=\"ds-access__title\">No account and no sign-in needed</p><p class=\"ds-access__body\">Open to USC staff and officers, and to every Angelite student. You do not need a HAU-USC Logistics account, staff sign-in, activation, or approval to submit.</p></div>",
+      "css": ".ds-access { border-radius: 0.625rem; padding: 16px 20px; background: rgba(120,20,26,0.42); border: 1px solid rgba(242,209,92,0.28); backdrop-filter: blur(10px) saturate(112%); } .ds-access__title { margin: 0 0 4px; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 1rem; font-weight: 700; color: #faeecb; } .ds-access__body { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.8125rem; line-height: 1.5; color: #f6e29a; }"
+    },
+    {
+      "name": "Eyebrow Label",
       "kind": "chip",
-      "refersTo": "status-chip",
-      "description": "A labelled five-tone workflow state; color reinforces text and never replaces it.",
-      "html": "<span class='ds-status-chip' data-tone='alert'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M12 4 3.5 19h17L12 4Z' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linejoin='round'/><path d='M12 9v5m0 3v.1' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg>Overdue</span>",
-      "css": ".ds-status-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid #cdbfa7;border-radius:999px;background:#ece3d3;color:#5d4a4f;font:700 12px/1.2 var(--font-body,'IBM Plex Sans Local',sans-serif);white-space:nowrap}.ds-status-chip svg{width:13px;height:13px}.ds-status-chip[data-tone='info']{border-color:#b0cbe6;background:#e4eefa;color:#23557f}.ds-status-chip[data-tone='progress']{border-color:#dcbe8a;background:#fbeed2;color:#7d5518}.ds-status-chip[data-tone='done']{border-color:#a8d3ba;background:#e2f3e9;color:#1f6b41}.ds-status-chip[data-tone='alert']{border-color:#e3aeb3;background:#fbe6e8;color:#9c2630}.ds-status-chip:focus-visible{outline:3px solid var(--gold-500,oklch(69% .115 82));outline-offset:3px}"
+      "refersTo": "eyebrow",
+      "description": "Mono, uppercase, letterspaced. Names the context of a surface — 'PUBLIC REQUEST · NO SIGN-IN'. Never decorative.",
+      "html": "<p class=\"ds-eyebrow\">PUBLIC REQUEST · NO SIGN-IN</p>",
+      "css": ".ds-eyebrow { margin: 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.625rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #f2d15c; }"
     },
     {
-      "name": "Queue Table",
-      "kind": "custom",
-      "refersTo": "queue-table",
-      "description": "Semantic operational records with selected-row spine and column-priority behavior.",
-      "html": "<div class='ds-queue-wrap'><table class='ds-queue'><caption>Requests awaiting review</caption><thead><tr><th scope='col'>Request</th><th scope='col'>Status</th><th scope='col'>Qty</th></tr></thead><tbody><tr aria-selected='true'><th scope='row'><button class='ds-queue-link' type='button'>Sound system and stage materials<small>REQ-DEMO-431</small></button></th><td><span class='ds-queue-state' data-tone='info'>For review</span></td><td class='ds-queue-num'>12 units</td></tr><tr><th scope='row'><button class='ds-queue-link' type='button'>Event signage<small>REQ-DEMO-432</small></button></th><td><span class='ds-queue-state'>Recorded</span></td><td class='ds-queue-num'>4 sets</td></tr></tbody></table></div>",
-      "css": ".ds-queue-wrap{width:100%;overflow-x:auto;border:1px solid var(--line,oklch(85% .015 70));border-radius:12px;background:var(--paper,oklch(98.5% .008 70))}.ds-queue{width:100%;border-collapse:collapse;color:var(--ink,oklch(19% .018 22));font:400 14px/1.5 var(--font-body,'IBM Plex Sans Local',sans-serif)}.ds-queue caption{padding:12px 16px 8px;color:var(--muted,oklch(44% .014 22));font-size:12px;text-align:left}.ds-queue thead th{padding:8px 10px;border-bottom:1px solid var(--line-strong,oklch(72% .021 70));background:var(--anchor-soft,color-mix(in oklch,var(--oxblood-800,oklch(30% .12 22)) 8%,var(--paper,white)));color:var(--muted,oklch(44% .014 22));font-size:10px;letter-spacing:.06em;text-align:left;text-transform:uppercase;white-space:nowrap}.ds-queue tbody th,.ds-queue td{padding:10px;border-bottom:1px solid var(--line,oklch(85% .015 70));vertical-align:middle}.ds-queue tbody tr{transition:background-color 110ms cubic-bezier(.16,1,.3,1),box-shadow 150ms cubic-bezier(.16,1,.3,1)}.ds-queue tbody tr:hover{background:var(--cream,oklch(93% .027 76))}.ds-queue tbody tr[aria-selected='true']{background:var(--accent-wash,color-mix(in oklch,var(--gold-500,oklch(69% .115 82)) 17%,var(--paper,white)));box-shadow:inset 4px 0 0 var(--anchor,var(--oxblood-800,oklch(30% .12 22)))}.ds-queue-link{display:grid;gap:2px;width:100%;color:var(--ink,oklch(19% .018 22));text-align:left}.ds-queue-link small{color:var(--muted,oklch(44% .014 22));font-size:12px}.ds-queue-link:focus-visible{outline:3px solid var(--gold-500,oklch(69% .115 82));outline-offset:3px}.ds-queue-state{display:inline-flex;padding:3px 9px;border:1px solid #b0cbe6;border-radius:999px;background:#e4eefa;color:#23557f;font-size:12px;font-weight:700;white-space:nowrap}.ds-queue-num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}@media (prefers-reduced-motion:reduce){.ds-queue tbody tr{transition-duration:1ms}}"
-    },
-    {
-      "name": "Route Field",
-      "kind": "input",
-      "refersTo": "input",
-      "description": "A labelled field with inset paper, explicit focus, and room for linked errors or hints.",
-      "html": "<label class='ds-field'><span>Event or activity title <em>(required)</em></span><input type='text' value='Illustrative Leadership Assembly' aria-describedby='ds-field-hint' required /><small id='ds-field-hint'>Use the approved event title.</small></label>",
-      "css": ".ds-field{display:grid;gap:4px;color:var(--ink,oklch(19% .018 22));font:700 14px/1.2 var(--font-body,'IBM Plex Sans Local',sans-serif)}.ds-field em{color:var(--muted,oklch(44% .014 22));font-style:normal;font-weight:400}.ds-field input{width:100%;min-height:48px;padding:8px 12px;border:1px solid var(--line-strong,oklch(72% .021 70));border-radius:5px 14px 5px 14px;background:var(--paper-2,oklch(96.5% .012 70));color:var(--ink,oklch(19% .018 22));font:400 14px/1.5 var(--font-body,'IBM Plex Sans Local',sans-serif)}.ds-field input:focus-visible{border-color:var(--gold-500,oklch(69% .115 82));background:var(--paper,oklch(98.5% .008 70));outline:3px solid var(--gold-500,oklch(69% .115 82));outline-offset:3px}.ds-field small{color:var(--muted,oklch(44% .014 22));font-size:12px;font-weight:400}"
-    },
-    {
-      "name": "Celestial Theme Control",
-      "kind": "button",
-      "refersTo": "celestial-toggle",
-      "description": "A truthful dual-endpoint day/night capsule with one travelling active plate and a reduced-motion instant path.",
-      "html": "<button class='ds-theme' type='button' aria-label='Switch to dark mode' aria-pressed='false'><span class='ds-theme-track'><svg class='ds-theme-sun' viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='4' fill='none' stroke='currentColor' stroke-width='1.8'/><path d='M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg><span class='ds-theme-thumb'></span><svg class='ds-theme-moon' viewBox='0 0 24 24' aria-hidden='true'><path d='M19 15.5A8 8 0 0 1 8.5 5 8 8 0 1 0 19 15.5Z' fill='none' stroke='currentColor' stroke-width='1.8'/></svg></span></button>",
-      "css": ".ds-theme{display:inline-grid;place-items:center;min-width:84px;min-height:48px;padding:4px;border:1px solid transparent;border-radius:999px;background:transparent}.ds-theme-track{display:grid;grid-template-columns:1fr 1fr;place-items:center;position:relative;width:76px;height:38px;border:1px solid var(--oxblood-700,oklch(37% .135 22));border-radius:999px;background:var(--oxblood-900,oklch(22% .085 22));color:var(--gold-200,oklch(91% .045 82))}.ds-theme-sun,.ds-theme-moon{position:relative;z-index:2;width:18px;height:18px}.ds-theme-thumb{position:absolute;z-index:1;inset-block-start:2px;inset-inline-start:2px;width:32px;height:32px;border:1px solid var(--gold-300,oklch(84% .075 82));border-radius:50%;background:var(--gold-200,oklch(91% .045 82));transition:transform 240ms cubic-bezier(.16,1,.3,1),background-color 280ms cubic-bezier(.16,1,.3,1)}.ds-theme[aria-pressed='true'] .ds-theme-thumb{transform:translateX(38px)}.ds-theme:active .ds-theme-thumb{scale:.92}.ds-theme:hover .ds-theme-track{border-color:var(--gold-400,oklch(77% .1 82))}.ds-theme:focus-visible{outline:3px solid var(--gold-500,oklch(69% .115 82));outline-offset:3px}@media (prefers-reduced-motion:reduce){.ds-theme-thumb{transition-duration:80ms;transition-property:background-color}.ds-theme:active .ds-theme-thumb{scale:1}}"
-    },
-    {
-      "name": "Route Progress",
-      "kind": "custom",
-      "refersTo": "route-progress",
-      "description": "A finite route rule and node sequence that resolves on arrival, then rests.",
-      "html": "<div class='ds-route-progress' data-run='true' aria-label='Route O-04'><span class='ds-route-line'></span><code>O-04</code><i></i><i></i><i></i></div>",
-      "css": ".ds-route-progress{display:grid;grid-template-columns:minmax(0,1fr) auto repeat(3,7px);align-items:center;gap:8px;height:18px;padding:0 14px;background:var(--paper,oklch(98.5% .008 70));color:var(--anchor,var(--oxblood-800,oklch(30% .12 22)))}.ds-route-line{display:block;height:2px;background:var(--anchor-line,var(--line-strong));transform-origin:left}.ds-route-progress code{font:600 10px/1 var(--font-body,'IBM Plex Sans Local',sans-serif);font-variant-numeric:tabular-nums;letter-spacing:.1em}.ds-route-progress i{width:7px;height:7px;border-radius:50%;background:var(--gold-500,oklch(69% .115 82))}.ds-route-progress[data-run='true'] .ds-route-line{animation:ds-route-draw 420ms cubic-bezier(.16,1,.3,1) both}.ds-route-progress[data-run='true'] i{animation:ds-node-arrive 260ms cubic-bezier(.16,1,.3,1) both}.ds-route-progress[data-run='true'] i:nth-of-type(2){animation-delay:45ms}.ds-route-progress[data-run='true'] i:nth-of-type(3){animation-delay:90ms}@keyframes ds-route-draw{from{opacity:.4;transform:scaleX(.08)}to{opacity:1;transform:scaleX(1)}}@keyframes ds-node-arrive{from{opacity:0;transform:scale(.45)}to{opacity:1;transform:scale(1)}}@media (prefers-reduced-motion:reduce){.ds-route-progress[data-run='true'] .ds-route-line,.ds-route-progress[data-run='true'] i{animation:none;opacity:1;transform:none}}"
-    },
-    {
-      "name": "Public Floating Bar",
+      "name": "Public Navbar",
       "kind": "nav",
-      "refersTo": "public-bar",
-      "description": "N5 public shell chrome with institutional marks, theme, and a calm return control.",
-      "html": "<header class='ds-public-bar'><span class='ds-public-marks'><b>HAU</b><b>USC</b></span><span class='ds-public-wordmark'>HAU-USC Logistics</span><button class='ds-public-theme' type='button' aria-label='Switch to dark mode'>Theme</button><a class='ds-public-return' href='#/public.landing'>Return to Portals</a></header>",
-      "css": ".ds-public-bar{display:flex;align-items:center;gap:12px;min-height:68px;padding:8px 10px 8px 18px;border:1px solid var(--line,oklch(85% .015 70));border-radius:999px;background:color-mix(in oklch,var(--paper,white) 95%,transparent);box-shadow:0 2px 8px var(--shadow-color,rgba(54,25,30,.14));color:var(--ink,oklch(19% .018 22));font:400 16px/1.5 var(--font-body,'IBM Plex Sans Local',sans-serif)}.ds-public-marks{display:flex;gap:4px}.ds-public-marks b{display:grid;place-items:center;min-width:42px;min-height:30px;border:1px solid var(--anchor-line,var(--line-strong));border-radius:4px 11px 4px 11px;color:var(--anchor,var(--oxblood-800,oklch(30% .12 22)));font:800 10px/1 var(--font-display,'Bricolage Grotesque Local',sans-serif);letter-spacing:.06em}.ds-public-marks b:first-child{background:var(--anchor,var(--oxblood-800,oklch(30% .12 22)));color:var(--anchor-ink,var(--gold-100,oklch(96% .02 82)))}.ds-public-wordmark{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 22px/1.15 var(--font-wordmark,'Newsreader Local',serif)}.ds-public-theme,.ds-public-return{min-height:46px;padding:8px 12px;border:1px solid var(--line,oklch(85% .015 70));border-radius:999px;background:transparent;color:var(--ink-2,oklch(34% .018 22));font:700 14px/1.2 var(--font-body,'IBM Plex Sans Local',sans-serif);text-decoration:none}.ds-public-theme:hover,.ds-public-return:hover{border-color:var(--anchor-line,var(--line-strong));background:var(--anchor-soft,var(--paper-2))}.ds-public-theme:focus-visible,.ds-public-return:focus-visible{outline:3px solid var(--gold-500,oklch(69% .115 82));outline-offset:3px}@media (max-width:767px){.ds-public-bar{min-height:60px;border-radius:5px 22px 5px 22px;padding-inline:10px}.ds-public-wordmark{font-size:14px}.ds-public-return{font-size:0}.ds-public-return::after{content:'Back';font-size:14px}}"
+      "refersTo": "public-nav--glass",
+      "description": "Sticky public header on oxblood glass. Carries the USC and Department of Logistics lockups and a separate, visually quiet Staff sign in.",
+      "html": "<header class=\"ds-nav\"><span class=\"ds-nav__brand\">University Student Council</span><button class=\"ds-nav__signin\" type=\"button\">Staff sign in</button></header>",
+      "css": ".ds-nav { position: sticky; top: 0; display: flex; align-items: center; gap: 20px; padding: 14px 20px; background: rgba(64,7,10,0.82); backdrop-filter: blur(16px) saturate(118%); border-bottom: 1px solid rgba(242,209,92,0.16); } .ds-nav__brand { font-family: 'Newsreader', Georgia, serif; font-weight: 700; font-size: 15px; color: #fff; letter-spacing: -0.075px; } .ds-nav__signin { margin-left: auto; min-height: 32px; padding-inline: 13px; border-radius: 0.625rem; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 11px; font-weight: 600; color: #faeecb; background: none; border: 1px solid #d1b478; } .ds-nav__signin:focus-visible { outline: 2px solid #e8b93c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Operational Field",
+      "kind": "input",
+      "refersTo": "form-field",
+      "description": "Text input on the warm-paper working plane. Border meets 1.4.11 against ground, inset and work surfaces.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field__label\">Purpose</span><input class=\"ds-field__input\" type=\"text\" placeholder=\"Describe the activity\" /></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-field__label { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.8125rem; font-weight: 600; color: #241416; } .ds-field__input { min-height: 44px; padding: 10px 12px; border-radius: 0.5rem; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.875rem; color: #241416; background: #fffdf8; border: 1px solid #d1b478; } .ds-field__input::placeholder { color: #6f5a60; } .ds-field__input:focus-visible { outline: 2px solid #7d5518; outline-offset: 1px; border-color: #7d5518; }"
+    },
+    {
+      "name": "Status Tone",
+      "kind": "chip",
+      "refersTo": "tone",
+      "description": "Communicates lifecycle state. Status is never carried by colour alone — the label always states the state in words.",
+      "html": "<em class=\"ds-tone ds-tone--info\">For Review</em>",
+      "css": ".ds-tone { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; font-weight: 600; font-style: normal; letter-spacing: 0.02em; } .ds-tone--info { background: #e4eefa; color: #23557f; border: 1px solid #b0cbe6; } .ds-tone--done { background: #e2f3e9; color: #1f6b41; border: 1px solid #a8d3ba; } .ds-tone--warn { background: #fbe6e8; color: #9c2630; border: 1px solid #e3aeb3; }"
     }
   ],
   "narrative": {
-    "northStar": "Institutional Command / Operational Choreography",
-    "overview": "V4.1 is a premium institutional operations interface rather than a generic dashboard in university colors. A cinematic campus gateway introduces the Holy Angel University Student Council and routes people into governed services. Authenticated work uses an editorial command environment: persistent route rail, compact command topbar, exception-first operational brief, semantic queues, and separately authored light and dark worlds.\n\nThe dual-endpoint celestial theme control, kinetic menu, compact glass back control, production-grounded Request Center, local-only profile image preview, labelled role picker, and finite structure-preserving loading make state and cause visible without implying a backend write. Illustrative preview data is explicitly marked.",
+    "northStar": "Institutional Logistics Ledger",
+    "overview": "HAU-USC Logistics is a governed operational record, not a dashboard in university colours. Actions have owners, states, timestamps and consequences, and the interface is built so that each of those is visible rather than implied.\n\nOxblood is the institutional anchor and carries structure: the public navbar, the footer, the dark-mode ground. Gold is scarce and deliberate — it marks active controls, focus and selection, never routine labels. Warm paper is the working surface where an operator spends a shift. Institutional Glass is localised to layers that earn it, never a wash over the whole application.\n\nThe system has two contexts sharing one record. The public service — Request Center, Lending Center, tracking — never places authentication, activation or approval in front of intake, browsing or tracking. Staff operations sit behind a separate sign-in and are capability-gated. A staff sign-in link is not a staff sign-in requirement, and the two must never be visually conflated.",
     "keyCharacteristics": [
-      "Cinematic public gateway and asymmetric exception-first authenticated command brief.",
-      "Bundled Bricolage Grotesque display, IBM Plex Sans body, and Newsreader wordmark type.",
-      "Dual-endpoint celestial theme, kinetic menu, compact back, named command search, and six-result route palette.",
-      "Finite structure-preserving loading, mobile drawer and bottom navigation, full reduced-motion path, and no stale counts during refresh."
+      "Oxblood structure, disciplined gold, warm paper working surface",
+      "Institutional Glass is contextual and localised, never ambient",
+      "Lines are semantic; decorative rules are rejected",
+      "Purposeful asymmetry and operational hierarchy over centred symmetry",
+      "Module intensity is tuned to the job: Overview 5/5, public gateway 4/5, Inventory/Request/Lending 3/5, Release Desk 2/5, Staff and Administration 1/5",
+      "Colour is carried by variables; the design file holds zero paint styles"
     ],
     "rules": [
-      { "name": "The Route-as-Truth Rule", "body": "A line or node must explain a route, relationship, or state; remove it if it is only ornament.", "section": "colors" },
-      { "name": "The Signal-Rarity Rule", "body": "Gold earns attention through scarcity: use it for active segments, focus, selection, status emphasis, and small marks rather than large decorative fields.", "section": "colors" },
-      { "name": "The Explicit-Label Rule", "body": "A status, quantity, or unknown is always named in plain language; type hierarchy may emphasize it, but never replaces the label.", "section": "typography" },
-      { "name": "The Wordmark-Only Serif Rule", "body": "Newsreader is the institutional signature, not a general-purpose body or heading face.", "section": "typography" },
-      { "name": "The Earned Elevation Rule", "body": "A shadow marks a layer that floats above the route; ordinary work surfaces rely on paper tone and hairlines.", "section": "elevation" }
+      { "name": "Gold is scarce", "body": "Gold marks active controls, focus and selection. It does not mark routine labels, and a surface with two competing gold fields has already failed. The canonical primary gold is #D4AF37 and is OWNER-LOCKED — it is not derived and not negotiable.", "section": "colors" },
+      { "name": "Accent text is not accent fill", "body": "Gold-family text on light working surfaces uses accent-text #7d5518, which measures 5.46:1. Using the canonical gold as text on paper measures 1.52:1 and fails WCAG 2.2 AA 1.4.3. The two tokens are not interchangeable.", "section": "colors" },
+      { "name": "Nothing reaches pure black or pure white", "body": "Light ink is oxblood-charcoal at L* 16, not #000; dark ink is a warm off-white at L* 93, not #FFF. The darkest dark surface is L* 8.6. Both directions buy legibility, and going further buys only glare or crush.", "section": "colors" },
+      { "name": "Glass must earn its layer", "body": "Institutional Glass applies to layers that genuinely float: the sticky public navbar, hero companion actions, overlays. Fill goes up as blur comes down at each step. Glass as a full-page wash is an anti-pattern here.", "section": "elevation" },
+      { "name": "Status is never colour alone", "body": "Every status tone states the state in words. Colour reinforces; it never carries the meaning.", "section": "colors" },
+      { "name": "The public service is never gated", "body": "Public intake, browsing and tracking never require or probe a session. Every public 'Start a logistics request' control navigates to the public Request Center and must not call requireAuth.", "section": "components" }
     ],
     "dos": [
-      "Do retain the oxblood/gold institutional identity and use gold as a rare route, focus, selection, status, and mark signal.",
-      "Do keep queues semantic, preserve row-to-detail relationships, and show status labels, quantities, units, and truthful \"Not recorded\" / \"Not assessed\" values.",
-      "Do use the bundled Bricolage Grotesque, IBM Plex Sans, and Newsreader roles; the preview makes no remote font or image request.",
-      "Do label every preview figure as illustrative and keep demo-only actions visibly non-persistent.",
-      "Do preserve keyboard focus, labelled dialogs/drawers, 44px touch targets, 200% zoom, no 320px horizontal overflow, and the reduced-motion path."
+      "Do bind colour to variables rather than declaring hex in components",
+      "Do keep gold for active state, focus and selection",
+      "Do state the public no-sign-in contract in words on public surfaces",
+      "Do position surfaces on the L* ladder rather than picking a hex by eye",
+      "Do give every control a visible focus ring and a 44px minimum touch target",
+      "Do honour prefers-reduced-motion; the entrance choreography is enhancement, not structure"
     ],
     "donts": [
-      "Don't replace the route grammar with a generic dashboard card wall, decorative gradient text, or repeated metric tiles.",
-      "Don't use color alone for status, expose raw enums, or imply that a hidden control is authorized.",
-      "Don't fabricate live records, metrics, claims, or provider state; public surfaces remain narrower and calmer than internal workspaces.",
-      "Don't add perpetual shimmer, bounce, or ambient loops. Motion is finite and state-bound; only a genuinely live status dot may pulse.",
-      "Don't flatten dark mode into a light-theme inversion or revert the pinned N13 authenticated / N5 public navigation and Ft5 statement close."
+      "Don't use the canonical gold #D4AF37 as text on warm paper — it fails AA at 1.52:1",
+      "Don't wash a whole surface in glass",
+      "Don't add decorative rules or dividers that do not connect, divide or select",
+      "Don't put a staff sign-in, activation or approval step in front of public intake",
+      "Don't communicate a lifecycle state by colour alone",
+      "Don't converge on a generic SaaS dashboard; purposeful asymmetry and operational hierarchy are the identity"
     ]
   }
 }

@@ -216,3 +216,128 @@ environmental canvas and a text field is reading content.
   specification references those paths; the correction was applied as a final
   aliasing layer instead.
 - Any production code. This is a design stream; the boundary held.
+
+
+---
+
+# Third bounded pass — 2026-08-23, R3-A1 post-synchronization
+
+Run after the R3-A1 Figma Design + Figma Make v40 synchronization, against the
+public surfaces: landing / public gateway, Public Request Center, Staff Sign In,
+public Lending, and the public shell and navigation. Both passes were
+**read-only**. Nothing in `src/frontend/` was edited.
+
+## The precondition that made this pass meaningful
+
+The previous Impeccable findings could not be trusted, and R3 recorded why as
+FE-R3-010: `.impeccable/design.json` was written 2026-08-08 by the pre-cutover
+V4.1 redesign. Its fifteen-colour palette contained **none** of the current
+identity anchors — no `#d4af37`, no `#40070a`, no `#7d5518` — so the
+`design-system-color` rule was flagging the real institutional palette as drift.
+
+R3-A1 rebuilt the sidecar at schemaVersion 2 from `scripts/design/theme-source.mjs`
+(the canonical token source) and the shipped `theme.css`, and added a
+machine-readable `colors` / `typography` / `rounded` block to `DESIGN.md`
+frontmatter, which the detector actually reads.
+
+## Impeccable — mechanical detector, measured before and after
+
+`node .../impeccable/scripts/detect.mjs --json` over the eight public components
+(`HeroSection`, `LandingPage`, `LogisticsHubSection`, `Footer`,
+`PublicMobileDrawer`, `PublicNavbar`, `PublicFlows`, `AppRouteRenderer`):
+
+| Run | Findings | Breakdown |
+|---|---:|---|
+| Before (stale sidecar) | 27 | `design-system-color` 27 |
+| After (refreshed sidecar + DESIGN.md palette) | **7** | `design-system-radius` 7 |
+
+**All 27 colour findings were false positives** against a superseded system, and
+all 27 are gone. Every value they flagged — `#e8b93c`, `#f6e29a`, `#f2d15c`, the
+gold `rgba()` hairlines, `#fff` on oxblood — is a genuine current token.
+
+### The 7 that survive are real, and small
+
+All advisory, all in `PublicFlows.tsx`, all `design-system-radius`:
+`12px` at lines 951, 959, 975, 981, 986, 989 and `18px` at line 913, against the
+real scale `sm 6 · md 8 · lg 10 · xl 14 · pill 999` computed from
+`--radius: 0.625rem`.
+
+### One finding the detector cannot raise, recorded deliberately
+
+The shipped system declares font **families and weights** but has never defined a
+**type ramp**. `theme.css` carries only `--font-size: 16px`, while the public
+components use ten ad-hoc literal steps — 9, 10, 11, 12, 13, 14, 15, 16, 18 and
+19px. `DESIGN.md` therefore declares no `fontSize` steps on purpose: declaring
+the literals in use would have silenced the check by blessing the debt. This is
+recorded as FE-R3-011 and is product-source work, not design-authority work.
+
+## Hallmark — anti-slop audit
+
+Read-only, `hallmark audit`. Grouped by severity.
+
+### Critical — 0
+
+**The structural fingerprint is not the AI template.** The landing is three
+sections — hero, Current, Logistics hub — not hero → three equal feature cards →
+CTA → footer. The hub is a genuine asymmetric two-column (`lg:grid-cols-2`)
+pairing a 2x2 action-tile grid against an ordered `<ol>` lifecycle rail. There is
+no centred-hero-plus-three-cards rhythm anywhere on the public surfaces.
+
+**No public/staff ambiguity.** Verified behaviourally in Make v40, not inferred:
+"Start a logistics request" reaches "PUBLIC REQUEST · NO SIGN-IN — Request
+Center" carrying the explicit no-account contract, and "Staff sign in" reaches a
+separate staff sign-in page. The four public request CTAs no longer hold
+`requireAuth`.
+
+### Major — 1
+
+| Tell | Where | Fix |
+|---|---|---|
+| Touch target below the declared floor | `src/frontend/app/public/Footer.tsx:57,64` — both footer buttons are `minHeight: 40` | `PRODUCT.md` and `DESIGN.md` both require 44px touch targets. The footer is not breakpoint-gated, so these render on mobile at 40px. Raise to 44. |
+
+### Minor — 3
+
+| Tell | Where | Fix |
+|---|---|---|
+| Radius off the documented scale | `PublicFlows.tsx` — `12px` x6, `18px` x1 | Use `xl` (14px) or `lg` (10px), or add a documented 12px step if the shape is intentional. |
+| Mid-render token improvisation | All eight public components declare literal hex/`rgba()` inline rather than `var(--oxblood-deep)` etc. | Faithful to the Make source and the values are correct, so this is not drift — but it bypasses the token layer. Tracked as FE-R3-011. |
+| Desktop-only control below 44px | `PublicNavbar.tsx:56` — "Staff sign in" at `minHeight: 32` | Inside the `hidden lg:flex` cluster, so it only renders at >=1024px on a fine pointer. Below the stated floor but not a touch target. Raise if the floor is meant to be absolute. |
+
+### Checked and clean
+
+- **Focus.** Every public control has a visible `:focus-visible` ring. The hero's
+  three controls carry theirs in `index.css:162-164` rather than in the TSX,
+  which is why a source-only grep reads as zero — it is not missing.
+- **Horizontal overflow.** `index.css:7` sets `overflow-x: clip` on
+  `html, body, #root` — `clip`, not `hidden`, which is the correct value.
+- **Reduced motion.** Honoured in `atrium-motion.css` and `index.css`.
+- **Section tags.** The one eyebrow on the Logistics hub is stacked vertically
+  above its heading. The banned tag-left / heading-right hanging-header pattern
+  does not appear.
+- **Italic headers.** None. The only italic is "Laus Deo Semper" in the footer —
+  the institutional motto, set as body copy in Newsreader. That is not a heading
+  and is not the italic-header tell.
+- **Invented metrics.** None. No fabricated counts, testimonials or percentages
+  on any public surface.
+
+**Count: 0 critical · 1 major · 3 minor.**
+
+## Two generic heuristics deliberately not applied
+
+R3-A1 forbids redesigning away from the synchronized Figma/Make authority merely
+to satisfy a generic rule, so these were considered and rejected:
+
+1. **"No Hallmark macrostructure stamp."** The audit verb would normally flag a
+   missing stamp on a system-managed project. This project's visual authority is
+   Figma Make, not Hallmark; adding a Hallmark stamp would assert an authorship
+   that is not true.
+2. **"Eyebrows default off."** The mono uppercase eyebrow is an established
+   element of this design system — it names surface context, as in
+   "PUBLIC REQUEST · NO SIGN-IN". It is product truth, not decoration.
+
+## What this pass did not touch
+
+No `src/frontend/` edit, no product source, no Figma write, no backend,
+Playground, Production or `main` change. The two writes were
+`.impeccable/design.json` and the `DESIGN.md` frontmatter token block, both of
+which are design authority and both of which R3-A1 explicitly authorizes.

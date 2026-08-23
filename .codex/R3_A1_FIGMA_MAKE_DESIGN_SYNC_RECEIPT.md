@@ -214,13 +214,44 @@ over-trust the table:
 protected-tile seam survives for FI-04. Only the public request path was detached
 from `requireAuth`.
 
+## Impeccable and Hallmark — done (§15, §16, §32)
+
+`.impeccable/design.json` was rebuilt at schemaVersion 2 from
+`scripts/design/theme-source.mjs` and the shipped `theme.css`, and a
+machine-readable `colors` / `typography` / `rounded` block was added to
+`DESIGN.md` frontmatter, which the Impeccable detector actually reads. The old
+sidecar was written 2026-08-08 by the V4.1 redesign and contained **none** of the
+current identity anchors.
+
+Measured over the eight public components with
+`impeccable/scripts/detect.mjs --json`:
+
+| Run | Findings |
+|---|---|
+| Before | 27, all `design-system-color` |
+| After | **7**, all `design-system-radius` |
+
+All 27 colour findings were false positives against a superseded system.
+FE-R3-010 is closed; FE-R3-011 is re-scoped to the real residual.
+
+Hallmark `audit`, read-only: **0 critical · 1 major · 3 minor**. The structural
+fingerprint is not the AI template, and there is no public/staff visual
+ambiguity. Full record in `docs/design/HALLMARK_IMPECCABLE_CLOSURE.md`, third
+bounded pass.
+
+The documentation reconciliation manifest is at
+`docs/frontend/R3_A1_DOCUMENTATION_RECONCILIATION_MANIFEST.md`.
+
 ## Outstanding
 
-- `.impeccable/design.json` refresh and the post-sync Impeccable / Hallmark
-  audits (R3-A1 §15, §16, §32) — FE-R3-010 / FE-R3-011. The sidecar is still the
-  stale pre-cutover v4.1 record and will misreport the current oxblood/gold
-  system as drift until refreshed.
-- `docs/frontend/R3_A1_DOCUMENTATION_RECONCILIATION_MANIFEST.md` (§33).
+- **FE-R3-012**, opened by this pass: `src/frontend/app/appRoutes.ts:19` still
+  maps `"request-center"` to the user-facing label **"Staff Request Center"**,
+  rendered by `auth/StaffSignInPage.tsx:41` and duplicated at
+  `src/frontend/preview/index/registry.ts:103`. The R3-A1 vocabulary holds in
+  every design authority and in all documentation, but not yet in the
+  implementation. Product-source edit, therefore Codex work.
+- FE-R3-011: 7 advisory radius findings in `PublicFlows.tsx`, and no documented
+  type ramp anywhere in the shipped system.
 - A visual workflow diagram for the shared canonical request (§5); the model is
   currently documented in prose in block `733:2` and in `DESIGN.md`.
 - Byte-for-byte re-read of the four reconstructed mirror files, if that level of

@@ -20,7 +20,7 @@ VALIDATION: Figma Design writes were read back — a full-board text scan return
 
 EXTERNAL_ACTIONS: Live Figma Design writes to `hXJElH4p72KfgAaoUyfNOC` (authorized by R3-A1). Live Figma Make edits to `rP9W9MQlZkyQrUx38TVsFS`, saved as Version 40. Git commit and push to `origin/frontend-design-integration`. No Playground, Production, `main`, backend, schema, migration, D1/R2, deployment, or other provider action.
 
-BLOCKER: NONE for the provider synchronization. The first Make save attempt stalled on a Figma reconnect failure; Figma reconnected and the save landed as Version 40, verified after reload. OUTSTANDING, non-blocking: `.impeccable/design.json` is still the stale pre-cutover v4.1 sidecar; the post-sync Impeccable and Hallmark audits and the documentation reconciliation manifest are not done. The repository Make mirror is refreshed to v40 with hashes recorded.
+BLOCKER: NONE for the provider synchronization. The first Make save attempt stalled on a Figma reconnect failure; Figma reconnected and the save landed as Version 40, verified after reload. OUTSTANDING for Codex, non-blocking to R3-A1: **FE-R3-012** — `src/frontend/app/appRoutes.ts:19` still maps `"request-center"` to the user-facing label "Staff Request Center", surfaced by `auth/StaffSignInPage.tsx:41` and duplicated at `src/frontend/preview/index/registry.ts:103`. The R3-A1 public/internal vocabulary therefore holds everywhere except the frontend implementation. Also open: 7 advisory `design-system-radius` findings in `PublicFlows.tsx`, and the absence of any documented type ramp (FE-R3-011). All three are product-source edits, which R3-A1 deliberately did not make.
 
 ## Provider identity
 
@@ -47,6 +47,7 @@ running preview and against the updated design references.
 | `R3A1-STAFF-SIGNIN-SEPARATION` | Generic sign-in denied valid staff lacking one capability | board `733:2` | `PublicFlows.tsx`, `AppRouteRenderer.tsx` | `src/frontend/app/PublicFlows.tsx`, `app/useAppController.ts` | R3 release-only sign-in case | "Access authorized", no "Access denied" |
 | `R3A1-REQUEST-HUB-INTERNAL-CONTEXT` | Internal hub was labelled "Staff Request Center", colliding with the public centre | page 40 frame `300:2`; `680:13` | n/a (FI-04 not exposed) | none yet — FI-04 | n/a | internal hub reads INTERNAL / STAFF SESSION REQUIRED, marked READY FOR FI-04, never implementation-verified |
 | `R3A1-PUBLIC-TRACKING-PROJECTION` | Public tracking must stay requester-safe | `680:13`; page 40 tracking frames | `PublicFlows.tsx` tracking view | `src/frontend/app/PublicFlows.tsx` | existing tracking cases | no internal operational detail exposed publicly |
+| `R3A1-REQUEST-HUB-RENAME` | The internal route is still labelled "Staff Request Center" in code, colliding with the public Request Center | board `733:2`; `680:13`; page 40 `300:2` | n/a | `src/frontend/app/appRoutes.ts:19`, `src/frontend/preview/index/registry.ts:103`, surfaced by `auth/StaffSignInPage.tsx:41` | add a case asserting the staff sign-in intent label is not "Staff Request Center" | staff sign-in intent label reads "Request Hub", never a Request Center variant |
 | `R3A1-NAV-PUBLIC-STAFF-BOUNDARY` | Public components must not hold `requireAuth` | board `733:2` | `PublicNavbar.tsx`, `LandingPage.tsx` | `src/frontend/app/public/PublicNavbar.tsx`, `app/landing/LandingPage.tsx` | five-width nav cases | Staff Sign In remains a separate, visibly distinct entry |
 
 ## Files Codex MUST read first
@@ -58,6 +59,8 @@ running preview and against the updated design references.
 - `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`
 - `.codex/R3_PUBLIC_STAFF_BOUNDARY_RECEIPT.md`
 - `docs/design/FIGMA_MAKE_SOURCE_REGISTER.md`, `docs/design/FIGMA_BASELINE_REGISTER.md`
+- `docs/frontend/R3_A1_DOCUMENTATION_RECONCILIATION_MANIFEST.md`
+- `docs/design/HALLMARK_IMPECCABLE_CLOSURE.md` (third bounded pass, 2026-08-23)
 
 ## Files Codex MUST NOT treat as current authority
 
@@ -68,6 +71,7 @@ running preview and against the updated design references.
 - `docs/design/CODEX_LANDING_REPRODUCTION_*.md` and other pre-R3 handoffs.
 - Any claim that a guarded preview is running on 4173 — verified false.
 - `DESIGN.md` D24.0 as the *Request* citation — it is the *Lending* precedent.
+- `docs/design/CODEX_LANDING_REPRODUCTION_HANDOFF.md` — presents Make v39 as current identity; Make is v40.
 
 ## Preview
 
@@ -144,4 +148,8 @@ starting with R3A1-REQUEST-PUBLIC-ENTRY, comparing each against the updated
 Figma references. The Make mirror is already at v40, so no mirror work is
 required; if byte-level proof is wanted for the four reconstructed files,
 re-read them from the provider and compare against the recorded sha256.
+Fix FE-R3-012 early: rename the "Staff Request Center" intent label in
+src/frontend/app/appRoutes.ts:19 and src/frontend/preview/index/registry.ts:103
+to "Request Hub", so the implementation matches the vocabulary the design
+authorities now carry.
 ```

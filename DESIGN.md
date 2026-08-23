@@ -9,6 +9,61 @@ design_documentation_authority: live-figma-design-hXJElH4p72KfgAaoUyfNOC-current
 functional_authority: repository-server-worker-auth-contracts
 accepted_amendment: .codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md
 last_reviewed: 2026-08-23
+# Machine-readable palette. Generated from scripts/design/theme-source.mjs, the
+# canonical token source, and emitted into src/frontend/styles/theme.css. This
+# block exists so tooling can tell a real design-system addition from drift; it
+# does not replace the variables, which remain the implementation contract.
+colors:
+  oxblood-deep: "#40070a"
+  oxblood-mid: "#78141a"
+  oxblood-light: "#8d1f28"
+  oxblood-dark-ground: "#4a1015"
+  gold-canonical: "#d4af37"
+  gold-vivid: "#e8b93c"
+  gold-mid: "#f2d15c"
+  gold-pale: "#f6e29a"
+  gold-cream: "#faeecb"
+  gold-dark-mode: "#e1c671"
+  accent-text: "#7d5518"
+  accent-text-dark: "#c9a45f"
+  paper-warm: "#fffdf8"
+  paper-mid: "#fcf2cf"
+  paper-light: "#f7f0e2"
+  paper-bg: "#f2eae5"
+  ink-deep: "#241416"
+  ink-mid: "#6f5a60"
+  border-warm: "#d1b478"
+  border-paper: "#e6dcc9"
+  on-oxblood: "#ffffff"
+  scrim: "rgba(0,0,0,0.5)"
+  hairline-gold: "rgba(242,209,92,0.16)"
+  hairline-gold-strong: "rgba(242,209,92,0.28)"
+typography:
+  display:
+    fontFamily: "'Bricolage Grotesque', system-ui, sans-serif"
+    fontWeight: 700
+  editorial:
+    fontFamily: "'Newsreader', Georgia, serif"
+    fontWeight: 700
+  body:
+    fontFamily: "'IBM Plex Sans', system-ui, sans-serif"
+    fontWeight: 600
+  mono:
+    fontFamily: "'IBM Plex Mono', ui-monospace, monospace"
+    letterSpacing: "0.1em"
+# Deliberately no fontSize steps: the shipped system declares font families and
+# weights but has never defined a type ramp. theme.css carries only
+# `--font-size: 16px` as a base. Recorded as real tokenization debt in
+# docs/frontend/WORKFLOW_ARCHITECTURE.md rather than papered over by declaring
+# the ad-hoc literals in use (9, 10, 11, 12, 13, 14, 15, 16, 18, 19px) as a ramp.
+# Radius scale is real, and is the computed output of theme.css:
+#   --radius: 0.625rem -> sm 6px, md 8px, lg 10px, xl 14px.
+rounded:
+  sm: "6px"
+  md: "8px"
+  lg: "10px"
+  xl: "14px"
+  pill: "999px"
 ---
 
 # HAU-USC Logistics frontend design authority
