@@ -321,5 +321,62 @@ The full list is in `.codex/R3_A1_A2_MAKE_MIRROR_TRUNCATION.txt`.
 **Consequence for R3-A1-A2.** The mirror was rejected as a source of truth for
 authoring Make edits. Live source is read from the Figma Make editor instead.
 
-**Not fixed by this pass.** Repairing all 47 files requires a full provider
-re-capture, which is its own bounded task. Recorded as `FE-R3-015`.
+**Fixed by this pass** — see "RESOLVED" below. (Original note, written before the
+fix: repairing all 47 files requires a full provider re-capture, which is its own
+bounded task. Recorded as `FE-R3-015`.)
+
+---
+
+## RESOLVED — R3-A1-A2, 2026-08-24
+
+`CURRENT_MAKE_MIRROR_TRUNCATION_MARKERS = 0`
+
+The defect recorded above is fixed. The current mirror is no longer derived from
+MCP reads at all — it is a byte-faithful provider export.
+
+### What was done
+
+1. The authenticated Figma Make code view's **"Download code"** export was taken
+   at provider **Version 41**.
+   Archive sha256 `b01a320fe149383ec548cf68049d81aa93ad9fc0e3a2636446a8002a292d42c8`.
+2. Extracted verbatim to `output/design/make-provider-export-v41/`, with a
+   per-file manifest at `output/design/make-provider-export-v41/MANIFEST.md`
+   recording provider version, path, bytes, sha256 and a truncation check for
+   every one of the **208** files.
+3. `output/design/figma-make-source/` — the CURRENT mirror — was rebuilt from
+   that export.
+
+| | files | truncated |
+|---|---:|---:|
+| Old MCP-derived mirror | 200 | **47** |
+| Current provider-export mirror | **208** | **0** |
+
+### Status of the old mirror
+
+```
+SUPERSEDED — MCP RESPONSE TRUNCATION
+NOT BYTE-FAITHFUL SOURCE AUTHORITY
+```
+
+It was replaced in place rather than kept alongside, because a truncated mirror
+sitting next to a faithful one is a trap for the next reader. Its exact bytes
+remain recoverable from git history — nothing was destroyed, and no historical
+snapshot elsewhere in `output/design/` was rewritten.
+
+### Fidelity evidence for the file this amendment changed
+
+`src/app/PublicFlows.tsx` agrees three ways at
+sha256 `165aa1c626775b0330f0b2bdb6dd30a70fe940d7bca753712172d903ee1c2765`:
+
+| Source | Result |
+|---|---|
+| Live CodeMirror document in the editor | match |
+| Preserved recovery artifact (`output/design/r3-a1-a2-make-recovery/`) | match |
+| Provider "Download code" export at Version 41 | match |
+
+### Verification-level language retired
+
+The older per-file grading in this register — "byte-verified",
+"structure-verified", "reconstructed and grep-verified" — described how confident
+an MCP-read reconstruction was. That vocabulary no longer applies: every file in
+the current mirror is a provider export byte. `FE-R3-015` is **CLOSED**.
