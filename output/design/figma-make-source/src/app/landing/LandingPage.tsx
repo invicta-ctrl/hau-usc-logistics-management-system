@@ -14,7 +14,6 @@ export function LandingPage({
     <main id="main-content" className="flex flex-col flex-1">
       <HeroSection
         onNavigate={onNavigate}
-        onRequireAuth={onRequireAuth}
       />
 
       <CurrentSection />

@@ -599,8 +599,8 @@ VERIFIED BY      scripts/design/verify-make-landing-theme.mjs — 31/31 conform
 
 ```text
 DESIGN_BASELINE_ID:      DESIGN_BASELINE_2026-08-23-R3A1
-STATUS:                  PARTIAL — Figma Design lane reconciled; Figma Make saved
-                         and verified at v40; repository mirror refresh outstanding
+STATUS:                  Figma Design lane reconciled; Figma Make saved and
+                         verified at v40; repository mirror refreshed to v40
 DESIGN BRANCH:           frontend-design-integration
 ACCEPTED AMENDMENT:      .codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md
 REPOSITORY BASELINE:     e30fbff (R3 public-entry repair)
@@ -650,6 +650,6 @@ quoted D24.0 for Request; that citation is superseded by `DESIGN.md`.
 
 ### STALE IF
 
-- the repository Make mirror is refreshed to v40 and no successor baseline records it;
+- the four reconstructed mirror files are re-read from the provider and any recorded sha256 differs;
 - board `568:2` loses block `733:2`, or `680:13` reverts to "Staff Request Center";
 - `DESIGN.md` and this register stop agreeing on the provider identities.

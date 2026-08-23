@@ -20,7 +20,7 @@ VALIDATION: Figma Design writes were read back — a full-board text scan return
 
 EXTERNAL_ACTIONS: Live Figma Design writes to `hXJElH4p72KfgAaoUyfNOC` (authorized by R3-A1). Live Figma Make edits to `rP9W9MQlZkyQrUx38TVsFS`, saved as Version 40. Git commit and push to `origin/frontend-design-integration`. No Playground, Production, `main`, backend, schema, migration, D1/R2, deployment, or other provider action.
 
-BLOCKER: NONE for the provider synchronization. The first Make save attempt stalled on a Figma reconnect failure; Figma reconnected and the save landed as Version 40, verified after reload. OUTSTANDING, non-blocking: the repository Make mirror at `output/design/figma-make-source/` is still at v39 and must be refreshed to the saved v40 source with recorded bytes and sha256 per file; `.impeccable/design.json` is still the stale pre-cutover v4.1 sidecar; the post-sync Impeccable and Hallmark audits and the documentation reconciliation manifest are not done.
+BLOCKER: NONE for the provider synchronization. The first Make save attempt stalled on a Figma reconnect failure; Figma reconnected and the save landed as Version 40, verified after reload. OUTSTANDING, non-blocking: `.impeccable/design.json` is still the stale pre-cutover v4.1 sidecar; the post-sync Impeccable and Hallmark audits and the documentation reconciliation manifest are not done. The repository Make mirror is refreshed to v40 with hashes recorded.
 
 ## Provider identity
 
@@ -79,7 +79,7 @@ RESUME_COMMANDS: `git status --short`; `git rev-parse HEAD`; `git rev-list --lef
 
 PROHIBITED_ACTIONS: Playground, Production or `main` writes, merges, promotion or deployment; backend/API/auth semantic change; schema or migration; D1/R2 writes; provider writes other than the two canonical design files named by R3-A1; exposing FI-04 staff workspaces; marking any FI-04 surface implementation-verified; touching `.ai-bridge/`; history rewrite, reset, clean or force-push.
 
-NEXT_EXACT_ACTION: Codex adopts the R3-A1 synchronized design into src/frontend/ and the local frontend preview, verifies against the updated Figma Design and Figma Make v40 references, and refreshes the repository Make source mirror to the saved v40 source with recorded hashes; Playground, Production and main remain untouched.
+NEXT_EXACT_ACTION: Codex adopts the R3-A1 synchronized design into src/frontend/ and the local frontend preview and verifies it against the updated Figma Design and Figma Make v40 references; Playground, Production and main remain untouched.
 
 ---
 
@@ -119,8 +119,8 @@ Figma Make rP9W9MQlZkyQrUx38TVsFS at Version 40 (previous 39)
   Saved and verified: 8 files changed, 0 pending edits after reload.
   Public "Start a logistics request" reaches the public Request Center;
   "Staff sign in" reaches a separate staff sign-in page.
-  NOTE: the repository mirror output/design/figma-make-source/ is still
-  at v39 and must be refreshed to the saved v40 source.
+  The repository mirror output/design/figma-make-source/ is refreshed
+  to v40; per-file sha256 are in docs/design/FIGMA_MAKE_SOURCE_REGISTER.md.
 
 PREVIEW:
 local frontend preview only
@@ -141,9 +141,7 @@ FIRST_ACTION:
 Resolve live HEAD and confirm 0 ahead / 0 behind. Start the local preview.
 Implement and confirm the R3-A1 traceability items in priority order,
 starting with R3A1-REQUEST-PUBLIC-ENTRY, comparing each against the updated
-Figma references. Then refresh output/design/figma-make-source/ from the
-saved Figma Make v40 source - read each of the eight changed files verbatim
-from the provider rather than assuming the repository src/frontend/ copy is
-identical - and record bytes and sha256 per file in
-docs/design/FIGMA_MAKE_SOURCE_REGISTER.md.
+Figma references. The Make mirror is already at v40, so no mirror work is
+required; if byte-level proof is wanted for the four reconstructed files,
+re-read them from the provider and compare against the recorded sha256.
 ```

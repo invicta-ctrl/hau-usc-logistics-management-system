@@ -4,7 +4,7 @@ DATE: 2026-08-23
 EXECUTOR: Claude Code (Opus 5)
 AUTHORITY: Earl's R3-A1 owner instruction (2026-08-23) + accepted amendment
 `.codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md`
-STATUS: **PROVIDER SYNCHRONIZATION COMPLETE AND VERIFIED — repository mirror refresh outstanding**
+STATUS: **R3-A1 PROVIDER SYNCHRONIZATION AND MIRROR REFRESH COMPLETE**
 
 ## Identity
 
@@ -184,33 +184,47 @@ and is byte-identical to the repository file
 records. Provider sha256 (no terminal newline):
 `556327163556ce208a0ffbc66eaa2eba8ac6a15ac31541d32e747cb88f6c153a`.
 
-## Outstanding — repository Make mirror
+## Repository Make mirror — refreshed to v40
 
-`output/design/figma-make-source/` still holds the **v39** state; its
-`src/app/landing/HeroSection.tsx` still contains
-`onClick={() => onRequireAuth("request-center")}`.
+`output/design/figma-make-source/` now holds the v40 state. The resulting Git
+diff is surgical — **8 files, 19 insertions, 29 deletions** — which is the exact
+shape of the R3 public-entry patch; a whole-file diff would have signalled a
+line-ending or transcription error. Line endings stay LF, matching this tree's
+existing capture convention (the rest of the repository is CRLF).
 
-R3-A1 §12 requires `LIVE MAKE SAVED SOURCE == REPOSITORY ADOPTED SOURCE
-IDENTITY`. That refresh is **not done** and is the next mechanical step:
+Per-file bytes and sha256 are recorded in
+`docs/design/FIGMA_MAKE_SOURCE_REGISTER.md`.
 
-1. For each of the 8 files above, read
-   `file://figma/make/source/rP9W9MQlZkyQrUx38TVsFS/<path>` via
-   `get_design_context` + `ReadMcpResourceTool` and write it verbatim into
-   `output/design/figma-make-source/<path>`.
-2. Do **not** assume the repository `src/frontend/` copy is identical — it is for
-   `HeroSection.tsx`, but `LandingPage.tsx`, `LogisticsHubSection.tsx` and
-   `PublicFlows.tsx` differ in formatting and in `PublicFlows`'s header comment.
-3. Record bytes and sha256 per file in
-   `docs/design/FIGMA_MAKE_SOURCE_REGISTER.md` §1 and add a successor baseline to
-   `docs/design/FIGMA_BASELINE_REGISTER.md`.
+**How far each file is verified**, stated precisely so a later session does not
+over-trust the table:
 
-## Also outstanding
+- **Byte-verified against the provider:** `landing/HeroSection.tsx`.
+- **Structure-verified against the provider:** `landing/LandingPage.tsx`,
+  `public/PublicNavbar.tsx`, `AppRouteRenderer.tsx` — each read in full from the
+  provider after the save and matched, including the deliberate retention of
+  `onRequireAuth` where the provider retains it.
+- **Reconstructed and grep-verified:** `landing/LogisticsHubSection.tsx`,
+  `public/Footer.tsx`, `public/PublicMobileDrawer.tsx`, `PublicFlows.tsx` — the
+  identical edits were applied to the faithful v39 capture. Before editing, that
+  capture's line numbers for every target matched the live file exactly
+  (`PublicFlows` 20-22, 115, 120, 234). These four were not re-read byte-for-byte.
+
+`onRequireAuth` deliberately remains in `LandingPage.tsx` (3),
+`LogisticsHubSection.tsx` (3) and `AppRouteRenderer.tsx` (1): the Logistics-hub
+protected-tile seam survives for FI-04. Only the public request path was detached
+from `requireAuth`.
+
+## Outstanding
 
 - `.impeccable/design.json` refresh and the post-sync Impeccable / Hallmark
-  audits (R3-A1 §15, §16, §32) — FE-R3-010 / FE-R3-011.
+  audits (R3-A1 §15, §16, §32) — FE-R3-010 / FE-R3-011. The sidecar is still the
+  stale pre-cutover v4.1 record and will misreport the current oxblood/gold
+  system as drift until refreshed.
 - `docs/frontend/R3_A1_DOCUMENTATION_RECONCILIATION_MANIFEST.md` (§33).
 - A visual workflow diagram for the shared canonical request (§5); the model is
   currently documented in prose in block `733:2` and in `DESIGN.md`.
+- Byte-for-byte re-read of the four reconstructed mirror files, if that level of
+  proof is wanted.
 
 ## Scope fence held
 

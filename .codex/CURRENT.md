@@ -2,7 +2,7 @@
 
 PROGRAM: HAU-USC Logistics
 MILESTONE: R3_A1_DESIGN_AUTHORITY_SYNCHRONIZATION
-STATUS: R3A1_PROVIDER_SYNC_COMPLETE_MIRROR_REFRESH_OUTSTANDING
+STATUS: R3A1_DESIGN_SYNC_COMPLETE__CODEX_PREVIEW_ADOPTION_READY
 PHASE: R3A1_DESIGN_SYNC_THEN_CODEX_PREVIEW_ADOPTION
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
@@ -44,7 +44,7 @@ are not rewritten.
 ## R3-A1 state
 
 FIGMA_DESIGN_STATUS: RECONCILED. Authority board page 55:3 / board 568:2 now carries R3-A1 block 733:2; module index 680:13 distinguishes the public Request Center from the internal Request Hub; page 40 frame 300:2 renamed to the internal Request Hub; dangling pointers in 680:16 repaired. Read back and screenshotted.
-FIGMA_MAKE_STATUS: SAVED_AND_VERIFIED. Version 39 -> **Version 40**, 8 files changed, pending edits 0 after reload. Behaviourally verified in the live prototype: public "Start a logistics request" reaches "PUBLIC REQUEST - NO SIGN-IN / Request Center", and "Staff sign in" reaches a separate staff sign-in page. The repository Make mirror at output/design/figma-make-source/ is still at v39 and must be refreshed.
+FIGMA_MAKE_STATUS: SAVED_AND_VERIFIED. Version 39 -> **Version 40**, 8 files changed, pending edits 0 after reload. Behaviourally verified in the live prototype: public "Start a logistics request" reaches "PUBLIC REQUEST - NO SIGN-IN / Request Center", and "Staff sign in" reaches a separate staff sign-in page. The repository Make mirror at output/design/figma-make-source/ has been refreshed to v40 with per-file sha256 recorded in docs/design/FIGMA_MAKE_SOURCE_REGISTER.md.
 DESIGN_MD_STATUS: REWRITTEN to the post-R3-A1 authority model.
 WORKFLOW_ARCHITECTURE_STATUS: CITATION_CORRECTED and pointed at R3-A1.
 IMPECCABLE_SIDECAR_STATUS: STALE — not yet refreshed (FE-R3-010 / FE-R3-011).
@@ -75,6 +75,6 @@ LOCAL_PREVIEW_URL: http://127.0.0.1:5199
 LOCAL_PREVIEW_VERIFIED: 2026-08-23 — no listener on 4173 or 5199, confirming the preview is not running.
 FRONTEND_E2E_COMMAND: `npx playwright test --config playwright.frontend.config.js` (its own webServer binds 127.0.0.1:4174)
 
-BLOCKER: NONE for the R3-A1 provider synchronization — it completed and was verified. The first save attempt stalled on a Figma reconnect failure; Figma reconnected and the save landed as Version 40, confirmed after a full reload. Outstanding non-blocking work: refresh the repository Make mirror to v40 with hashes, refresh the stale `.impeccable/design.json`, and run the post-sync Impeccable and Hallmark audits. FVR-02 media blockers unchanged and untouched; FI-04 not started.
+BLOCKER: NONE for the R3-A1 provider synchronization — it completed and was verified. The first save attempt stalled on a Figma reconnect failure; Figma reconnected and the save landed as Version 40, confirmed after a full reload. Outstanding non-blocking work: refresh the stale `.impeccable/design.json`, run the post-sync Impeccable and Hallmark audits, and write the documentation reconciliation manifest. FVR-02 media blockers unchanged and untouched; FI-04 not started.
 
-NEXT_EXACT_ACTION: Codex adopts the R3-A1 synchronized design into src/frontend/ and the local frontend preview, verifies against the updated Figma Design and Figma Make v40 references, and refreshes the repository Make source mirror to the saved v40 source with recorded hashes; Playground, Production and main remain untouched.
+NEXT_EXACT_ACTION: Codex adopts the R3-A1 synchronized design into src/frontend/ and the local frontend preview and verifies it against the updated Figma Design and Figma Make v40 references; Playground, Production and main remain untouched.

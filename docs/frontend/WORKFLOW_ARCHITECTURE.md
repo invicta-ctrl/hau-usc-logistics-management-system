@@ -178,6 +178,5 @@ Design current-authority lane is reconciled, and the eight-file Make changeset w
 applied and **saved as Version 40** (previous 39), verified after a full reload
 with zero pending edits. Exercised live: "Start a logistics request" reaches the
 public Request Center, and "Staff sign in" reaches a separate staff sign-in page.
-The repository Make mirror at `output/design/figma-make-source/` is still at v39
-and its refresh is outstanding. See
-`.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`.
+The repository Make mirror at `output/design/figma-make-source/` is refreshed to
+v40. See `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`.

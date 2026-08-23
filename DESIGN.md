@@ -185,10 +185,12 @@ reaches "PUBLIC REQUEST · NO SIGN-IN — Request Center", and "Staff sign in"
 reaches a separate staff sign-in page. The exact changeset is tabulated in
 `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`.
 
-**The repository Make mirror is not yet refreshed.** `output/design/figma-make-source/`
-still holds the v39 state, so it does not yet satisfy R3-A1 §12's requirement that
-the mirror match the live saved source. That refresh, with per-file bytes and
-sha256, is the next mechanical step and is recorded in the receipt.
+**The repository Make mirror is refreshed to v40.** `output/design/figma-make-source/`
+now matches the live saved source, satisfying R3-A1 §12. Per-file bytes and sha256
+are recorded in `docs/design/FIGMA_MAKE_SOURCE_REGISTER.md`, together with an
+explicit statement of how far each file is verified — one byte-verified, three
+structure-verified against full provider reads, four reconstructed and
+grep-verified.
 
 ## Codex adoption workflow
 
@@ -216,7 +218,7 @@ sha256, is the next mechanical step and is recorded in the receipt.
 
 ## Known residuals
 
-- Repository Make mirror still at v39; refresh to the saved v40 source (above).
+- Four of the eight mirrored Make files are reconstructed rather than byte-re-read; see the source register if byte-level proof is wanted.
 - `.impeccable/design.json` is stale from the pre-cutover v4.1 design; see
   FE-R3-010 / FE-R3-011 in `docs/frontend/WORKFLOW_ARCHITECTURE.md`.
 - 54 colours on design page 15 were restored by inference in the 2026-08-19

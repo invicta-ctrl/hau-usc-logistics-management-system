@@ -29,8 +29,8 @@ LIVE_PROVIDER_RECHECK    READ available via get_design_context; WRITE only via t
                          Make editor in a browser (see the correction above)
 VERIFIED                 2026-08-21, sha256 recomputed from the working tree
                          2026-08-23 R3-A1: live version verified as 40 after full
-                         reload, pending edits 0; hashes for the 8 changed files
-                         NOT yet recomputed - mirror refresh outstanding
+                         reload, pending edits 0; output/design/figma-make-source/
+                         refreshed to v40 with sha256 recorded per file below
 FIGMA_MAKE_WRITES        1 saved (v40, 8 files - see R3-A1 section)
 FIGMA_DESIGN_WRITES      R3-A1 reconciled the current-authority lane; see
                          .codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md
@@ -194,9 +194,9 @@ CURRENT_VERSION         40   (SAVED AND VERIFIED after full reload)
 PENDING_EDITS_BEFORE    NONE (verified on open, so nothing unknown was swept in)
 PENDING_EDITS_AFTER     0    (verified after full reload)
 FILES_CHANGED           8    (provider label: "8 edited files - Version 40")
-SOURCE_SNAPSHOT         NOT YET UPDATED - output/design/figma-make-source/ is at v39
+SOURCE_SNAPSHOT         output/design/figma-make-source/ REFRESHED to v40
 ROLLBACK_SNAPSHOT       unchanged (output/design/make-preservation/, v36 captures)
-HASHES                  NOT YET RECOMPUTED for the 8 changed files
+HASHES                  recorded below for all 8 changed files
 FIGMA_MAKE_WRITE        AUTHORIZED_BY_R3_A1, APPLIED, SAVED AS v40
 BEHAVIOUR_VERIFIED      public "Start a logistics request" -> PUBLIC REQUEST CENTER;
                         "Staff sign in" -> separate staff sign-in page
@@ -221,28 +221,66 @@ in `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`.
 so FE-R3-002's capability-gate half has no counterpart there. Rationale is in the
 receipt.
 
-### Required next steps (mirror refresh)
+### Mirror refresh — DONE
 
-Steps 1-3 and 5 are DONE: the save landed as v40, pending edits are 0 after
-reload, and both the public and staff paths were exercised in the live prototype.
+All five provider steps are complete: the save landed as v40, pending edits are 0
+after reload, both the public and staff paths were exercised in the live
+prototype, and `output/design/figma-make-source/` now holds the v40 state.
 
-Outstanding is the mirror refresh:
+#### The v40 mirror
 
-1. For each of the 8 files, read
-   `file://figma/make/source/rP9W9MQlZkyQrUx38TVsFS/<path>` and write it verbatim
-   into `output/design/figma-make-source/<path>`.
-2. Do NOT assume the repository `src/frontend/` copy is identical. It is for
-   `HeroSection.tsx` (modulo Make's omitted terminal newline), but
-   `LandingPage.tsx`, `LogisticsHubSection.tsx` and `PublicFlows.tsx` differ in
-   formatting, and `PublicFlows.tsx` carries a different header comment.
-3. Record bytes and sha256 per file here, and add a successor baseline to
-   `docs/design/FIGMA_BASELINE_REGISTER.md`.
+Recomputed 2026-08-23 from `output/design/figma-make-source/`. Line endings are
+LF, matching the existing capture convention for this tree (the rest of the
+repository is CRLF; these are faithful provider captures).
 
-Known provider hash: `src/app/landing/HeroSection.tsx` (no terminal newline)
-sha256 `556327163556ce208a0ffbc66eaa2eba8ac6a15ac31541d32e747cb88f6c153a`.
+| Provider path (`src/app/...`) | Bytes | sha256 |
+| --- | ---: | --- |
+| `landing/HeroSection.tsx` | 2,201 | `b94fc789464ea2baa937af12e1cdd604310dff5e625fdc9b0ead8c33518c52a8` |
+| `landing/LandingPage.tsx` | 650 | `28aa373d3526b3a728a38b7aaae9dbccc65fca93f010088e4ad4f386a3fde78c` |
+| `landing/LogisticsHubSection.tsx` | 6,235 | `3f83a62945cdb4c6c0458724ceb86c50a4be40a628ce44a1c673537113cfd745` |
+| `public/Footer.tsx` | 4,313 | `9fd53415455c5732f8af42e2922eb1dd60ce1fb163f3c3b1f510930e14acb3ac` |
+| `public/PublicMobileDrawer.tsx` | 4,560 | `2b5b19231bc9d235df7340c01534eea734224d7cb53d5e107d833341a2fe182f` |
+| `public/PublicNavbar.tsx` | 3,879 | `d9f21032389b92da36d055963e222078b93fba2d94336417acf047a015386018` |
+| `AppRouteRenderer.tsx` | 3,633 | `94922a20488ebb8ad84d96fc7b7db44a7443499ed8757a5ad9b029499197f57b` |
+| `PublicFlows.tsx` | 46,303 | `3ab0ebb5bcab408f80fea9c71c4d8418e144e6ac5222878e8b16a4b0f196826f` |
+
+The resulting Git diff is surgical — 8 files, 19 insertions and 29 deletions —
+which is the exact shape of the R3 public-entry patch. A whole-file diff here
+would have meant a line-ending or transcription error.
+
+#### How each file was produced, and how far it is verified
+
+Stated precisely so a later session does not over-trust this table:
+
+- **Byte-verified against the provider:** `landing/HeroSection.tsx`. Re-read from
+  `file://figma/make/source/rP9W9MQlZkyQrUx38TVsFS/...` after the save; the
+  provider body is byte-identical to the mirror minus the terminal newline,
+  provider sha256
+  `556327163556ce208a0ffbc66eaa2eba8ac6a15ac31541d32e747cb88f6c153a`.
+- **Structure-verified against the provider:** `landing/LandingPage.tsx`,
+  `public/PublicNavbar.tsx`, `AppRouteRenderer.tsx` — each was read in full from
+  the provider after the save and the mirror was produced to match, including the
+  deliberate retention of `onRequireAuth` where the provider retains it.
+- **Reconstructed and grep-verified:** `landing/LogisticsHubSection.tsx`,
+  `public/Footer.tsx`, `public/PublicMobileDrawer.tsx`, `PublicFlows.tsx` — the
+  identical edits were applied to the faithful v39 capture. Before editing, the
+  capture's line numbers for every target matched the live file exactly
+  (`PublicFlows` 20-22, 115, 120, 234), which is strong evidence the capture was
+  in sync. These four were **not** re-read from the provider byte-for-byte.
+
+If byte-exactness matters for the four reconstructed files, re-read them from the
+provider and compare against the hashes above.
+
+#### Retained `onRequireAuth`, deliberately
+
+`LandingPage.tsx` (3 occurrences), `LogisticsHubSection.tsx` (3) and
+`AppRouteRenderer.tsx` (1) still reference `onRequireAuth`. That is correct: the
+Logistics-hub protected-tile seam survives for FI-04. Only the public request
+path was detached from `requireAuth`.
 
 ### STALE IF
 
 - a live Make reload reports a version other than 40;
 - the pending-edit count is not 0;
-- the mirror is refreshed and this section still says the snapshot is at v39.
+- the four reconstructed files are re-read from the provider and any hash above
+  turns out to differ.
