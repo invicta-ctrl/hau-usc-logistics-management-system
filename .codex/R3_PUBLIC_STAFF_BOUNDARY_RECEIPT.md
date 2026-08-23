@@ -129,4 +129,4 @@ This pass is **not** FRONTEND-INTEGRATION READY as R3 §43 defines it. It closes
 the P0/P1 public/staff access defects and records the remaining findings.
 
 COMMIT: e30fbff1982beabc98e0b93fdfa6be5250bb919e
-PUSH: withheld pending owner confirmation
+PUSH: origin/frontend-design-integration @ 455e452d5b0c52649cf6cc4cb3254ed955ac0407 (owner-authorized 2026-08-23); remote readback confirms 0 ahead / 0 behind. main unchanged at f7e5bf8. No merge, PR, deploy, or promotion.
