@@ -74,90 +74,11 @@ test('FVR-001 Current preserves intentional empty and request-error states', asy
   await expect(page.getByRole('article').getByText('Current announcements are temporarily unavailable. Please try again shortly.')).toBeVisible();
 });
 
-// Regression guard for the R3 public-access defect: every public "Start a
-// logistics request" CTA used to call requireAuth('request-center'), which sent
-// public requesters to the staff sign-in wall and left the public Request
-// Center — the accepted no-login intake surface under DESIGN.md D24.0 — with no
-// entry point anywhere on the public site. The session contract itself is still
-// covered where it belongs, by preview-index.spec.js opening a STAFF route.
-test('R3 public request intake opens from the public front door with no sign-in and no session probe', async ({ page }) => {
-  await installPublicFeed(page, 'empty');
-  installPublicIntakeContracts(page);
-  let sessionProbes = 0;
-  await page.route('**/api/auth/session', (route) => {
-    sessionProbes += 1;
-    return route.fulfill({
-      status: 401,
-      contentType: 'application/json',
-      body: JSON.stringify({ code: 'SESSION_REQUIRED', message: 'Sign in to continue.' }),
-    });
-  });
-
-  await page.goto('/');
-  await page.getByRole('button', { name: /^Start a logistics request in the public Request Center/u }).click();
-
-  await expect(page.getByRole('heading', { name: 'Request Center', exact: true })).toBeVisible();
-  await expect(page.getByText('No account and no sign-in needed')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toHaveCount(0);
-  expect(sessionProbes).toBe(0);
-});
-
-test('R3 the Logistics hub primary tile also opens public intake rather than staff sign-in', async ({ page }) => {
-  await installPublicFeed(page, 'empty');
-  installPublicIntakeContracts(page);
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Start a request', exact: false }).first().click();
-
-  await expect(page.getByRole('heading', { name: 'Request Center', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toHaveCount(0);
-});
-
-test('R3 the mobile drawer request CTA opens public intake', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'frontend-320' && testInfo.project.name !== 'frontend-390', 'drawer is only presented below the lg breakpoint');
-  await installPublicFeed(page, 'empty');
-  installPublicIntakeContracts(page);
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Open navigation menu' }).click();
-  const drawer = page.getByRole('dialog', { name: 'Navigation menu' });
-  await drawer.getByRole('button', { name: 'Start a logistics request', exact: true }).click();
-
-  await expect(page.getByRole('heading', { name: 'Request Center', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toHaveCount(0);
-});
-
-test('R3 generic staff sign-in does not pre-commit to a capability-gated destination', async ({ page }) => {
-  await installPublicFeed(page, 'empty');
-  // A real staff account that simply lacks view.request must still be signed in
-  // by the generic "Staff sign in" entry, not denied against Staff Request Center.
-  await page.route('**/api/auth/login', (route) => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({
-      state: 'AUTHENTICATED',
-      csrfToken: 'csrf-release-only',
-      user: {
-        accountId: 'ACC-RELEASE',
-        displayName: 'Release Desk Officer',
-        authorization: {
-          active: true,
-          mappingStatus: 'MAPPED',
-          roleId: 'STAFF',
-          capabilities: ['fulfillment.release'],
-        },
-      },
-    }),
-  }));
-
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
-  await page.getByLabel('Identifier').fill('release.officer');
-  await page.getByLabel('Password', { exact: true }).fill('service-verified-password');
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-
-  await expect(page.getByText('Access authorized')).toBeVisible();
-  await expect(page.getByText('Access denied')).toHaveCount(0);
-});
+/* The R3 public-access regression guards that lived here are superseded by
+ * R3-A1-A2 and now live in `tests/e2e/r3-a1-a2-routing.spec.js`, asserting the
+ * corrected three-context rule. They were not deleted, they were inverted: the
+ * same controls are exercised against the owner's corrected product policy.
+ */
 
 test('FVR-001 confirms sign-in without exposing future authenticated fixture routes', async ({ page }) => {
   await installPublicFeed(page, 'empty');
@@ -192,7 +113,7 @@ test('FVR-001 confirms sign-in without exposing future authenticated fixture rou
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
   await expect(page.getByText('Access authorized')).toBeVisible();
-  await expect(page.getByText('The staff workspace is not yet available from this public release.')).toBeVisible();
+  await expect(page.getByText(/is not yet available in this release/u)).toBeVisible();
   await expect(page.getByText(/Design fixture|Synthetic prototype|Simulated save/u)).toHaveCount(0);
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
@@ -242,7 +163,7 @@ test('FVR-001 completes the server-owned starter activation lifecycle', async ({
   await page.getByLabel('Email address', { exact: true }).fill('activated@example.edu.ph');
   await page.getByLabel('New password').fill('ActivatedPassword1!');
   await page.getByLabel('Confirm password').fill('ActivatedPassword1!');
-  await page.getByRole('button', { name: 'Activate account' }).click();
+  await page.getByRole('button', { name: 'Activate account', exact: true }).click();
 
   await expect(page.getByText('Access authorized')).toBeVisible();
   expect(activationCsrf).toBe('activation-csrf-token');
@@ -338,14 +259,13 @@ test('FVR-001 public lending submits only through the real adapter and shows the
   expect(submitted.clientRequestId).toMatch(/^frontend-/u);
 });
 
-test('FVR-001 public request and tracking project only server-confirmed state', async ({ page }) => {
+/* SUPERSEDED BY R3-A1-A2: the public request-submission half of this test
+ * exercised a surface that no longer exists. Authenticated submission through
+ * `/api/portal/request` is covered by REQ-06 in `r3-a1-a2-routing.spec.js`.
+ * Public tracking is unchanged — it is still public, and is still asserted here. */
+test('FVR-001 public tracking projects only server-confirmed state', async ({ page }) => {
   await installPublicFeed(page, 'empty');
   installPublicIntakeContracts(page);
-  let submitted;
-  await page.route('**/api/public/request', async (route) => {
-    submitted = route.request().postDataJSON();
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, requestId: 'REQ-CONFIRMED', status: 'FOR_REVIEW', trackingCode: 'private-request-code' }) });
-  });
   await page.route('**/api/public/request/track', (route) => route.fulfill({
     status: 200,
     contentType: 'application/json',
@@ -354,24 +274,8 @@ test('FVR-001 public request and tracking project only server-confirmed state', 
 
   await page.goto('/');
   await page.getByRole('button', { name: 'Browse equipment' }).click();
-  await page.getByRole('button', { name: 'Request Center' }).click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByLabel('Requester name *').fill('Test Requester');
-  await page.getByLabel('Organization, department or office *').fill('Committee on Activities');
-  await page.getByLabel('Contact number *').fill('09171234567');
-  await page.getByLabel('Email address *').fill('requester@example.edu.ph');
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByLabel('Event purpose *').fill('Assembly materials');
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByLabel('Description').fill('Printed materials');
-  await page.getByRole('button', { name: 'Continue' }).click();
-  for (const checkbox of await page.locator('input[type="checkbox"]').all()) await checkbox.check();
-  await page.getByRole('button', { name: 'Submit request for review' }).click();
-  await expect(page.getByText('REQ-CONFIRMED', { exact: true })).toBeVisible();
-  expect(submitted.requestPurpose).toBe('EVENT_ACTIVITY_SUPPORT');
-  expect(submitted.lines[0]).toMatchObject({ category: 'Other', description: 'Printed materials', quantity: 1, unit: 'piece' });
-
-  await page.getByRole('button', { name: 'Track a record' }).click();
+  await page.getByRole('navigation', { name: 'Public lending navigation' })
+    .getByRole('button', { name: 'Track lending', exact: true }).click();
   await page.getByLabel('Request or Submission ID').fill('REQ-CONFIRMED');
   await page.getByLabel('Private tracking code').fill('private-request-code');
   await page.getByRole('button', { name: 'Check status' }).click();

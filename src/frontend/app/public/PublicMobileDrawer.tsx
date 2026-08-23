@@ -11,12 +11,14 @@ export function PublicMobileDrawer({
   dark,
   onToggleTheme,
   onNavigate,
+  onHome,
 }: {
   open: boolean;
   onClose: () => void;
   dark: boolean;
   onToggleTheme: () => void;
   onNavigate: (r: Route) => void;
+  onHome: () => void;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -80,11 +82,18 @@ export function PublicMobileDrawer({
 
         <div className="mt-auto flex flex-col gap-3 px-5 pb-8 pt-4 border-t" style={{ borderColor: "rgba(242,209,92,0.18)" }}>
           <button
-            onClick={() => { onClose(); onNavigate("request"); }}
+            onClick={() => { onClose(); onNavigate("external-request"); }}
             className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
             style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", background: "#e8b93c", color: "#40070a", minHeight: 48, border: "1px solid #d1b478" }}
           >
             Start a logistics request
+          </button>
+          <button
+            onClick={() => { onClose(); onHome(); }}
+            className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+            style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 48, border: "1px solid #d1b478" }}
+          >
+            Home
           </button>
           <button
             onClick={() => { onClose(); onNavigate("staff-signin"); }}

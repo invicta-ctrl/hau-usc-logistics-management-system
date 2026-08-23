@@ -15,7 +15,7 @@ export type AccessRequirement = (typeof ACCESS_REQUIREMENT)[number];
 export const PREVIEW_MODE = ["REAL_MODULE", "SURFACE_PREVIEW"] as const;
 export type PreviewMode = (typeof PREVIEW_MODE)[number];
 
-export const ROUTE_GROUP = ["PUBLIC", "STAFF", "ADMINISTRATION"] as const;
+export const ROUTE_GROUP = ["PUBLIC", "REQUESTER", "STAFF", "ADMINISTRATION"] as const;
 export type RouteGroup = (typeof ROUTE_GROUP)[number];
 
 export const PREVIEW_FILTER = [
@@ -66,6 +66,7 @@ export const PREVIEW_MODE_LABELS: Readonly<Record<PreviewMode, string>> = Object
 
 export const ROUTE_GROUP_LABELS: Readonly<Record<RouteGroup, string>> = Object.freeze({
   PUBLIC: "Public",
+  REQUESTER: "External requester",
   STAFF: "Staff",
   ADMINISTRATION: "Administration",
 });

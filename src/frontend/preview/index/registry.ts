@@ -32,14 +32,15 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     previewMode: "REAL_MODULE",
   }),
   Object.freeze({
-    id: "request",
-    route: "request",
-    label: "Public Request Center",
-    group: "PUBLIC",
-    description: "Public equipment and supply request flow backed by the request service.",
+    id: "external-request",
+    route: "external-request",
+    label: "External Request Center",
+    group: "REQUESTER",
+    description:
+      "Authenticated USC requester surface backed by GET/POST /api/portal/request. R3-A1-A2: sign-in required; this is no longer a public portal.",
     implementationStatus: "ACCEPTED",
     backendStatus: "REAL_BACKEND",
-    access: "PUBLIC",
+    access: "AUTHENTICATED",
     previewMode: "REAL_MODULE",
   }),
   Object.freeze({
@@ -100,7 +101,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
   Object.freeze({
     id: "request-center",
     route: "request-center",
-    label: "Staff Request Center",
+    label: "Internal Request Hub",
     group: "STAFF",
     description: "Authenticated staff request surface with preserved visual components and no active backend calls.",
     implementationStatus: "SURFACE_PREVIEW",

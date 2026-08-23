@@ -6,6 +6,7 @@ import { StaffSignInPage } from "./auth/StaffSignInPage";
 import { LandingPage } from "./landing/LandingPage";
 import { Footer } from "./public/Footer";
 import { PublicNavbar } from "./public/PublicNavbar";
+import { ExternalRequestCenter } from "./request/ExternalRequestCenter";
 
 export function AppRouteRenderer({ controller }: { controller: AppController }) {
   const {
@@ -14,9 +15,13 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
     session,
     authState,
     authError,
+    entryIntent,
     intendedRoute,
+    denialReason,
+    requesterMode,
     navigate,
-    requireAuth,
+    requireExternalRequest,
+    openLogisticsHub,
     goHome,
     handleSignIn,
     handleActivate,
@@ -25,6 +30,27 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
     toggleTheme,
   } = controller;
 
+  /* Context B — External Request Center. Only reachable with a session; the
+   * controller routes here exclusively through `resolvePostAuthDestination`, so
+   * an unauthenticated user can never land on it. */
+  if (route === "external-request" && session) {
+    return (
+      <ExternalRequestCenter
+        session={session}
+        dark={dark}
+        onToggleTheme={toggleTheme}
+        onHome={goHome}
+        onOpenLogisticsHub={openLogisticsHub}
+        onSignOut={handleSignOut}
+        requesterMode={requesterMode}
+      />
+    );
+  }
+
+  /* Context C — Main Logistics Hub. FI-04 is not implemented: no internal
+   * workspace renders in this release. The gateway states that truthfully and
+   * names the destination the account resolved to, rather than showing an empty
+   * shell that implies a working workspace. */
   if (session && isAuthRoute(route)) {
     return (
       <StaffSignInPage
@@ -34,9 +60,13 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
         onToggle={toggleTheme}
         authState="authorized"
         authError={null}
+        entryIntent={entryIntent}
         intendedRoute={route}
+        denialReason={null}
+        session={session}
         onSignOut={handleSignOut}
         onActivate={handleActivate}
+        onOpenExternalRequest={requireExternalRequest}
         activationExpiresAt={activationExpiresAt}
       />
     );
@@ -51,9 +81,13 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
         onToggle={toggleTheme}
         authState={authState}
         authError={authError}
+        entryIntent={entryIntent}
         intendedRoute={intendedRoute}
+        denialReason={denialReason}
+        session={session}
         onSignOut={handleSignOut}
         onActivate={handleActivate}
+        onOpenExternalRequest={requireExternalRequest}
         activationExpiresAt={activationExpiresAt}
       />
     );
@@ -61,15 +95,15 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: dark ? "#40070a" : "#f2eae5" }}>
-      <PublicNavbar dark={dark} onToggle={toggleTheme} onNavigate={navigate} />
+      <PublicNavbar dark={dark} onToggle={toggleTheme} onNavigate={navigate} onHome={goHome} />
 
       {route !== "landing" ? (
         <PublicFlows route={route as PublicSubRoute} onBack={goHome} dark={dark} onNavigate={navigate} />
       ) : (
-        <LandingPage onNavigate={navigate} onRequireAuth={requireAuth} />
+        <LandingPage onNavigate={navigate} onRequireExternalRequest={requireExternalRequest} />
       )}
 
-      {route === "landing" && <Footer onNavigate={navigate} />}
+      {route === "landing" && <Footer onNavigate={navigate} onHome={goHome} />}
     </div>
   );
 }

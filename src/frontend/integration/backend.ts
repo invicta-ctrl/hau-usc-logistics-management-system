@@ -70,6 +70,71 @@ export type PublicTrackingResult = {
   history: Array<{ status: string; at: string }>;
 };
 
+/* R3-A1-A2 — authenticated External Request Center.
+ *
+ * These project `GET/POST /api/portal/request`, which the Worker authorizes with
+ * `authorize(request, auth, CAPABILITIES.REQUEST_CREATE)` and scopes to
+ * `requester_account_id = <session account>`. Requester identity is taken from
+ * the session server-side; the frontend never supplies it. This is the real
+ * boundary the External Request Center is gated on — not a browser-side check.
+ */
+
+export type RequesterPortalRequestLine = {
+  description: string;
+  specification: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  status: string;
+};
+
+export type RequesterPortalRequest = {
+  id: string;
+  requestType: string;
+  parentRequestId: string;
+  eventSeriesId: string;
+  eventId: string;
+  event: string;
+  subEvent: string;
+  department: string;
+  purpose: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  lines: RequesterPortalRequestLine[];
+  history: Array<{ status: string; at: string }>;
+};
+
+export type RequesterPortal = {
+  profile: { displayName: string; departmentId: string };
+  eventSeries: Array<{ id: string; code: string; name: string }>;
+  events: Array<{
+    id: string;
+    seriesId: string;
+    name: string;
+    activityType: string;
+    startsAt: string;
+    endsAt: string;
+    venue: string;
+  }>;
+  /** Approved choices per category, server-owned. */
+  choices: Record<string, string[]>;
+  units: string[];
+  requests: RequesterPortalRequest[];
+};
+
+export type RequesterSubmissionReceipt = {
+  id: string;
+  requestType: string;
+  parentRequestId: string;
+  department: string;
+  event: string;
+  subEvent: string;
+  status: string;
+  submittedAt: string;
+  replayed: boolean;
+};
+
 export type AccountApplicationStatus = {
   applicationCode: string;
   state: string;
@@ -330,6 +395,142 @@ export class FrontendBackend {
       })),
       history: records(request.history).map((entry) => ({ status: asString(entry.status), at: asString(entry.at) })),
     };
+  }
+
+  /* ---- R3-A1-A2 identity recovery: activate an existing account, reset a password ----
+   *
+   * These bind to the contract R3-A1-A2 §17-§19 requires. Three of the five
+   * routes do not exist in the Worker yet — `src/auth/http-contract.js` declares
+   * only session/login/activate/logout/reset-complete, and the only reset path
+   * consumes an admin-issued `resetToken`. They are called for real anyway, so
+   * that the moment the accepted backend amendment lands the frontend is already
+   * correct. Until then the Worker answers 404 and the caller surfaces a truthful
+   * "not available yet" state — it never simulates a success.
+   *
+   * Recorded as BACKEND_CONTRACT_GAP_SELF_SERVICE_IDENTITY.
+   */
+
+  /** Step 1. Never reveals whether the identifier exists. */
+  async startIdentityVerification(
+    flow: "activate" | "reset",
+    identifier: string,
+  ): Promise<{ accepted: boolean; resendAvailableInSeconds: number }> {
+    const payload = await this.request(`/api/auth/${flow}/start`, { body: { identifier } });
+    return {
+      accepted: payload.accepted !== false,
+      resendAvailableInSeconds: asNumber(payload.resendAvailableInSeconds) || 60,
+    };
+  }
+
+  /** Step 2. Exchanges the 8-digit code for a short-lived single-use token. */
+  async verifyIdentityCode(
+    flow: "activate" | "reset",
+    identifier: string,
+    code: string,
+  ): Promise<{ token: string; expiresAt: string }> {
+    const payload = await this.request(`/api/auth/${flow}/verify`, { body: { identifier, code } });
+    const token = asString(payload.token) || asString(payload.activationToken) || asString(payload.resetToken);
+    if (!token) return incomplete("The verification service returned an incomplete result.");
+    return { token, expiresAt: asString(payload.expiresAt) };
+  }
+
+  /** Step 3a. Activates an existing eligible staff identity. Never creates one. */
+  async completeAccountActivation(token: string, password: string, confirmPassword: string): Promise<void> {
+    await this.request("/api/auth/activate/complete", {
+      body: { activationToken: token, password, confirmPassword },
+    });
+  }
+
+  /** Step 3b. `/api/auth/reset/complete` already exists and takes this shape. */
+  async completePasswordReset(token: string, password: string, confirmPassword: string): Promise<void> {
+    await this.request("/api/auth/reset/complete", {
+      body: { resetToken: token, password, confirmPassword },
+    });
+  }
+
+  /* ---- R3-A1-A2 authenticated External Request Center ---- */
+
+  async requesterPortal(signal?: AbortSignal): Promise<RequesterPortal> {
+    const payload = await this.request("/api/portal/request", { method: "GET", signal });
+    const profile = asRecord(payload.profile);
+    const choices: Record<string, string[]> = {};
+    for (const [category, values] of Object.entries(asRecord(payload.choices))) {
+      choices[category] = asStrings(values);
+    }
+    return {
+      profile: {
+        displayName: asString(profile.displayName),
+        departmentId: asString(profile.departmentId),
+      },
+      eventSeries: records(payload.eventSeries)
+        .map((series) => ({ id: asString(series.id), code: asString(series.code), name: asString(series.name) }))
+        .filter((series) => series.id && series.name),
+      events: records(payload.events)
+        .map((event) => ({
+          id: asString(event.id),
+          seriesId: asString(event.seriesId),
+          name: asString(event.name),
+          activityType: asString(event.activityType),
+          startsAt: asString(event.startsAt),
+          endsAt: asString(event.endsAt),
+          venue: asString(event.venue),
+        }))
+        .filter((event) => event.id && event.name),
+      choices,
+      units: asStrings(payload.units),
+      requests: records(payload.requests).map((request) => ({
+        id: asString(request.id),
+        requestType: asString(request.requestType) || "NEW",
+        parentRequestId: asString(request.parentRequestId),
+        eventSeriesId: asString(request.eventSeriesId),
+        eventId: asString(request.eventId),
+        event: asString(request.event),
+        subEvent: asString(request.subEvent),
+        department: asString(request.department),
+        purpose: asString(request.purpose),
+        status: asString(request.status),
+        createdAt: asString(request.createdAt),
+        updatedAt: asString(request.updatedAt),
+        lines: records(request.lines).map((line) => ({
+          description: asString(line.description),
+          specification: asString(line.specification),
+          category: asString(line.category),
+          quantity: asNumber(line.quantity),
+          unit: asString(line.unit),
+          status: asString(line.status),
+        })),
+        history: records(request.history).map((entry) => ({
+          status: asString(entry.status),
+          at: asString(entry.at),
+        })),
+      })),
+    };
+  }
+
+  async submitRequesterRequest(command: Json): Promise<RequesterSubmissionReceipt> {
+    const payload = await this.request("/api/portal/request", { body: command, csrf: true });
+    const id = asString(payload.requestId) || asString(payload.id);
+    const status = asString(payload.status);
+    if (!id || !status) return incomplete("The request service returned an incomplete receipt.");
+    return {
+      id,
+      requestType: asString(payload.requestType) || "NEW",
+      parentRequestId: asString(payload.parentRequestId),
+      department: asString(payload.department),
+      event: asString(payload.event),
+      subEvent: asString(payload.subEvent),
+      status,
+      submittedAt: asString(payload.submittedAt),
+      replayed: payload.replayed === true,
+    };
+  }
+
+  async cancelRequesterRequest(command: Json): Promise<{ id: string; status: string }> {
+    const payload = await this.request("/api/portal/request/cancel", { body: command, csrf: true });
+    const id = asString(payload.requestId) || asString(payload.id);
+    const status = asString(payload.status);
+    if (!id || !status) return incomplete("The request service returned an incomplete cancellation result.");
+    return { id, status };
   }
 
   async startAccountApplicationEmail(email: string): Promise<{ accepted: boolean; nextAttemptAt: string }> {

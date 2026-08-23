@@ -23,7 +23,10 @@ import {
   searchPreviewRoutes,
 } from '../../src/frontend/preview/index/selectors';
 
-const PUBLIC_ROUTES = ['landing', 'request', 'tracking', 'borrow', 'staff-signin'];
+// R3-A1-A2 three-context model: `external-request` left the public set when the
+// logistics Request Center became authenticated. It is asserted separately below.
+const PUBLIC_ROUTES = ['landing', 'tracking', 'borrow', 'staff-signin'];
+const REQUESTER_ROUTES = ['external-request'];
 
 describe('preview index trusted gate and registry foundations', () => {
   it('matches only the exact preview index hash and fails closed on variants', () => {
@@ -69,7 +72,7 @@ describe('preview index trusted gate and registry foundations', () => {
     expect(BACKEND_STATUS).toEqual(['REAL_BACKEND', 'PARTIAL', 'VISUAL_ONLY']);
     expect(ACCESS_REQUIREMENT).toEqual(['PUBLIC', 'AUTHENTICATED']);
     expect(PREVIEW_MODE).toEqual(['REAL_MODULE', 'SURFACE_PREVIEW']);
-    expect(ROUTE_GROUP).toEqual(['PUBLIC', 'STAFF', 'ADMINISTRATION']);
+    expect(ROUTE_GROUP).toEqual(['PUBLIC', 'REQUESTER', 'STAFF', 'ADMINISTRATION']);
 
     expect(PREVIEW_FILTER).toEqual([
       'ALL',
@@ -110,6 +113,7 @@ describe('preview index trusted gate and registry foundations', () => {
     expect(PREVIEW_MODE_LABELS.SURFACE_PREVIEW).toBe('Surface preview');
     expect(ROUTE_GROUP_LABELS).toEqual({
       PUBLIC: 'Public',
+      REQUESTER: 'External requester',
       STAFF: 'Staff',
       ADMINISTRATION: 'Administration',
     });
@@ -117,7 +121,7 @@ describe('preview index trusted gate and registry foundations', () => {
 
   it('registers exactly the live public and auth route inventories without duplicates', () => {
     const entries = listPreviewRoutes();
-    const expectedRoutes = [...PUBLIC_ROUTES, ...AUTH_ROUTES].sort();
+    const expectedRoutes = [...PUBLIC_ROUTES, ...REQUESTER_ROUTES, ...AUTH_ROUTES].sort();
 
     expect(entries.map((entry) => entry.route).sort()).toEqual(expectedRoutes);
     expect(entries).toHaveLength(15);
@@ -162,8 +166,8 @@ describe('preview index trusted gate and registry foundations', () => {
     expect(count((entry) => entry.backendStatus === 'REAL_BACKEND')).toBe(5);
     expect(count((entry) => entry.backendStatus === 'PARTIAL')).toBe(0);
     expect(count((entry) => entry.backendStatus === 'VISUAL_ONLY')).toBe(10);
-    expect(count((entry) => entry.access === 'PUBLIC')).toBe(5);
-    expect(count((entry) => entry.access === 'AUTHENTICATED')).toBe(10);
+    expect(count((entry) => entry.access === 'PUBLIC')).toBe(4);
+    expect(count((entry) => entry.access === 'AUTHENTICATED')).toBe(11);
     expect(count((entry) => entry.previewMode === 'REAL_MODULE')).toBe(5);
     expect(count((entry) => entry.previewMode === 'SURFACE_PREVIEW')).toBe(10);
 
@@ -173,6 +177,17 @@ describe('preview index trusted gate and registry foundations', () => {
         backendStatus: 'REAL_BACKEND',
         access: 'PUBLIC',
         previewMode: 'REAL_MODULE',
+      });
+    }
+    for (const route of REQUESTER_ROUTES) {
+      // Authenticated, but backed by a real contract (/api/portal/request) —
+      // unlike the FI-04 staff surfaces, which are visual only.
+      expect(entries.find((entry) => entry.route === route)).toMatchObject({
+        implementationStatus: 'ACCEPTED',
+        backendStatus: 'REAL_BACKEND',
+        access: 'AUTHENTICATED',
+        previewMode: 'REAL_MODULE',
+        group: 'REQUESTER',
       });
     }
     for (const route of AUTH_ROUTES) {
@@ -192,18 +207,19 @@ describe('preview index trusted gate and registry foundations', () => {
 
     expect(filterPreviewRoutes('ALL')).toHaveLength(15);
     expect(filterPreviewRoutes('ACCEPTED').map((entry) => entry.route).sort()).toEqual(
-      [...PUBLIC_ROUTES].sort(),
+      [...PUBLIC_ROUTES, ...REQUESTER_ROUTES].sort(),
     );
     expect(filterPreviewRoutes('BACKEND_WIRED')).toHaveLength(5);
     expect(filterPreviewRoutes('PREVIEW_ONLY')).toHaveLength(10);
     expect(filterPreviewRoutes('IN_PROGRESS')).toEqual([]);
     expect(filterPreviewRoutes('NOT_STARTED')).toEqual([]);
-    expect(filterPreviewRoutes('PUBLIC')).toHaveLength(5);
-    expect(filterPreviewRoutes('AUTHENTICATED')).toHaveLength(10);
+    expect(filterPreviewRoutes('PUBLIC')).toHaveLength(4);
+    expect(filterPreviewRoutes('AUTHENTICATED')).toHaveLength(11);
 
     const groups = groupPreviewRoutes();
-    expect(groups.map((group) => group.group)).toEqual(['PUBLIC', 'STAFF', 'ADMINISTRATION']);
-    expect(groups.find((group) => group.group === 'PUBLIC').items).toHaveLength(5);
+    expect(groups.map((group) => group.group)).toEqual(['PUBLIC', 'REQUESTER', 'STAFF', 'ADMINISTRATION']);
+    expect(groups.find((group) => group.group === 'PUBLIC').items).toHaveLength(4);
+    expect(groups.find((group) => group.group === 'REQUESTER').items).toHaveLength(1);
     expect(groups.find((group) => group.group === 'STAFF').items).toHaveLength(8);
     expect(groups.find((group) => group.group === 'ADMINISTRATION').items).toHaveLength(2);
   });

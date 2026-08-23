@@ -1,24 +1,26 @@
-import type { AuthRoute, Route } from "../appTypes";
+import type { Route } from "../appTypes";
 import { CurrentSection } from "./CurrentSection";
 import { HeroSection } from "./HeroSection";
 import { LogisticsHubSection } from "./LogisticsHubSection";
 
 export function LandingPage({
   onNavigate,
-  onRequireAuth,
+  onRequireExternalRequest,
 }: {
   onNavigate: (route: Route) => void;
-  onRequireAuth: (route: AuthRoute) => void;
+  /** R3-A1-A2: starting a logistics request is an authenticated action. The
+   *  landing page asks for the intent; the controller owns the auth gate. */
+  onRequireExternalRequest: () => void;
 }) {
   return (
     <main id="main-content" className="flex flex-col flex-1">
-      <HeroSection onNavigate={onNavigate} />
+      <HeroSection onNavigate={onNavigate} onRequireExternalRequest={onRequireExternalRequest} />
 
       <CurrentSection />
 
       <LogisticsHubSection
         onNavigate={onNavigate}
-        onRequireAuth={onRequireAuth}
+        onRequireExternalRequest={onRequireExternalRequest}
       />
     </main>
   );

@@ -89,8 +89,11 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   await expect(page.locator('[data-preview-index]')).toBeVisible();
 
   await expect(page.locator('[data-preview-route]')).toHaveCount(15);
-  await expect(page.locator('[data-preview-group]')).toHaveCount(3);
-  await expect(page.locator('[data-preview-group="PUBLIC"] [data-preview-route]')).toHaveCount(5);
+  // R3-A1-A2 added a fourth context: the authenticated External Request Center
+  // is no longer filed under Public, because it is not public.
+  await expect(page.locator('[data-preview-group]')).toHaveCount(4);
+  await expect(page.locator('[data-preview-group="PUBLIC"] [data-preview-route]')).toHaveCount(4);
+  await expect(page.locator('[data-preview-group="REQUESTER"] [data-preview-route]')).toHaveCount(1);
   await expect(page.locator('[data-preview-group="STAFF"] [data-preview-route]')).toHaveCount(8);
   await expect(page.locator('[data-preview-group="ADMINISTRATION"] [data-preview-route]')).toHaveCount(2);
 
@@ -108,7 +111,7 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   await page.locator('[data-preview-search]').fill('');
 
   await page.locator('[data-filter="PUBLIC"]').click();
-  await expect(page.locator('[data-preview-route]')).toHaveCount(5);
+  await expect(page.locator('[data-preview-route]')).toHaveCount(4);
   await page.locator('[data-filter="PREVIEW_ONLY"]').click();
   await expect(page.locator('[data-preview-route]')).toHaveCount(10);
   await page.locator('[data-filter="IN_PROGRESS"]').click();

@@ -1,10 +1,11 @@
 import { useCallback, useState } from "react";
 import { AUTH_ROUTES, isAuthRoute } from "./appRoutes";
-import type { AuthGateState, AuthRoute, Route, Session } from "./appTypes";
+import type { AuthGateState, AuthRoute, EntryIntent, Route, Session } from "./appTypes";
+import { resolvePostAuthDestination, resolveStaffHome, type DenialReason } from "./entryIntent";
 import { useTheme } from "./hooks/useTheme";
 import { scrollToRouteStart } from "./shared/scrollToRouteStart";
 import { FrontendApiError, frontendBackend, type FrontendUser } from "../integration/backend";
-import { isRouteAuthorized } from "../integration/routeAccess";
+import { isEligibleRequester, isInternalOperator, isRouteAuthorized } from "../integration/routeAccess";
 
 function initials(value: string) {
   const parts = value.split(/\s+/u).filter(Boolean);
@@ -18,6 +19,8 @@ function projectSession(user: FrontendUser): Session {
     role: user.roleId,
     initials: initials(user.displayName),
     capabilities: AUTH_ROUTES.filter((route) => isRouteAuthorized(user, route)),
+    requesterEligible: isEligibleRequester(user),
+    internalOperator: isInternalOperator(user),
   };
 }
 
@@ -27,27 +30,58 @@ export function useAppController() {
   const [session, setSession] = useState<Session | null>(null);
   const [authState, setAuthState] = useState<AuthGateState>("signed-out");
   const [authError, setAuthError] = useState<string | null>(null);
-  const [intendedRoute, setIntendedRoute] = useState<AuthRoute | null>(null);
   const [activationExpiresAt, setActivationExpiresAt] = useState("");
+
+  /* R3-A1-A2 entry intent. `entryIntent` is what the user explicitly opened;
+   * `intendedRoute` is the specific internal route behind an
+   * OTHER_INTERNAL_DESTINATION intent. They are separate because a DOL account
+   * arriving through "Start a logistics request" has an explicit external
+   * intent and no internal target at all. */
+  const [entryIntent, setEntryIntent] = useState<EntryIntent>("GENERIC_STAFF_SIGN_IN");
+  const [intendedRoute, setIntendedRoute] = useState<AuthRoute | null>(null);
+  const [denialReason, setDenialReason] = useState<DenialReason | null>(null);
+  /** True while an authenticated DOL account is deliberately using requester mode. */
+  const [requesterMode, setRequesterMode] = useState(false);
 
   const moveTo = useCallback((nextRoute: Route) => {
     setRoute(nextRoute);
     scrollToRouteStart();
   }, []);
 
-  const requireAuth = useCallback((target: AuthRoute) => {
-    setIntendedRoute(target);
-    if (session?.capabilities.includes(target)) {
-      setAuthState("authorized");
-      moveTo("staff-signin");
-      return;
-    }
-    if (session) {
+  const applyDecision = useCallback((next: Session, intent: EntryIntent, target: AuthRoute | null) => {
+    const decision = resolvePostAuthDestination(next, intent, target);
+    if (decision.outcome === "denied") {
+      // Denial is truthful and recoverable: the gateway states the access state
+      // and offers Home and Public Lending. It never says why another account
+      // would have been allowed.
+      setDenialReason(decision.reason);
+      setRequesterMode(false);
       setAuthState("denied");
       moveTo("staff-signin");
       return;
     }
+    setDenialReason(null);
+    setRequesterMode(decision.requesterMode);
+    setAuthState("authorized");
+    moveTo(decision.route);
+  }, [moveTo]);
+
+  /**
+   * Send the user to the identity gateway, remembering what they were trying to
+   * open. An already-authorized session skips the gateway entirely — being
+   * signed in should not make an explicit destination harder to reach.
+   */
+  const requireAuth = useCallback((intent: EntryIntent, target: AuthRoute | null = null) => {
+    setEntryIntent(intent);
+    setIntendedRoute(target);
     setAuthError(null);
+    setDenialReason(null);
+
+    if (session) {
+      applyDecision(session, intent, target);
+      return;
+    }
+
     setAuthState("loading");
     moveTo("staff-signin");
     void frontendBackend.session().then((current) => {
@@ -55,50 +89,81 @@ export function useAppController() {
         setAuthState("auth-required");
         return;
       }
-      const nextSession = projectSession(current.user);
-      setSession(nextSession);
-      if (nextSession.capabilities.includes(target)) {
-        setAuthState("authorized");
-        moveTo("staff-signin");
-      } else {
-        setAuthState("denied");
-      }
+      const next = projectSession(current.user);
+      setSession(next);
+      applyDecision(next, intent, target);
     }).catch((error: unknown) => {
       setAuthError(error instanceof FrontendApiError ? error.message : "The authentication service is temporarily unavailable.");
       setAuthState("service-error");
     });
-  }, [moveTo, session]);
+  }, [applyDecision, moveTo, session]);
+
+  /** Open the External Request Center, authenticating first if needed. */
+  const requireExternalRequest = useCallback(() => {
+    requireAuth("EXTERNAL_REQUEST_CENTER");
+  }, [requireAuth]);
 
   const navigate = useCallback((next: Route) => {
-    if (isAuthRoute(next)) {
-      requireAuth(next);
+    if (next === "external-request") {
+      requireExternalRequest();
       return;
     }
-
+    if (isAuthRoute(next)) {
+      requireAuth(next === "request-center" ? "INTERNAL_REQUEST_HUB" : "OTHER_INTERNAL_DESTINATION", next);
+      return;
+    }
     if (next === "staff-signin") {
-      setAuthState("signed-out");
-      setAuthError(null);
+      // Generic identity gateway: no pre-committed destination. Binding it to a
+      // capability-gated route would deny otherwise-valid accounts that merely
+      // lack that one capability.
+      setEntryIntent("GENERIC_STAFF_SIGN_IN");
       setIntendedRoute(null);
+      setDenialReason(null);
+      setAuthError(null);
       setActivationExpiresAt("");
+      setAuthState(session ? "authorized" : "signed-out");
     }
     moveTo(next);
-  }, [moveTo, requireAuth]);
+  }, [moveTo, requireAuth, requireExternalRequest, session]);
 
+  /**
+   * R3-A1-A2: Home is Home, not logout.
+   *
+   * Home returns to the landing surface, scrolls to top and drops transient
+   * navigation intent. It deliberately does **not** touch `session`, so an
+   * authenticated user stays authenticated. Sign Out remains the only normal
+   * action that destroys a session.
+   */
   const goHome = useCallback(() => {
-    setAuthState("signed-out");
-    setAuthError(null);
+    setEntryIntent("GENERIC_STAFF_SIGN_IN");
     setIntendedRoute(null);
-    setActivationExpiresAt("");
-    moveTo("landing");
-  }, [moveTo]);
-
-  // `target` is null for a generic staff sign-in. A successful sign-in with no
-  // requested destination is authorized on the strength of the session alone;
-  // only a request for a specific protected route is checked against that
-  // route's server-derived capability.
-  const handleSignIn = useCallback(async (accessId: string, password: string) => {
-    const target = intendedRoute;
+    setDenialReason(null);
     setAuthError(null);
+    setActivationExpiresAt("");
+    setRequesterMode(false);
+    setAuthState(session ? "authorized" : "signed-out");
+    moveTo("landing");
+  }, [moveTo, session]);
+
+  /** DOL requester-mode shortcut. Routes to the capability-appropriate internal
+   *  home, never blindly to Overview. */
+  const openLogisticsHub = useCallback(() => {
+    const home = resolveStaffHome(session);
+    if (!home) {
+      setDenialReason("NO_INTERNAL_CAPABILITY");
+      setAuthState("denied");
+      moveTo("staff-signin");
+      return;
+    }
+    setRequesterMode(false);
+    setEntryIntent("OTHER_INTERNAL_DESTINATION");
+    setIntendedRoute(home);
+    moveTo(home);
+  }, [moveTo, session]);
+
+  const handleSignIn = useCallback(async (accessId: string, password: string) => {
+    setAuthError(null);
+    setDenialReason(null);
     setAuthState("loading");
     try {
       const result = await frontendBackend.login(accessId, password);
@@ -114,47 +179,37 @@ export function useAppController() {
         setAuthError("The authentication service returned an incomplete session.");
         return;
       }
-      const nextSession = projectSession(result.session.user);
-      setSession(nextSession);
+      const next = projectSession(result.session.user);
+      setSession(next);
       setActivationExpiresAt("");
-      if (!target || nextSession.capabilities.includes(target)) {
-        setAuthState("authorized");
-        setIntendedRoute(target);
-      } else {
-        setAuthState("denied");
-      }
+      applyDecision(next, entryIntent, intendedRoute);
     } catch (error) {
       setSession(null);
       setAuthError(error instanceof FrontendApiError ? error.message : "The authentication service is temporarily unavailable.");
       setAuthState("service-error");
     }
-  }, [intendedRoute, moveTo]);
+  }, [applyDecision, entryIntent, intendedRoute]);
 
   const handleActivate = useCallback(async (
     profile: { fullName: string; mobileNumber: string; email: string },
     password: string,
     confirmPassword: string,
   ) => {
-    const target = intendedRoute;
     setAuthError(null);
+    setDenialReason(null);
     setAuthState("loading");
     try {
       const activated = await frontendBackend.activateStarter(profile, password, confirmPassword);
-      const nextSession = projectSession(activated.user);
-      setSession(nextSession);
+      const next = projectSession(activated.user);
+      setSession(next);
       setActivationExpiresAt("");
-      if (!target || nextSession.capabilities.includes(target)) {
-        setAuthState("authorized");
-        setIntendedRoute(target);
-      } else {
-        setAuthState("denied");
-      }
+      applyDecision(next, entryIntent, intendedRoute);
     } catch (error) {
       setSession(null);
       setAuthError(error instanceof FrontendApiError ? error.message : "The activation service is temporarily unavailable.");
       setAuthState("service-error");
     }
-  }, [intendedRoute]);
+  }, [applyDecision, entryIntent, intendedRoute]);
 
   const handleSignOut = useCallback(async () => {
     try {
@@ -163,7 +218,10 @@ export function useAppController() {
       setSession(null);
       setAuthState("signed-out");
       setAuthError(null);
+      setEntryIntent("GENERIC_STAFF_SIGN_IN");
       setIntendedRoute(null);
+      setDenialReason(null);
+      setRequesterMode(false);
       setActivationExpiresAt("");
       moveTo("landing");
     }
@@ -177,9 +235,14 @@ export function useAppController() {
     session,
     authState,
     authError,
+    entryIntent,
     intendedRoute,
+    denialReason,
+    requesterMode,
     navigate,
     requireAuth,
+    requireExternalRequest,
+    openLogisticsHub,
     goHome,
     handleSignIn,
     handleActivate,

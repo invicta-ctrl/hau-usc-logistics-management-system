@@ -177,6 +177,26 @@ html,body,#root{max-width:100%;overflow-x:clip}
   transform: translateY(1px);
 }
 
+/* R3-A1-A2. The two hero actions now carry their access rule on the control
+   itself, so a student does not discover the staff gate only after committing
+   to the flow. The note wraps at narrow widths rather than overflowing. */
+.atrium__action--stacked {
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-block: 0.5rem;
+  line-height: 1.2;
+  white-space: normal;
+  text-align: center;
+}
+
+.atrium__action-note {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  opacity: 0.78;
+  text-wrap: balance;
+}
+
 .atrium__secondary-paths {
   width: 100%;
   display: grid;
