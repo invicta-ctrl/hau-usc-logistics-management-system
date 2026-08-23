@@ -168,3 +168,88 @@ Additional, discovered during this pass:
 ## 6. Provider synchronization
 
 See §7 and §8 below for the Figma Design and Figma Make readback evidence.
+
+---
+
+## 7. Figma Design — writes performed and read back
+
+FILE: `hXJElH4p72KfgAaoUyfNOC` — HAU-USC Logistics · Frontend Design Lab
+AUTH: `mcp__figma__whoami` → Invicta-ctrl / adrianoearl04@gmail.com, Full seat
+WRITE AUTHORITY: R3-A1-A2, bounded to this file and the Make file only
+
+### 7.1 Current-authority lane, page `55:3` → board `568:2`
+
+| Node | Action |
+|---|---|
+| `753:2` / `753:3` / `753:4` | **CREATED.** Block "R3-A1-A2 three-context workflow authority — CURRENT", inserted at board index 2, above the R3-A1 block. Body 6,612 characters: three contexts, canonical records, entry-intent priority and the full routing matrix, DOL requester mode, public lending tab set, Home semantics, identity flows, the measured backend truth including both open gaps, the FI-04 warning, and the fixed vocabulary. |
+| `733:2` | **RENAMED** to "Block · SUPERSEDED BY R3-A1-A2 · R3-A1 public/staff workflow authority — HISTORICAL, retained as evidence". |
+| `733:3` / `733:4` | **BANNERED, NOT REWRITTEN.** A `SUPERSEDED BY R3-A1-A2` header and a "HISTORICAL RECORD, R3-A1, PRESERVED VERBATIM" separator were prepended. Every original character is intact beneath. |
+| `568:4` | **UPDATED.** Board freshness now reads R3-A1-A2 and points at the in-file documentation page. |
+| `680:13` | **REWRITTEN.** Module index restructured into contexts A / B / C. Explicitly marks the page-40 public five-step intake frames as HISTORICAL evidence and warns "Do not implement from them". |
+| `680:16` | **UPDATED.** Interactive-counterpart block records the R3-A1-A2 Make reconciliation, carries a `SUPERSEDED BY R3-A1-A2` note over the R3-A1 public-request claim, points at `ROUTING.md`, and names both open backend gaps. |
+
+### 7.2 Documentation mirror — the owner's mandatory requirement
+
+**CREATED: page `755:2` — "10.1 — CURRENT · Frontend Architecture & Routing".**
+Document page count 28 → **29**. Board `755:3`, 1400 px wide, 8 cards, 10,669 px tall.
+
+| Card | Content |
+|---|---|
+| `755:4` | Masthead + precedence statement |
+| `755:7` | **Mirror manifest** — repository, commit, per-file sha256, byte counts, per-document fidelity declaration, stale-if conditions |
+| `756:2` | ROUTING.md §1 contexts · §2 entry intent + full matrix · §3 Home semantics |
+| `759:2` | ROUTING.md §4.1–§4.6 — the complete control contract |
+| `760:2` | ROUTING.md §5 backend contract status incl. both open gaps and the verbatim required next contract · §6 limitations · §7 providers |
+| `761:2` | WORKFLOW_ARCHITECTURE.md §0–§5 |
+| `762:2` | DESIGN.md current-authority normative sections |
+| `762:6` | R3-A1-A2 amendment, full traceability matrix, verification results, Codex next actions |
+
+**Fidelity is declared honestly.** An initial draft of the manifest claimed
+"FULL MIRROR" for ROUTING.md and WORKFLOW_ARCHITECTURE.md. That was corrected
+before completion: **no mirror on the page is byte-identical** — markdown tables
+are reformatted for monospace rendering and markdown syntax is dropped. The
+manifest now declares:
+
+- `NORMATIVE MIRROR — COMPLETE SECTION COVERAGE` for `ROUTING.md` and
+  `WORKFLOW_ARCHITECTURE.md`, listing every section reproduced.
+- `NORMATIVE MIRROR — CORE SECTIONS + HASHED SOURCE POINTER` for `DESIGN.md`,
+  the accepted amendment, and this receipt.
+
+with the stated rule: *"A one-line link is not a mirror and is never counted as
+one. To verify any document exactly, read it at the commit and sha256 below."*
+
+### 7.3 Node `35:145` — the owner's linked legacy placeholder
+
+**PRESERVED.** The section is untouched: same id, name, position, size and single
+child. Its evidence role is intact.
+
+**CREATED: `763:2`** — a 2000 × 578 px `CURRENT AUTHORITY POINTER` frame on page
+`00 — Capture Index`, placed 80 px directly above the section, gold-bordered, with
+a `SUPERSEDED HISTORICAL PLACEHOLDER` badge. It names the in-file documentation
+page, the authority board block, the four repository documents, the amendment and
+commit `aa6d2a7`, and closes with the one-line rule. Verified non-overlapping:
+gap 80 px, `overlaps: false`.
+
+### 7.4 Readback — performed, not assumed
+
+Re-read after every write. Verified: all six mutated nodes carry their new text;
+`753:2` exists at board index 2 with 2 children and 6,612 body characters;
+`733:2` retains its 2 children with the banner prepended; page `755:2` exists with
+8 cards in order; `763:2` exists with 6 children and does not overlap `35:145`.
+
+A regex sweep of the current-authority lane for "PUBLIC Request Center" and
+"No staff sign-in is required" returned **one** match, in `680:16` — inside the
+`SUPERSEDED BY R3-A1-A2` note that deliberately quotes the R3-A1 claim in order
+to retire it. The historical block `733:2` was excluded from the sweep by design.
+No current-lane node asserts a public Request Center.
+
+Screenshots captured to `output/design/r3-a1-a2-readback/`:
+
+| File | Node |
+|---|---|
+| `figma-35-145-current-authority-pointer.png` | `763:2` |
+| `figma-doc-mirror-manifest.png` | `755:7` |
+| `figma-r3a1a2-authority-block.png` | `753:2` |
+
+`FIGMA_DOCUMENTATION_MIRRORED` PASS · `FIGMA_NODE_35_145_CURRENT_POINTER` PASS ·
+`FIGMA_PROVIDER_READBACK` PASS
