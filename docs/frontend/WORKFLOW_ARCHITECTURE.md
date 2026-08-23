@@ -2,14 +2,24 @@
 
 Status: active
 Scope: `src/frontend/` on `frontend-design-integration`
-Authority: `DESIGN.md` (visual) → repository server/Worker/auth contracts (functional) → this document (frontend route and workflow ownership)
-Last reviewed: 2026-08-23 (R3 public/staff boundary audit)
+Authority: `DESIGN.md` (design) → repository server/Worker/auth contracts (functional) → this document (frontend route and workflow ownership)
+Accepted amendment: `.codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md` (R3-A1)
+Last reviewed: 2026-08-23 (R3 public/staff boundary audit; citation corrected by R3-A1)
 
 This document records who each frontend surface is for, what it is allowed to do,
 and which module owns each mutating business action. It does not define product
-policy. Where it describes access rules it is restating accepted authority —
-principally `DESIGN.md` D24.0 (public no-login access model, OWNER-LOCKED) and the
-accepted Worker contracts.
+policy. Where it describes access rules it is restating accepted authority.
+
+For the **public Request Center** the authority is `DESIGN.md` D06 Product /
+Route Inventory (`/request` = *Public request intake*), production
+`public-requester-portal.js` at `0.8.2 / c316e047` containing no session check,
+no sign-in gate and no authorization branch (`ACCESS_MODEL_DRIFT` / `PL-01` in
+the parity audit), and the accepted `/api/public/request` Worker contract.
+
+`DESIGN.md` D24.0 is the OWNER-LOCKED no-login model for the **Public Lending
+Center**. It is the correct analogous precedent, but it is not the Request
+citation; earlier revisions of this document and `.codex/R3_PUBLIC_STAFF_BOUNDARY_RECEIPT.md`
+quoted it as one. See the correction of record in `DESIGN.md`.
 
 ---
 
@@ -150,12 +160,23 @@ Regression coverage for rules 1–3 and 5 lives in `tests/e2e/frontend-cutover.s
 ## 7. Relationship to Figma
 
 `DESIGN.md` names the authenticated live Figma Make file
-(`rP9W9MQlZkyQrUx38TVsFS`) as the visual, interaction, motion, and responsive
-authority; the Figma Design file is documentation. Repository contracts remain the
-sole functional authority.
+(`rP9W9MQlZkyQrUx38TVsFS`) as the interactive frontend prototype authority.
+Since R3-A1 the **current-authority lane** of the Figma Design file
+(`hXJElH4p72KfgAaoUyfNOC`) is the design documentation and visual reference
+authority; its historical lanes remain historical. Repository contracts remain
+the sole functional authority.
 
-No Figma or Figma Make write was performed in this pass. `.codex/CURRENT.md`
-records `FIGMA_WRITE: FORBIDDEN`, and the fixes here are routing and behavior
-corrections that do not alter Make's visual composition. The Make source should be
-reconciled to the corrected public CTA destinations when Figma write authority is
-separately granted; the visual treatment of those controls is unchanged.
+**Historical, R3:** no Figma or Figma Make write was performed in the R3 pass.
+`.codex/CURRENT.md` then recorded `FIGMA_WRITE: FORBIDDEN`, and R3's fixes were
+routing and behaviour corrections that did not alter Make's visual composition.
+R3 recorded that the Make source should be reconciled to the corrected public CTA
+destinations once write authority was granted.
+
+**Superseded by R3-A1.** That authority was granted. R3-A1 authorizes bounded
+writes to those two design files and nothing else, and performed them: the Figma
+Design current-authority lane is reconciled, and the eight-file Make changeset was
+applied. The Make **save did not complete** — Figma could not reconnect — so Make
+is still Version 39 and that changeset is unsaved. Until the save lands and is
+read back, treat Make v39 as carrying the old public request entry, and treat
+`DESIGN.md` plus the Figma Design current lane as authoritative for the corrected
+model. See `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`.

@@ -1,25 +1,145 @@
-# Current Environment Handoff — FVR-02 final batch (artifact regeneration + continuity closeout)
+# Current Environment Handoff — R3-A1 design synchronization to Codex preview adoption
 
-FROM: DEEPSEEK_V4_PRO:/root/ds1_fvr02_closeout_v4
-TO: GPT-5.6_SOL_MAX:/root (read-only orchestrator/final reviewer)
+FROM: Claude Code (Opus 5), R3-A1 design-authority synchronization
+TO: Codex — frontend implementation and local preview adoption
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY_EXCEPT_PRESERVED_EXCLUDED_UNTracked `.ai-bridge/`
+WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
 HANDOFF_STATUS: READY_FOR_HANDOFF
-PHASE: FVR02_FRONTEND_MEDIA_MOTION_INDEX_IMPLEMENTATION
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr02-full-frontend-recovery-media-motion-index.md
-ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr02-a2-ox-first-routing.md;.codex/specs/accepted/2026-08-22-fvr02-a2-local-preview-resilience.md
-STATUS: BLOCKED_PARTIAL_FVR02
-COMPLETED: FVR-02 implementation commits after local-preview acceptance: ae64a519beabd23647dc92b6d9d855044ef53cc8, b826ceb05e15b5e98e91e4230beeb918c91e467c, da5d517deda0b72848198a79b3c66b082d51522d, 8794140d96c22f05478f32d58f4f82a96f33cbad, 06b646b3a76db0475f9c1bfdd67c8abeedaf9737, afe71859f9f9d06a7358e434db0386179602a0c7, a8cc23bf0d8ade1458eda74b55b195129a14bffb, d5d85d6a9f43dfdbdb6feb790d042b4fd6e17487; regenerated tracked frontend artifacts; final batch continuity records committed. Closeout: writer-lock transfer checkpoint then EOF-only trailing blank-line correction in index.css/theme.css plus continuity reconciliation, lock release, commit, and push to origin/frontend-design-integration.
-VALIDATION: `npm test` = 147 files / 1,114 tests passed (136.90s); full Playwright after final UI = 120 passed across five widths plus targeted skip-link 5 passed; `npm run build` passed; `npm run verify:dist` passed (sha256 c84c8b398b9d67ab unchanged by EOF-only CSS edits); `npm run check:agents` passed (12 project files); `npm run check:continuation` passed (14 required fields); `git diff --check 842f4c6b4468462928b1b9e6ab9ae98fa80ebbf8..HEAD` passed; `npm run handoff:verify` passed.
-EXTERNAL_ACTIONS: Git commit and push of the FVR-02 closeout checkpoint to origin/frontend-design-integration; no Figma/provider/Production/data/migration/deployment writes; guarded preview left RUNNING at 127.0.0.1:4173; running-app Figma connector session remained stale-auth (OAuth completed) so no live connector read this turn; Design/Make evidence re-verified read-only via authenticated Chrome.
-BLOCKER: FVR02_VIDEO_AUTHORITY_CONFLICT (live Make v39 exposes no hero video source; poster-only intentional, no source fabricated) plus FVR02_PUBLIC_MEDIA_BLOCKED (seed advertisement expired 2026-08-01, referenced R2 object missing, no accepted seed/upload runbook, no media mutation authorized); FI-04 not ready/not advanced.
-NEXT_EXACT_ACTION: Parent orchestrator final acceptance review of the FVR-02 final batch; FI-04 not ready/not advanced; preview remains RUNNING at 4173 (do not restart/stop).
-RESUME_COMMANDS: `git status --short`; `git rev-parse HEAD`; `npm run check:agents`; `npm run check:continuation`; `npm run handoff:verify`.
-PROHIBITED_ACTIONS: Production deployment/data write; provider/Figma write; backend/API/auth/data/schema/migration change; FI-04 start; media population without accepted seed/upload runbook; history rewrite/reset/clean/force-push; touching `.ai-bridge/`.
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md
+
+COMPLETED: Adopted the R3-A1 bounded design-provider write authority as an accepted amendment and reconciled the `.codex` records that previously said `FIGMA_WRITE: FORBIDDEN`. Resolved both provider identities live. Reconciled the live Figma Design current-authority lane: added R3-A1 block `733:2` to authority board `568:2` on page `55:3`, corrected the board freshness line `568:4`, rewrote module-index `680:13` so the public Request Center and internal Request Hub are distinct, repaired dangling pointers in `680:16`, and renamed page-40 frame `300:2` to the internal Request Hub. Applied the public-request reconciliation to eight live Figma Make source files. Rewrote `DESIGN.md` to the post-R3-A1 authority model. Corrected the D24.0 citation in `docs/frontend/WORKFLOW_ARCHITECTURE.md`.
+
+VALIDATION: Figma Design writes were read back — a full-board text scan returns zero remaining "Staff Request Center" strings on the authority board, and blocks `733:2` were screenshotted after each edit. `npm run check:agents`, `npm run check:continuation` and `npm run handoff:verify` passed before the governance commit. `git diff --check` clean. Remote readback confirmed 0 ahead / 0 behind at the governance checkpoint. The Figma Make changeset is NOT validated: it is unsaved, so no version readback, no re-hash, and no prototype exercise was possible.
+
+EXTERNAL_ACTIONS: Live Figma Design writes to `hXJElH4p72KfgAaoUyfNOC` (authorized by R3-A1). Live Figma Make edits to `rP9W9MQlZkyQrUx38TVsFS` staged but NOT saved. Git commit and push to `origin/frontend-design-integration`. No Playground, Production, `main`, backend, schema, migration, D1/R2, deployment, or other provider action.
+
+BLOCKER: R3A1_MAKE_SAVE_BLOCKED. The Figma Make save did not complete; Figma reported "Some changes won't be synced until Figma is able to reconnect" and showed a disconnected-cloud indicator. Make is still Version 39. The eight-file changeset exists only as client-side pending edits in a browser tab that was deliberately left open, not reloaded and not discarded. The full changeset is tabulated in `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md` and is reproducible from that table alone.
+
+## Provider identity
+
+| Field | Value |
+|---|---|
+| FIGMA_DESIGN_FILE | `hXJElH4p72KfgAaoUyfNOC` (28 pages) |
+| FIGMA_DESIGN_CURRENT_AUTHORITY | page `55:3` → board `568:2` → R3-A1 block `733:2` |
+| FIGMA_DESIGN_MODULE_INDEX | `680:13` |
+| FIGMA_MAKE_FILE | `rP9W9MQlZkyQrUx38TVsFS` |
+| FIGMA_MAKE_PREVIOUS_VERSION | 39 |
+| FIGMA_MAKE_CURRENT_VERSION | **39 — unchanged; R3-A1 save did not land** |
+| MAKE_PENDING_EDITS | 8 files, unsaved |
+| REPOSITORY_BASELINE_COMMIT | `e30fbff` (R3 public-entry repair) |
+
+## Design-to-code traceability
+
+Implement by this map rather than visually guessing. Every row is already true in
+`src/frontend/` as of `e30fbff`; Codex's job is to confirm it end-to-end in the
+running preview and against the updated design references.
+
+| CHANGE_ID | Product reason | Figma Design | Figma Make | Frontend file(s) | Test | Visual acceptance |
+|---|---|---|---|---|---|---|
+| `R3A1-REQUEST-PUBLIC-ENTRY` | Public requesters could not start a request at all | board `733:2`; module index `680:13`; page 40 `626:2` | `landing/HeroSection.tsx`, `public/Footer.tsx`, `public/PublicMobileDrawer.tsx`, `landing/LogisticsHubSection.tsx` | same four files under `src/frontend/app/` | `tests/e2e/frontend-cutover.spec.js` R3 cases | landing CTA reaches "PUBLIC REQUEST · NO SIGN-IN", never the sign-in wall |
+| `R3A1-STAFF-SIGNIN-SEPARATION` | Generic sign-in denied valid staff lacking one capability | board `733:2` | `PublicFlows.tsx`, `AppRouteRenderer.tsx` | `src/frontend/app/PublicFlows.tsx`, `app/useAppController.ts` | R3 release-only sign-in case | "Access authorized", no "Access denied" |
+| `R3A1-REQUEST-HUB-INTERNAL-CONTEXT` | Internal hub was labelled "Staff Request Center", colliding with the public centre | page 40 frame `300:2`; `680:13` | n/a (FI-04 not exposed) | none yet — FI-04 | n/a | internal hub reads INTERNAL / STAFF SESSION REQUIRED, marked READY FOR FI-04, never implementation-verified |
+| `R3A1-PUBLIC-TRACKING-PROJECTION` | Public tracking must stay requester-safe | `680:13`; page 40 tracking frames | `PublicFlows.tsx` tracking view | `src/frontend/app/PublicFlows.tsx` | existing tracking cases | no internal operational detail exposed publicly |
+| `R3A1-NAV-PUBLIC-STAFF-BOUNDARY` | Public components must not hold `requireAuth` | board `733:2` | `PublicNavbar.tsx`, `LandingPage.tsx` | `src/frontend/app/public/PublicNavbar.tsx`, `app/landing/LandingPage.tsx` | five-width nav cases | Staff Sign In remains a separate, visibly distinct entry |
+
+## Files Codex MUST read first
+
+- `AGENTS.md`
+- `DESIGN.md`
+- `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, this file
+- `docs/frontend/WORKFLOW_ARCHITECTURE.md`
+- `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`
+- `.codex/R3_PUBLIC_STAFF_BOUNDARY_RECEIPT.md`
+- `docs/design/FIGMA_MAKE_SOURCE_REGISTER.md`, `docs/design/FIGMA_BASELINE_REGISTER.md`
+
+## Files Codex MUST NOT treat as current authority
+
+- `.impeccable/design.json` — stale from the pre-cutover v4.1 design; it misreports
+  the current oxblood/gold system as drift. Do not tune the design to satisfy it.
+- Any design frame or page named `HISTORICAL`, `SUPERSEDED`, or `PROTOTYPE`.
+- The `SUPERSEDED_MODEL_CONTRACT` writer/orchestrator records in `.codex` history.
+- `docs/design/CODEX_LANDING_REPRODUCTION_*.md` and other pre-R3 handoffs.
+- Any claim that a guarded preview is running on 4173 — verified false.
+- `DESIGN.md` D24.0 as the *Request* citation — it is the *Lending* precedent.
+
+## Preview
+
+LOCAL_PREVIEW_COMMAND: `npm run dev -- --host 127.0.0.1 --port 5199` with `HAU_PLAYGROUND_PROXY_ORIGIN` unset
+LOCAL_PREVIEW_URL: http://127.0.0.1:5199
+PREVIEW_GUARD: `vite.config.js` installs the Playground proxy only when `HAU_PLAYGROUND_PROXY_ORIGIN` is set. Leave it unset. LOCAL PREVIEW ONLY — no Playground proxy, no Production.
+
+RESUME_COMMANDS: `git status --short`; `git rev-parse HEAD`; `git rev-list --left-right --count HEAD...@{u}`; `npm run check:agents`; `npm run check:continuation`; `npm run handoff:verify`.
+
+PROHIBITED_ACTIONS: Playground, Production or `main` writes, merges, promotion or deployment; backend/API/auth semantic change; schema or migration; D1/R2 writes; provider writes other than the two canonical design files named by R3-A1; exposing FI-04 staff workspaces; marking any FI-04 surface implementation-verified; touching `.ai-bridge/`; history rewrite, reset, clean or force-push; discarding or reloading away the unsaved Figma Make pending edits.
+
+NEXT_EXACT_ACTION: Codex adopts the R3-A1 synchronized design into src/frontend/ and the local frontend preview, verifies against the updated Figma Design current-authority references, and separately retries the blocked Figma Make save and records its real version; Playground, Production and main remain untouched.
+
+---
+
+## Codex resume block
+
+```text
+NEXT_EXECUTOR:
+Codex
+
+NEXT_INTENT:
+FRONTEND_IMPLEMENTATION
+
+NEXT_OBJECTIVE:
+Apply the R3-A1 synchronized Figma Design and Figma Make changes to the
+frontend-design-integration implementation and local preview.
+
+READ_FIRST:
+AGENTS.md
+DESIGN.md
+.codex/CURRENT.md
+.codex/CURRENT_TASK.md
+.codex/CURRENT_HANDOFF.md
+docs/frontend/WORKFLOW_ARCHITECTURE.md
+.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md
+docs/design/FIGMA_MAKE_SOURCE_REGISTER.md
+docs/design/FIGMA_BASELINE_REGISTER.md
+
+IMPLEMENTATION_TARGET:
+src/frontend/ and the current frontend-owned implementation surfaces only
+
+VISUAL_AUTHORITY:
+Figma Design hXJElH4p72KfgAaoUyfNOC current-authority lane
+  page 55:3 -> board 568:2 -> R3-A1 block 733:2
+  module index 680:13
+  page 40 public.request 626:2 / internal Request Hub 300:2
+Figma Make rP9W9MQlZkyQrUx38TVsFS at Version 39
+  NOTE: v39 still carries the OLD public request entry because the
+  R3-A1 save did not land. DESIGN.md and the Figma Design current lane
+  are authoritative for the corrected model until that save is verified.
+
+PREVIEW:
+local frontend preview only
+npm run dev -- --host 127.0.0.1 --port 5199
+HAU_PLAYGROUND_PROXY_ORIGIN unset
+
+FORBIDDEN:
+Playground
+Production
+Main
+deployment
+backend semantic changes
+schema/migration
+D1/R2 mutation
+exposing FI-04 staff workspaces
+
+FIRST_ACTION:
+Resolve live HEAD and confirm 0 ahead / 0 behind. Start the local preview.
+Implement and confirm the R3-A1 traceability items in priority order,
+starting with R3A1-REQUEST-PUBLIC-ENTRY, comparing each against the updated
+Figma references. Then retry the blocked Figma Make save, verify the real
+new version and pending-edit count, and record both in
+docs/design/FIGMA_MAKE_SOURCE_REGISTER.md.
+```

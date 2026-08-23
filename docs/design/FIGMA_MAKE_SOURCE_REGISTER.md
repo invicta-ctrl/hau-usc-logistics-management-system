@@ -1,15 +1,21 @@
 # Figma Make Source Register
 
 The point of this file: **the accepted Figma Make v39 source is recoverable from
-Git.** A future session does not need to open Figma, and cannot, because no MCP
-tool reads a `/make/` URL.
+Git.** A future session does not need to open Figma to recover the adopted state.
+
+> **Corrected 2026-08-23 (R3-A1).** The original claim that "no MCP tool reads a
+> `/make/` URL" is wrong. `mcp__figma__get_design_context` with `nodeId "0:1"`
+> on a Make file key **does** return the project's source files as readable
+> resource links (205 files for this project). What is genuinely impossible is
+> *writing*: `mcp__figma__use_figma` rejects Make file keys outright. Make edits
+> must go through the Make editor's code view in an authenticated browser.
 
 ```text
 FIGMA_DESIGN_FILE        hXJElH4p72KfgAaoUyfNOC
 FIGMA_DESIGN_BASELINE_ID DESIGN_BASELINE_2026-08-20-F
 FIGMA_DESIGN_VERSION     content identity only; the bridge cannot name a native version
 FIGMA_MAKE_FILE          rP9W9MQlZkyQrUx38TVsFS
-FIGMA_MAKE_VERSION       Version 39 - pending edits NONE
+FIGMA_MAKE_VERSION       Version 39 - see the R3-A1 section: 8 files edited, UNSAVED
                          v37 canonical theme + route adoption   5 files
                          v38 landing atrium pinned              1 file
                          v39 MK-06 scoped atrium palette pin    1 file
@@ -19,9 +25,14 @@ ROUTE_GENERATOR          scripts/design/build-make-routes.mjs
 MAKE_SOURCE_SNAPSHOT     output/design/make-adoption/   (v39 adopted state)
 MAKE_ROLLBACK_SNAPSHOT   output/design/make-preservation/ (v36 captures)
 MAKE_SOURCE_STATUS       RECOVERABLE_FROM_GIT
-LIVE_PROVIDER_RECHECK    UNAVAILABLE_BY_TOOLCHAIN (see section 4)
+LIVE_PROVIDER_RECHECK    READ available via get_design_context; WRITE only via the
+                         Make editor in a browser (see the correction above)
 VERIFIED                 2026-08-21, sha256 recomputed from the working tree
-FIGMA_WRITES             0
+                         2026-08-23 R3-A1: live version re-read as 39; hashes NOT
+                         recomputed because nothing new was saved
+FIGMA_MAKE_WRITES        0 saved (8 files edited, save blocked - see R3-A1 section)
+FIGMA_DESIGN_WRITES      R3-A1 reconciled the current-authority lane; see
+                         .codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md
 ```
 
 ## 1. The v39 adopted source in Git
@@ -170,3 +181,58 @@ Cheap re-verification:
 ```bash
 sha256sum output/design/make-adoption/theme.css
 ```
+
+---
+
+## R3-A1 — 2026-08-23 — public request reconciliation, SAVE NOT COMPLETED
+
+```text
+AMENDMENT               .codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md
+PREVIOUS_VERSION        39
+CURRENT_VERSION         39   (UNCHANGED - the provider save did not land)
+PENDING_EDITS_BEFORE    NONE (verified on open, so nothing unknown was swept in)
+PENDING_EDITS_AFTER     8 files, UNSAVED
+FILES_CHANGED           8
+SOURCE_SNAPSHOT         NOT UPDATED - there is no saved provider state to mirror
+ROLLBACK_SNAPSHOT       unchanged (output/design/make-preservation/, v36 captures)
+HASHES                  NOT RECOMPUTED - nothing saved to hash
+FIGMA_MAKE_WRITE        AUTHORIZED_BY_R3_A1, APPLIED_IN_EDITOR, SAVE_BLOCKED
+BLOCKER                 Figma reported "Some changes won't be synced until Figma is
+                        able to reconnect"; a disconnected-cloud indicator was shown.
+CODEX_ADOPTION_POINTER  .codex/CURRENT_HANDOFF.md
+```
+
+### Why this section exists
+
+The eight-file changeset lives only as client-side pending edits in an open Make
+browser tab. The authoritative, reproducible description of that changeset is the
+table in `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`. If the browser state is
+lost, re-apply from that table — it is complete.
+
+### Changed provider files (all under `src/app/`)
+
+`landing/HeroSection.tsx`, `landing/LandingPage.tsx`,
+`landing/LogisticsHubSection.tsx`, `public/Footer.tsx`,
+`public/PublicMobileDrawer.tsx`, `public/PublicNavbar.tsx`,
+`AppRouteRenderer.tsx`, `PublicFlows.tsx`.
+
+`useAppController.ts` was deliberately **not** changed: the Make prototype grants
+`capabilities: [...AUTH_ROUTES]` and has no `capabilities.includes(target)` gate,
+so FE-R3-002's capability-gate half has no counterpart there. Rationale is in the
+receipt.
+
+### Required steps once Figma reconnects
+
+1. Confirm the 8 pending edits are still listed with the deltas in the receipt.
+2. Save; wait for a real version bump.
+3. Reload; verify the new version and `PENDING_EDITS = 0`.
+4. Re-read and re-hash the 8 files; update `MAKE_SOURCE_SNAPSHOT` and the hash
+   table above, and add a new `FIGMA_BASELINE_REGISTER` baseline.
+5. Exercise the prototype: public "Start a logistics request" must reach the
+   public Request Center; "Staff sign in" must stay a separate staff entry.
+
+### STALE IF
+
+- a live Make reload reports a version other than 39;
+- the pending-edit count is neither 8 nor 0;
+- the save lands and this section still says `CURRENT_VERSION 39`.

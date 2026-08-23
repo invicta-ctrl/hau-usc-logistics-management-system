@@ -594,3 +594,62 @@ VERIFIED BY      scripts/design/verify-make-landing-theme.mjs — 31/31 conform
                    pinned chrome  11 tokens · must NOT move · 11 PASS
                    reading planes 20 tokens · must move     · 20 PASS
 ```
+
+## DESIGN_BASELINE_2026-08-23-R3A1
+
+```text
+DESIGN_BASELINE_ID:      DESIGN_BASELINE_2026-08-23-R3A1
+STATUS:                  PARTIAL — Figma Design current-authority lane reconciled;
+                         Figma Make save BLOCKED on provider reconnection
+DESIGN BRANCH:           frontend-design-integration
+ACCEPTED AMENDMENT:      .codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md
+REPOSITORY BASELINE:     e30fbff (R3 public-entry repair)
+FIGMA FILE:              hXJElH4p72KfgAaoUyfNOC
+FIGMA PAGES:             28 — re-verified live via use_figma
+FIGMA MAKE:              rP9W9MQlZkyQrUx38TVsFS — Version 39, 8 files edited, UNSAVED
+IMPLEMENTATION READY:    NO for FI-04; the public lane is already implemented at e30fbff
+```
+
+### Connector truncation, resolved
+
+`get_metadata` with no `nodeId` returns only `0:1 — 00 — Capture Index` for this
+file. That is the connector exposing a single loaded page; it is **not** evidence
+the file was emptied. `use_figma` enumerates all 28 pages, and direct node reads
+resolve normally. Do not re-open this as a defect.
+
+### What changed in this baseline
+
+| Change | Node / ID | Verified |
+|---|---|---|
+| Added the R3-A1 public/staff workflow authority block to the CURRENT board | `733:2` (heading `733:3`, body `733:4`) | Read back + screenshot |
+| Board freshness line reconciled to R3-A1 / 2026-08-23 | `568:4` | Read back |
+| Module index: `Public Request — page 40` → **Public Request Center**, PUBLIC, NO STAFF LOGIN REQUIRED | `680:13` | Read back |
+| Module index: `Staff Request Center — page 40` → **Internal Request Hub**, INTERNAL, STAFF SESSION REQUIRED, DESIGN AUTHORITY / READY FOR FI-04, not implementation-verified | `680:13` | Read back |
+| Interactive-counterpart block: removed two dangling pointers (`docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md` and `prototypes/impeccable-whole-site-redesign-v5/` no longer exist on this branch), repointed to `.codex/CURRENT_HANDOFF.md` and the R3-A1 receipt | `680:16` | Read back; paths checked on disk |
+| Page 40 internal workbench frame renamed to the internal Request Hub with INTERNAL / STAFF SESSION REQUIRED / READY FOR FI-04 labelling | `300:2` | Read back |
+| Board height grown to fit the new block | `568:2` | Read back |
+
+### Verified clean
+
+A full text scan of board `568:2` returns **zero** remaining `Staff Request Center`
+strings. Page 40's CURRENT frames were already correctly named (`626:2`
+`public.request`, `624:2` `portal.request`). The CURRENT landing frames `411:2`
+and `411:2571` already show "Start a logistics request", "Track a request" and a
+separate "Staff sign in", so no landing copy change was needed. The 200 landing
+matches for "Staff sign in" are in `HISTORICAL` frames `275:*` / `277:*` and were
+deliberately left untouched.
+
+### Authority correction carried by this baseline
+
+`D24.0` is the OWNER-LOCKED no-login model for the Public **Lending** Center. It
+is not the citation for the public **Request** Center, whose authority is `D06`'s
+route inventory (`/request` = Public request intake), production
+`public-requester-portal.js` parity at `0.8.2 / c316e047`, and the accepted
+`/api/public/request` contract. `.codex/R3_PUBLIC_STAFF_BOUNDARY_RECEIPT.md`
+quoted D24.0 for Request; that citation is superseded by `DESIGN.md`.
+
+### STALE IF
+
+- the Figma Make save lands and no successor baseline records the real version;
+- board `568:2` loses block `733:2`, or `680:13` reverts to "Staff Request Center";
+- `DESIGN.md` and this register stop agreeing on the provider identities.

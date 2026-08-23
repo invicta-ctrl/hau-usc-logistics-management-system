@@ -1,22 +1,20 @@
-# Current Bounded Task — FVR-02 final batch (artifact regeneration + continuity closeout)
+# Current Bounded Task — Codex R3-A1 preview adoption
 
-INTENT: FRONTEND_RECOVERY
+INTENT: FRONTEND_IMPLEMENTATION
 MODE: EXECUTE
-OBJECTIVE: Correct the two EOF-only trailing blank-line `git diff --check 842f4c6b..HEAD` failures in the frontend CSS, reconcile the FVR-02 continuity records with verified live Git/Design/Make/API evidence, release the writer lock, commit and push the closeout checkpoint, and stop with FVR-02 BLOCKED_PARTIAL and FI-04 not advanced.
-TARGET: frontend-design-integration worktree; `src/frontend/styles/index.css` and `src/frontend/styles/theme.css` (EOF-only trailing blank-line correction); `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, `.codex/FVR02_RECEIPT.md`, `.codex/FVR02_A2_LOCAL_PREVIEW_RECEIPT.md`, `docs/WORK_CONTINUATION.md`.
+OBJECTIVE: Apply the R3-A1 synchronized Figma Design and Figma Make workflow and visual changes to the `frontend-design-integration` implementation, run the local frontend preview, and verify the result against the updated design references. Separately, retry the Figma Make provider save that R3-A1 could not complete and record its real version.
+TARGET: `src/frontend/` and frontend-owned implementation surfaces on the `frontend-design-integration` worktree only; `docs/design/FIGMA_MAKE_SOURCE_REGISTER.md` and `docs/design/FIGMA_BASELINE_REGISTER.md` when the Make save lands.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr02-full-frontend-recovery-media-motion-index.md
-ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr02-a2-ox-first-routing.md;.codex/specs/accepted/2026-08-22-fvr02-a2-local-preview-resilience.md
-AUTHORITY: Earl current instruction -> accepted FVR-02 spec -> accepted FVR-02-A2 amendments -> live Figma Make source -> accepted backend/API/auth/data contracts -> verified repository state.
-REQUIRED_MODEL: GPT-5.6_SOL_MAX
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md
+AUTHORITY: Earl current instruction -> accepted R3-A1 amendment -> accepted backend/API/auth/data/security contracts -> live Figma Make (interactive prototype) -> live Figma Design current-authority lane (design documentation and visual reference) -> repository mirrors and registers.
+REQUIRED_MODEL: ANY_ACCEPTED_WRITER
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
-PHASE: FVR02_FRONTEND_MEDIA_MOTION_INDEX_IMPLEMENTATION
-RISK: HIGH
-SCOPE: Remove only the superfluous trailing blank lines at EOF in the two CSS source files (no CSS semantic or Figma fidelity change), correct the FVR-02 continuity records to verified live Git/Design/Make/API evidence, release the writer lock, commit and push the closeout checkpoint; no behavioral source, test, dependency, provider, Figma write, data, migration, deployment, or Production change.
-OUT_OF_SCOPE: Product source/tests, dependencies, auth/backend/API semantics, schema/data/R2/D1, migrations, Figma, provider, deployment, Production, unrelated docs, `.ai-bridge/`, and history rewrite/reset/clean/force-push.
-VERIFICATION: `git diff --check 842f4c6b4468462928b1b9e6ab9ae98fa80ebbf8..HEAD`; `npm run build`; `npm run verify:dist`; `npm run check:agents`; `npm run check:continuation`; `npm run handoff:verify`; final diff review; remote readback of pushed HEAD.
-STOP_CONDITIONS: conflicting active writer; unexpected dirty work; missing/contradictory authority; need for server/auth/data/schema/migration/provider/Figma/Production change; FI-04 start; verification failure not safely explainable.
-STATUS: BLOCKED_PARTIAL_FVR02
-NEXT_EXACT_ACTION: Parent orchestrator final acceptance review of the FVR-02 final batch; FI-04 not ready/not advanced; preview remains RUNNING at 4173 (do not restart/stop).
+RISK: MEDIUM
+SCOPE: Implement the R3-A1 traceability items in priority order against `src/frontend/`; run the plain local Vite preview; perform local browser acceptance at 320/390/768/1024/1440; compare against the Figma Design current-authority references named in the handoff; keep the public Request Center reachable with no staff login and Staff Sign In separate; retry the blocked Make save and, once it lands, capture the saved source into the existing repository mirror structure and update the source and baseline registers with the real version and hashes.
+OUT_OF_SCOPE: Playground, Production, `main`, deployment, merges, backend/API/auth semantics, schema, migrations, D1/R2 writes, provider writes other than the two canonical design files named by R3-A1, FI-04 staff workspace implementation, `.ai-bridge/`, and any history rewrite, reset, clean or force-push.
+VERIFICATION: `npm run check:agents`; `npm run check:continuation`; `npm run handoff:verify`; `npm run build`; `npm run verify:dist`; `npm test`; frontend Playwright across five widths; `git diff --check`; local preview reachable and the public request path exercised in a browser; full diff review; remote readback of the pushed HEAD at 0 ahead / 0 behind.
+STOP_CONDITIONS: another writer appears; unknown dirty work at risk; missing or contradictory authority; the change would invent backend or product policy; FI-04 staff workspaces would have to be exposed; a required change crosses into Playground, Production or `main`; the Make pending edits are found lost and the receipt table cannot be reapplied cleanly; verification failure that cannot be explained safely.
+STATUS: READY_FOR_CODEX
+NEXT_EXACT_ACTION: Codex adopts the R3-A1 synchronized design into src/frontend/ and the local frontend preview, verifies against the updated Figma Design current-authority references, and separately retries the blocked Figma Make save and records its real version; Playground, Production and main remain untouched.

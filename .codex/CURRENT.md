@@ -1,67 +1,80 @@
 # Current Work Pointer — frontend-design-integration
 
 PROGRAM: HAU-USC Logistics
-MILESTONE: FVR-02_FULL_FRONTEND_RECOVERY_MEDIA_MOTION_INDEX
-STATUS: BLOCKED_PARTIAL_FVR02
-PHASE: FVR02_FRONTEND_MEDIA_MOTION_INDEX_IMPLEMENTATION
-LOCAL_PREVIEW_REPAIR: ACCEPTED_LIVE_RUNTIME_VERIFIED;CORRECTION_COMMIT_4cbb921;PRIOR_PASSES_346f4bf_ac2d722_2d66d9d_b718ba1_ee412d4_9ad2d35_adf52f8_FAILED
+MILESTONE: R3_A1_DESIGN_AUTHORITY_SYNCHRONIZATION
+STATUS: IN_PROGRESS_R3A1_MAKE_SAVE_BLOCKED
+PHASE: R3A1_DESIGN_SYNC_THEN_CODEX_PREVIEW_ADOPTION
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
-BASELINE_HEAD: RESOLVE_FROM_LIVE_GIT
-LAST_VERIFIED_AHEAD_BEHIND: RESOLVE_FROM_LIVE_GIT
 UPSTREAM: origin/frontend-design-integration
-AHEAD_BEHIND: RESOLVE_FROM_LIVE_GIT
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY_EXCEPT_PRESERVED_EXCLUDED_UNTracked `.ai-bridge/`
+WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
 HANDOFF_STATUS: READY_FOR_HANDOFF
-REQUIRED_MODEL: GPT-5.6_SOL_MAX
-SOL_MAX_ROLE: top-level orchestrator and final reviewer, read-only, writes forbidden
-CANONICAL_WRITER: DeepSeek V4 Pro #1
+REQUIRED_MODEL: ANY_ACCEPTED_WRITER
+NEXT_EXECUTOR: Codex
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr02-full-frontend-recovery-media-motion-index.md
-ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr02-a2-ox-first-routing.md;.codex/specs/accepted/2026-08-22-fvr02-a2-local-preview-resilience.md
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md
+ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md
+R3A1_RECEIPT: .codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md
+R3_RECEIPT: .codex/R3_PUBLIC_STAFF_BOUNDARY_RECEIPT.md
+WORKFLOW_ARCHITECTURE: docs/frontend/WORKFLOW_ARCHITECTURE.md
 
-AUTHORITY: Earl instruction -> accepted FVR-02 spec -> accepted FVR-02-A2 amendments -> live Figma Make implementation/composition/motion/source -> live Figma Design docs/annotations/variables/assets -> accepted backend/API/auth/data/security contracts -> current Figma-native source/tests -> verified mirrors fallback only -> V5 historical archaeology only (never authority).
+AUTHORITY: Earl instruction -> accepted R3-A1 amendment -> accepted backend/API/auth/data/security contracts (functional truth) -> live Figma Make rP9W9MQlZkyQrUx38TVsFS (interactive prototype authority) -> live Figma Design hXJElH4p72KfgAaoUyfNOC current-authority lane (design documentation and visual reference) -> repository design mirrors and registers -> historical evidence, never authority.
+
+## Provider write authority after R3-A1
+
+FIGMA_DESIGN_WRITE: AUTHORIZED_AND_PERFORMED_BY_R3_A1
+FIGMA_MAKE_WRITE: AUTHORIZED_BY_R3_A1_SAVE_PENDING_PROVIDER_RECONNECT
+OTHER_PROVIDER_WRITE: FORBIDDEN
+PLAYGROUND_WRITE: FORBIDDEN
+PRODUCTION_WRITE: FORBIDDEN
+PRODUCTION_DEPLOYMENT: FORBIDDEN
+MAIN_WRITE: FORBIDDEN
+BACKEND_SEMANTIC_CHANGE: FORBIDDEN
+MIGRATION: FORBIDDEN
+
+R3-A1 supersedes the older `FIGMA_WRITE: FORBIDDEN` and `PROVIDER_WRITE: FORBIDDEN`
+records for these two canonical design files only. Historical FVR-02 and FVR-001
+receipts that record "no Figma write occurred" remain true of their own tasks and
+are not rewritten.
+
+## R3-A1 state
+
+FIGMA_DESIGN_STATUS: RECONCILED. Authority board page 55:3 / board 568:2 now carries R3-A1 block 733:2; module index 680:13 distinguishes the public Request Center from the internal Request Hub; page 40 frame 300:2 renamed to the internal Request Hub; dangling pointers in 680:16 repaired. Read back and screenshotted.
+FIGMA_MAKE_STATUS: EIGHT_FILES_EDITED_SAVE_NOT_COMPLETED. Make remains at Version 39. Figma reported it could not reconnect. Edits are held as client-side pending edits; the full changeset is tabulated in the R3-A1 receipt and is reproducible from it.
+DESIGN_MD_STATUS: REWRITTEN to the post-R3-A1 authority model.
+WORKFLOW_ARCHITECTURE_STATUS: CITATION_CORRECTED and pointed at R3-A1.
+IMPECCABLE_SIDECAR_STATUS: STALE — not yet refreshed (FE-R3-010 / FE-R3-011).
+
+## Correction of record
+
+`.codex/R3_PUBLIC_STAFF_BOUNDARY_RECEIPT.md` cites `DESIGN.md` D24.0 as the
+OWNER-LOCKED authority for the public Request Center. D24.0 is the OWNER-LOCKED
+no-login model for the Public **Lending** Center. The correct Request authority is
+D06 Product / Route Inventory, production `public-requester-portal.js` parity, and
+the accepted `/api/public/request` contract. The historical receipt is preserved;
+`DESIGN.md` carries the correction.
+
+## Historical continuity — preserved, not current
 
 FVR001_CUTOVER_COMMIT: f7e5bf83205dbe58b5fb72126a4456747d92e906
 FVR001_STATUS: CLOSED_PUBLISHED
-GOVERNANCE_COMMIT: a7da2e46902273f6724b21dffc5854f11e920c26
-GOVERNANCE_COMMIT_NOTE: branch-local AGENTS appendix, non-propagating
+FVR02_STATUS: BLOCKED_PARTIAL — media blockers unchanged and untouched by R3-A1
+FVR02_RECEIPTS: .codex/FVR02_RECEIPT.md; .codex/FVR02_A2_LOCAL_PREVIEW_RECEIPT.md
+FI04_STATUS: NOT_STARTED. AuthenticatedShell is not mounted; staff route components are orphaned. Design material for pages 20-80 is DESIGN AUTHORITY / READY FOR FI-04 IMPLEMENTATION, never implementation-verified.
+SUPERSEDED_MODEL_CONTRACT: the DeepSeek-writer / Sol-orchestrator model contract recorded before R3 is historical. R3 and R3-A1 were executed by Claude Code under Earl's direct instruction with ACTIVE_WRITER NONE at entry.
 
-RECLASSIFICATION:
-FI00_STATUS: REVALIDATE
-FI01_STATUS: REVALIDATE
-FI02_FUNCTIONAL_STATUS: PRESERVE_IF_VERIFIED
-FI02_VISUAL_MEDIA_MOTION_STATUS: REOPENED
-FI03_FUNCTIONAL_STATUS: PRESERVE_IF_VERIFIED
-FI03_VISUAL_STATUS: REVALIDATE
-PREVIEW_MODULE_INDEX_STATUS: IMPLEMENTED_GATED_PREVIEW
-FI04_STATUS: BLOCKED
+## Preview
 
-MODEL_CONTRACT: GPT-5.6 Sol Max sole read-only orchestrator/final reviewer (Sol writes forbidden, only Sol spawns, depth one, no recursion/substitution). DeepSeek V4 Pro #1 sole canonical writer. Ox Alpha is the default read-only subagent for all safe review/scout/audit domains via explicit model override openrouter/stealth/ox-alpha; additional DeepSeek is exceptional heavy-analysis only with a one-sentence WHY_DEEPSEEK_NOT_OX. fork_turns none/narrow capsules for Ox; no silent substitution; one writer; non-propagation unchanged; actual runtime concurrency ceiling unchanged; Ox writer failover only under separately accepted FVR-02-A1 exhaustion authority.
+LOCAL_PREVIEW: NOT RUNNING. The earlier `GUARDED_PREVIEW: http://127.0.0.1:4173 RUNNING healthy` claim was verified stale during R3 — port 4173 had no listener and no owning process. Nothing was stopped or restarted.
+LOCAL_PREVIEW_COMMAND: `npm run dev -- --host 127.0.0.1 --port 5199` with `HAU_PLAYGROUND_PROXY_ORIGIN` UNSET, so `vite.config.js` installs no Playground proxy. Do NOT use `preview:frontend:*`: those scripts resolve and verify a private Playground origin and are out of R3 scope.
+LOCAL_PREVIEW_URL: http://127.0.0.1:5199
+LOCAL_PREVIEW_VERIFIED: 2026-08-23 — no listener on 4173 or 5199, confirming the preview is not running.
+FRONTEND_E2E_COMMAND: `npx playwright test --config playwright.frontend.config.js` (its own webServer binds 127.0.0.1:4174)
 
-FIRST_WAVE: Ox-first; routine read-only lanes default to Ox Alpha; DeepSeek reserved for the canonical writer and exceptional heavy-analysis lanes; no invented lane IDs or results.
+BLOCKER: R3A1_MAKE_SAVE_BLOCKED — the Figma Make provider save did not complete because Figma could not reconnect; Make is still Version 39 and the eight-file changeset is unsaved. Secondary: FVR-02 media blockers unchanged; FI-04 not started.
 
-LISTENER_EVIDENCE: 2026-08-22 -> initial A2 activation observed http://127.0.0.1:4173/ NO_LISTENER; after parent live acceptance the preview is RUNNING healthy (no machine PIDs/token/port/instance recorded).
-PREVIEW_PLAN: .plans/fvr02-a2-local-preview-resilience.todo.md
-PREVIEW_RECEIPT: .codex/FVR02_A2_LOCAL_PREVIEW_RECEIPT.md
-
-GUARDED_PREVIEW: http://127.0.0.1:4173 RUNNING healthy (parent-verified; leave running)
-PRODUCTION_DEPLOYMENT: FORBIDDEN
-PRODUCTION_DATA_WRITE: FORBIDDEN
-PROVIDER_WRITE: FORBIDDEN
-FIGMA_WRITE: FORBIDDEN
-BACKEND_SEMANTIC_CHANGE: FORBIDDEN (unless separately amended)
-MIGRATION: FORBIDDEN
-
-ROLLBACK: Git revert product commits; preserve FVR-001 and rollback tag; Playground repair only via recorded existing runbook recovery; no Production/Figma rollback because no writes.
-
-BLOCKER: FVR02_VIDEO_AUTHORITY_CONFLICT (live Make v39 exposes no hero video source; poster-only is intentional and no source was fabricated) plus FVR02_PUBLIC_MEDIA_BLOCKED (prior seed advertisement expired 2026-08-01, referenced R2 object missing, no accepted seed/upload runbook, no media mutation authorized).
-
-OPEN_RISKS: hero-video authority conflict (blocker); public-media source/runbook gap (blocker).
-CONNECTOR_SESSION: Figma Make v39 and Design page-04 media evidence re-verified read-only via authenticated Chrome; the running-app Figma connector session remained stale-auth at closeout (OAuth completed), so no live connector read was completed this turn.
-
-NEXT_EXACT_ACTION: Parent orchestrator final acceptance review of the FVR-02 final batch; FI-04 not ready/not advanced; preview remains RUNNING at 4173 (do not restart/stop).
+NEXT_EXACT_ACTION: Codex adopts the R3-A1 synchronized design into src/frontend/ and the local frontend preview, verifies against the updated Figma Design current-authority references, and separately retries the blocked Figma Make save and records its real version; Playground, Production and main remain untouched.
