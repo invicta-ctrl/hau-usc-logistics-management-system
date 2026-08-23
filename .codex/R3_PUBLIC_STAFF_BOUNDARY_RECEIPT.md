@@ -128,5 +128,5 @@ FI-04 remains not started.
 This pass is **not** FRONTEND-INTEGRATION READY as R3 §43 defines it. It closes
 the P0/P1 public/staff access defects and records the remaining findings.
 
-COMMIT: recorded at commit time
+COMMIT: e30fbff1982beabc98e0b93fdfa6be5250bb919e
 PUSH: withheld pending owner confirmation
