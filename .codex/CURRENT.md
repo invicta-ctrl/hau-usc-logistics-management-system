@@ -2,18 +2,18 @@
 
 PROGRAM: HAU-USC Logistics
 MILESTONE: R3_A1_A2_OWNER_ROUTING_IDENTITY_CORRECTION
-STATUS: R3A1A2_REPO_AND_FIGMA_DESIGN_COMPLETE__FIGMA_MAKE_PARTIAL_SAVE_IN_FLIGHT
+STATUS: R3_A1_A2_FRONTEND_DESIGN_MAKE_SYNC_COMPLETE__BACKEND_AUTH_AMENDMENT_READY
 PHASE: R3A1A2_THREE_CONTEXT_CORRECTION
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: Claude Code
-WRITER_LOCK: HELD_FOR_R3A1A2
-HANDOFF_STATUS: IN_PROGRESS
+ACTIVE_WRITER: NONE
+WRITER_LOCK: RELEASED
+HANDOFF_STATUS: READY_FOR_HANDOFF
 REQUIRED_MODEL: ANY_ACCEPTED_WRITER
-NEXT_EXECUTOR: Claude Code (finish Figma Make), then Codex
+NEXT_EXECUTOR: Owner decision on the proposed backend amendment, then FI-04
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-23-r3-a1-a2-owner-routing-identity-three-context.md
@@ -44,69 +44,69 @@ records for these two canonical design files only. Historical FVR-02 and FVR-001
 receipts that record "no Figma write occurred" remain true of their own tasks and
 are not rewritten.
 
-## R3-A1-A2 state
+## R3-A1-A2 state — COMPLETE
 
 OWNER CORRECTION: the logistics Request Center is **not public**. R3 and R3-A1
 were faithful to the authority they held; that authority was wrong about the
 product. `DESIGN.md` D24.0 — OWNER-LOCKED no-login public **Lending** — is
 untouched and remains current.
 
-FRONTEND_IMPLEMENTATION_STATUS: **COMPLETE.** Three-context model implemented in
-`src/frontend/`. Entry intent is first-class (`app/entryIntent.ts`); the External
-Request Center (`app/request/ExternalRequestCenter.tsx`) binds to the real
-authenticated `/api/portal/request` contract; `PublicFlows` owns public lending
-only; Home preserves the session everywhere; activation and password reset are
-separate operations from applying for access, with an 8-digit verification field.
+FRONTEND_IMPLEMENTATION: **COMPLETE.** Three-context model in `src/frontend/`.
+Entry intent is first-class (`app/entryIntent.ts`); the External Request Center
+(`app/request/ExternalRequestCenter.tsx`) binds to the real authenticated
+`/api/portal/request` contract; `PublicFlows` owns public lending only; Home
+preserves the session everywhere; activation and password reset are separate
+operations from applying for access, with an 8-digit verification field.
 FE-R3-012 and FE-R3-006 CLOSED.
 
-TESTS_STATUS: `npm test` 1126/1126 across 148 files. Frontend Playwright 190/190
-at 320/390/768/1024/1440, of which 70 are the new R3-A1-A2 acceptance matrix
-(`tests/e2e/r3-a1-a2-routing.spec.js`) plus 12 unit tests asserting every row of
-the routing matrix (`tests/unit/frontend-entry-intent.test.js`). Build, verify:dist,
-check:agents and check:continuation all pass.
+TESTS: `npm test` 1126/1126 across 148 files. Frontend Playwright 190/190 at
+320/390/768/1024/1440, of which 70 are the R3-A1-A2 acceptance matrix, plus 12
+unit tests asserting every row of the routing matrix. Build, verify:dist and both
+governance checks pass.
 
-DOCUMENTATION_STATUS: `docs/frontend/ROUTING.md` is NEW and is the canonical
-control contract. `WORKFLOW_ARCHITECTURE.md` and `DESIGN.md` are reconciled to the
-three-context model. Superseded statements are marked, never deleted.
+DOCUMENTATION: `docs/frontend/ROUTING.md` is NEW and is the canonical control
+contract. `WORKFLOW_ARCHITECTURE.md` and `DESIGN.md` reconciled. Superseded
+statements are marked, never deleted.
 
-FIGMA_DESIGN_STATUS: **RECONCILED AND READ BACK.** Authority board `568:2` gains
-the R3-A1-A2 CURRENT block `753:2`; the R3-A1 block `733:2` is renamed and
-bannered with its original text preserved verbatim. New page `755:2`
-"10.1 — CURRENT · Frontend Architecture & Routing" mirrors the documentation
-inside the file with per-file commit and sha256 and an honest per-document
-fidelity declaration. Node `35:145` is untouched, with a CURRENT AUTHORITY
-pointer `763:2` placed 80px above it. Screenshots in
-`output/design/r3-a1-a2-readback/`.
+FIGMA_DESIGN: **RECONCILED AND READ BACK.** Authority board carries R3-A1-A2
+block `753:2`; the R3-A1 block `733:2` is renamed and bannered with its original
+text preserved verbatim. Page `755:2` "10.1 — CURRENT · Frontend Architecture &
+Routing" mirrors the documentation inside the file with commit and per-file
+sha256, re-synced to the final state. Node `35:145` untouched, with pointer
+`763:2` above it. Zero current-lane nodes assert a public Request Center.
 
-FIGMA_MAKE_STATUS: **PARTIAL — SAVE IN FLIGHT, NOT CONFIRMED.**
-`src/app/PublicFlows.tsx` transformed live (790 → 670 lines, public Request
-Center view deleted, 20 asserted transformations, one atomic dispatch). Save was
-clicked; the spinner has run for minutes and the provider still reads Version 40
-with the edit pending. Console shows telemetry-only failures, no save-API error —
-the same stall R3-A1 recorded and recovered from. **The Chrome tab is left open;
-Discard has NOT been clicked.** The remaining Make files are listed and specified
-in `.codex/R3_A1_A2_MAKE_CHANGESET.md`.
+FIGMA_MAKE: **COMPLETE — Version 44, zero pending edits.** Saved across v41
+(PublicFlows), v42 (Checkpoint A) and v44 (Checkpoint B). All 16 changed files
+verified byte-identical between the provider export and the repository source.
+The repository mirror was found to contain 47 truncated files and was rebuilt
+from the provider export — 212 files, 0 markers. FE-R3-015 CLOSED.
+
+QUALITY: Impeccable sidecar refreshed; Hallmark 0 critical / 0 major / 2 minor;
+Impeccable clean with no rule suppressed; Taste pass; Vercel Web Interface
+Guidelines 5 findings, all fixed. Recorded in
+`docs/design/HALLMARK_IMPECCABLE_CLOSURE.md`.
 
 BACKEND_CONTRACT_STATUS:
 - `BACKEND_CONTRACT_GAP_EXTERNAL_REQUEST_AUTH` **CLOSED** — `/api/portal/request`
   already exists, authorized on `CAPABILITIES.REQUEST_CREATE` and scoped to the
   session account. The frontend binds to it; the browser sends no requester
-  identity. No fake boundary was invented.
+  identity.
 - `BACKEND_CONTRACT_GAP_DOL_REQUESTER_MODE` **OPEN** — `assertRequesterPortalAccount`
-  requires `roleId === 'REQUESTER'`, so DOL requester mode is unsupported server-side.
+  requires `roleId === 'REQUESTER'`.
 - `BACKEND_CONTRACT_GAP_SELF_SERVICE_IDENTITY` **OPEN** — no self-service
   activation or password-reset route exists.
-Both open gaps need a separate accepted backend amendment. The exact contract is
-specified in `docs/frontend/ROUTING.md` §5.
 
-NOT_CLAIMED: `FIGMA_MAKE_CODE_CURRENT`, `FIGMA_MAKE_PROTOTYPE_CURRENT`,
-`FIGMA_MAKE_PROVIDER_READBACK`, end-to-end security completion, and the
-Hallmark / Impeccable / Taste / Vercel audit pass (§42, not yet run).
+Both open gaps are specified in
+`.codex/specs/proposed/2026-08-24-r3-a1-a2-b1-authenticated-identity-and-dol-requester-backend.md`
+— **PROPOSED, NOT ACCEPTED, NOT EXECUTED**.
 
-OPEN_FINDINGS: FE-R3-013 (`--destructive` undeclared in `DESIGN.md` frontmatter),
-FE-R3-014 (remaining nested-label selects in `PublicFlows.tsx`), FE-R3-015
-(47 truncated files in the repository Make mirror), plus the pre-existing
-FE-R3-003/004/005/007/008/009/011.
+NOT_CLAIMED: end-to-end security completion, while either gap is open.
+
+OPEN_FINDINGS: FE-R3-013 (account-panel pair still light-mode only — convert the
+pair, not one of them), FE-R3-011 (no type ramp), plus pre-existing
+FE-R3-003/004/005/007/008/009.
+
+FI04: **NOT STARTED**, and must not start until the owner accepts the next phase.
 
 ## Correction of record
 
