@@ -47,6 +47,15 @@ const COPY: Record<RecoveryMode, { title: string; lede: string; submit: string; 
 const GENERIC_CONFIRMATION =
   "If this account exists, a verification code has been sent to its registered email.";
 
+/* Colour note. `#fff7e6` and `#f7f0e2` below are the input and card treatments
+ * the sibling `AccountAccessPanel` already ships, and both panels render in the
+ * same slot on the sign-in page — diverging one of them would be a visible
+ * inconsistency, so they are matched deliberately rather than tokenised here.
+ * That whole account-panel family predates R3-A1-A2 and is light-mode only; it
+ * is tracked as FE-R3-013 (literals undeclared in DESIGN.md frontmatter), to be
+ * fixed for both panels together. Values that were introduced by this file and
+ * had a shipped token available use the token: `var(--green-open)`,
+ * `var(--destructive)`. */
 const PANEL_CSS = `
   .account-recovery{display:flex;flex-direction:column;gap:22px;color:#241416;font-family:"IBM Plex Sans",system-ui,sans-serif}
   .account-recovery .account-close,.account-recovery .account-access-form button{min-height:44px;padding:10px 14px;border:1px solid #d1b478;border-radius:10px;color:#610b0f;background:transparent}
@@ -61,9 +70,9 @@ const PANEL_CSS = `
   .account-code-field{display:flex;flex-direction:column;gap:8px}
   .account-code-field input{letter-spacing:.34em;font-variant-numeric:tabular-nums}
   .account-code-error{color:var(--destructive)!important;font-weight:600}
-  .account-code-ok{color:#2f6b3d!important;font-weight:600}
+  .account-code-ok{color:var(--green-open)!important;font-weight:600}
   .account-code-resend button{align-self:flex-start}
-  .account-status-card{display:grid;gap:12px;padding:16px;border:1px solid #d1b478;border-radius:12px;background:#f7f0e2}
+  .account-status-card{display:grid;gap:12px;padding:16px;border:1px solid #d1b478;border-radius:14px;background:#f7f0e2}
 `;
 
 export function AccountRecoveryPanel({

@@ -323,7 +323,7 @@ open.** No Production, Playground, D1 or R2 mutation was performed.
 | FE-R3-003 | P2 | Public sub-routes stack the site `PublicNavbar` and the `PublicFlows` masthead, presenting two Home affordances on one page. R3-A1-A2 made them behave identically, which removes the correctness problem but not the duplication. |
 | FE-R3-004 | P2 | `PublicMobileDrawer` sets `role="dialog" aria-modal="true"` and handles Escape and scroll lock, but performs no focus management: focus is not moved in, not trapped, and not restored on close. |
 | FE-R3-011 | P3 | 7 advisory radius findings in `PublicFlows.tsx`, and the shipped system still declares no type ramp — `theme.css` carries only `--font-size: 16px` while components use ten ad-hoc literal steps. |
-| FE-R3-013 | P2 | **New.** `--destructive` (`#d4183d`) is the shipped error colour in `theme.css` and is used across six frontend surfaces as a literal, but `DESIGN.md` frontmatter does not declare it, so the Impeccable detector reads it as drift. New code uses `var(--destructive)`; the existing literals and the missing declaration remain. |
+| FE-R3-013 | P2 | **New.** Literal colours that `theme.css` ships but `DESIGN.md` frontmatter does not declare, so the Impeccable detector reads them as drift. Two families: `--destructive` (`#d4183d`) across six surfaces, and the account-panel treatments `#fff7e6` / `#f7f0e2` shared by `AccountAccessPanel` and `AccountRecoveryPanel`. The account panels are also light-mode only. New code uses tokens where one exists (`var(--destructive)`, `var(--green-open)`); the shared literals are deliberately left matched between the two sibling panels rather than diverging one of them, and should be fixed for both together. |
 
 ---
 
