@@ -253,3 +253,61 @@ Screenshots captured to `output/design/r3-a1-a2-readback/`:
 
 `FIGMA_DOCUMENTATION_MIRRORED` PASS · `FIGMA_NODE_35_145_CURRENT_POINTER` PASS ·
 `FIGMA_PROVIDER_READBACK` PASS
+
+---
+
+## 8. Figma Make — partially applied, save in flight
+
+FILE: `rP9W9MQlZkyQrUx38TVsFS` · baseline Version 40
+FULL CHANGESET AND METHOD: `.codex/R3_A1_A2_MAKE_CHANGESET.md`
+
+### 8.1 Constraints re-confirmed
+
+- `mcp__figma__use_figma` **cannot write Make files** — no MCP write path exists.
+- Figma Make **AI credits are exhausted** ("Credits reset Sep 12"), so the
+  AI-prompt path is unavailable.
+- The in-app browser is **signed out** of Figma; it renders the Make file as
+  "Sign up to use Figma Make" and cannot edit.
+- Authenticated **Chrome** is the only write path. The code view is
+  **CodeMirror 6**, so edits are dispatched through the editor's own
+  `EditorView.dispatch` rather than typed — synthetic typing would be corrupted
+  by CM6 auto-closing brackets and quotes.
+- Every transformation asserts its anchor before dispatch; a missing anchor
+  aborts with the document untouched, so a partial edit cannot occur.
+
+### 8.2 The repository mirror was rejected as a source
+
+47 mirror files contain a literal `…N tokens truncated…` marker, including
+`src/app/PublicFlows.tsx`. Recorded as `FE-R3-015` in
+`docs/design/FIGMA_MAKE_SOURCE_REGISTER.md`, listed in
+`.codex/R3_A1_A2_MAKE_MIRROR_TRUNCATION.txt`. Live source was read from the
+editor instead — 790 lines, no marker.
+
+### 8.3 Applied
+
+`src/app/PublicFlows.tsx` — **20 transformations, one atomic dispatch.**
+790 → 670 lines. The public Request Center view is deleted (−8,006 characters),
+the tab set becomes Home · Lending Center · Track lending · Lending policy ·
+Staff sign in, the banner is rescoped to lending, "Public front door" reaches
+**0 occurrences**, decorative arrows move out of the accessible name, and the
+stale R3 header is replaced with the R3-A1-A2 scope correction. The editor
+registered it as `1 edited file · PublicFlows.tsx +53 −173`.
+
+### 8.4 Save — IN FLIGHT, NOT CONFIRMED
+
+Save was clicked and has shown a spinner for over two minutes. The header still
+reads **Version 40** and the pending panel still shows the edit.
+
+Console was checked: every error is **telemetry only**
+(`api/web_logger/metrics/*`, `events.statsigapi.net`, `Failed to fetch` /
+`status 0`). **No save-API error.** This is the same stall R3-A1 recorded, which
+resolved on its own once Figma reconnected.
+
+Handling, per that precedent: the tab is left open, not reloaded, not navigated
+away from, and **Discard has never been clicked**. The changeset is recorded in
+the repository first so it is reproducible from the repository alone.
+
+> **`FIGMA_MAKE_CODE_CURRENT` and `FIGMA_MAKE_PROTOTYPE_CURRENT` are NOT claimed.**
+> They require a provider version above 40 with zero pending edits after a full
+> reload, plus the journey run. Neither has been observed. The remaining Make
+> files listed in the changeset are not yet applied.
