@@ -256,58 +256,146 @@ Screenshots captured to `output/design/r3-a1-a2-readback/`:
 
 ---
 
-## 8. Figma Make — partially applied, save in flight
+## 8. Figma Make - complete, saved and read back
 
-FILE: `rP9W9MQlZkyQrUx38TVsFS` · baseline Version 40
-FULL CHANGESET AND METHOD: `.codex/R3_A1_A2_MAKE_CHANGESET.md`
+FILE: `rP9W9MQlZkyQrUx38TVsFS` - baseline Version 40 - **current Version 44**
+METHOD AND CHANGESET: `.codex/R3_A1_A2_MAKE_CHANGESET.md`
 
-### 8.1 Constraints re-confirmed
+### 8.1 Constraints
 
-- `mcp__figma__use_figma` **cannot write Make files** — no MCP write path exists.
-- Figma Make **AI credits are exhausted** ("Credits reset Sep 12"), so the
-  AI-prompt path is unavailable.
-- The in-app browser is **signed out** of Figma; it renders the Make file as
-  "Sign up to use Figma Make" and cannot edit.
-- Authenticated **Chrome** is the only write path. The code view is
-  **CodeMirror 6**, so edits are dispatched through the editor's own
-  `EditorView.dispatch` rather than typed — synthetic typing would be corrupted
-  by CM6 auto-closing brackets and quotes.
-- Every transformation asserts its anchor before dispatch; a missing anchor
-  aborts with the document untouched, so a partial edit cannot occur.
+- `mcp__figma__use_figma` **cannot write Make files** - no MCP write path exists.
+- Figma Make **AI credits are exhausted**, so the AI-prompt path was unavailable.
+- The in-app browser is **signed out**; authenticated Chrome was the only path.
+- The code view is **CodeMirror 6**, so every file was written through the
+  editor's own `EditorView.dispatch` rather than typed - synthetic typing is
+  corrupted by CM6 auto-closing brackets and quotes.
+- Every write asserted its anchor and compared the resulting document against the
+  served bytes before moving on. A missing anchor aborted with the document
+  untouched, so a partial write could not occur.
 
-### 8.2 The repository mirror was rejected as a source
+### 8.2 Two provider behaviours that cost real time
 
-47 mirror files contain a literal `…N tokens truncated…` marker, including
-`src/app/PublicFlows.tsx`. Recorded as `FE-R3-015` in
-`docs/design/FIGMA_MAKE_SOURCE_REGISTER.md`, listed in
-`.codex/R3_A1_A2_MAKE_MIRROR_TRUNCATION.txt`. Live source was read from the
-editor instead — 790 lines, no marker.
+**The Save control is not a truth signal.** It spun for roughly fifteen minutes
+on a save that had *already landed* as Version 41. Provider state must be decided
+by reloading a **separate** session and reading the version.
 
-### 8.3 Applied
+**Figma was serving an outdated client.** A dormant dialog read *"Reload to
+continue - You're using an outdated version of Figma Make."* Until that reload
+was accepted, saves from that session could not complete. This - not a network
+fault - is what stalled the Checkpoint B save for over thirty minutes. Console
+errors throughout were **telemetry only** (`api/web_logger/*`, `statsigapi.net`);
+there was never a save-API error to find.
 
-`src/app/PublicFlows.tsx` — **20 transformations, one atomic dispatch.**
-790 → 670 lines. The public Request Center view is deleted (−8,006 characters),
-the tab set becomes Home · Lending Center · Track lending · Lending policy ·
-Staff sign in, the banner is rescoped to lending, "Public front door" reaches
-**0 occurrences**, decorative arrows move out of the accessible name, and the
-stale R3 header is replaced with the R3-A1-A2 scope correction. The editor
-registered it as `1 edited file · PublicFlows.tsx +53 −173`.
+### 8.3 Version trail
 
-### 8.4 Save — IN FLIGHT, NOT CONFIRMED
+| Version | Contents |
+|---|---|
+| 40 | R3-A1 baseline |
+| 41 | `PublicFlows.tsx` - 20 asserted transformations, public Request Center view deleted (-8,006 chars), 790 to 670 lines |
+| 42 | Checkpoint A - `appTypes`, `appRoutes`, and new `entryIntent.ts`, `auth/VerificationCodeField.tsx`, `auth/AccountRecoveryPanel.tsx`, `request/ExternalRequestCenter.tsx` |
+| 44 | Checkpoint B - `useAppController`, `AppRouteRenderer`, `StaffSignInPage`, three landing files, three public-chrome files, the `appTypes` switch, `styles/index.css` |
 
-Save was clicked and has shown a spinner for over two minutes. The header still
-reads **Version 40** and the pending panel still shows the edit.
+`MAKE_PENDING_EDITS: 0`, confirmed in the editor and in a separately reloaded
+session.
 
-Console was checked: every error is **telemetry only**
-(`api/web_logger/metrics/*`, `events.statsigapi.net`, `Failed to fetch` /
-`status 0`). **No save-API error.** This is the same stall R3-A1 recorded, which
-resolved on its own once Figma reconnected.
+### 8.4 Readback - 16 of 16 byte-identical
 
-Handling, per that precedent: the tab is left open, not reloaded, not navigated
-away from, and **Discard has never been clicked**. The changeset is recorded in
-the repository first so it is reproducible from the repository alone.
+Every file R3-A1-A2 touched was compared with `cmp` between the Version 44
+provider export and the staged source. **16 of 16 MATCH.**
+`src/app/PublicFlows.tsx` agrees three ways - live editor document, preserved
+recovery artifact, provider export - at sha256
+`165aa1c626775b0330f0b2bdb6dd30a70fe940d7bca753712172d903ee1c2765`.
 
-> **`FIGMA_MAKE_CODE_CURRENT` and `FIGMA_MAKE_PROTOTYPE_CURRENT` are NOT claimed.**
-> They require a provider version above 40 with zero pending edits after a full
-> reload, plus the journey run. Neither has been observed. The remaining Make
-> files listed in the changeset are not yet applied.
+Model checks run against the **saved provider source**, not against intent:
+no `view === "Request Center"` remains; the lending tab set is
+`["Lending Center", "Track lending", "Lending policy"]`; `Public front door` is
+absent from `src/app/` entirely; the `external-request` route and `EntryIntent`
+exist; `goHome` preserves the session; `Open Logistics Hub`,
+`No password yet? Activate account`, `Forgot password?` and the 8-digit
+`pattern="[0-9]{8}"` field are present; and the blanket
+`capabilities: [...AUTH_ROUTES]` grant is gone - its only remaining occurrence is
+the comment explaining why it was wrong.
+
+### 8.5 Repository mirror - repaired at the root
+
+`FE-R3-015`: 47 mirror files contained literal truncation markers, so the mirror
+was never byte-faithful despite the register claiming per-file fidelity. It was
+rejected as an authoring source and rebuilt from the provider `Download code`
+export.
+
+| | files | truncated |
+|---|---:|---:|
+| Old MCP-derived mirror | 200 | **47** |
+| Current provider export mirror | **212** | **0** |
+
+`FE-R3-015` **CLOSED**.
+
+---
+
+## 9. Completion gate - measured
+
+```
+THREE_CONTEXT_ARCHITECTURE                     PASS
+PUBLIC_LENDING_NO_SIGNIN                       PASS   LEND-01
+PUBLIC_LENDING_NO_REQUEST_CENTER_TAB           PASS   LEND-02
+START_LOGISTICS_REQUEST_AUTH_GATE              PASS   REQ-01
+EXTERNAL_REQUEST_AUTHENTICATED                 PASS   REQ-02/03/06
+NON_DOL_REQUESTER_NO_MAIN_HUB                  PASS   CTX-01
+DOL_EXTERNAL_INTENT_PRESERVED                  PASS   REQ-04
+DOL_OPEN_LOGISTICS_HUB_SHORTCUT                PASS   REQ-04
+GENERIC_DOL_LOGIN_MAIN_HUB                     PASS   AUTH-01
+GENERIC_NON_DOL_LOGIN_EXTERNAL_REQUEST         PASS   AUTH-02
+HOME_WORKS_FROM_PUBLIC_LENDING                 PASS   HOME-01/02
+HOME_SESSION_PRESERVATION                      PASS   HOME-03 / AUTH-06
+PUBLIC_FRONT_DOOR_CURRENT_COPY_COUNT           0      repo and Make
+STAFF_ACTIVATE_ACCOUNT_ENTRY                   PASS   AUTH-03
+STAFF_FORGOT_PASSWORD_ENTRY                    PASS   AUTH-04
+OTP_8_DIGIT_FLOW                               PASS   AUTH-05 (UI; server gap open)
+
+FIGMA_DESIGN_CURRENT                           PASS
+FIGMA_DOCUMENTATION_MIRRORED                   PASS   page 10.1
+FIGMA_NODE_35_145_CURRENT_POINTER              PASS   node 763:2
+FIGMA_PROVIDER_READBACK                        PASS
+
+MAKE_PROVIDER_BASELINE_TRUSTWORTHY             PASS   v44 export
+MAKE_TRUNCATED_CURRENT_MIRROR_FILES            0
+MAKE_PUBLICFLOWS_SAVED                         PASS   v41
+MAKE_REMAINING_A2_FILES_SAVED                  PASS   v42, v44
+MAKE_PENDING_EDITS                             0
+MAKE_PROVIDER_READBACK                         PASS   16/16 byte-identical
+MAKE_REPOSITORY_MIRROR                         EXACT / VERIFIED
+
+DESIGN_MD_CURRENT                              PASS
+WORKFLOW_ARCHITECTURE_CURRENT                  PASS
+ROUTING_MD_CURRENT                             PASS
+
+IMPECCABLE_SIDECAR_CURRENT                     PASS
+HALLMARK_FINAL                                 PASS   0 critical / 0 major / 2 minor
+IMPECCABLE_FINAL                               PASS   no rule suppressed
+TASTE_FINAL                                    PASS
+VERCEL_FINAL                                   PASS   5 findings, all fixed
+
+BACKEND_GAP_DOL_REQUESTER_MODE                 DOCUMENTED
+BACKEND_GAP_ACTIVATION_RESET                   DOCUMENTED
+BACKEND_FOLLOWUP_AMENDMENT                     PREPARED_NOT_EXECUTED
+
+FI04_STARTED                                   NO
+PLAYGROUND_TOUCHED                             NO
+PRODUCTION_TOUCHED                             NO
+MAIN_TOUCHED                                   NO
+DEPLOYMENT                                     NONE
+```
+
+### Not claimed
+
+**End-to-end security completion is NOT claimed.** Two server-side contract gaps
+remain open by design and are specified in
+`.codex/specs/proposed/2026-08-24-r3-a1-a2-b1-authenticated-identity-and-dol-requester-backend.md`,
+which is proposed and unexecuted. Until it is accepted and implemented:
+
+- DOL requester mode is refused by the real portal contract, and the surface says so.
+- Self-service activation and password reset have no server route, and the panel
+  says so instead of simulating success.
+
+The **authenticated External Request Center boundary is real** - that gap is
+closed, not deferred.
