@@ -284,3 +284,42 @@ path was detached from `requireAuth`.
 - the pending-edit count is not 0;
 - the four reconstructed files are re-read from the provider and any hash above
   turns out to differ.
+
+---
+
+## INTEGRITY DEFECT — recorded by R3-A1-A2, 2026-08-23
+
+> **This register overstated the fidelity of the repository Make mirror.**
+
+`output/design/figma-make-source/` contains **47 files with a literal
+`…N tokens truncated…` marker embedded in the source text**. A file carrying that
+marker is not a copy of the provider source — it is a truncated MCP read saved as
+if it were one. None of those 47 files could compile.
+
+Discovered while attempting to author the R3-A1-A2 Make changeset from the mirror:
+`src/app/PublicFlows.tsx:415` reads
+
+```
+            …1184 tokens truncated…            const n = idx + 1;
+```
+
+The full list is in `.codex/R3_A1_A2_MAKE_MIRROR_TRUNCATION.txt`.
+
+**What is and is not affected.**
+
+- The **live Figma Make file is unaffected.** This is a defect in the repository
+  mirror only. The provider still holds the real source at Version 40.
+- The per-file `sha256` values already recorded here remain *accurate hashes of
+  the mirrored bytes* — they simply hash truncated content. They are not evidence
+  that the mirror matches the provider.
+- R3-A1 recorded its eight changed files as "one byte-verified, three
+  structure-verified against full provider reads, four reconstructed and
+  grep-verified". `PublicFlows.tsx` is among the reconstructions, and it is
+  truncated. The R3-A1 changeset table itself is unaffected and remains a correct
+  description of what was applied live.
+
+**Consequence for R3-A1-A2.** The mirror was rejected as a source of truth for
+authoring Make edits. Live source is read from the Figma Make editor instead.
+
+**Not fixed by this pass.** Repairing all 47 files requires a full provider
+re-capture, which is its own bounded task. Recorded as `FE-R3-015`.
