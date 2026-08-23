@@ -341,3 +341,120 @@ No `src/frontend/` edit, no product source, no Figma write, no backend,
 Playground, Production or `main` change. The two writes were
 `.impeccable/design.json` and the `DESIGN.md` frontmatter token block, both of
 which are design authority and both of which R3-A1 explicitly authorizes.
+
+---
+
+# R3-A1-A2 final quality pass — 2026-08-24
+
+Run only after the §9 preconditions were all met: Figma Design current, Figma
+Make saved at Version 44 and read back, the repository Make mirror rebuilt from
+the provider export, and `DESIGN.md`, `WORKFLOW_ARCHITECTURE.md` and `ROUTING.md`
+agreeing. Auditing an intermediate state would have measured something that was
+about to change.
+
+Scope: the surfaces R3-A1-A2 created or changed —
+`request/ExternalRequestCenter.tsx`, `auth/AccountRecoveryPanel.tsx`,
+`auth/VerificationCodeField.tsx`, `auth/StaffSignInPage.tsx`,
+`landing/HeroSection.tsx`, `landing/LogisticsHubSection.tsx`,
+`public/PublicNavbar.tsx`, `public/PublicMobileDrawer.tsx`, `public/Footer.tsx`,
+`PublicFlows.tsx`.
+
+## 1. Impeccable sidecar — refreshed first
+
+`.impeccable/design.json` was stale again: `DESIGN.md` had moved under R3-A1-A2.
+Refreshed at schemaVersion 2, repointed at the R3-A1-A2 amendment, the
+current-authority Figma Design lane plus its page `10.1` documentation mirror,
+and Figma Make **Version 44**.
+
+`IMPECCABLE_SIDECAR_CURRENT` **PASS**.
+
+## 2. Impeccable — detector findings, and what was done
+
+The detector flagged literal colours and one off-scale radius across the new
+files. Handled by cause rather than by suppression:
+
+| Finding | Resolution |
+|---|---|
+| `#2f6b3d` in the verified-code state | **Fixed.** Invented here; `theme.css` already ships `--green-open`, which is theme-aware. Now `var(--green-open)`. |
+| `12px` radius on the status card | **Fixed.** Off the documented 6/8/10/14/999 scale; now `14px`. |
+| `#d4183d`, `#1f6b41`, `#fff7e6`, `#f7f0e2` | **Fixed at the root.** These genuinely ship in `theme.css` and are used across the frontend, but `DESIGN.md` frontmatter never declared them, so the detector read real system tokens as drift. Declared. |
+
+**No finding was silenced with an ignore rule.** Where a token existed, the code
+now uses it; where the token shipped but was undeclared, the declaration was the
+fix. `FE-R3-013` is closed.
+
+One item is deliberately left open and is recorded, not hidden: the
+account-panel pair (`AccountAccessPanel`, `AccountRecoveryPanel`) is still
+light-mode only, sharing literal surfaces. Converting them is a change to the
+**pair** — tokenising one would create a visible inconsistency between two panels
+that render in the same slot. Tracked as the remaining half of `FE-R3-013`.
+
+`IMPECCABLE_FINAL` **PASS**.
+
+## 3. Vercel Web Interface Guidelines — five real defects fixed
+
+Reviewed against the current published rule set. Findings on R3-A1-A2 surfaces:
+
+| Rule | Finding | Fix |
+|---|---|---|
+| Decorative icons need `aria-hidden` | Five lucide icons in `ExternalRequestCenter` and the `ArrowLeft` on the sign-in back control sat beside visible text and were announced twice | `aria-hidden="true"` |
+| Disable spellcheck on codes and usernames | The identifier fields and the 8-digit code field were spellchecked, and the code field autocapitalised | `spellCheck={false}`, plus `autoCorrect`/`autoCapitalize` off on the code |
+| `overscroll-behavior: contain` in drawers | The mobile drawer chained scroll to the page behind it | `overscrollBehavior: "contain"` |
+| Placeholders show an example and end with `…` | Placeholders restated their labels | Rewritten as examples |
+| `touch-action: manipulation` | Absent, so touch carried the 300 ms double-tap delay | Added to interactive elements. Pinch zoom is untouched — `user-scalable=no` remains forbidden |
+
+Already compliant and verified, not assumed: `:focus-visible` rings throughout;
+`role="alert"` / `aria-live` on async validation; the verification field focuses
+itself when it becomes the thing to correct; no `transition: all`; no blocked
+paste; labels bound with `htmlFor`; `tabular-nums` on the code field; submit
+controls stay enabled until the request starts.
+
+`VERCEL_FINAL` **PASS** — 5 findings, all fixed.
+
+## 4. Hallmark and Taste — anti-slop review
+
+- **Generic SaaS drift.** None introduced. The new surfaces reuse the shipped
+  institutional language — oxblood ground, scarce gold on active controls, mono
+  eyebrows naming surface context, `Bricolage Grotesque` display over
+  `IBM Plex Sans` body.
+- **The eyebrow convention survives, with corrected content.** The old
+  `PUBLIC REQUEST · NO SIGN-IN` eyebrow was product truth when written and is now
+  false, so it is gone. `REQUESTER VIEW` replaces it on the DOL cue. The
+  *pattern* was kept; only the claim changed.
+- **Invented metrics.** None. Counts on the requester surface are derived from
+  the returned record set, never fabricated.
+- **Honest empty and gap states.** The request surface distinguishes *loading*,
+  *empty*, *service error* and *contract gap*, and names
+  `BACKEND_CONTRACT_GAP_DOL_REQUESTER_MODE` rather than showing a generic failure
+  for a known server limitation.
+- **Access rules stated on the control.** "Start a logistics request" carries
+  "USC staff sign-in required" and "Browse public lending" carries "No sign-in
+  needed". Discovering a sign-in wall only after committing to a flow is the
+  defect this prevents.
+
+**Count: 0 critical · 0 major · 2 minor.**
+
+Minor, recorded against owning slices rather than fixed here:
+
+| ID | Minor finding | Owner |
+|---|---|---|
+| FE-R3-013 | The account-panel pair remains light-mode only with shared literal surfaces | FI-12 |
+| FE-R3-011 | No type ramp exists; components still use ten ad-hoc literal steps | FI-12 / FI-13 |
+
+`HALLMARK_PASS` **PASS** · `TASTE_PASS_OR_FINDINGS_RECORDED` **PASS**.
+
+## 5. Verification re-run — only what the changes could affect
+
+The fixes touched frontend markup, CSS and the design frontmatter. Re-ran the
+frontend gates rather than every completed gate blindly:
+
+| Gate | Result |
+|---|---|
+| `npm run build` | PASS |
+| `npm run verify:dist` | PASS — deterministic |
+| `npm test` | PASS — 1126/1126 |
+| Frontend Playwright, 5 widths | PASS — 190/190 |
+| `npm run check:governance` | PASS |
+
+No Figma, Make, Playground, Production, `main`, backend or schema change was made
+by this pass.
