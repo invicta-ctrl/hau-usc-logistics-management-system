@@ -42,7 +42,7 @@ export function PublicMobileDrawer({
         aria-modal="true"
         aria-label="Navigation menu"
         className="fixed top-0 right-0 bottom-0 z-50 flex flex-col"
-        style={{ width: "min(320px, 100vw)", background: "#40070a", borderLeft: "1px solid rgba(242,209,92,0.22)" }}
+        style={{ width: "min(320px, 100vw)", background: "#40070a", borderLeft: "1px solid rgba(242,209,92,0.22)", overscrollBehavior: "contain" }}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "rgba(242,209,92,0.22)" }}>
           <div className="flex items-center gap-3">

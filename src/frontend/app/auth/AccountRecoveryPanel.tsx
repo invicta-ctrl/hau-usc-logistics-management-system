@@ -51,11 +51,16 @@ const GENERIC_CONFIRMATION =
  * the sibling `AccountAccessPanel` already ships, and both panels render in the
  * same slot on the sign-in page — diverging one of them would be a visible
  * inconsistency, so they are matched deliberately rather than tokenised here.
- * That whole account-panel family predates R3-A1-A2 and is light-mode only; it
- * is tracked as FE-R3-013 (literals undeclared in DESIGN.md frontmatter), to be
- * fixed for both panels together. Values that were introduced by this file and
- * had a shipped token available use the token: `var(--green-open)`,
- * `var(--destructive)`. */
+ * That whole account-panel family predates R3-A1-A2 and is light-mode only.
+ *
+ * These are now declared in `DESIGN.md` frontmatter (`panel-input`,
+ * `destructive`, `green-open`), so the detector reads them as the system tokens
+ * they are rather than as drift. Declaring what actually ships was the fix;
+ * suppressing the finding would not have been. Converting both panels to
+ * theme-aware tokens stays open as FE-R3-013, and must be done to the pair.
+ *
+ * Values introduced by this file that had a shipped token available use it:
+ * `var(--green-open)`, `var(--destructive)`. */
 const PANEL_CSS = `
   .account-recovery{display:flex;flex-direction:column;gap:22px;color:#241416;font-family:"IBM Plex Sans",system-ui,sans-serif}
   .account-recovery .account-close,.account-recovery .account-access-form button{min-height:44px;padding:10px 14px;border:1px solid #d1b478;border-radius:10px;color:#610b0f;background:transparent}
@@ -231,9 +236,10 @@ export function AccountRecoveryPanel({
             <input
               required
               autoComplete="username"
+              spellCheck={false}
               value={identifier}
               onChange={(event) => { setIdentifier(event.target.value); setError(""); }}
-              placeholder="Username, account code, or email"
+              placeholder="e.g. j.dela.cruz…"
               aria-invalid={Boolean(error)}
             />
           </label>

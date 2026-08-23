@@ -1,15 +1,15 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-23T00:00:00.000Z",
+  "generatedAt": "2026-08-24T00:00:00.000Z",
   "title": "Design System: HAU-USC Logistics Management System",
   "source": {
-    "note": "Rebuilt by R3-A1 from the current shipped design authority. Supersedes the 2026-08-08 sidecar, which described the pre-cutover V4.1 system and contained none of the current identity anchors.",
+    "note": "Refreshed by R3-A1-A2 from the current shipped design authority. Adds the semantic status roles (destructive, green-open) and the shared account-panel input surface, which ship in theme.css but were previously undeclared, so the detector read real system tokens as drift (FE-R3-013).",
     "canonicalTokenSource": "scripts/design/theme-source.mjs",
     "generatedCss": "src/frontend/styles/theme.css",
     "designAuthority": "DESIGN.md",
-    "acceptedAmendment": ".codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md",
-    "figmaDesign": "hXJElH4p72KfgAaoUyfNOC",
-    "figmaMake": "rP9W9MQlZkyQrUx38TVsFS Version 40"
+    "acceptedAmendment": ".codex/specs/accepted/2026-08-23-r3-a1-a2-owner-routing-identity-three-context.md",
+    "figmaDesign": "hXJElH4p72KfgAaoUyfNOC (current-authority lane + page 10.1 documentation mirror)",
+    "figmaMake": "rP9W9MQlZkyQrUx38TVsFS Version 44"
   },
   "extensions": {
     "colorMeta": {
@@ -17,7 +17,16 @@
         "role": "primary",
         "displayName": "Oxblood Deep",
         "purpose": "The institutional anchor. Public navbar, footer, dark-mode ground, primary-button ink.",
-        "tonalRamp": ["#40070a", "#610b0f", "#78141a", "#8d1f28", "#a62835", "#b8535d", "#c4626c", "#e3aeb3"]
+        "tonalRamp": [
+          "#40070a",
+          "#610b0f",
+          "#78141a",
+          "#8d1f28",
+          "#a62835",
+          "#b8535d",
+          "#c4626c",
+          "#e3aeb3"
+        ]
       },
       "oxblood-mid": {
         "role": "primary",
@@ -30,7 +39,16 @@
         "canonical": "#d4af37",
         "ownerLocked": true,
         "purpose": "OWNER-LOCKED per DESIGN.md D08.0. Not derived, not negotiable. Marks active controls, focus and selection — never routine labels.",
-        "tonalRamp": ["#7d5518", "#a37426", "#c8992f", "#d4af37", "#e6d088", "#f0e2b4", "#f7efd5", "#faf1de"]
+        "tonalRamp": [
+          "#7d5518",
+          "#a37426",
+          "#c8992f",
+          "#d4af37",
+          "#e6d088",
+          "#f0e2b4",
+          "#f7efd5",
+          "#faf1de"
+        ]
       },
       "gold-dark-mode": {
         "role": "accent",
@@ -49,7 +67,16 @@
         "role": "neutral",
         "displayName": "Warm Paper",
         "purpose": "The working surface. Public and authentication surfaces sit here.",
-        "tonalRamp": ["#e5dac7", "#efe5d7", "#f2eae5", "#f7f0e2", "#f7f1e8", "#fbf6f0", "#fcf2cf", "#fffdf8"]
+        "tonalRamp": [
+          "#e5dac7",
+          "#efe5d7",
+          "#f2eae5",
+          "#f7f0e2",
+          "#f7f1e8",
+          "#fbf6f0",
+          "#fcf2cf",
+          "#fffdf8"
+        ]
       },
       "ink-deep": {
         "role": "neutral",
@@ -82,11 +109,31 @@
         "hue": 80,
         "chromaDirection": "decreases up the ladder, so the cream lives in the environment and the reading plane stays near-neutral",
         "steps": [
-          { "name": "ground", "L": 87.4, "purpose": "environmental canvas; never carries reading content" },
-          { "name": "inset", "L": 91.6, "purpose": "recess inside the work plane: filter bars, table headers, disabled regions" },
-          { "name": "work", "L": 95.4, "purpose": "primary reading and operational plane; tables, forms, records" },
-          { "name": "raised", "L": 97.3, "purpose": "temporary elevation: floating cards, popovers" },
-          { "name": "overlay", "L": 98.5, "purpose": "dialogs, command palette, context panels" }
+          {
+            "name": "ground",
+            "L": 87.4,
+            "purpose": "environmental canvas; never carries reading content"
+          },
+          {
+            "name": "inset",
+            "L": 91.6,
+            "purpose": "recess inside the work plane: filter bars, table headers, disabled regions"
+          },
+          {
+            "name": "work",
+            "L": 95.4,
+            "purpose": "primary reading and operational plane; tables, forms, records"
+          },
+          {
+            "name": "raised",
+            "L": 97.3,
+            "purpose": "temporary elevation: floating cards, popovers"
+          },
+          {
+            "name": "overlay",
+            "L": 98.5,
+            "purpose": "dialogs, command palette, context panels"
+          }
         ]
       },
       "dark": {
@@ -94,11 +141,26 @@
         "chromaDirection": "increases up the ladder, so rising out of the ground reads as moving toward the institution rather than toward grey",
         "note": "Nothing approaches #000: the darkest surface is L* 8.6, which keeps large dark fields legible instead of crushed.",
         "steps": [
-          { "name": "ground", "L": 8.6 },
-          { "name": "inset", "L": 11.8 },
-          { "name": "work", "L": 15.2 },
-          { "name": "raised", "L": 19.0 },
-          { "name": "overlay", "L": 22.4 }
+          {
+            "name": "ground",
+            "L": 8.6
+          },
+          {
+            "name": "inset",
+            "L": 11.8
+          },
+          {
+            "name": "work",
+            "L": 15.2
+          },
+          {
+            "name": "raised",
+            "L": 19.0
+          },
+          {
+            "name": "overlay",
+            "L": 22.4
+          }
         ]
       }
     },
@@ -125,46 +187,137 @@
       }
     },
     "shadows": [
-      { "name": "glass-shadow-soft-light", "value": "0 12px 28px color-mix(in oklch, var(--ink-deep) 12%, transparent)", "purpose": "Institutional Glass, resting elevation on light surfaces." },
-      { "name": "glass-shadow-raised-light", "value": "0 20px 48px color-mix(in oklch, var(--ink-deep) 20%, transparent)", "purpose": "Institutional Glass, raised elevation on light surfaces." },
-      { "name": "glass-shadow-soft-dark", "value": "0 6px 20px rgba(0, 0, 0, 0.26)", "purpose": "Institutional Glass, resting elevation on dark surfaces." },
-      { "name": "glass-shadow-raised-dark", "value": "0 14px 36px rgba(0, 0, 0, 0.36)", "purpose": "Institutional Glass, raised elevation on dark surfaces." }
+      {
+        "name": "glass-shadow-soft-light",
+        "value": "0 12px 28px color-mix(in oklch, var(--ink-deep) 12%, transparent)",
+        "purpose": "Institutional Glass, resting elevation on light surfaces."
+      },
+      {
+        "name": "glass-shadow-raised-light",
+        "value": "0 20px 48px color-mix(in oklch, var(--ink-deep) 20%, transparent)",
+        "purpose": "Institutional Glass, raised elevation on light surfaces."
+      },
+      {
+        "name": "glass-shadow-soft-dark",
+        "value": "0 6px 20px rgba(0, 0, 0, 0.26)",
+        "purpose": "Institutional Glass, resting elevation on dark surfaces."
+      },
+      {
+        "name": "glass-shadow-raised-dark",
+        "value": "0 14px 36px rgba(0, 0, 0, 0.36)",
+        "purpose": "Institutional Glass, raised elevation on dark surfaces."
+      }
     ],
     "glass": {
       "note": "Institutional Glass is localised to layers that earn it, never a wash over the whole application. Second generation: fill up, blur down at every step.",
       "blur": [
-        { "name": "glass-blur-soft", "value": "blur(10px) saturate(112%)" },
-        { "name": "glass-blur-raised", "value": "blur(16px) saturate(118%)" }
+        {
+          "name": "glass-blur-soft",
+          "value": "blur(10px) saturate(112%)"
+        },
+        {
+          "name": "glass-blur-raised",
+          "value": "blur(16px) saturate(118%)"
+        }
       ],
-      "blurLadder": [16, 22, 30, 36]
+      "blurLadder": [
+        16,
+        22,
+        30,
+        36
+      ]
     },
     "motion": [
-      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Default easing for entrances and anything arriving." },
-      { "name": "ease-in", "value": "cubic-bezier(0.7, 0, 0.84, 0)", "purpose": "Exits and dismissals." },
-      { "name": "ease-in-out", "value": "cubic-bezier(0.65, 0, 0.35, 1)", "purpose": "Reversible state changes." },
-      { "name": "dur-response", "value": "120ms", "purpose": "Direct manipulation feedback: press, hover, focus." },
-      { "name": "dur-state", "value": "200ms", "purpose": "State transitions on a control." },
-      { "name": "dur-surface", "value": "280ms", "purpose": "Surface and panel movement." },
-      { "name": "dur-narrative", "value": "400ms", "purpose": "Staggered entrance choreography on the public landing only." }
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Default easing for entrances and anything arriving."
+      },
+      {
+        "name": "ease-in",
+        "value": "cubic-bezier(0.7, 0, 0.84, 0)",
+        "purpose": "Exits and dismissals."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.65, 0, 0.35, 1)",
+        "purpose": "Reversible state changes."
+      },
+      {
+        "name": "dur-response",
+        "value": "120ms",
+        "purpose": "Direct manipulation feedback: press, hover, focus."
+      },
+      {
+        "name": "dur-state",
+        "value": "200ms",
+        "purpose": "State transitions on a control."
+      },
+      {
+        "name": "dur-surface",
+        "value": "280ms",
+        "purpose": "Surface and panel movement."
+      },
+      {
+        "name": "dur-narrative",
+        "value": "400ms",
+        "purpose": "Staggered entrance choreography on the public landing only."
+      }
     ],
     "shapes": {
       "radiusBase": "0.625rem",
       "scale": [
-        { "name": "sm", "value": "calc(var(--radius) - 4px)" },
-        { "name": "md", "value": "calc(var(--radius) - 2px)" },
-        { "name": "lg", "value": "var(--radius)" },
-        { "name": "xl", "value": "calc(var(--radius) + 4px)" }
+        {
+          "name": "sm",
+          "value": "calc(var(--radius) - 4px)"
+        },
+        {
+          "name": "md",
+          "value": "calc(var(--radius) - 2px)"
+        },
+        {
+          "name": "lg",
+          "value": "var(--radius)"
+        },
+        {
+          "name": "xl",
+          "value": "calc(var(--radius) + 4px)"
+        }
       ]
     },
     "breakpoints": [
-      { "name": "xs", "value": "320px" },
-      { "name": "sm", "value": "375px" },
-      { "name": "mobile", "value": "390px" },
-      { "name": "mobile-lg", "value": "414px" },
-      { "name": "tablet", "value": "768px" },
-      { "name": "laptop", "value": "1024px" },
-      { "name": "desktop", "value": "1440px" },
-      { "name": "wide", "value": "1920px" }
+      {
+        "name": "xs",
+        "value": "320px"
+      },
+      {
+        "name": "sm",
+        "value": "375px"
+      },
+      {
+        "name": "mobile",
+        "value": "390px"
+      },
+      {
+        "name": "mobile-lg",
+        "value": "414px"
+      },
+      {
+        "name": "tablet",
+        "value": "768px"
+      },
+      {
+        "name": "laptop",
+        "value": "1024px"
+      },
+      {
+        "name": "desktop",
+        "value": "1440px"
+      },
+      {
+        "name": "wide",
+        "value": "1920px"
+      }
     ]
   },
   "components": [
@@ -245,12 +398,36 @@
       "Colour is carried by variables; the design file holds zero paint styles"
     ],
     "rules": [
-      { "name": "Gold is scarce", "body": "Gold marks active controls, focus and selection. It does not mark routine labels, and a surface with two competing gold fields has already failed. The canonical primary gold is #D4AF37 and is OWNER-LOCKED — it is not derived and not negotiable.", "section": "colors" },
-      { "name": "Accent text is not accent fill", "body": "Gold-family text on light working surfaces uses accent-text #7d5518, which measures 5.46:1. Using the canonical gold as text on paper measures 1.52:1 and fails WCAG 2.2 AA 1.4.3. The two tokens are not interchangeable.", "section": "colors" },
-      { "name": "Nothing reaches pure black or pure white", "body": "Light ink is oxblood-charcoal at L* 16, not #000; dark ink is a warm off-white at L* 93, not #FFF. The darkest dark surface is L* 8.6. Both directions buy legibility, and going further buys only glare or crush.", "section": "colors" },
-      { "name": "Glass must earn its layer", "body": "Institutional Glass applies to layers that genuinely float: the sticky public navbar, hero companion actions, overlays. Fill goes up as blur comes down at each step. Glass as a full-page wash is an anti-pattern here.", "section": "elevation" },
-      { "name": "Status is never colour alone", "body": "Every status tone states the state in words. Colour reinforces; it never carries the meaning.", "section": "colors" },
-      { "name": "The public service is never gated", "body": "Public intake, browsing and tracking never require or probe a session. Every public 'Start a logistics request' control navigates to the public Request Center and must not call requireAuth.", "section": "components" }
+      {
+        "name": "Gold is scarce",
+        "body": "Gold marks active controls, focus and selection. It does not mark routine labels, and a surface with two competing gold fields has already failed. The canonical primary gold is #D4AF37 and is OWNER-LOCKED — it is not derived and not negotiable.",
+        "section": "colors"
+      },
+      {
+        "name": "Accent text is not accent fill",
+        "body": "Gold-family text on light working surfaces uses accent-text #7d5518, which measures 5.46:1. Using the canonical gold as text on paper measures 1.52:1 and fails WCAG 2.2 AA 1.4.3. The two tokens are not interchangeable.",
+        "section": "colors"
+      },
+      {
+        "name": "Nothing reaches pure black or pure white",
+        "body": "Light ink is oxblood-charcoal at L* 16, not #000; dark ink is a warm off-white at L* 93, not #FFF. The darkest dark surface is L* 8.6. Both directions buy legibility, and going further buys only glare or crush.",
+        "section": "colors"
+      },
+      {
+        "name": "Glass must earn its layer",
+        "body": "Institutional Glass applies to layers that genuinely float: the sticky public navbar, hero companion actions, overlays. Fill goes up as blur comes down at each step. Glass as a full-page wash is an anti-pattern here.",
+        "section": "elevation"
+      },
+      {
+        "name": "Status is never colour alone",
+        "body": "Every status tone states the state in words. Colour reinforces; it never carries the meaning.",
+        "section": "colors"
+      },
+      {
+        "name": "The public service is never gated",
+        "body": "Public intake, browsing and tracking never require or probe a session. Every public 'Start a logistics request' control navigates to the public Request Center and must not call requireAuth.",
+        "section": "components"
+      }
     ],
     "dos": [
       "Do bind colour to variables rather than declaring hex in components",

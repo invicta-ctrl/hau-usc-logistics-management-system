@@ -7,8 +7,8 @@ branch: frontend-design-integration
 visual_authority: live-figma-make-rP9W9MQlZkyQrUx38TVsFS
 design_documentation_authority: live-figma-design-hXJElH4p72KfgAaoUyfNOC-current-lane
 functional_authority: repository-server-worker-auth-contracts
-accepted_amendment: .codex/specs/accepted/2026-08-23-r3-a1-figma-make-design-sync-codex-preview-handoff.md
-last_reviewed: 2026-08-23
+accepted_amendment: .codex/specs/accepted/2026-08-23-r3-a1-a2-owner-routing-identity-three-context.md
+last_reviewed: 2026-08-24
 # Machine-readable palette. Generated from scripts/design/theme-source.mjs, the
 # canonical token source, and emitted into src/frontend/styles/theme.css. This
 # block exists so tooling can tell a real design-system addition from drift; it
@@ -38,6 +38,18 @@ colors:
   scrim: "rgba(0,0,0,0.5)"
   hairline-gold: "rgba(242,209,92,0.16)"
   hairline-gold-strong: "rgba(242,209,92,0.28)"
+  # Semantic status roles. These ship in theme.css and are used across the
+  # frontend, but were previously undeclared here, so the detector read genuine
+  # system tokens as drift (FE-R3-013). Declaring them is the fix; suppressing
+  # the finding would not have been.
+  destructive: "#d4183d"
+  destructive-foreground: "#ffffff"
+  destructive-dark: "#f6acb2"
+  green-open: "#1f6b41"
+  green-open-dark: "#9ad9b2"
+  # Account-panel surfaces. Light-mode only by history, shared by
+  # AccountAccessPanel and AccountRecoveryPanel; recorded rather than diverged.
+  panel-input: "#fff7e6"
 typography:
   display:
     fontFamily: "'Bricolage Grotesque', system-ui, sans-serif"

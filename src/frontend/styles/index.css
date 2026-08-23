@@ -5,6 +5,8 @@
 @import './atrium-motion.css';
 
 html,body,#root{max-width:100%;overflow-x:clip}
+/* Removes the 300ms double-tap zoom delay on touch without disabling pinch zoom. */
+button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipulation}
 #main-content{min-width:0}
 
 /* Shared material roles */

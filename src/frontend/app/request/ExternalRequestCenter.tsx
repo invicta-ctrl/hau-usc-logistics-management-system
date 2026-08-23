@@ -263,7 +263,7 @@ export function ExternalRequestCenter({
         <div className="flex items-center gap-2 ml-auto">
           <ThemeToggle dark={dark} onToggle={onToggleTheme} />
           <button type="button" onClick={onHome} style={{ ...quietButton, color: "#faeecb", minHeight: 36 }}>
-            <span className="inline-flex items-center gap-2"><Home size={14} strokeWidth={1.6} />Home</span>
+            <span className="inline-flex items-center gap-2"><Home size={14} strokeWidth={1.6} aria-hidden="true" />Home</span>
           </button>
           <button type="button" onClick={() => void onSignOut()} style={{ ...quietButton, color: "#faeecb", minHeight: 36 }}>
             Sign out
@@ -289,7 +289,7 @@ export function ExternalRequestCenter({
               </p>
             </div>
             <button type="button" onClick={onOpenLogisticsHub} style={primaryButton}>
-              <span className="inline-flex items-center gap-2">Open Logistics Hub<ArrowUpRight size={14} strokeWidth={1.8} /></span>
+              <span className="inline-flex items-center gap-2">Open Logistics Hub<ArrowUpRight size={14} strokeWidth={1.8} aria-hidden="true" /></span>
             </button>
           </section>
         )}
@@ -358,7 +358,7 @@ export function ExternalRequestCenter({
           <>
             <section className="flex flex-wrap items-center gap-3">
               <button type="button" onClick={startCompose} style={primaryButton}>
-                <span className="inline-flex items-center gap-2"><Plus size={15} strokeWidth={1.8} />New request</span>
+                <span className="inline-flex items-center gap-2"><Plus size={15} strokeWidth={1.8} aria-hidden="true" />New request</span>
               </button>
               <span style={{ fontSize: 12, color: c.muted }}>
                 {openRequests.length} open · {portal.requests.length} total
@@ -468,7 +468,7 @@ export function ExternalRequestCenter({
                 onChange={(e) => setPurpose(e.target.value)}
                 rows={3}
                 maxLength={500}
-                placeholder="What is this for, and what does the activity need it to achieve?"
+                placeholder="e.g. Seating and a rostrum for the opening plenary…"
                 style={{ ...field, minHeight: 88, resize: "vertical" }}
               />
             </label>
@@ -513,7 +513,7 @@ export function ExternalRequestCenter({
                             id={`${formId}-item-${index}`}
                             value={line.description}
                             onChange={(e) => updateLine(index, { description: e.target.value })}
-                            placeholder="Describe what is needed"
+                            placeholder="e.g. Extension cords…"
                             maxLength={240}
                             style={field}
                           />
@@ -546,7 +546,7 @@ export function ExternalRequestCenter({
                         id={`${formId}-spec-${index}`}
                         value={line.specification}
                         onChange={(e) => updateLine(index, { specification: e.target.value })}
-                        placeholder="Size, colour, setup notes, timing"
+                        placeholder="e.g. 3 m, black, set up by 08:00…"
                         maxLength={1000}
                         style={field}
                       />
@@ -558,7 +558,7 @@ export function ExternalRequestCenter({
                         onClick={() => setLines((current) => current.filter((_, i) => i !== index))}
                         style={{ ...quietButton, alignSelf: "flex-start", minHeight: 38 }}
                       >
-                        <span className="inline-flex items-center gap-2"><Trash2 size={14} strokeWidth={1.6} />Remove item</span>
+                        <span className="inline-flex items-center gap-2"><Trash2 size={14} strokeWidth={1.6} aria-hidden="true" />Remove item</span>
                       </button>
                     )}
                   </div>
@@ -570,7 +570,7 @@ export function ExternalRequestCenter({
                 onClick={() => setLines((current) => [...current, emptyLine(categories[0] ?? "Other", units[0] ?? "piece")])}
                 style={{ ...quietButton, alignSelf: "flex-start" }}
               >
-                <span className="inline-flex items-center gap-2"><Plus size={14} strokeWidth={1.8} />Add another item</span>
+                <span className="inline-flex items-center gap-2"><Plus size={14} strokeWidth={1.8} aria-hidden="true" />Add another item</span>
               </button>
             </fieldset>
 

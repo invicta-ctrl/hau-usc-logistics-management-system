@@ -262,12 +262,13 @@ export function StaffSignInPage({
                 id="signin-id"
                 type="text"
                 autoComplete="username"
+                spellCheck={false}
                  value={identifier}
                  disabled={busy}
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? "signin-error" : undefined}
                 onChange={(e) => { setIdentifier(e.target.value); setError(null); }}
-                placeholder="Username, account code, or email"
+                placeholder="e.g. j.dela.cruz…"
                 className="rounded-[10px] px-4 py-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#e8b93c] focus:ring-offset-0"
                 style={{ background: c.m2, border: `1px solid ${c.border}`, color: c.text, fontFamily: "'IBM Plex Sans', system-ui, sans-serif" }}
               />
@@ -368,7 +369,7 @@ export function StaffSignInPage({
             className="inline-flex items-center gap-2 text-[13px] tracking-[-0.15px] transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#610b0f] rounded-sm self-start"
             style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: dark ? "#f6e29a" : "#610b0f", background: "none" }}
           >
-            <ArrowLeft size={14} strokeWidth={1.5} />
+            <ArrowLeft size={14} strokeWidth={1.5} aria-hidden="true" />
             Home
           </button>
         </div>

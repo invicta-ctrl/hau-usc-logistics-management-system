@@ -81,6 +81,9 @@ export function VerificationCodeField({
           required
           inputMode="numeric"
           autoComplete="one-time-code"
+          spellCheck={false}
+          autoCorrect="off"
+          autoCapitalize="off"
           pattern="[0-9]{8}"
           minLength={8}
           maxLength={8}
