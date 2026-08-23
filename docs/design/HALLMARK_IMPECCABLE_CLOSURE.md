@@ -383,6 +383,23 @@ files. Handled by cause rather than by suppression:
 now uses it; where the token shipped but was undeclared, the declaration was the
 fix. `FE-R3-013` is closed.
 
+That claim is checkable rather than asserted. `.impeccable/config.json` is the
+only place suppressions can live, and it is **untouched since the R3-A1
+baseline** — `git log 8daec38..HEAD -- .impeccable/config.json` is empty. Its
+current state:
+
+```
+ignoreRules  : []                                   # zero rule suppressions
+ignoreFiles  : prototypes/impeccable-whole-site-redesign/**
+               prototypes/impeccable-whole-site-redesign-v2/**
+ignoreValue  : codex-grid-background  value *  created 2026-08-08
+```
+
+The single value exception predates this work by more than two weeks and is
+scoped to a prototype tokens file. The only file R3-A1-A2 changed under
+`.impeccable/` is `design.json` — the sidecar refresh — not the suppression
+config.
+
 One item is deliberately left open and is recorded, not hidden: the
 account-panel pair (`AccountAccessPanel`, `AccountRecoveryPanel`) is still
 light-mode only, sharing literal surfaces. Converting them is a change to the
