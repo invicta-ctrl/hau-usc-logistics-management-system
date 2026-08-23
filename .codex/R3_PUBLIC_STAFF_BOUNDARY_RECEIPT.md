@@ -24,9 +24,9 @@ and was read only, never mutated.
 
 ## Findings
 
-FINDINGS_OPENED: 10 (FE-R3-001 … FE-R3-010, recorded in `docs/frontend/WORKFLOW_ARCHITECTURE.md` §6)
+FINDINGS_OPENED: 11 (FE-R3-001 … FE-R3-011, recorded in `docs/frontend/WORKFLOW_ARCHITECTURE.md` §6)
 FINDINGS_FIXED: 2 (FE-R3-001 P0, FE-R3-002 P1)
-FINDINGS_DEFERRED: 8, each with a recorded owning FI slice
+FINDINGS_DEFERRED: 9, each with a recorded owning FI slice
 
 ### FE-R3-001 — P0 — public request intake was unreachable
 
