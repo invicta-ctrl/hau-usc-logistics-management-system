@@ -5,6 +5,7 @@ IMPLEMENTATION_WRITER: TERRA_MAX:/root/fi06_request_hub_writer
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
 BASELINE: `d76a52208fea6229d07b01cbff02b3515a699654`
+CHECKPOINT_COMMIT: `b8a2ed40d54e441cd782052be132b80f1dcb1a83` (committed and pushed normally to `origin/frontend-design-integration` before this metadata-only repair)
 ACCEPTED PACKET: `.codex/specs/accepted/2026-08-24-fi06-internal-request-hub-frontend-integration.md`
 
 ## Completed bounded implementation
@@ -64,6 +65,10 @@ ACCEPTED PACKET: `.codex/specs/accepted/2026-08-24-fi06-internal-request-hub-fro
 
 No backend/Worker/auth/capability semantic change, stock or reservation math,
 Release action, provider/Figma, Playground, Production, main, migration, D1/R2,
-package, deployment, commit, or push occurred. The pre-existing untracked
-`.ai-bridge/` remains untouched. FI-07 is intake and repository-handshake only;
-it requires its own accepted packet and writer lock before implementation.
+package, or deployment occurred. No commit or push occurred during FI-06
+implementation; after acceptance, the product checkpoint
+`b8a2ed40d54e441cd782052be132b80f1dcb1a83` was committed and pushed normally.
+This follow-up changes durable continuity metadata only. The pre-existing
+untracked `.ai-bridge/` remains untouched. FI-07 is intake and
+repository-handshake only; it requires its own accepted packet and writer lock
+before implementation.

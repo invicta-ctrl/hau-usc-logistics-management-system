@@ -2,13 +2,13 @@
 
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
 MILESTONE: R1_FI07_INTAKE_HANDSHAKE
-STATUS: FI06_ACCEPTED_CHECKPOINT_READY
+STATUS: FI06_ACCEPTED_CHECKPOINT_COMPLETE
 PHASE: FI07_INTAKE_HANDSHAKE_ONLY
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY__ACCEPTED_UNCOMMITTED_FI06_LOGICAL_DIFF__PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
+WORKTREE_STATE: DIRTY__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED__FI06_CHECKPOINT_COMMITTED_AND_PUSHED
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
 HANDOFF_STATUS: READY_FOR_HANDOFF
@@ -24,12 +24,13 @@ A3_PREVIEW_RECEIPT: .codex/A3_LOCAL_PREVIEW_RECEIPT.md
 FI04_RECEIPT: .codex/FI04_AUTHENTICATED_SHELL_RECEIPT.md
 FI05_RECEIPT: .codex/FI05_INVENTORY_RECEIPT.md
 FI06_RECEIPT: .codex/FI06_INTERNAL_REQUEST_HUB_RECEIPT.md
+FI06_CHECKPOINT_COMMIT: b8a2ed40d54e441cd782052be132b80f1dcb1a83 (committed and pushed to origin/frontend-design-integration before this metadata-only repair)
 DELEGATION_LEDGER:
 
 - writer=/root/fi05_inventory_writer | model=gpt-5.6-terra | role=FI-06 predecessor writer | mode=execute | scope=initial FI-06 integration handoff | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=RELEASED | evidence=FI-05 lock-release transfer records.
 - writer=/root/fi06_request_hub_writer | model=gpt-5.6-terra | role=FI-06 successor sole canonical integration writer | mode=execute | scope=accepted FI-06 frontend integration, artifacts, and continuity closeout | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=COMPLETED | evidence=.codex/FI06_INTERNAL_REQUEST_HUB_RECEIPT.md.
 
-BLOCKER: NONE — FI-06 is accepted and checkpoint-ready; FI-07 authority has not yet been accepted.
+BLOCKER: NONE — FI-06 is accepted and checkpoint-complete; FI-07 authority has not yet been accepted.
 NEXT_EXACT_ACTION: Perform FI-07 intake and repository handshake only. Do not implement FI-07 or acquire a writer lock before an FI-07 packet is accepted.
 
 ## Active A4 preview inspection

@@ -1,12 +1,12 @@
-# Current Environment Handoff — FI-06 accepted checkpoint; FI-07 intake only
+# Current Environment Handoff — FI-06 checkpoint complete; FI-07 intake only
 
 FROM: TERRA_MAX:/root/fi06_request_hub_writer (completed FI-06 successor closeout)
 TO: Sol / next designated FI-07 intake owner
 BRANCH: frontend-design-integration
-HEAD: d76a52208fea6229d07b01cbff02b3515a699654
-UPSTREAM: origin/frontend-design-integration (equal at FI-06 acquisition; no commit or push during FI-06)
+HEAD: GIT_HEAD
+UPSTREAM: origin/frontend-design-integration (FI-06 product checkpoint b8a2ed40d54e441cd782052be132b80f1dcb1a83 pushed normally; parity confirmed before this metadata-only repair)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY__accepted uncommitted FI-06 logical diff and regenerated deterministic artifacts; preexisting untracked `.ai-bridge/` excluded and preserved
+WORKTREE_STATE: DIRTY__only preexisting untracked `.ai-bridge/` excluded and preserved; FI-06 product checkpoint committed and pushed before this metadata-only repair
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
 HANDOFF_STATUS: READY_FOR_HANDOFF
@@ -14,9 +14,10 @@ CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi06-internal-request-hub-frontend-integration.md
 FI07_ACCEPTED_SPEC: NONE — FI-07 requires a separate accepted packet before implementation
-COMPLETED: FI-06 Internal Request Hub is accepted and checkpoint-ready. It is a DOL-only request bootstrap/review UI, separate from External Request Center, with strict v2 projection, server-owned query scope, line routing/idempotency/recovery, accessibility, and A4 fixture-only Preview Index isolation.
+CHECKPOINT_COMMIT: b8a2ed40d54e441cd782052be132b80f1dcb1a83 (successfully committed and pushed to origin/frontend-design-integration before this metadata-only repair)
+COMPLETED: FI-06 Internal Request Hub is accepted and checkpoint-complete. It is a DOL-only request bootstrap/review UI, separate from External Request Center, with strict v2 projection, server-owned query scope, line routing/idempotency/recovery, accessibility, and A4 fixture-only Preview Index isolation.
 VALIDATION: Focused units 34/34 passed. The regular FI-06 Playwright matrix passed 55 with 5 intentional exact-4173-only skips across 320/390/768/1024/1440. Exact 4173 Preview Index passed 1/1 with zero protected request/review traffic. `npm.cmd run build` and `npm.cmd run verify:dist` passed; both deterministic frontend artifacts are SHA-256 `725857F273E32239628FB241FA2A14C4E04F049D2753BAEDB72F88C058A2E1F7`. Targeted formatting, governance, continuation, handoff, and diff checks are recorded in the FI-06 receipt.
-EXTERNAL_ACTIONS: The healthy 127.0.0.1:4173 supervisor was reused without restart. No Production, Playground, provider, Figma, backend, D1/R2, migration, deployment, commit, or push write occurred.
+EXTERNAL_ACTIONS: The healthy 127.0.0.1:4173 supervisor was reused without restart. No Production, Playground, provider, Figma, backend, D1/R2, migration, or deployment write occurred. No commit or push occurred during FI-06 implementation; after acceptance, product checkpoint b8a2ed40d54e441cd782052be132b80f1dcb1a83 was committed and pushed normally. This follow-up repairs durable metadata only.
 DELEGATION_LEDGER:
 
 - writer=/root/fi05_inventory_writer | model=gpt-5.6-terra | role=FI-06 predecessor writer | mode=execute | scope=initial FI-06 integration handoff | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=RELEASED | evidence=FI-05 lock-release transfer records.
