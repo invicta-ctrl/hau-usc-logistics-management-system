@@ -10,6 +10,13 @@
 
 ## Unreleased
 
+### A4 Preview Index local inspection
+
+- Added the accepted local-only Preview Inspection context, distinct from Session, auth gate state, entry intent, and server capability truth. It can activate only after a rendered Index action in development at exact 127.0.0.1:4173.
+- Protected Index rows now distinguish Open Preview from route-specific Test Real Access; normal navigation and real auth/capability enforcement remain unchanged.
+- Inspection renders the FI-04 shell/Profile with explicit presentation identity and deterministic profile data, uses the real External Request Center component with an injected fixture portal, labels all previewed surfaces, and blocks requester submission before any network mutation.
+- Default non-4173 browser tests prove the gate fails closed. An opt-in 4173 test configuration reuses the existing supervisor for positive local evidence and never starts a replacement server.
+
 ### FI-LIVE-FIGMA-AUTHORITY-01
 
 - Reopened FI-02 after owner rejection of its stale visual acceptance, then reconciled only `#/public.landing` to live Make v39: attached institutional masthead/hero, Current split composition with truthful state projection, Logistics hub/ledger, and oxblood public footer. Routes, policy access, accessibility, and no-fabrication rules remain intact.

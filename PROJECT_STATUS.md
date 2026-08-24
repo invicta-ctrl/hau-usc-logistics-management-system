@@ -11,5 +11,6 @@ FVR-001 has completed the Figma-native FI-00 through FI-03 implementation, autho
 - FI-03 includes sign-in, session/bootstrap, logout, starter activation, email verification, account application, private status-token lookup, and supported withdrawal.
 - Authenticated operational workspaces remain deferred to FI-04 and are not exposed as synthetic state.
 - Guarded loopback preview uses the isolated Playground backend; Production crossover is forbidden.
+- A4 is Sol-accepted: the Preview Index has an explicit loopback-only inspection context for fixture-backed presentation of protected modules. It does not create a Session, grant capabilities, bypass Worker authorization, or permit backend reads/writes.
 
 No Production deployment, provider write, database mutation, migration, backend semantic change, or Figma write is authorized by this milestone.

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { AUTH_ROUTES } from '../../src/frontend/app/appRoutes';
 import { isPreviewIndexHash, PREVIEW_INDEX_HASH } from '../../src/frontend/preview/index/routeHash';
 import { projectPreviewIndexGate } from '../../src/frontend/preview/index/trustedGate';
+import { localPreviewInspectionAllowed } from '../../src/frontend/preview/index/inspection';
 import {
   ACCESS_REQUIREMENT,
   ACCESS_REQUIREMENT_LABELS,
@@ -62,13 +63,30 @@ describe('preview index trusted gate and registry foundations', () => {
     });
   });
 
+  it('allows local inspection only for an explicit Index action in DEV on exact loopback 4173', () => {
+    const common = { indexAllowed: true, indexOpen: true, explicitIndexAction: true, dev: true };
+    expect(
+      localPreviewInspectionAllowed({
+        ...common,
+        location: { hostname: '127.0.0.1', port: '4173' },
+      }),
+    ).toBe(true);
+
+    for (const patch of [
+      { dev: false },
+      { indexAllowed: false },
+      { indexOpen: false },
+      { explicitIndexAction: false },
+      { location: { hostname: 'localhost', port: '4173' } },
+      { location: { hostname: '127.0.0.1', port: '4174' } },
+      { location: { hostname: 'preview.hausc.org', port: '' } },
+    ]) {
+      expect(localPreviewInspectionAllowed({ ...common, ...patch })).toBe(false);
+    }
+  });
+
   it('defines a complete, exhaustive filter vocabulary', () => {
-    expect(IMPLEMENTATION_STATUS).toEqual([
-      'ACCEPTED',
-      'IN_PROGRESS',
-      'SURFACE_PREVIEW',
-      'NOT_STARTED',
-    ]);
+    expect(IMPLEMENTATION_STATUS).toEqual(['ACCEPTED', 'IN_PROGRESS', 'SURFACE_PREVIEW', 'NOT_STARTED']);
     expect(BACKEND_STATUS).toEqual(['REAL_BACKEND', 'PARTIAL', 'VISUAL_ONLY']);
     expect(ACCESS_REQUIREMENT).toEqual(['PUBLIC', 'AUTHENTICATED']);
     expect(PREVIEW_MODE).toEqual(['REAL_MODULE', 'SURFACE_PREVIEW']);
@@ -159,17 +177,17 @@ describe('preview index trusted gate and registry foundations', () => {
     const entries = listPreviewRoutes();
     const count = (predicate) => entries.filter(predicate).length;
 
-    expect(count((entry) => entry.implementationStatus === 'ACCEPTED')).toBe(5);
-    expect(count((entry) => entry.implementationStatus === 'SURFACE_PREVIEW')).toBe(10);
+    expect(count((entry) => entry.implementationStatus === 'ACCEPTED')).toBe(6);
+    expect(count((entry) => entry.implementationStatus === 'SURFACE_PREVIEW')).toBe(9);
     expect(count((entry) => entry.implementationStatus === 'IN_PROGRESS')).toBe(0);
     expect(count((entry) => entry.implementationStatus === 'NOT_STARTED')).toBe(0);
-    expect(count((entry) => entry.backendStatus === 'REAL_BACKEND')).toBe(5);
+    expect(count((entry) => entry.backendStatus === 'REAL_BACKEND')).toBe(6);
     expect(count((entry) => entry.backendStatus === 'PARTIAL')).toBe(0);
-    expect(count((entry) => entry.backendStatus === 'VISUAL_ONLY')).toBe(10);
+    expect(count((entry) => entry.backendStatus === 'VISUAL_ONLY')).toBe(9);
     expect(count((entry) => entry.access === 'PUBLIC')).toBe(4);
     expect(count((entry) => entry.access === 'AUTHENTICATED')).toBe(11);
-    expect(count((entry) => entry.previewMode === 'REAL_MODULE')).toBe(5);
-    expect(count((entry) => entry.previewMode === 'SURFACE_PREVIEW')).toBe(10);
+    expect(count((entry) => entry.previewMode === 'REAL_MODULE')).toBe(6);
+    expect(count((entry) => entry.previewMode === 'SURFACE_PREVIEW')).toBe(9);
 
     for (const route of PUBLIC_ROUTES) {
       expect(entries.find((entry) => entry.route === route)).toMatchObject({
@@ -190,7 +208,7 @@ describe('preview index trusted gate and registry foundations', () => {
         group: 'REQUESTER',
       });
     }
-    for (const route of AUTH_ROUTES) {
+    for (const route of AUTH_ROUTES.filter((route) => route !== 'profile')) {
       expect(entries.find((entry) => entry.route === route)).toMatchObject({
         implementationStatus: 'SURFACE_PREVIEW',
         backendStatus: 'VISUAL_ONLY',
@@ -198,6 +216,12 @@ describe('preview index trusted gate and registry foundations', () => {
         previewMode: 'SURFACE_PREVIEW',
       });
     }
+    expect(entries.find((entry) => entry.route === 'profile')).toMatchObject({
+      implementationStatus: 'ACCEPTED',
+      backendStatus: 'REAL_BACKEND',
+      access: 'AUTHENTICATED',
+      previewMode: 'REAL_MODULE',
+    });
   });
 
   it('derives search, filter, and group results deterministically from the registry', () => {
@@ -206,11 +230,13 @@ describe('preview index trusted gate and registry foundations', () => {
     expect(searchPreviewRoutes('does-not-exist')).toEqual([]);
 
     expect(filterPreviewRoutes('ALL')).toHaveLength(15);
-    expect(filterPreviewRoutes('ACCEPTED').map((entry) => entry.route).sort()).toEqual(
-      [...PUBLIC_ROUTES, ...REQUESTER_ROUTES].sort(),
-    );
-    expect(filterPreviewRoutes('BACKEND_WIRED')).toHaveLength(5);
-    expect(filterPreviewRoutes('PREVIEW_ONLY')).toHaveLength(10);
+    expect(
+      filterPreviewRoutes('ACCEPTED')
+        .map((entry) => entry.route)
+        .sort(),
+    ).toEqual([...PUBLIC_ROUTES, ...REQUESTER_ROUTES, 'profile'].sort());
+    expect(filterPreviewRoutes('BACKEND_WIRED')).toHaveLength(6);
+    expect(filterPreviewRoutes('PREVIEW_ONLY')).toHaveLength(9);
     expect(filterPreviewRoutes('IN_PROGRESS')).toEqual([]);
     expect(filterPreviewRoutes('NOT_STARTED')).toEqual([]);
     expect(filterPreviewRoutes('PUBLIC')).toHaveLength(4);

@@ -1,38 +1,43 @@
 import { useEffect, useRef, useState } from 'react';
 import { LogOut, X } from 'lucide-react';
-import type { AuthRoute, Route, Session } from '../appTypes';
+import type { AuthRoute, Route } from '../appTypes';
 import { DolMark } from '../brand/BrandMarks';
 import { ThemeToggle } from '../brand/ThemeToggle';
 import { useDialogFocusTrap } from '../hooks/useDialogFocusTrap';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import { NAV_ADMINISTRATION, NAV_OPERATIONS, visibleNavigationItems } from './navConfig';
+import type { ShellPresentation } from './presentation';
 
 export function AuthMobileDrawer({
   open,
   onClose,
   route,
   navigate,
-  session,
+  presentation,
   onHome,
   onSignOut,
   dark,
   onToggle,
+  inspection = false,
+  onBackToPreview,
 }: {
   open: boolean;
   onClose: () => void;
   route: AuthRoute;
   navigate: (r: Route) => void;
-  session: Session;
+  presentation: ShellPresentation;
   onHome: () => void;
   onSignOut: () => void;
   dark: boolean;
   onToggle: () => void;
+  inspection?: boolean;
+  onBackToPreview?: () => void;
 }) {
   const [visible, setVisible] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const reducedMotion = usePrefersReducedMotion();
-  const operations = visibleNavigationItems(NAV_OPERATIONS, session.capabilities);
-  const administration = visibleNavigationItems(NAV_ADMINISTRATION, session.capabilities);
+  const operations = visibleNavigationItems(NAV_OPERATIONS, [...presentation.visibleRoutes]);
+  const administration = visibleNavigationItems(NAV_ADMINISTRATION, [...presentation.visibleRoutes]);
 
   useDialogFocusTrap({ open, dialogRef });
 
@@ -280,26 +285,48 @@ export function AuthMobileDrawer({
             </span>
             <ThemeToggle dark={dark} onToggle={onToggle} small />
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              onSignOut();
-              onClose();
-            }}
-            className="flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
-          >
-            <LogOut size={14} strokeWidth={1.5} color="rgba(250,238,203,0.6)" />
-            <span
-              style={{
-                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                fontSize: 13,
-                color: 'rgba(250,238,203,0.6)',
-                letterSpacing: -0.1,
+          {inspection ? (
+            <button
+              type="button"
+              onClick={() => {
+                onBackToPreview?.();
+                onClose();
               }}
+              className="flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
             >
-              Sign out
-            </span>
-          </button>
+              <span
+                style={{
+                  fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                  fontSize: 13,
+                  color: 'rgba(250,238,203,0.76)',
+                  letterSpacing: -0.1,
+                }}
+              >
+                Back to Preview Index
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                onSignOut();
+                onClose();
+              }}
+              className="flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+            >
+              <LogOut size={14} strokeWidth={1.5} color="rgba(250,238,203,0.6)" />
+              <span
+                style={{
+                  fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                  fontSize: 13,
+                  color: 'rgba(250,238,203,0.6)',
+                  letterSpacing: -0.1,
+                }}
+              >
+                Sign out
+              </span>
+            </button>
+          )}
         </div>
       </div>
     </>

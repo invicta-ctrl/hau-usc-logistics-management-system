@@ -1,24 +1,29 @@
 import { LogOut } from 'lucide-react';
-import type { AuthRoute, Route, Session } from '../appTypes';
+import type { AuthRoute, Route } from '../appTypes';
 import { DolMark, UscMark } from '../brand/BrandMarks';
 import { NAV_ADMINISTRATION, NAV_OPERATIONS, visibleNavigationItems } from './navConfig';
 import { SidebarNavItem } from './SidebarNavItem';
+import type { ShellPresentation } from './presentation';
 
 export function AuthShellSidebar({
   route,
   navigate,
-  session,
+  presentation,
   onHome,
   onSignOut,
+  inspection = false,
+  onBackToPreview,
 }: {
   route: AuthRoute;
   navigate: (r: Route) => void;
-  session: Session;
+  presentation: ShellPresentation;
   onHome: () => void;
   onSignOut: () => void;
+  inspection?: boolean;
+  onBackToPreview?: () => void;
 }) {
-  const operations = visibleNavigationItems(NAV_OPERATIONS, session.capabilities);
-  const administration = visibleNavigationItems(NAV_ADMINISTRATION, session.capabilities);
+  const operations = visibleNavigationItems(NAV_OPERATIONS, [...presentation.visibleRoutes]);
+  const administration = visibleNavigationItems(NAV_ADMINISTRATION, [...presentation.visibleRoutes]);
 
   return (
     <aside
@@ -157,7 +162,7 @@ export function AuthShellSidebar({
                 color: '#40070a',
               }}
             >
-              {session.initials}
+              {presentation.initials}
             </span>
           </div>
           <div className="hidden xl:flex flex-col min-w-0">
@@ -173,7 +178,7 @@ export function AuthShellSidebar({
                 whiteSpace: 'nowrap',
               }}
             >
-              {session.displayName}
+              {presentation.displayName}
             </span>
             <span
               style={{
@@ -183,30 +188,50 @@ export function AuthShellSidebar({
                 letterSpacing: '0.3px',
               }}
             >
-              {session.role}
+              {presentation.roleLabel}
             </span>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onSignOut}
-          className="flex items-center justify-center px-2 py-2 w-full rounded-[8px] text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c] xl:justify-start xl:gap-2 xl:px-3"
-          aria-label="Sign out"
-          title="Sign out"
-        >
-          <LogOut size={14} strokeWidth={1.5} color="rgba(250,238,203,0.5)" />
-          <span
-            className="hidden xl:inline"
-            style={{
-              fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-              fontSize: 12,
-              color: 'rgba(250,238,203,0.5)',
-              letterSpacing: -0.1,
-            }}
+        {!inspection ? (
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="flex items-center justify-center px-2 py-2 w-full rounded-[8px] text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c] xl:justify-start xl:gap-2 xl:px-3"
+            aria-label="Sign out"
+            title="Sign out"
           >
-            Sign out
-          </span>
-        </button>
+            <LogOut size={14} strokeWidth={1.5} color="rgba(250,238,203,0.5)" />
+            <span
+              className="hidden xl:inline"
+              style={{
+                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                fontSize: 12,
+                color: 'rgba(250,238,203,0.5)',
+                letterSpacing: -0.1,
+              }}
+            >
+              Sign out
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onBackToPreview}
+            className="flex items-center justify-center px-2 py-2 w-full rounded-[8px] text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c] xl:justify-start xl:gap-2 xl:px-3"
+            aria-label="Back to Preview Index"
+          >
+            <span
+              className="hidden xl:inline"
+              style={{
+                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                fontSize: 12,
+                color: 'rgba(250,238,203,0.7)',
+              }}
+            >
+              Preview Index
+            </span>
+          </button>
+        )}
       </div>
     </aside>
   );

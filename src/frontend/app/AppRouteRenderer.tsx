@@ -10,6 +10,7 @@ import { Footer } from './public/Footer';
 import { PublicNavbar } from './public/PublicNavbar';
 import { ExternalRequestCenter } from './request/ExternalRequestCenter';
 import { AuthenticatedShell } from './shell/AuthenticatedShell';
+import { shellPresentationFromSession } from './shell/presentation';
 
 export function AppRouteRenderer({ controller }: { controller: AppController }) {
   const {
@@ -39,7 +40,7 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
   if (route === 'external-request' && session) {
     return (
       <ExternalRequestCenter
-        session={session}
+        presentation={{ displayName: session.displayName, internalOperator: session.internalOperator }}
         dark={dark}
         onToggleTheme={toggleTheme}
         onHome={goHome}
@@ -56,7 +57,7 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
   if (session && isAuthRoute(route)) {
     return (
       <AuthenticatedShell
-        session={session}
+        presentation={shellPresentationFromSession(session)}
         route={route}
         navigate={navigate}
         onHome={goHome}

@@ -1,19 +1,24 @@
 import { Menu, Search } from 'lucide-react';
-import type { Route, Session } from '../appTypes';
+import type { Route } from '../appTypes';
 import { ThemeToggle } from '../brand/ThemeToggle';
+import type { ShellPresentation } from './presentation';
 
 export function AuthShellTopbar({
   navigate,
-  session,
+  presentation,
   dark,
   onToggle,
   onOpenDrawer,
+  inspection = false,
+  onBackToPreview,
 }: {
   navigate: (r: Route) => void;
-  session: Session;
+  presentation: ShellPresentation;
   dark: boolean;
   onToggle: () => void;
   onOpenDrawer: () => void;
+  inspection?: boolean;
+  onBackToPreview?: () => void;
 }) {
   const localPreview = typeof window !== 'undefined' && window.location.hostname === '127.0.0.1';
   const commandBackground = dark ? '#40070a' : '#fffaf0';
@@ -144,7 +149,7 @@ export function AuthShellTopbar({
               letterSpacing: '0.5px',
             }}
           >
-            {session.role}
+            {presentation.roleLabel}
           </span>
           <div className="hidden lg:block" data-theme-control>
             <ThemeToggle dark={dark} onToggle={onToggle} small />
@@ -153,7 +158,7 @@ export function AuthShellTopbar({
             type="button"
             onClick={() => navigate('profile')}
             className="flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
-            aria-label={`${session.displayName} — go to profile`}
+            aria-label={`${presentation.displayName} — go to profile`}
             style={{ width: 34, height: 34, background: '#e8b93c', flexShrink: 0 }}
           >
             <span
@@ -164,7 +169,7 @@ export function AuthShellTopbar({
                 color: '#40070a',
               }}
             >
-              {session.initials}
+              {presentation.initials}
             </span>
           </button>
         </div>

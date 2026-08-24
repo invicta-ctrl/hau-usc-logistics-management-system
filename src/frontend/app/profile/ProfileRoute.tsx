@@ -156,14 +156,28 @@ function ProfileLoading() {
   );
 }
 
-export function ProfileRoute({ dark, onToggle }: { dark: boolean; onToggle: () => void }) {
-  const [profile, setProfile] = useState<FrontendProfile | null>(null);
+export function ProfileRoute({
+  dark,
+  onToggle,
+  previewProfile,
+}: {
+  dark: boolean;
+  onToggle: () => void;
+  previewProfile?: FrontendProfile;
+}) {
+  const [profile, setProfile] = useState<FrontendProfile | null>(previewProfile ?? null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!previewProfile);
   const [retryKey, setRetryKey] = useState(0);
   const requestRef = useRef<{ retryKey: number; promise: Promise<FrontendProfile> } | null>(null);
 
   useEffect(() => {
+    if (previewProfile) {
+      setProfile(previewProfile);
+      setError(null);
+      setLoading(false);
+      return;
+    }
     let active = true;
     setLoading(true);
     setError(null);
@@ -193,7 +207,7 @@ export function ProfileRoute({ dark, onToggle }: { dark: boolean; onToggle: () =
     return () => {
       active = false;
     };
-  }, [retryKey]);
+  }, [previewProfile, retryKey]);
 
   if (loading) return <ProfileLoading />;
 
@@ -244,10 +258,11 @@ export function ProfileRoute({ dark, onToggle }: { dark: boolean; onToggle: () =
           <button
             type="button"
             onClick={() => setRetryKey((value) => value + 1)}
+            disabled={Boolean(previewProfile)}
             className="mt-6 rounded-[8px] px-4 py-2 text-[13px] font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
             style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
           >
-            Retry profile
+            {previewProfile ? 'Preview data only' : 'Retry profile'}
           </button>
         </section>
       </div>
@@ -373,7 +388,11 @@ export function ProfileRoute({ dark, onToggle }: { dark: boolean; onToggle: () =
         <div className="flex flex-col gap-6">
           <ProfileSection
             title="Personal information"
-            subtitle="Read-only · sourced from the authenticated profile contract"
+            subtitle={
+              previewProfile
+                ? 'Preview fixture · no authenticated profile read'
+                : 'Read-only · sourced from the authenticated profile contract'
+            }
           >
             <DetailGrid fields={personalFields} />
           </ProfileSection>

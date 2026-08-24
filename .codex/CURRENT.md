@@ -1,29 +1,36 @@
 # Current Work Pointer — frontend-design-integration
 
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
-MILESTONE: R3_A1_A2_FOUNDATION_PLUS_A3_PERSISTENT_LOCAL_PREVIEW
-STATUS: FI04_SOL_ACCEPTED_CHECKPOINT_READY
-PHASE: FI04_AUTHENTICATED_SHELL
+MILESTONE: R1_A4_PREVIEW_INDEX_LOCAL_INSPECTION
+STATUS: A4_SOL_ACCEPTED_CHECKPOINT_COMPLETE
+PHASE: FI04_PREVIEW_INDEX_LOCAL_INSPECTION
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
-POST_CHECKPOINT_WORKTREE: OWNED_FI04_DIFF_PRESENT__PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
+POST_CHECKPOINT_WORKTREE: A4_CHECKPOINT_COMMITTED__PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
-HANDOFF_STATUS: FI04_SOL_ACCEPTED_CHECKPOINT_READY
+HANDOFF_STATUS: READY_FOR_FI05_BOUNDED_INTAKE
 REQUIRED_MODEL: GPT-5.6-Terra integration writer
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi04-fi17-r1-a3-persistent-local-live-preview-4173-visual-fix-gate.md
-ACCEPTED_AMENDMENTS: R1 one-shot; R1-A2 reconciliation; accepted A3 persistent local live-preview gate
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi04-fi17-r1-a4-preview-index-local-inspection-no-login-module-browsing.md
+ACCEPTED_AMENDMENTS: R1 one-shot; R1-A2 reconciliation; accepted A3 persistent local live-preview gate; accepted A4 local Preview Index inspection
 R3A1A2_RECEIPT: .codex/R3_A1_A2_ROUTING_IDENTITY_RECEIPT.md
 F2_BASELINE: .codex/FRONTEND_F2_R3A1A2.md
 A3_PREVIEW_RECEIPT: .codex/A3_LOCAL_PREVIEW_RECEIPT.md
 FI04_RECEIPT: .codex/FI04_AUTHENTICATED_SHELL_RECEIPT.md
-BLOCKER: NONE — Sol accepted FI-04; the single checkpoint is staged only after final governance and must stop before FI-05 implementation
-NEXT_EXACT_ACTION: Perform the bounded FI-05 intake and repository handshake only; do not begin FI-05 implementation without a newly acquired writer lock and accepted authority.
+A4_PREVIEW_INDEX_RECEIPT: .codex/A4_PREVIEW_INDEX_INSPECTION_RECEIPT.md
+BLOCKER: NONE — Sol accepted A4 and authorized the single checkpoint; do not begin FI-05 implementation.
+NEXT_EXACT_ACTION: Perform the bounded FI-05 intake and repository handshake only; acquire a new writer lock and accepted authority before any FI-05 implementation.
+
+## Active A4 preview inspection
+
+PREVIEW_INDEX_LOCAL_INSPECTION is enabled only for the trusted development preview at `127.0.0.1:4173`, after an explicit rendered Preview Index action. It bypasses frontend route gating only to render fixture-backed or truthful preview-data-gap presentation. It creates no Session, grants no capability, bypasses no Worker authorization, and authorizes no backend reads or writes. Production and Playground remain fail-closed.
+
+Sol accepted the complete A4 logical diff. Independent evidence includes exact-4173 positive inspection, default non-4173 fail-closed coverage, real-auth regression, deterministic artifacts, and continuity/governance checks. The writer lock is released after this authorized checkpoint; FI-05 remains intake-only.
 
 ## Completed FI-04 slice
 

@@ -1,52 +1,81 @@
 import { useState, type ReactNode } from 'react';
-import type { AuthRoute, Route, Session } from '../appTypes';
+import type { AuthRoute, Route } from '../appTypes';
 import { AuthMobileDrawer } from './AuthMobileDrawer';
 import { AuthShellSidebar } from './AuthShellSidebar';
 import { AuthShellTopbar } from './AuthShellTopbar';
 import { MOBILE_DOCK, visibleNavigationItems } from './navConfig';
+import type { ShellPresentation } from './presentation';
 
 export function AuthenticatedShell({
-  session,
+  presentation,
   route,
   navigate,
   onHome,
   onSignOut,
   dark,
   onToggle,
+  inspection = false,
+  onBackToPreview,
   children,
 }: {
-  session: Session;
+  presentation: ShellPresentation;
   route: AuthRoute;
   navigate: (r: Route) => void;
   onHome: () => void;
   onSignOut: () => void;
   dark: boolean;
   onToggle: () => void;
+  inspection?: boolean;
+  onBackToPreview?: () => void;
   children: ReactNode;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const mobileDock = visibleNavigationItems(MOBILE_DOCK, session.capabilities);
+  const mobileDock = visibleNavigationItems(MOBILE_DOCK, [...presentation.visibleRoutes]);
 
   return (
-    <div className="min-h-screen flex" style={{ background: dark ? '#1c1917' : '#fffdf8' }}>
+    <div
+      className="min-h-screen flex"
+      style={{ background: dark ? '#1c1917' : '#fffdf8' }}
+      data-preview-inspection={inspection ? 'true' : undefined}
+      data-preview-route={inspection ? route : undefined}
+    >
       <AuthShellSidebar
         route={route}
         navigate={navigate}
-        session={session}
+        presentation={presentation}
         onHome={onHome}
         onSignOut={onSignOut}
+        inspection={inspection}
+        onBackToPreview={onBackToPreview}
       />
 
       <div className="flex flex-col flex-1 min-w-0 lg:ml-[76px] xl:ml-[272px] min-h-screen">
         <AuthShellTopbar
           navigate={navigate}
-          session={session}
+          presentation={presentation}
           dark={dark}
           onToggle={onToggle}
           onOpenDrawer={() => setDrawerOpen(true)}
+          inspection={inspection}
+          onBackToPreview={onBackToPreview}
         />
 
         <main className="flex-1 min-w-0 overflow-x-hidden pb-20 lg:pb-8" id="main-content">
+          {inspection ? (
+            <section
+              className="mx-4 mt-4 rounded-[8px] px-4 py-3 flex flex-wrap items-center justify-between gap-3"
+              style={{ background: '#fff4d6', border: '1px solid #d1b478', color: '#40070a' }}
+              role="note"
+              aria-label="Preview inspection"
+            >
+              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '0.35px' }}>
+                PREVIEW INSPECTION · Local frontend review only. No backend authorization has been granted.
+              </p>
+              <button type="button" className="preview-action" onClick={onBackToPreview}>
+                Back to Preview Index
+              </button>
+            </section>
+          ) : null}
           {children}
         </main>
 
@@ -89,11 +118,13 @@ export function AuthenticatedShell({
         onClose={() => setDrawerOpen(false)}
         route={route}
         navigate={navigate}
-        session={session}
+        presentation={presentation}
         onHome={onHome}
         onSignOut={onSignOut}
         dark={dark}
         onToggle={onToggle}
+        inspection={inspection}
+        onBackToPreview={onBackToPreview}
       />
     </div>
   );

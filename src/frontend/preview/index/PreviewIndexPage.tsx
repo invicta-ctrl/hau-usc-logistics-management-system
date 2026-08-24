@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { Route } from "../../app/appTypes";
-import { listPreviewRoutes } from "./registry";
-import type { PreviewRouteEntry } from "./registry";
-import { filterPreviewRoutes, groupPreviewRoutes, searchPreviewRoutes } from "./selectors";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Route } from '../../app/appTypes';
+import { listPreviewRoutes } from './registry';
+import type { PreviewRouteEntry } from './registry';
+import type { PreviewIndexBrowseState } from './inspection';
+import { filterPreviewRoutes, groupPreviewRoutes, searchPreviewRoutes } from './selectors';
 import {
   ACCESS_REQUIREMENT_LABELS,
   BACKEND_STATUS_LABELS,
@@ -12,8 +13,8 @@ import {
   PREVIEW_MODE_LABELS,
   ROUTE_GROUP_LABELS,
   type PreviewFilter,
-} from "./vocabulary";
-import "./PreviewIndex.css";
+} from './vocabulary';
+import './PreviewIndex.css';
 
 function EntryMeta({ label, value, kind }: { label: string; value: string; kind: string }) {
   return (
@@ -27,11 +28,13 @@ function EntryMeta({ label, value, kind }: { label: string; value: string; kind:
 function PreviewEntryRow({
   entry,
   onOpen,
+  onOpenPreview,
   onSurface,
   surfaceTriggerRef,
 }: {
   entry: PreviewRouteEntry;
   onOpen: (entry: PreviewRouteEntry) => void;
+  onOpenPreview: (entry: PreviewRouteEntry) => void;
   onSurface: (entry: PreviewRouteEntry, trigger: HTMLButtonElement) => void;
   surfaceTriggerRef: (route: string, node: HTMLButtonElement | null) => void;
 }) {
@@ -42,22 +45,42 @@ function PreviewEntryRow({
         <p className="preview-entry-route">{entry.route}</p>
         <p className="preview-entry-description">{entry.description}</p>
         <dl className="preview-entry-metas">
-          <EntryMeta label="Status" value={IMPLEMENTATION_STATUS_LABELS[entry.implementationStatus]} kind="status" />
+          <EntryMeta
+            label="Status"
+            value={IMPLEMENTATION_STATUS_LABELS[entry.implementationStatus]}
+            kind="status"
+          />
           <EntryMeta label="Backend" value={BACKEND_STATUS_LABELS[entry.backendStatus]} kind="backend" />
           <EntryMeta label="Access" value={ACCESS_REQUIREMENT_LABELS[entry.access]} kind="access" />
           <EntryMeta label="Mode" value={PREVIEW_MODE_LABELS[entry.previewMode]} kind="mode" />
         </dl>
       </div>
       <div className="preview-entry-actions">
-        <button
-          type="button"
-          className="preview-action"
-          data-action="open"
-          onClick={() => onOpen(entry)}
-        >
-          Open
-        </button>
-        {entry.previewMode === "SURFACE_PREVIEW" ? (
+        {entry.access === 'AUTHENTICATED' ? (
+          <>
+            <button
+              type="button"
+              className="preview-action"
+              data-action="open-preview"
+              onClick={() => onOpenPreview(entry)}
+            >
+              Open Preview
+            </button>
+            <button
+              type="button"
+              className="preview-action preview-action-secondary"
+              data-action="test-real-access"
+              onClick={() => onOpen(entry)}
+            >
+              Test Real Access
+            </button>
+          </>
+        ) : (
+          <button type="button" className="preview-action" data-action="open" onClick={() => onOpen(entry)}>
+            Open
+          </button>
+        )}
+        {entry.previewMode === 'SURFACE_PREVIEW' ? (
           <button
             type="button"
             className="preview-action preview-action-secondary"
@@ -73,13 +96,7 @@ function PreviewEntryRow({
   );
 }
 
-function SurfacePreview({
-  entry,
-  onClose,
-}: {
-  entry: PreviewRouteEntry;
-  onClose: () => void;
-}) {
+function SurfacePreview({ entry, onClose }: { entry: PreviewRouteEntry; onClose: () => void }) {
   const backRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -93,7 +110,13 @@ function SurfacePreview({
           <p className="preview-surface-eyebrow">Surface preview</p>
           <h2 id="preview-surface-heading">{entry.label}</h2>
         </div>
-        <button ref={backRef} type="button" className="preview-action" data-action="surface-back" onClick={onClose}>
+        <button
+          ref={backRef}
+          type="button"
+          className="preview-action"
+          data-action="surface-back"
+          onClick={onClose}
+        >
           Back
         </button>
       </header>
@@ -102,9 +125,18 @@ function SurfacePreview({
           Visual reference only. This surface is not functionally wired and does not indicate acceptance.
         </p>
         <dl className="preview-surface-sample">
-          <div><dt>Sample record</dt><dd>Pending review</dd></div>
-          <div><dt>Sample category</dt><dd>General</dd></div>
-          <div><dt>Sample status</dt><dd>Not available</dd></div>
+          <div>
+            <dt>Sample record</dt>
+            <dd>Pending review</dd>
+          </div>
+          <div>
+            <dt>Sample category</dt>
+            <dd>General</dd>
+          </div>
+          <div>
+            <dt>Sample status</dt>
+            <dd>Not available</dd>
+          </div>
         </dl>
       </div>
     </section>
@@ -116,24 +148,37 @@ export function PreviewIndexPage({
   onClose,
   onCancelLauncherRestore,
   returnFocusRequestedRef,
+  browseState,
+  onBrowseStateChange,
+  onOpenPreview,
 }: {
   navigate: (route: Route) => void;
   onClose: () => void;
   onCancelLauncherRestore: () => void;
   returnFocusRequestedRef: { current: boolean };
+  browseState: PreviewIndexBrowseState;
+  onBrowseStateChange: (state: PreviewIndexBrowseState) => void;
+  onOpenPreview: (entry: PreviewRouteEntry) => void;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<PreviewFilter>("ALL");
+  const [query, setQuery] = useState(browseState.query);
+  const [filter, setFilter] = useState<PreviewFilter>(browseState.filter);
   const [surfaceRoute, setSurfaceRoute] = useState<string | null>(null);
   const surfaceTriggers = useRef(new Map<string, HTMLButtonElement>());
 
   useEffect(() => {
     headingRef.current?.focus();
-  }, []);
+    if (browseState.scrollTop) {
+      requestAnimationFrame(() => window.scrollTo({ top: browseState.scrollTop }));
+    }
+  }, [browseState.scrollTop]);
 
   useEffect(() => {
-    const skipLink = document.querySelector<HTMLAnchorElement>(".skip-link");
+    onBrowseStateChange({ query, filter, scrollTop: window.scrollY });
+  }, [filter, onBrowseStateChange, query]);
+
+  useEffect(() => {
+    const skipLink = document.querySelector<HTMLAnchorElement>('.skip-link');
     if (!skipLink) return;
 
     const activate = (event: Event) => {
@@ -141,21 +186,21 @@ export function PreviewIndexPage({
       headingRef.current?.focus();
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Enter" || event.key === " ") {
+      if (event.key === 'Enter' || event.key === ' ') {
         activate(event);
       }
     };
 
-    skipLink.addEventListener("click", activate);
-    skipLink.addEventListener("keydown", onKeyDown);
+    skipLink.addEventListener('click', activate);
+    skipLink.addEventListener('keydown', onKeyDown);
     return () => {
-      skipLink.removeEventListener("click", activate);
-      skipLink.removeEventListener("keydown", onKeyDown);
+      skipLink.removeEventListener('click', activate);
+      skipLink.removeEventListener('keydown', onKeyDown);
     };
   }, []);
 
   const surfaceEntry = useMemo(
-    () => (surfaceRoute ? listPreviewRoutes().find((entry) => entry.route === surfaceRoute) ?? null : null),
+    () => (surfaceRoute ? (listPreviewRoutes().find((entry) => entry.route === surfaceRoute) ?? null) : null),
     [surfaceRoute],
   );
 
@@ -167,9 +212,15 @@ export function PreviewIndexPage({
   const groups = useMemo(() => groupPreviewRoutes(visibleEntries), [visibleEntries]);
 
   const openRoute = (entry: PreviewRouteEntry) => {
+    onBrowseStateChange({ query, filter, scrollTop: window.scrollY });
     onCancelLauncherRestore();
     onClose();
     navigate(entry.route);
+  };
+
+  const openPreviewRoute = (entry: PreviewRouteEntry) => {
+    onBrowseStateChange({ query, filter, scrollTop: window.scrollY });
+    onOpenPreview(entry);
   };
 
   const openSurface = (entry: PreviewRouteEntry, trigger: HTMLButtonElement) => {
@@ -188,7 +239,7 @@ export function PreviewIndexPage({
   const testRealLogin = () => {
     onCancelLauncherRestore();
     onClose();
-    navigate("staff-signin");
+    navigate('staff-signin');
   };
 
   return (
@@ -209,7 +260,7 @@ export function PreviewIndexPage({
           </button>
         </header>
 
-        <div className="preview-index-list" style={{ display: surfaceRoute ? "none" : undefined }}>
+        <div className="preview-index-list" style={{ display: surfaceRoute ? 'none' : undefined }}>
           <div className="preview-index-controls">
             <label className="preview-search">
               <span className="preview-sr-only">Search preview routes</span>
@@ -238,7 +289,7 @@ export function PreviewIndexPage({
           </div>
 
           <p className="preview-result-count" aria-live="polite" data-preview-count>
-            {visibleEntries.length} {visibleEntries.length === 1 ? "route" : "routes"}
+            {visibleEntries.length} {visibleEntries.length === 1 ? 'route' : 'routes'}
           </p>
 
           {visibleEntries.length === 0 ? (
@@ -247,7 +298,12 @@ export function PreviewIndexPage({
             </p>
           ) : (
             groups.map((group) => (
-              <section key={group.group} className="preview-group" data-preview-group={group.group} aria-labelledby={`preview-group-${group.group}`}>
+              <section
+                key={group.group}
+                className="preview-group"
+                data-preview-group={group.group}
+                aria-labelledby={`preview-group-${group.group}`}
+              >
                 <h2 id={`preview-group-${group.group}`} className="preview-group-title">
                   {ROUTE_GROUP_LABELS[group.group]}
                 </h2>
@@ -257,6 +313,7 @@ export function PreviewIndexPage({
                       key={entry.route}
                       entry={entry}
                       onOpen={openRoute}
+                      onOpenPreview={openPreviewRoute}
                       onSurface={openSurface}
                       surfaceTriggerRef={(route, node) => {
                         if (node) surfaceTriggers.current.set(route, node);
@@ -269,7 +326,12 @@ export function PreviewIndexPage({
             ))
           )}
 
-          <button type="button" className="preview-action preview-action-test-login" data-action="test-login" onClick={testRealLogin}>
+          <button
+            type="button"
+            className="preview-action preview-action-test-login"
+            data-action="test-login"
+            onClick={testRealLogin}
+          >
             Test Real Login Flow
           </button>
         </div>
