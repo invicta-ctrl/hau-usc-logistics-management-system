@@ -13,6 +13,7 @@ REQUIRED_MODEL: GPT-5.6_TERRA_MAX
 WRITER_LOCK: RELEASED_AT_ATOMIC_PUBLICATION_CHECKPOINT
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
+BACKEND_CURRENT: .codex/backend/CURRENT.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-22-fvr001-atomic-figma-frontend-cutover.md
 ACCEPTED_AMENDMENTS: .codex/specs/accepted/2026-08-22-fvr001-a1-figma-design-source-limitation.md;.codex/specs/accepted/2026-08-22-fvr001-a2-native-mcp-truncation-recovery.md
 
