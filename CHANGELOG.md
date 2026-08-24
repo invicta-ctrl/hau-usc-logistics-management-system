@@ -10,6 +10,13 @@
 
 ## Unreleased
 
+### FI-05 Inventory frontend integration
+
+- Sol accepted the FI-05 checkpoint, including strict modal Tab/Shift+Tab containment, opener restoration, and a distinct truthful zero-record bootstrap state. The slice stops before FI-06 intake.
+- Mounted the Inventory UI in the real capability-gated DOL shell with a strict credentialed adapter for the existing read-only inventory bootstrap. Ledger-derived quantities, reservations, availability, classification, condition, maintenance, and lending presentation remain server-owned.
+- Kept the v44 Inventory desktop table, mobile cards, search/filter, inspector, focus restoration, loading/empty/error/denied/stale states, and local inspection fixture boundary. The route adds no inventory mutation.
+- Updated the Preview Index registry and route wiring together: local inspection renders the actual component with a labelled deterministic fixture and no protected request; normal Test Real Access remains unchanged.
+
 ### A4 Preview Index local inspection
 
 - Added the accepted local-only Preview Inspection context, distinct from Session, auth gate state, entry intent, and server capability truth. It can activate only after a rendered Index action in development at exact 127.0.0.1:4173.

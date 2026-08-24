@@ -94,11 +94,11 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Inventory',
     group: 'STAFF',
     description:
-      'Authenticated inventory surface with preserved visual components and no active backend calls.',
-    implementationStatus: 'SURFACE_PREVIEW',
-    backendStatus: 'VISUAL_ONLY',
+      'Authenticated Inventory surface projected through the existing read-only module bootstrap. Local inspection uses a deterministic fixture with no protected request.',
+    implementationStatus: 'ACCEPTED',
+    backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
-    previewMode: 'SURFACE_PREVIEW',
+    previewMode: 'REAL_MODULE',
   }),
   Object.freeze({
     id: 'request-center',

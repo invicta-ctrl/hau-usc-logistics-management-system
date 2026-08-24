@@ -16,6 +16,30 @@ export type FrontendVersion = {
   playground: boolean;
 };
 
+export type FrontendInventoryItem = {
+  id: string;
+  name: string;
+  category: string;
+  unit: string;
+  onHand: number;
+  reserved: number;
+  availableToPromise: number;
+  reorderThreshold: number;
+  lowStockState: 'DISABLED' | 'LOW' | 'NORMAL';
+  isLendable: boolean;
+  lendingStatus: string;
+  inventoryKind: string;
+  classificationStatus: string;
+  conditionReviewState: string;
+  maintenanceReviewState: string;
+  updatedAt: string;
+};
+
+export type FrontendInventoryBootstrap = {
+  inventoryItems: FrontendInventoryItem[];
+  scopeRevision: { token: string; updatedAt: string } | null;
+};
+
 export type FrontendProfile = {
   displayName: string;
   legalName: string;
@@ -225,6 +249,13 @@ function asNumber(value: unknown): number {
   return Number.isFinite(result) ? result : 0;
 }
 
+function requiredNumber(value: unknown, field: string): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    incomplete(`The inventory response did not include ${field}.`);
+  }
+  return value;
+}
+
 function records(value: unknown): Json[] {
   return Array.isArray(value) ? value.map(asRecord) : [];
 }
@@ -399,6 +430,48 @@ export class FrontendBackend {
   async version(signal?: AbortSignal): Promise<FrontendVersion> {
     const payload = await this.request('/api/version', { method: 'GET', signal });
     return { playground: payload.playground === true };
+  }
+
+  /**
+   * FI-05: the authenticated Inventory projection is deliberately read from the
+   * existing module bootstrap.  The Worker remains the sole authority for the
+   * session, `view.inventory` capability, operational scope, and ledger-derived
+   * quantities; this adapter supplies no identity, capability, or stock values.
+   */
+  async inventoryBootstrap(signal?: AbortSignal): Promise<FrontendInventoryBootstrap> {
+    const payload = await this.request('/api/bootstrap/inventory', { method: 'GET', signal });
+    if (asString(payload.contract) !== 'bootstrap-module' || asString(payload.module) !== 'inventory') {
+      incomplete('The inventory response did not match the supported module bootstrap contract.');
+    }
+    const data = asRecord(payload.data);
+    if (!Array.isArray(data.inventoryItems)) {
+      incomplete('The inventory response did not include inventoryItems.');
+    }
+    const revision = asRecord(payload.scopeRevision);
+    return {
+      inventoryItems: records(data.inventoryItems).map((item) => ({
+        id: requiredString(item.id, 'inventoryItems.id'),
+        name: requiredString(item.name, 'inventoryItems.name'),
+        category: requiredString(item.category, 'inventoryItems.category'),
+        unit: requiredString(item.unit, 'inventoryItems.unit'),
+        onHand: requiredNumber(item.onHand, 'inventoryItems.onHand'),
+        reserved: requiredNumber(item.reserved, 'inventoryItems.reserved'),
+        availableToPromise: requiredNumber(item.availableToPromise, 'inventoryItems.availableToPromise'),
+        reorderThreshold: requiredNumber(item.reorderThreshold, 'inventoryItems.reorderThreshold'),
+        lowStockState: asString(item.lowStockState) as FrontendInventoryItem['lowStockState'],
+        isLendable: item.isLendable === true,
+        lendingStatus: asString(item.lendingStatus),
+        inventoryKind: asString(item.inventoryKind),
+        classificationStatus: asString(item.classificationStatus),
+        conditionReviewState: asString(item.conditionReviewState),
+        maintenanceReviewState: asString(item.maintenanceReviewState),
+        updatedAt: requiredString(item.updatedAt, 'inventoryItems.updatedAt'),
+      })),
+      scopeRevision:
+        revision.token && revision.updatedAt
+          ? { token: asString(revision.token), updatedAt: asString(revision.updatedAt) }
+          : null,
+    };
   }
 
   async login(

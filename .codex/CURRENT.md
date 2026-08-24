@@ -1,9 +1,9 @@
 # Current Work Pointer — frontend-design-integration
 
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
-MILESTONE: R1_A4_PREVIEW_INDEX_LOCAL_INSPECTION
-STATUS: A4_SOL_ACCEPTED_CHECKPOINT_COMPLETE
-PHASE: FI04_PREVIEW_INDEX_LOCAL_INSPECTION
+MILESTONE: R1_FI05_INVENTORY_CHECKPOINT_COMPLETE
+STATUS: FI05_ACCEPTED_CHECKPOINT_COMPLETE
+PHASE: FI06_INTAKE_ONLY
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration
@@ -12,19 +12,20 @@ WORKTREE_STATE: GIT_STATUS
 POST_CHECKPOINT_WORKTREE: A4_CHECKPOINT_COMMITTED__PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
-HANDOFF_STATUS: READY_FOR_FI05_BOUNDED_INTAKE
+HANDOFF_STATUS: FI05_CHECKPOINT_COMPLETE
 REQUIRED_MODEL: GPT-5.6-Terra integration writer
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi04-fi17-r1-a4-preview-index-local-inspection-no-login-module-browsing.md
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi05-inventory-frontend-integration.md
 ACCEPTED_AMENDMENTS: R1 one-shot; R1-A2 reconciliation; accepted A3 persistent local live-preview gate; accepted A4 local Preview Index inspection
 R3A1A2_RECEIPT: .codex/R3_A1_A2_ROUTING_IDENTITY_RECEIPT.md
 F2_BASELINE: .codex/FRONTEND_F2_R3A1A2.md
 A3_PREVIEW_RECEIPT: .codex/A3_LOCAL_PREVIEW_RECEIPT.md
 FI04_RECEIPT: .codex/FI04_AUTHENTICATED_SHELL_RECEIPT.md
 A4_PREVIEW_INDEX_RECEIPT: .codex/A4_PREVIEW_INDEX_INSPECTION_RECEIPT.md
-BLOCKER: NONE — Sol accepted A4 and authorized the single checkpoint; do not begin FI-05 implementation.
-NEXT_EXACT_ACTION: Perform the bounded FI-05 intake and repository handshake only; acquire a new writer lock and accepted authority before any FI-05 implementation.
+FI05_RECEIPT: .codex/FI05_INVENTORY_RECEIPT.md
+BLOCKER: NONE — Sol accepted the FI-05 candidate; the authorized checkpoint is complete and no FI-06 implementation is authorized.
+NEXT_EXACT_ACTION: Perform FI-06 intake and repository handshake only; do not implement FI-06 until accepted scope and writer lock are established.
 
 ## Active A4 preview inspection
 

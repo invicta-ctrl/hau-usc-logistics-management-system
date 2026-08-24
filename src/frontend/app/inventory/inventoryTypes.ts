@@ -1,5 +1,5 @@
-export type InvLending = "lendable" | "not-lendable";
-export type InvQty = number | "—";
+export type InvLending = 'lendable' | 'not-lendable';
+export type InvQty = number | '—';
 
 export type InvItem = {
   id: string;
@@ -15,4 +15,11 @@ export type InvItem = {
   unconfirmed: boolean;
   consequence: string;
   nextAction: string;
+  /** The real route is a server bootstrap projection; fixtures exist only in A4 inspection. */
+  dataOrigin?: 'REAL_BOOTSTRAP' | 'LOCAL_PREVIEW_FIXTURE';
+  unit?: string;
+  classificationStatus?: string;
+  conditionReviewState?: string;
+  maintenanceReviewState?: string;
+  updatedAt?: string;
 };

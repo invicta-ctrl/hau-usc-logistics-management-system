@@ -155,6 +155,57 @@ describe('Figma frontend backend adapter', () => {
     await expect(backend.profile()).rejects.toMatchObject({ code: 'PROFILE_UNAVAILABLE', status: 503 });
   });
 
+  it('projects only the authenticated inventory module bootstrap and fails closed on a partial DTO', async () => {
+    const valid = {
+      ok: true,
+      contract: 'bootstrap-module',
+      module: 'inventory',
+      scopeRevision: { token: 'inventory-r7', updatedAt: '2026-08-24T00:00:00.000Z' },
+      data: {
+        inventoryItems: [
+          {
+            id: 'ITM-1',
+            name: 'Ledger chair',
+            category: 'Venue',
+            unit: 'piece',
+            onHand: 8,
+            reserved: 3,
+            availableToPromise: 5,
+            reorderThreshold: 2,
+            lowStockState: 'NORMAL',
+            isLendable: true,
+            lendingStatus: 'ACTIVE',
+            inventoryKind: 'REUSABLE',
+            classificationStatus: 'CLASSIFIED',
+            conditionReviewState: 'ASSESSED',
+            maintenanceReviewState: 'CURRENT',
+            updatedAt: '2026-08-24T00:00:00.000Z',
+          },
+        ],
+      },
+    };
+    const partial = structuredClone(valid);
+    delete partial.data.inventoryItems[0].availableToPromise;
+    const fetchMock = vi.fn().mockResolvedValueOnce(response(valid)).mockResolvedValueOnce(response(partial));
+    vi.stubGlobal('fetch', fetchMock);
+    const backend = new FrontendBackend();
+
+    await expect(backend.inventoryBootstrap()).resolves.toEqual({
+      inventoryItems: [
+        expect.objectContaining({ id: 'ITM-1', availableToPromise: 5, onHand: 8, reserved: 3 }),
+      ],
+      scopeRevision: { token: 'inventory-r7', updatedAt: '2026-08-24T00:00:00.000Z' },
+    });
+    await expect(backend.inventoryBootstrap()).rejects.toMatchObject({
+      code: 'INCOMPLETE_RESPONSE',
+      status: 502,
+    });
+    expect(fetchMock.mock.calls[0]).toEqual([
+      '/api/bootstrap/inventory',
+      expect.objectContaining({ method: 'GET', credentials: 'include' }),
+    ]);
+  });
+
   it('projects login success and starter activation while preserving activation CSRF', async () => {
     const authenticatedUser = {
       accountId: 'ACC-LOGIN',

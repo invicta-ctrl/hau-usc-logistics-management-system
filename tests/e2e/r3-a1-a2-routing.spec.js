@@ -164,6 +164,40 @@ function installRequesterPortal(page) {
   });
 }
 
+function installInventoryBootstrap(page, { status = 200, body } = {}) {
+  const payload = body ?? {
+    ok: true,
+    contract: 'bootstrap-module',
+    module: 'inventory',
+    scopeRevision: { token: 'inventory-r1', updatedAt: '2026-08-24T00:00:00.000Z' },
+    data: {
+      inventoryItems: [
+        {
+          id: 'ITM-REAL-1',
+          name: 'Authoritative folding chair',
+          category: 'Venue',
+          unit: 'piece',
+          onHand: 24,
+          reserved: 6,
+          availableToPromise: 18,
+          reorderThreshold: 4,
+          lowStockState: 'NORMAL',
+          isLendable: true,
+          lendingStatus: 'ACTIVE',
+          inventoryKind: 'REUSABLE',
+          classificationStatus: 'CLASSIFIED',
+          conditionReviewState: 'ASSESSED',
+          maintenanceReviewState: 'CURRENT',
+          updatedAt: '2026-08-24T00:00:00.000Z',
+        },
+      ],
+    },
+  };
+  return page.route('**/api/bootstrap/inventory', (route) =>
+    route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(payload) }),
+  );
+}
+
 /** ROLES.REQUESTER — eligible USC requester, no view.internal. */
 const NON_DOL_REQUESTER = {
   accountId: 'ACC-USC-OFFICER',
@@ -204,6 +238,10 @@ async function signIn(page, identifier) {
 
 function usesMobileShell(testInfo) {
   return ['frontend-320', 'frontend-390', 'frontend-768'].includes(testInfo.project.name);
+}
+
+function usesMobileInventoryLayout(testInfo) {
+  return ['frontend-320', 'frontend-390'].includes(testInfo.project.name);
 }
 
 async function workspaceSurface(page, testInfo) {
@@ -433,6 +471,7 @@ test('AUTH-01 generic staff sign-in sends a DOL account to its capability-approp
 }, testInfo) => {
   await installPublicFeed(page);
   await installLogin(page, DOL_STAFF);
+  await installInventoryBootstrap(page);
 
   await page.goto('/');
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
@@ -472,7 +511,105 @@ test('AUTH-01 generic staff sign-in sends a DOL account to its capability-approp
 
   await operations.getByRole('button', { name: 'Inventory' }).click();
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible();
-  await expect(page.getByText('This workspace route is reserved and has not yet been built.')).toBeVisible();
+  await expect(page.getByText('Authenticated bootstrap · ledger-derived')).toBeVisible();
+  await expect(page.getByText('Authoritative folding chair')).toBeVisible();
+  await expect(page.getByText('This workspace route is reserved and has not yet been built.')).toHaveCount(0);
+});
+
+test('FI-05 Inventory uses the authenticated bootstrap, restores inspector focus, and reports a denied read truthfully', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  await installInventoryBootstrap(page);
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await signIn(page, 'dol.staff');
+  await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Inventory' }).click();
+  const opener = usesMobileInventoryLayout(testInfo)
+    ? page.getByRole('button', { name: 'Open item record' })
+    : page.getByRole('button', { name: /Authoritative folding chair/u });
+  await expect(opener).toBeVisible();
+  await opener.click();
+  await expect(page.getByRole('dialog')).toContainText('Authenticated bootstrap · ledger-derived');
+  const closeInspector = usesMobileInventoryLayout(testInfo)
+    ? page.getByRole('button', { name: 'Back to inventory' })
+    : page.getByRole('button', { name: 'Close inspector' });
+  await expect(closeInspector).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(closeInspector).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(closeInspector).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(opener).toBeFocused();
+});
+
+test('FI-05 Inventory fails closed to the access-limited state when the bootstrap denies the read', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  await installInventoryBootstrap(page, {
+    status: 403,
+    body: { code: 'FORBIDDEN', message: 'Access denied.' },
+  });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await signIn(page, 'dol.staff');
+  await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Inventory' }).click();
+  await expect(page.getByText('Access limited')).toBeVisible();
+  await expect(page.getByText('This view is not available for your current session.')).toBeVisible();
+});
+
+test('FI-05 Inventory reports a genuinely empty authorized bootstrap without implying a local filter mismatch', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  await installInventoryBootstrap(page, {
+    body: {
+      ok: true,
+      contract: 'bootstrap-module',
+      module: 'inventory',
+      scopeRevision: { token: 'inventory-empty', updatedAt: '2026-08-24T00:00:00.000Z' },
+      data: { inventoryItems: [] },
+    },
+  });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await signIn(page, 'dol.staff');
+  await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Inventory' }).click();
+  await expect(page.getByText('No inventory records are available in this authorized scope')).toBeVisible();
+  await expect(page.getByText('No records match this filter')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Clear filter' })).toHaveCount(0);
+});
+
+test('FI-05 Inventory retains the last authoritative projection and labels it stale after a failed refresh', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  await installInventoryBootstrap(page);
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await signIn(page, 'dol.staff');
+  await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Inventory' }).click();
+  await expect(page.getByText('Authoritative folding chair')).toBeVisible();
+  await page.unroute('**/api/bootstrap/inventory');
+  await page.route('**/api/bootstrap/inventory', (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 'SERVICE_UNAVAILABLE', message: 'Inventory is temporarily unavailable.' }),
+    }),
+  );
+  await page.getByRole('button', { name: 'Refresh inventory' }).click();
+  await expect(page.getByText('Data may be out of date')).toBeVisible();
+  await expect(page.getByText('Authoritative folding chair')).toBeVisible();
 });
 
 test('AUTH-01 generic zero-capability sign-in remains denied even though Profile is projected for an authenticated account', async ({
