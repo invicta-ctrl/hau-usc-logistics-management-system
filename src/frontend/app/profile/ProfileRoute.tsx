@@ -1,377 +1,683 @@
-import { useState, type FormEvent } from "react";
-import { User } from "lucide-react";
-import type { Session } from "../appTypes";
-import { DolMark, UscMark } from "../brand/BrandMarks";
-import { ThemeToggle } from "../brand/ThemeToggle";
-import { ACCOUNT_ACTIVITY } from "./profileFixtures";
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { User } from 'lucide-react';
+import { ThemeToggle } from '../brand/ThemeToggle';
+import { FrontendApiError, frontendBackend, type FrontendProfile } from '../../integration/backend';
 
-export function ProfileRoute({
-  session,
-  dark,
-  onToggle,
+type Field = { label: string; value: string };
+
+function unavailable(value: string) {
+  return value || 'Not available';
+}
+
+function DetailGrid({ fields }: { fields: Field[] }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2">
+      {fields.map((field, index) => (
+        <div
+          key={field.label}
+          className="px-5 py-4"
+          style={{
+            borderTop: index >= 2 ? '1px solid var(--border)' : 'none',
+            borderLeft: index % 2 === 1 ? '1px solid var(--border)' : 'none',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 10,
+              color: 'var(--muted-foreground)',
+              letterSpacing: '0.5px',
+              textTransform: 'uppercase',
+              marginBottom: 4,
+            }}
+          >
+            {field.label}
+          </p>
+          <p
+            style={{
+              fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+              fontSize: 13,
+              color: 'var(--foreground)',
+              letterSpacing: -0.15,
+              overflowWrap: 'anywhere',
+            }}
+          >
+            {unavailable(field.value)}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProfileSection({
+  title,
+  subtitle,
+  children,
 }: {
-  session: Session;
-  dark: boolean;
-  onToggle: () => void;
+  title: string;
+  subtitle: string;
+  children: ReactNode;
 }) {
-  const [editName, setEditName] = useState(session.displayName);
-  const [nameSaved, setNameSaved] = useState(false);
-  const [isDirty, setIsDirty] = useState(false);
+  return (
+    <section
+      className="rounded-[12px] overflow-hidden"
+      style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+    >
+      <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+        <h2
+          style={{
+            fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+            fontWeight: 600,
+            fontSize: 14,
+            color: 'var(--foreground)',
+            letterSpacing: -0.2,
+          }}
+        >
+          {title}
+        </h2>
+        <p
+          style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 10,
+            color: 'var(--muted-foreground)',
+            letterSpacing: '0.4px',
+            marginTop: 2,
+          }}
+        >
+          {subtitle}
+        </p>
+      </div>
+      {children}
+    </section>
+  );
+}
 
-  function handleSaveName(e: FormEvent) {
-    e.preventDefault();
-    setIsDirty(false);
-    setNameSaved(true);
-    setTimeout(() => setNameSaved(false), 3000);
+function ProfileLoading() {
+  return (
+    <div
+      className="max-w-[1180px] mx-auto px-5 md:px-8 py-8"
+      aria-busy="true"
+      aria-label="Loading account profile"
+    >
+      <p
+        className="mb-6"
+        style={{
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: 10,
+          color: 'var(--muted-foreground)',
+          letterSpacing: '0.8px',
+          textTransform: 'uppercase',
+        }}
+      >
+        Account / Profile
+      </p>
+      <div
+        className="rounded-[14px] p-6 flex items-center gap-5"
+        style={{ background: '#40070a', border: '1px solid rgba(242,209,92,0.22)' }}
+      >
+        <div
+          className="rounded-full animate-pulse"
+          style={{ width: 72, height: 72, background: 'rgba(232,185,60,0.24)' }}
+        />
+        <div className="flex flex-col gap-3 w-full max-w-[340px]">
+          <div
+            className="rounded animate-pulse"
+            style={{ height: 20, background: 'rgba(250,238,203,0.18)' }}
+          />
+          <div
+            className="rounded animate-pulse"
+            style={{ height: 12, width: '68%', background: 'rgba(250,238,203,0.12)' }}
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        {[0, 1].map((card) => (
+          <div
+            key={card}
+            className="rounded-[12px] p-5 animate-pulse"
+            style={{ minHeight: 188, background: 'var(--card)', border: '1px solid var(--border)' }}
+          />
+        ))}
+      </div>
+      <p
+        className="mt-5"
+        role="status"
+        style={{
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: 11,
+          color: 'var(--muted-foreground)',
+          letterSpacing: '0.4px',
+        }}
+      >
+        Loading account profile…
+      </p>
+    </div>
+  );
+}
+
+export function ProfileRoute({ dark, onToggle }: { dark: boolean; onToggle: () => void }) {
+  const [profile, setProfile] = useState<FrontendProfile | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [retryKey, setRetryKey] = useState(0);
+  const requestRef = useRef<{ retryKey: number; promise: Promise<FrontendProfile> } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+    setProfile(null);
+
+    if (!requestRef.current || requestRef.current.retryKey !== retryKey) {
+      requestRef.current = { retryKey, promise: frontendBackend.profile() };
+    }
+
+    void requestRef.current.promise
+      .then((next) => {
+        if (active) setProfile(next);
+      })
+      .catch((reason: unknown) => {
+        if (active) {
+          setError(
+            reason instanceof FrontendApiError
+              ? reason.message
+              : 'The account profile is temporarily unavailable.',
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [retryKey]);
+
+  if (loading) return <ProfileLoading />;
+
+  if (error || !profile) {
+    return (
+      <div className="max-w-[760px] mx-auto px-5 md:px-8 py-12">
+        <section
+          className="rounded-[12px] p-6"
+          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+          aria-labelledby="profile-unavailable-heading"
+        >
+          <p
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 10,
+              color: 'var(--muted-foreground)',
+              letterSpacing: '0.8px',
+              textTransform: 'uppercase',
+            }}
+          >
+            Account / Profile
+          </p>
+          <h1
+            id="profile-unavailable-heading"
+            className="mt-3"
+            style={{
+              fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
+              fontWeight: 700,
+              fontSize: 'clamp(24px, 3vw, 32px)',
+              color: 'var(--foreground)',
+              letterSpacing: '-0.8px',
+            }}
+          >
+            Profile unavailable
+          </h1>
+          <p
+            role="alert"
+            className="mt-3"
+            style={{
+              fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+              fontSize: 14,
+              color: 'var(--muted-foreground)',
+              lineHeight: '22px',
+            }}
+          >
+            {error ?? 'The account profile response was incomplete.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => setRetryKey((value) => value + 1)}
+            className="mt-6 rounded-[8px] px-4 py-2 text-[13px] font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
+            style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
+          >
+            Retry profile
+          </button>
+        </section>
+      </div>
+    );
   }
 
-  function handleCancelName() {
-    setEditName(session.displayName);
-    setIsDirty(false);
-    setNameSaved(false);
-  }
+  const personalFields: Field[] = [
+    { label: 'Display name', value: profile.displayName },
+    { label: 'Legal name', value: profile.legalName },
+    { label: 'Verified email', value: profile.verifiedEmail || 'Not verified' },
+    { label: 'Username', value: profile.username },
+    { label: 'Contact number', value: profile.contactNumber },
+    { label: 'Account code', value: profile.accountCode },
+  ];
+  const affiliationFields: Field[] = [
+    { label: 'Institution', value: profile.affiliation.institutionId },
+    {
+      label: 'Department',
+      value: profile.affiliation.departmentDisplayName || profile.affiliation.departmentId,
+    },
+    { label: 'Course', value: profile.affiliation.courseId },
+    { label: 'Year level', value: profile.affiliation.yearLevel },
+  ];
 
   return (
-    <div className="max-w-[1100px] mx-auto px-5 md:px-8 py-8">
-      {/* Breadcrumb */}
+    <div className="max-w-[1180px] mx-auto px-5 md:px-8 py-8 pb-10">
       <nav aria-label="Breadcrumb" className="mb-6">
-        <ol className="flex items-center gap-2" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--muted-foreground)" }}>
+        <ol
+          className="flex items-center gap-2"
+          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: 'var(--muted-foreground)' }}
+        >
           <li>Account</li>
           <li aria-hidden="true">/</li>
-          <li style={{ color: "var(--foreground)" }}>Profile</li>
+          <li style={{ color: 'var(--foreground)' }}>Profile</li>
         </ol>
       </nav>
 
-      {/* Identity band */}
-      <div
+      <section
         className="rounded-[14px] overflow-hidden mb-6"
-        style={{ background: "#40070a", border: "1px solid rgba(242,209,92,0.22)" }}
+        style={{ background: '#40070a', border: '1px solid rgba(242,209,92,0.22)' }}
+        aria-labelledby="profile-heading"
       >
-        {/* Avatar + name */}
-        <div className="flex items-center gap-5 px-6 py-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5 px-5 sm:px-6 py-6">
           <div
             className="flex items-center justify-center rounded-full shrink-0"
-            style={{ width: 72, height: 72, background: "#e8b93c" }}
-            aria-label="Portrait placeholder"
+            style={{ width: 72, height: 72, background: '#e8b93c' }}
+            aria-label="Initials avatar"
             role="img"
           >
-            <span style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 24, fontWeight: 700, color: "#40070a" }}>
-              {session.initials}
-            </span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <h1
-              style={{ fontFamily: "'Bricolage Grotesque', system-ui, sans-serif", fontWeight: 700, fontSize: "clamp(18px, 3vw, 24px)", color: "#fff", letterSpacing: "-0.6px", fontVariationSettings: '"opsz" 14, "wdth" 100' }}
-            >
-              {session.displayName}
-            </h1>
-            <div className="flex items-center gap-2">
-              <UscMark size={24} />
-              <DolMark size={22} />
-              <span style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 12, color: "#f6e29a" }}>
-                Department of Logistics · University Student Council
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Badges */}
-        <div className="flex flex-wrap gap-2 px-6 pb-5">
-          {[
-            { label: "DOL Staff", style: { background: "rgba(232,185,60,0.2)", color: "#e8b93c", border: "1px solid rgba(232,185,60,0.35)" } },
-            { label: "Assigned access scope", style: { background: "transparent", color: "rgba(250,238,203,0.5)", border: "1px solid rgba(242,209,92,0.14)" } },
-            { label: "Active", style: { background: "rgba(31,107,65,0.2)", color: "#6bc98d", border: "1px solid rgba(31,107,65,0.3)" } },
-          ].map((badge) => (
             <span
-              key={badge.label}
-              className="inline-flex items-center rounded-full px-3 py-1"
-              style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, letterSpacing: "0.4px", ...badge.style }}
+              style={{
+                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                fontSize: 24,
+                fontWeight: 700,
+                color: '#40070a',
+              }}
             >
-              {badge.label}
+              {profile.avatar.initials}
             </span>
-          ))}
+          </div>
+          <div className="flex flex-col gap-1 min-w-0">
+            <p
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 10,
+                color: '#f6e29a',
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
+              }}
+            >
+              account.profile
+            </p>
+            <h1
+              id="profile-heading"
+              style={{
+                fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
+                fontWeight: 700,
+                fontSize: 'clamp(22px, 3vw, 30px)',
+                color: '#fff',
+                letterSpacing: '-0.7px',
+                overflowWrap: 'anywhere',
+              }}
+            >
+              {profile.displayName}
+            </h1>
+            <p
+              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 13, color: '#f6e29a' }}
+            >
+              {profile.accessSummary.roleLabel} · Server-decided access scope
+            </p>
+          </div>
         </div>
-      </div>
+        <div className="flex flex-wrap gap-2 px-5 sm:px-6 pb-5">
+          <span
+            className="inline-flex items-center rounded-full px-3 py-1"
+            style={{
+              background: 'rgba(232,185,60,0.2)',
+              color: '#e8b93c',
+              border: '1px solid rgba(232,185,60,0.35)',
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 10,
+              letterSpacing: '0.35px',
+            }}
+          >
+            {profile.roleId}
+          </span>
+          <span
+            className="inline-flex items-center rounded-full px-3 py-1"
+            style={{
+              color: 'rgba(250,238,203,0.72)',
+              border: '1px solid rgba(242,209,92,0.18)',
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 10,
+              letterSpacing: '0.35px',
+            }}
+          >
+            {profile.accessSummary.scopeMode || 'Assigned scope'}
+          </span>
+        </div>
+      </section>
 
-      {/* 2-col layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
-        {/* Main: info sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_292px] gap-6">
         <div className="flex flex-col gap-6">
-          {/* Personal information */}
-          <section
-            className="rounded-[12px] overflow-hidden"
-            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-            aria-labelledby="personal-info-heading"
+          <ProfileSection
+            title="Personal information"
+            subtitle="Read-only · sourced from the authenticated profile contract"
           >
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-              <h2
-                id="personal-info-heading"
-                style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontWeight: 600, fontSize: 14, color: "var(--foreground)", letterSpacing: -0.2 }}
-              >
-                Personal information
-              </h2>
-              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", letterSpacing: "0.4px", marginTop: 2 }}>
-                Read-only · Managed at account creation
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
-              {[
-                { label: "Preferred name", val: "Not included in this design fixture" },
-                { label: "Contact email", val: "Not included in this design fixture" },
-                { label: "Username", val: "Not included in this design fixture" },
-                { label: "Last verified sign-in", val: "Not included in this design fixture" },
-              ].map((field, i) => (
-                <div
-                  key={field.label}
-                  className="px-5 py-4"
-                  style={{ borderTop: i >= 2 ? "1px solid var(--border)" : "none", borderLeft: i % 2 === 1 ? "1px solid var(--border)" : "none" }}
-                >
-                  <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 4 }}>
-                    {field.label}
-                  </p>
-                  <p style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 13, color: "var(--foreground)", letterSpacing: -0.15 }}>
-                    {field.val}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
+            <DetailGrid fields={personalFields} />
+          </ProfileSection>
 
-          {/* USC information */}
-          <section
-            className="rounded-[12px] overflow-hidden"
-            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-            aria-labelledby="usc-info-heading"
+          <ProfileSection
+            title="University Student Council information"
+            subtitle="Read-only affiliation from the authenticated profile contract"
           >
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-              <h2
-                id="usc-info-heading"
-                style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontWeight: 600, fontSize: 14, color: "var(--foreground)", letterSpacing: -0.2 }}
-              >
-                University Student Council information
-              </h2>
-              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", letterSpacing: "0.4px", marginTop: 2 }}>
-                Staff directory source · Read-only
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
-              {[
-                { label: "Title", val: "Not included in this design fixture" },
-                { label: "Department", val: "Department of Logistics" },
-                { label: "Honours", val: "Not included in this design fixture" },
-                { label: "Term", val: "Not included in this design fixture" },
-              ].map((field, i) => (
-                <div
-                  key={field.label}
-                  className="px-5 py-4"
-                  style={{ borderTop: i >= 2 ? "1px solid var(--border)" : "none", borderLeft: i % 2 === 1 ? "1px solid var(--border)" : "none" }}
-                >
-                  <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 4 }}>
-                    {field.label}
-                  </p>
-                  <p style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 13, color: "var(--foreground)", letterSpacing: -0.15 }}>
-                    {field.val}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
+            <DetailGrid fields={affiliationFields} />
+          </ProfileSection>
 
-          {/* Account and access */}
-          <section
-            className="rounded-[12px] overflow-hidden"
-            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-            aria-labelledby="account-access-heading"
+          <ProfileSection
+            title="Account and access"
+            subtitle="Capabilities and workspaces are server-projected; this page does not change them."
           >
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-              <h2
-                id="account-access-heading"
-                style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontWeight: 600, fontSize: 14, color: "var(--foreground)", letterSpacing: -0.2 }}
-              >
-                Account and access
-              </h2>
-              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", letterSpacing: "0.4px", marginTop: 2 }}>
-                Assigned access scope · Roles and capabilities are managed by authorized account records.
-              </p>
-            </div>
             <div className="px-5 py-4 flex flex-col gap-5">
-              {/* Capabilities */}
               <div>
-                <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 8 }}>
+                <p
+                  style={{
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: 10,
+                    color: 'var(--muted-foreground)',
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
+                    marginBottom: 8,
+                  }}
+                >
                   Capabilities
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {["Review", "Reserve", "Release", "Reconcile"].map((cap) => (
-                    <span
-                      key={cap}
-                      className="inline-flex items-center rounded-[6px] px-2.5 py-1"
-                      style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#1f6b41", background: "rgba(31,107,65,0.1)", border: "1px solid rgba(31,107,65,0.22)", letterSpacing: "0.3px" }}
-                    >
-                      {cap}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              {/* Session */}
-              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
-                <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 4 }}>
-                  Session
-                </p>
-                <p style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 13, color: "var(--foreground)", letterSpacing: -0.15 }}>
-                  Expires on sign-out. No persistent token is stored.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Preferences (editable) */}
-          <section
-            className="rounded-[12px] overflow-hidden"
-            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-            aria-labelledby="preferences-heading"
-          >
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-              <h2
-                id="preferences-heading"
-                style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontWeight: 600, fontSize: 14, color: "var(--foreground)", letterSpacing: -0.2 }}
-              >
-                Preferences
-              </h2>
-              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", letterSpacing: "0.4px", marginTop: 2 }}>
-                Session-local only · Changes are not persisted beyond sign-out
-              </p>
-            </div>
-            <div className="px-5 py-4 flex flex-col gap-5">
-              {/* Display name preference */}
-              <form onSubmit={handleSaveName} className="flex flex-col gap-3">
-                <div>
-                  <label
-                    htmlFor="pref-name"
-                    style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 13, fontWeight: 500, color: "var(--foreground)", display: "block", marginBottom: 6 }}
-                  >
-                    Display name preference
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      id="pref-name"
-                      type="text"
-                      value={editName}
-                      onChange={(e) => { setEditName(e.target.value); setIsDirty(true); setNameSaved(false); }}
-                      className="flex-1 rounded-[8px] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#e8b93c] focus:ring-offset-0"
-                      style={{ background: "var(--input-background)", border: "1px solid var(--border)", color: "var(--foreground)", fontFamily: "'IBM Plex Sans', system-ui, sans-serif" }}
-                    />
-                    <button
-                      type="submit"
-                      className="flex items-center justify-center rounded-[8px] px-4 text-[12px] font-semibold transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
-                      style={{ background: "var(--primary)", color: "var(--primary-foreground)", minHeight: 38, border: "1px solid transparent", fontFamily: "'IBM Plex Sans', system-ui, sans-serif", minWidth: 60 }}
-                    >
-                      {nameSaved ? "Saved" : "Save"}
-                    </button>
-                    {isDirty && (
-                      <button
-                        type="button"
-                        onClick={handleCancelName}
-                        className="flex items-center justify-center rounded-[8px] px-4 text-[12px] font-semibold transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
-                        style={{ background: "transparent", color: "var(--foreground)", minHeight: 38, border: "1px solid var(--border)", fontFamily: "'IBM Plex Sans', system-ui, sans-serif", minWidth: 60 }}
+                {profile.accessSummary.capabilities.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {profile.accessSummary.capabilities.map((capability) => (
+                      <span
+                        key={capability}
+                        className="inline-flex items-center rounded-[6px] px-2.5 py-1"
+                        style={{
+                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontSize: 10,
+                          color: dark ? '#bbf7d0' : '#1f6b41',
+                          background: dark ? 'rgba(74, 154, 104, 0.2)' : 'rgba(31,107,65,0.1)',
+                          border: dark ? '1px solid rgba(187,247,208,0.3)' : '1px solid rgba(31,107,65,0.22)',
+                          letterSpacing: '0.3px',
+                        }}
                       >
-                        Cancel
-                      </button>
-                    )}
+                        {capability}
+                      </span>
+                    ))}
                   </div>
-                  {isDirty && (
-                    <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#d4183d", marginTop: 6, letterSpacing: "0.3px" }}>
-                      Unsaved change · local only
-                    </p>
-                  )}
-                  {nameSaved && (
-                    <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#1f6b41", marginTop: 6, letterSpacing: "0.3px" }}>
-                      Saved locally. No service has confirmed this change. No record has been submitted.
-                    </p>
-                  )}
-                </div>
-              </form>
-              {/* Theme */}
-              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 13, fontWeight: 500, color: "var(--foreground)" }}>
-                      Theme
-                    </p>
-                    <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", marginTop: 2 }}>
-                      {dark ? "Dark" : "Light"} · persists in this browser
-                    </p>
-                  </div>
-                  <ThemeToggle dark={dark} onToggle={onToggle} small />
-                </div>
+                ) : (
+                  <p
+                    style={{
+                      fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                      fontSize: 13,
+                      color: 'var(--muted-foreground)',
+                    }}
+                  >
+                    No server-projected capabilities are available.
+                  </p>
+                )}
+              </div>
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                <p
+                  style={{
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: 10,
+                    color: 'var(--muted-foreground)',
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
+                    marginBottom: 4,
+                  }}
+                >
+                  Workspace scope
+                </p>
+                <p
+                  style={{
+                    fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                    fontSize: 13,
+                    color: 'var(--foreground)',
+                    overflowWrap: 'anywhere',
+                  }}
+                >
+                  {profile.accessSummary.workspaceIds.length > 0
+                    ? profile.accessSummary.workspaceIds.join(', ')
+                    : 'No workspace assignments are available.'}
+                </p>
+                {profile.accessSummary.defaultWorkspaceId && (
+                  <p
+                    className="mt-2"
+                    style={{
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: 10,
+                      color: 'var(--muted-foreground)',
+                      letterSpacing: '0.3px',
+                    }}
+                  >
+                    Default workspace: {profile.accessSummary.defaultWorkspaceId}
+                  </p>
+                )}
+              </div>
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                <p
+                  style={{
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: 10,
+                    color: 'var(--muted-foreground)',
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
+                    marginBottom: 4,
+                  }}
+                >
+                  Credential version
+                </p>
+                <p
+                  style={{
+                    fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                    fontSize: 13,
+                    color: 'var(--foreground)',
+                  }}
+                >
+                  {profile.credentialVersion}
+                </p>
               </div>
             </div>
-          </section>
+          </ProfileSection>
+
+          <ProfileSection
+            title="Preferences"
+            subtitle="Theme is local to this browser; profile fields remain read-only."
+          >
+            <div className="px-5 py-4 flex items-center justify-between gap-4">
+              <div>
+                <p
+                  style={{
+                    fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: 'var(--foreground)',
+                  }}
+                >
+                  Theme
+                </p>
+                <p
+                  style={{
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: 10,
+                    color: 'var(--muted-foreground)',
+                    marginTop: 2,
+                  }}
+                >
+                  {dark ? 'Dark' : 'Light'} · persists in this browser
+                </p>
+              </div>
+              <ThemeToggle dark={dark} onToggle={onToggle} small />
+            </div>
+          </ProfileSection>
         </div>
 
-        {/* Sidebar: account activity + CONTRACT-GATED notice */}
-        <div className="flex flex-col gap-4">
-          {/* Account activity */}
-          <section
-            className="rounded-[12px] overflow-hidden"
-            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-            aria-labelledby="activity-heading"
-          >
-            <div className="px-4 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-              <h2
-                id="activity-heading"
-                style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontWeight: 600, fontSize: 13, color: "var(--foreground)", letterSpacing: -0.15 }}
-              >
-                Account activity
-              </h2>
-              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", marginTop: 2, letterSpacing: "0.3px" }}>
-                Session-scoped only
-              </p>
-            </div>
-            <div className="flex flex-col">
-              <div className="px-4 pt-3 pb-1">
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, letterSpacing: "0.9px", textTransform: "uppercase", color: "var(--muted-foreground)", opacity: 0.6 }}>
-                  LOCAL DESIGN FIXTURE
-                </span>
-              </div>
-              {ACCOUNT_ACTIVITY.map((entry, i) => (
-                <div
-                  key={i}
-                  className="px-4 py-3"
-                  style={{ borderTop: i > 0 ? "1px solid var(--border)" : "none" }}
+        <aside className="flex flex-col gap-4">
+          <ProfileSection title="Account record" subtitle="Current contract evidence">
+            <div className="px-4 py-4 flex flex-col gap-4">
+              <div>
+                <p
+                  style={{
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: 9,
+                    color: 'var(--muted-foreground)',
+                    letterSpacing: '0.8px',
+                    textTransform: 'uppercase',
+                  }}
                 >
-                  <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", letterSpacing: "0.3px" }}>
-                    {entry.when}
+                  Updated at
+                </p>
+                <p
+                  className="mt-1"
+                  style={{
+                    fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                    fontSize: 12,
+                    color: 'var(--foreground)',
+                    overflowWrap: 'anywhere',
+                  }}
+                >
+                  {profile.updatedAt}
+                </p>
+              </div>
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                <p
+                  style={{
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: 9,
+                    color: 'var(--muted-foreground)',
+                    letterSpacing: '0.8px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Revision
+                </p>
+                <p
+                  className="mt-1"
+                  style={{
+                    fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                    fontSize: 12,
+                    color: 'var(--foreground)',
+                    overflowWrap: 'anywhere',
+                  }}
+                >
+                  {profile.revision}
+                </p>
+              </div>
+              {profile.committeeIds.length > 0 && (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                  <p
+                    style={{
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: 9,
+                      color: 'var(--muted-foreground)',
+                      letterSpacing: '0.8px',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Committee scope
                   </p>
-                  <p style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 12, color: "var(--foreground)", letterSpacing: -0.1, marginTop: 2, lineHeight: "18px" }}>
-                    {entry.action}
+                  <p
+                    className="mt-1"
+                    style={{
+                      fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                      fontSize: 12,
+                      color: 'var(--foreground)',
+                      overflowWrap: 'anywhere',
+                    }}
+                  >
+                    {profile.committeeIds.join(', ')}
                   </p>
                 </div>
-              ))}
+              )}
             </div>
-          </section>
+          </ProfileSection>
 
-          {/* CONTRACT-GATED: portrait + biography */}
-          <div
+          <section
             className="rounded-[12px] px-4 py-4 flex flex-col gap-3"
-            style={{ background: "var(--muted)", border: "1px solid var(--border)" }}
+            style={{ background: 'var(--muted)', border: '1px solid var(--border)' }}
             role="note"
-            aria-label="Portrait and biography — not available"
+            aria-label="Portrait and biography unavailable"
           >
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "var(--muted-foreground)", letterSpacing: "1px", textTransform: "uppercase" }}>
+            <p
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 9,
+                color: 'var(--muted-foreground)',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+              }}
+            >
               Contract-gated
             </p>
-            <p style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 12, color: "var(--muted-foreground)", letterSpacing: -0.1, lineHeight: "18px" }}>
-              Portrait and biography editing are not implementation-ready. No upload or editing is available here.
+            <p
+              style={{
+                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                fontSize: 12,
+                color: 'var(--muted-foreground)',
+                lineHeight: '18px',
+              }}
+            >
+              Portrait and biography are not available from the current profile contract. Initials are used as
+              the supported fallback.
             </p>
             <div
               className="rounded-[8px] flex items-center justify-center"
-              style={{ height: 72, background: "var(--border)", border: "1px dashed var(--border)" }}
+              style={{ height: 72, background: 'var(--border)', border: '1px dashed var(--border)' }}
               aria-hidden="true"
             >
               <User size={20} strokeWidth={1} color="var(--muted-foreground)" />
             </div>
-          </div>
-        </div>
+          </section>
+
+          <section
+            className="rounded-[12px] px-4 py-4"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+            aria-labelledby="activity-heading"
+          >
+            <h2
+              id="activity-heading"
+              style={{
+                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                fontWeight: 600,
+                fontSize: 13,
+                color: 'var(--foreground)',
+              }}
+            >
+              Account activity
+            </h2>
+            <p
+              className="mt-2"
+              style={{
+                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                fontSize: 12,
+                color: 'var(--muted-foreground)',
+                lineHeight: '18px',
+              }}
+            >
+              Activity history is unavailable because the current profile API does not provide an activity
+              endpoint.
+            </p>
+          </section>
+        </aside>
       </div>
     </div>
   );

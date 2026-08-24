@@ -18,53 +18,121 @@
 import { expect, test } from '@playwright/test';
 
 function installPublicFeed(page) {
-  return page.route('**/api/public/advertisements', (route) => route.fulfill({
-    status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }),
-  }));
+  return page.route('**/api/public/advertisements', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, items: [] }),
+    }),
+  );
 }
 
 function installLendingCatalog(page) {
-  return page.route('**/api/public/lending/catalog', (route) => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({
-      ok: true,
-      uscDepartments: ['Department of Logistics'],
-      items: [{
-        id: 'ITM-CHAIR', productId: 'ITM-CHAIR', name: 'Folding chair', aliases: ['chair'],
-        category: 'Furniture', type: 'REUSABLE', availability: 'AVAILABLE', unit: 'piece',
-        maximumQuantity: 4, defaultLoanDays: 7, dueDateRequired: true,
-        acknowledgmentRequired: false, eligibility: '', handlingNotes: '', description: 'Governed chair.',
-        restrictions: '', imageUrl: '', conditionTracked: true,
-      }],
+  return page.route('**/api/public/lending/catalog', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        uscDepartments: ['Department of Logistics'],
+        items: [
+          {
+            id: 'ITM-CHAIR',
+            productId: 'ITM-CHAIR',
+            name: 'Folding chair',
+            aliases: ['chair'],
+            category: 'Furniture',
+            type: 'REUSABLE',
+            availability: 'AVAILABLE',
+            unit: 'piece',
+            maximumQuantity: 4,
+            defaultLoanDays: 7,
+            dueDateRequired: true,
+            acknowledgmentRequired: false,
+            eligibility: '',
+            handlingNotes: '',
+            description: 'Governed chair.',
+            restrictions: '',
+            imageUrl: '',
+            conditionTracked: true,
+          },
+        ],
+      }),
     }),
-  }));
+  );
 }
 
 function installSignedOutSession(page) {
-  return page.route('**/api/auth/session', (route) => route.fulfill({
-    status: 401,
-    contentType: 'application/json',
-    body: JSON.stringify({ code: 'SESSION_REQUIRED', message: 'Sign in to continue.' }),
-  }));
+  return page.route('**/api/auth/session', (route) =>
+    route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 'SESSION_REQUIRED', message: 'Sign in to continue.' }),
+    }),
+  );
 }
 
 /** Signs the browser in as a projected account. `capabilities` are the raw
  *  server-derived strings the Worker itself authorizes against. */
 function installLogin(page, { accountId, displayName, roleId, capabilities }) {
-  return page.route('**/api/auth/login', (route) => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({
-      state: 'AUTHENTICATED',
-      csrfToken: `csrf-${accountId}`,
-      user: {
-        accountId,
-        displayName,
-        authorization: { active: true, mappingStatus: 'MAPPED', roleId, capabilities },
-      },
+  return page.route('**/api/auth/login', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        state: 'AUTHENTICATED',
+        csrfToken: `csrf-${accountId}`,
+        user: {
+          accountId,
+          displayName,
+          authorization: { active: true, mappingStatus: 'MAPPED', roleId, capabilities },
+        },
+      }),
     }),
-  }));
+  );
+}
+
+function profileFixture() {
+  return {
+    ok: true,
+    profile: {
+      displayName: 'DOL Profile',
+      legalName: 'Department of Logistics Profile',
+      verifiedEmail: 'profile@example.test',
+      username: 'dol.profile',
+      contactNumber: '+63 917 000 0000',
+      affiliation: {
+        institutionId: 'USC',
+        departmentId: 'DOL',
+        departmentDisplayName: 'Department of Logistics',
+        courseId: '',
+        yearLevel: '',
+      },
+      roleId: 'DOL_STAFF',
+      committeeIds: ['COM-1'],
+      accountCode: 'ACC-DOL-1',
+      accessSummary: {
+        roleId: 'DOL_STAFF',
+        roleLabel: 'DOL Staff',
+        committeeIds: ['COM-1'],
+        capabilities: ['view.internal', 'view.inventory', 'view.request'],
+        workspaceIds: ['WORKSPACE-DOL'],
+        defaultWorkspaceId: 'WORKSPACE-DOL',
+        scopeMode: 'ASSIGNED',
+      },
+      revision: '2026-08-24T00:00:00.000Z',
+      credentialVersion: 3,
+      updatedAt: '2026-08-24T00:00:00.000Z',
+      avatar: { available: false, initials: 'DP', fallback: 'INITIALS' },
+    },
+  };
+}
+
+function installProfile(page, { delay = 0, status = 200, body = profileFixture() } = {}) {
+  return page.route('**/api/me/profile', async (route) => {
+    if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
+    return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+  });
 }
 
 function installRequesterPortal(page) {
@@ -77,7 +145,17 @@ function installRequesterPortal(page) {
         ok: true,
         profile: { displayName: 'Office of the Secretary', departmentId: 'DEP-SEC' },
         eventSeries: [{ id: 'SER-1', code: 'SER-1', name: 'General Assembly' }],
-        events: [{ id: 'EVT-1', seriesId: 'SER-1', name: 'Opening plenary', activityType: 'PLENARY', startsAt: '', endsAt: '', venue: 'Plenary Hall' }],
+        events: [
+          {
+            id: 'EVT-1',
+            seriesId: 'SER-1',
+            name: 'Opening plenary',
+            activityType: 'PLENARY',
+            startsAt: '',
+            endsAt: '',
+            venue: 'Plenary Hall',
+          },
+        ],
         choices: { Logistics: ['Monoblock Chairs', 'Rostrum'], Other: [] },
         units: ['piece', 'set'],
         requests: [],
@@ -124,6 +202,18 @@ async function signIn(page, identifier) {
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 }
 
+function usesMobileShell(testInfo) {
+  return ['frontend-320', 'frontend-390', 'frontend-768'].includes(testInfo.project.name);
+}
+
+async function workspaceSurface(page, testInfo) {
+  if (!usesMobileShell(testInfo)) return page;
+  await page.getByRole('button', { name: 'Open navigation' }).click();
+  const drawer = page.getByRole('dialog', { name: 'Workspace navigation' });
+  await expect(drawer).toBeVisible();
+  return drawer;
+}
+
 /* ---- LEND-01 / LEND-02 / LEND-03 ---------------------------------------- */
 
 test('LEND-01 browsing public lending requires no sign-in and probes no session', async ({ page }) => {
@@ -132,7 +222,11 @@ test('LEND-01 browsing public lending requires no sign-in and probes no session'
   let sessionProbes = 0;
   await page.route('**/api/auth/session', (route) => {
     sessionProbes += 1;
-    return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ code: 'SESSION_REQUIRED', message: 'Sign in to continue.' }) });
+    return route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 'SESSION_REQUIRED', message: 'Sign in to continue.' }),
+    });
   });
 
   await openPublicLending(page);
@@ -174,20 +268,28 @@ test('REQ-01 starting a logistics request while signed out reaches Staff Sign In
   await installSignedOutSession(page);
 
   await page.goto('/');
-  await page.getByRole('button', { name: /^Start a logistics request/u }).first().click();
+  await page
+    .getByRole('button', { name: /^Start a logistics request/u })
+    .first()
+    .click();
 
   await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'External Request Center', level: 1 })).toHaveCount(0);
 });
 
-test('REQ-02 external intent survives auth and REQ-03 an eligible non-DOL account lands in the External Request Center', async ({ page }) => {
+test('REQ-02 external intent survives auth and REQ-03 an eligible non-DOL account lands in the External Request Center', async ({
+  page,
+}) => {
   await installPublicFeed(page);
   await installSignedOutSession(page);
   await installRequesterPortal(page);
   await installLogin(page, NON_DOL_REQUESTER);
 
   await page.goto('/');
-  await page.getByRole('button', { name: /^Start a logistics request/u }).first().click();
+  await page
+    .getByRole('button', { name: /^Start a logistics request/u })
+    .first()
+    .click();
   // The gateway names the destination the user actually asked for.
   await expect(page.getByText('the External Request Center')).toBeVisible();
 
@@ -199,14 +301,19 @@ test('REQ-02 external intent survives auth and REQ-03 an eligible non-DOL accoun
   await expect(page.getByText('Requester view')).toHaveCount(0);
 });
 
-test('REQ-04 DOL staff entering through external intent stay in requester mode and are offered Open Logistics Hub', async ({ page }) => {
+test('REQ-04 DOL staff entering through external intent stay in requester mode and are offered Open Logistics Hub', async ({
+  page,
+}) => {
   await installPublicFeed(page);
   await installSignedOutSession(page);
   await installRequesterPortal(page);
   await installLogin(page, DOL_STAFF);
 
   await page.goto('/');
-  await page.getByRole('button', { name: /^Start a logistics request/u }).first().click();
+  await page
+    .getByRole('button', { name: /^Start a logistics request/u })
+    .first()
+    .click();
   await signIn(page, 'dol.staff');
 
   // Explicit intent wins over capability-based default routing.
@@ -215,13 +322,18 @@ test('REQ-04 DOL staff entering through external intent stay in requester mode a
   await expect(page.getByRole('button', { name: 'Open Logistics Hub' })).toBeVisible();
 });
 
-test('REQ-05 an ineligible identity cannot reach the External Request Center and is offered a safe recovery', async ({ page }) => {
+test('REQ-05 an ineligible identity cannot reach the External Request Center and is offered a safe recovery', async ({
+  page,
+}) => {
   await installPublicFeed(page);
   await installSignedOutSession(page);
   await installLogin(page, INELIGIBLE);
 
   await page.goto('/');
-  await page.getByRole('button', { name: /^Start a logistics request/u }).first().click();
+  await page
+    .getByRole('button', { name: /^Start a logistics request/u })
+    .first()
+    .click();
   await signIn(page, 'student.account');
 
   await expect(page.getByText('Not available for this account')).toBeVisible();
@@ -231,7 +343,9 @@ test('REQ-05 an ineligible identity cannot reach the External Request Center and
   await expect(page.getByRole('button', { name: 'Home', exact: true }).first()).toBeVisible();
 });
 
-test('REQ-06 submission goes to the authenticated portal contract and carries no browser-supplied requester identity', async ({ page }) => {
+test('REQ-06 submission goes to the authenticated portal contract and carries no browser-supplied requester identity', async ({
+  page,
+}) => {
   await installPublicFeed(page);
   await installSignedOutSession(page);
   await installRequesterPortal(page);
@@ -247,9 +361,16 @@ test('REQ-06 submission goes to the authenticated portal contract and carries no
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        ok: true, requestId: 'REQ-PORTAL-1', requestType: 'NEW', parentRequestId: '',
-        department: 'Office of the Secretary', event: 'General Assembly', subEvent: 'Opening plenary',
-        status: 'FOR_REVIEW', submittedAt: '2026-08-23T00:00:00.000Z', replayed: false,
+        ok: true,
+        requestId: 'REQ-PORTAL-1',
+        requestType: 'NEW',
+        parentRequestId: '',
+        department: 'Office of the Secretary',
+        event: 'General Assembly',
+        subEvent: 'Opening plenary',
+        status: 'FOR_REVIEW',
+        submittedAt: '2026-08-23T00:00:00.000Z',
+        replayed: false,
       }),
     });
   });
@@ -262,7 +383,10 @@ test('REQ-06 submission goes to the authenticated portal contract and carries no
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: /^Start a logistics request/u }).first().click();
+  await page
+    .getByRole('button', { name: /^Start a logistics request/u })
+    .first()
+    .click();
   await signIn(page, 'usc.officer');
   await expect(page.getByRole('heading', { name: 'External Request Center', level: 1 })).toBeVisible();
 
@@ -280,8 +404,9 @@ test('REQ-06 submission goes to the authenticated portal contract and carries no
 
   await expect(page.getByText('REQ-PORTAL-1', { exact: true })).toBeVisible();
   // The outcome is announced, not only drawn.
-  await expect(page.locator('[role="status"][aria-live="polite"]').first())
-    .toContainText('Request submitted. Record REQ-PORTAL-1.');
+  await expect(page.locator('[role="status"][aria-live="polite"]').first()).toContainText(
+    'Request submitted. Record REQ-PORTAL-1.',
+  );
   expect(submittedTo).toBe('/api/portal/request');
   expect(publicRequestCalls).toBe(0);
 
@@ -292,13 +417,20 @@ test('REQ-06 submission goes to the authenticated portal contract and carries no
     expect(submitted).not.toHaveProperty(forbidden);
   }
   expect(submitted).toMatchObject({ requestType: 'NEW', eventSeriesId: 'SER-1', eventId: 'EVT-1' });
-  expect(submitted.lines[0]).toMatchObject({ category: 'Logistics', description: 'Monoblock Chairs', quantity: 24, unit: 'piece' });
+  expect(submitted.lines[0]).toMatchObject({
+    category: 'Logistics',
+    description: 'Monoblock Chairs',
+    quantity: 24,
+    unit: 'piece',
+  });
   expect(String(submitted.clientRequestId)).toMatch(/^frontend-/u);
 });
 
 /* ---- AUTH-01 / AUTH-02 -------------------------------------------------- */
 
-test('AUTH-01 generic staff sign-in sends a DOL account to its capability-appropriate Main Logistics Hub home', async ({ page }) => {
+test('AUTH-01 generic staff sign-in sends a DOL account to its capability-appropriate Main Logistics Hub home', async ({
+  page,
+}, testInfo) => {
   await installPublicFeed(page);
   await installLogin(page, DOL_STAFF);
 
@@ -306,13 +438,179 @@ test('AUTH-01 generic staff sign-in sends a DOL account to its capability-approp
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
 
-  await expect(page.getByText('Access authorized')).toBeVisible();
-  // Named honestly: FI-04 is not implemented, so the workspace does not render.
-  await expect(page.getByText(/Operations overview/u)).toBeVisible();
+  await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
+  if (['frontend-1024', 'frontend-1440'].includes(testInfo.project.name)) {
+    await expect(page.getByRole('button', { name: 'Open navigation' })).toBeVisible();
+  }
+  if (testInfo.project.name === 'frontend-1024') {
+    const rail = page.getByRole('complementary', { name: 'Workspace navigation' });
+    await expect(rail).toBeVisible();
+    expect(await rail.evaluate((element) => Math.round(element.getBoundingClientRect().width))).toBe(76);
+    await expect(page.locator('[data-command-search]')).toBeVisible();
+    await expect(page.locator('[data-theme-control]')).toBeVisible();
+    await expect(page.locator('[data-navigate-surface="light-oxblood"]')).toBeVisible();
+  }
+  if (testInfo.project.name === 'frontend-1440') {
+    const rail = page.getByRole('complementary', { name: 'Workspace navigation' });
+    await expect(rail).toBeVisible();
+    expect(await rail.evaluate((element) => Math.round(element.getBoundingClientRect().width))).toBe(272);
+    await expect(page.locator('[data-command-surface="light-paper"]')).toBeVisible();
+  }
+  const surface = await workspaceSurface(page, testInfo);
+  const operations = surface.getByRole('navigation', { name: 'Operations' });
+  await expect(operations.getByRole('button', { name: 'Overview' })).toBeVisible();
+  // Only the server-projected capability routes appear. The older gateway must
+  // not remain mounted once the FI-04 shell owns the resolved route.
+  await expect(operations.getByRole('button', { name: 'Release' })).toHaveCount(0);
+  const administration = surface.getByRole('navigation', { name: 'Administration' });
+  // Profile is already part of the authenticated server projection; that alone
+  // may keep the group visible. The privileged Administration route must not.
+  await expect(administration.getByRole('button', { name: 'Profile' })).toBeVisible();
+  await expect(administration.getByRole('button', { name: 'Administration' })).toHaveCount(0);
+  await expect(page.getByText('Access authorized')).toHaveCount(0);
   await expect(page.getByText('Not available for this account')).toHaveCount(0);
+
+  await operations.getByRole('button', { name: 'Inventory' }).click();
+  await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible();
+  await expect(page.getByText('This workspace route is reserved and has not yet been built.')).toBeVisible();
 });
 
-test('AUTH-02 generic staff sign-in sends an eligible non-DOL account to the External Request Center', async ({ page }) => {
+test('AUTH-01 generic zero-capability sign-in remains denied even though Profile is projected for an authenticated account', async ({
+  page,
+}) => {
+  await installPublicFeed(page);
+  await installLogin(page, INELIGIBLE);
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await signIn(page, 'student.account');
+
+  // This uses the real `projectSession()` path: Profile remains a direct
+  // authenticated account route, but never becomes a generic workspace home.
+  await expect(page.getByText('Not available for this account')).toBeVisible();
+  await expect(page.getByText(/no logistics workspace or requester access assigned/u)).toBeVisible();
+  await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toHaveCount(0);
+});
+
+test('FI-04 profile uses loading, read-only contract data, and retryable truthful errors', async ({
+  page,
+}) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  await installProfile(page, { delay: 200 });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await signIn(page, 'dol.staff');
+  await page.getByRole('button', { name: /go to profile/u }).click();
+
+  await expect(page.getByRole('status')).toContainText('Loading account profile');
+  await expect(page.getByRole('heading', { name: 'DOL Profile' })).toBeVisible();
+  await expect(page.getByText('Department of Logistics Profile')).toBeVisible();
+  await expect(
+    page.getByText(
+      'Activity history is unavailable because the current profile API does not provide an activity endpoint.',
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Save' })).toHaveCount(0);
+});
+
+test('FI-04 profile surfaces a failed profile response and retries only after the user asks', async ({
+  page,
+}) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  let attempts = 0;
+  await page.route('**/api/me/profile', (route) => {
+    attempts += 1;
+    return route.fulfill(
+      attempts === 1
+        ? {
+            status: 503,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              code: 'PROFILE_UNAVAILABLE',
+              message: 'Profile temporarily unavailable.',
+            }),
+          }
+        : { status: 200, contentType: 'application/json', body: JSON.stringify(profileFixture()) },
+    );
+  });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await signIn(page, 'dol.staff');
+  await page.getByRole('button', { name: /go to profile/u }).click();
+  await expect(page.getByRole('alert')).toContainText('Profile temporarily unavailable.');
+  await page.getByRole('button', { name: 'Retry profile' }).click();
+  await expect(page.getByRole('heading', { name: 'DOL Profile' })).toBeVisible();
+});
+
+test('FI-04 Home preserves the DOL session while Sign out is the only shell action that destroys it', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installRequesterPortal(page);
+  await installLogin(page, DOL_STAFF);
+  let logouts = 0;
+  await page.route('**/api/auth/logout', (route) => {
+    logouts += 1;
+    return route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
+  });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await signIn(page, 'dol.staff');
+  await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Home', exact: true }).click();
+  await expect(page.getByRole('heading', { name: HERO_HEADING })).toBeVisible();
+  expect(logouts).toBe(0);
+
+  await page
+    .getByRole('button', { name: /^Start a logistics request/u })
+    .first()
+    .click();
+  await expect(page.getByRole('heading', { name: 'External Request Center', level: 1 })).toBeVisible();
+  await expect(page.getByLabel('Identifier')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Open Logistics Hub' }).click();
+  await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
+  await (
+    await workspaceSurface(page, testInfo)
+  )
+    .getByRole('button', { name: 'Sign out', exact: true })
+    .click();
+  await expect(page.getByRole('heading', { name: HERO_HEADING })).toBeVisible();
+  expect(logouts).toBe(1);
+});
+
+test('FI-04 mobile workspace drawer traps focus and restores its opener', async ({ page }, testInfo) => {
+  test.skip(!['frontend-320', 'frontend-390'].includes(testInfo.project.name), 'mobile drawer assertion');
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await signIn(page, 'dol.staff');
+
+  const opener = page.getByRole('button', { name: 'Open navigation' });
+  await opener.focus();
+  await opener.click();
+  const drawer = page.getByRole('dialog', { name: 'Workspace navigation' });
+  const close = drawer.getByRole('button', { name: 'Close navigation' });
+  await expect(close).toBeFocused();
+
+  await page.keyboard.press('Shift+Tab');
+  await expect(drawer.getByRole('button', { name: 'Sign out', exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(drawer).toHaveCount(0);
+  await expect(opener).toBeFocused();
+});
+
+test('AUTH-02 generic staff sign-in sends an eligible non-DOL account to the External Request Center', async ({
+  page,
+}) => {
   await installPublicFeed(page);
   await installRequesterPortal(page);
   await installLogin(page, NON_DOL_REQUESTER);
@@ -326,7 +624,9 @@ test('AUTH-02 generic staff sign-in sends an eligible non-DOL account to the Ext
 
 /* ---- AUTH-03 / AUTH-04 / AUTH-05 ---------------------------------------- */
 
-test('AUTH-03 and AUTH-04 the activation and password-reset paths are reachable from Staff Sign In', async ({ page }) => {
+test('AUTH-03 and AUTH-04 the activation and password-reset paths are reachable from Staff Sign In', async ({
+  page,
+}) => {
   await installPublicFeed(page);
   await page.goto('/');
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
@@ -346,14 +646,20 @@ test('AUTH-03 and AUTH-04 the activation and password-reset paths are reachable 
 
 test('AUTH-05 the verification step enforces 8 digits and never enumerates accounts', async ({ page }) => {
   await installPublicFeed(page);
-  await page.route('**/api/auth/reset/start', (route) => route.fulfill({
-    status: 200, contentType: 'application/json',
-    body: JSON.stringify({ ok: true, accepted: true, resendAvailableInSeconds: 60 }),
-  }));
-  await page.route('**/api/auth/reset/verify', (route) => route.fulfill({
-    status: 422, contentType: 'application/json',
-    body: JSON.stringify({ code: 'VERIFICATION_INVALID', message: 'That code is not correct.' }),
-  }));
+  await page.route('**/api/auth/reset/start', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, accepted: true, resendAvailableInSeconds: 60 }),
+    }),
+  );
+  await page.route('**/api/auth/reset/verify', (route) =>
+    route.fulfill({
+      status: 422,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 'VERIFICATION_INVALID', message: 'That code is not correct.' }),
+    }),
+  );
 
   await page.goto('/');
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
@@ -362,7 +668,9 @@ test('AUTH-05 the verification step enforces 8 digits and never enumerates accou
   await page.getByRole('button', { name: 'Send verification code' }).click();
 
   // Generic confirmation: identical whether or not the account exists.
-  await expect(page.getByText('If this account exists, a verification code has been sent to its registered email.')).toBeVisible();
+  await expect(
+    page.getByText('If this account exists, a verification code has been sent to its registered email.'),
+  ).toBeVisible();
 
   const codeField = page.getByLabel('8-digit verification code');
   await expect(codeField).toHaveAttribute('inputmode', 'numeric');
@@ -401,8 +709,10 @@ test('HOME-01 and HOME-02 Home returns to the landing surface from Public Lendin
   await expect(page.getByRole('heading', { name: HERO_HEADING })).toBeVisible();
 
   await page.getByRole('button', { name: /^Browse public lending/u }).click();
-  await page.getByRole('navigation', { name: 'Public lending navigation' })
-    .getByRole('button', { name: 'Home', exact: true }).click();
+  await page
+    .getByRole('navigation', { name: 'Public lending navigation' })
+    .getByRole('button', { name: 'Home', exact: true })
+    .click();
   await expect(page.getByRole('heading', { name: HERO_HEADING })).toBeVisible();
 });
 
@@ -426,14 +736,19 @@ test('HOME-03 and AUTH-06 Home preserves the session — Home is not sign-out', 
   expect(logouts).toBe(0);
 
   // Still authenticated: re-entering the request intent does not re-prompt for credentials.
-  await page.getByRole('button', { name: /^Start a logistics request/u }).first().click();
+  await page
+    .getByRole('button', { name: /^Start a logistics request/u })
+    .first()
+    .click();
   await expect(page.getByRole('heading', { name: 'External Request Center', level: 1 })).toBeVisible();
   await expect(page.getByLabel('Identifier')).toHaveCount(0);
 });
 
 /* ---- CTX-02 ------------------------------------------------------------- */
 
-test('CTX-02 every public surface states the staff gate before the user commits', async ({ page }, testInfo) => {
+test('CTX-02 every public surface states the staff gate before the user commits', async ({
+  page,
+}, testInfo) => {
   await installPublicFeed(page);
   await installSignedOutSession(page);
   await page.goto('/');

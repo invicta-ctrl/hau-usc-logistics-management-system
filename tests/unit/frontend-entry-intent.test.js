@@ -33,7 +33,16 @@ const dolStaff = {
   displayName: 'DOL Staff',
   role: 'DOL_STAFF',
   initials: 'DS',
-  capabilities: ['overview', 'inventory', 'request-center', 'lending', 'release', 'restocking', 'procurement', 'profile'],
+  capabilities: [
+    'overview',
+    'inventory',
+    'request-center',
+    'lending',
+    'release',
+    'restocking',
+    'procurement',
+    'profile',
+  ],
   requesterEligible: true,
   internalOperator: true,
 };
@@ -116,6 +125,15 @@ describe('R3-A1-A2 entry-intent routing matrix', () => {
 
     it('states a truthful access state when the account holds nothing at all', () => {
       expect(resolvePostAuthDestination(ineligible, 'GENERIC_STAFF_SIGN_IN', null)).toEqual({
+        outcome: 'denied',
+        reason: 'NO_ACCESS_AT_ALL',
+      });
+    });
+
+    it('does not treat the authenticated Profile route as a workspace entitlement', () => {
+      const profileOnly = { ...ineligible, capabilities: ['profile'] };
+      expect(resolveStaffHome(profileOnly)).toBeNull();
+      expect(resolvePostAuthDestination(profileOnly, 'GENERIC_STAFF_SIGN_IN', null)).toEqual({
         outcome: 'denied',
         reason: 'NO_ACCESS_AT_ALL',
       });

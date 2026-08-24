@@ -1,12 +1,15 @@
-import PublicFlows from "./PublicFlows";
-import { isAuthRoute } from "./appRoutes";
-import type { PublicSubRoute } from "./appTypes";
-import type { AppController } from "./useAppController";
-import { StaffSignInPage } from "./auth/StaffSignInPage";
-import { LandingPage } from "./landing/LandingPage";
-import { Footer } from "./public/Footer";
-import { PublicNavbar } from "./public/PublicNavbar";
-import { ExternalRequestCenter } from "./request/ExternalRequestCenter";
+import PublicFlows from './PublicFlows';
+import { isAuthRoute } from './appRoutes';
+import type { PublicSubRoute } from './appTypes';
+import type { AppController } from './useAppController';
+import { StaffSignInPage } from './auth/StaffSignInPage';
+import { AuthPlaceholderRoute } from './auth/AuthPlaceholderRoute';
+import { LandingPage } from './landing/LandingPage';
+import { ProfileRoute } from './profile/ProfileRoute';
+import { Footer } from './public/Footer';
+import { PublicNavbar } from './public/PublicNavbar';
+import { ExternalRequestCenter } from './request/ExternalRequestCenter';
+import { AuthenticatedShell } from './shell/AuthenticatedShell';
 
 export function AppRouteRenderer({ controller }: { controller: AppController }) {
   const {
@@ -33,7 +36,7 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
   /* Context B — External Request Center. Only reachable with a session; the
    * controller routes here exclusively through `resolvePostAuthDestination`, so
    * an unauthenticated user can never land on it. */
-  if (route === "external-request" && session) {
+  if (route === 'external-request' && session) {
     return (
       <ExternalRequestCenter
         session={session}
@@ -47,32 +50,30 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
     );
   }
 
-  /* Context C — Main Logistics Hub. FI-04 is not implemented: no internal
-   * workspace renders in this release. The gateway states that truthfully and
-   * names the destination the account resolved to, rather than showing an empty
-   * shell that implies a working workspace. */
+  /* Context C — Main Logistics Hub. The shell is now an FI-04 surface. It is
+   * mounted only after the controller's server-derived capability projection
+   * admits a concrete AuthRoute; later module routes remain truthful stubs. */
   if (session && isAuthRoute(route)) {
     return (
-      <StaffSignInPage
-        onSignIn={handleSignIn}
-        onBack={goHome}
+      <AuthenticatedShell
+        session={session}
+        route={route}
+        navigate={navigate}
+        onHome={goHome}
+        onSignOut={handleSignOut}
         dark={dark}
         onToggle={toggleTheme}
-        authState="authorized"
-        authError={null}
-        entryIntent={entryIntent}
-        intendedRoute={route}
-        denialReason={null}
-        session={session}
-        onSignOut={handleSignOut}
-        onActivate={handleActivate}
-        onOpenExternalRequest={requireExternalRequest}
-        activationExpiresAt={activationExpiresAt}
-      />
+      >
+        {route === 'profile' ? (
+          <ProfileRoute dark={dark} onToggle={toggleTheme} />
+        ) : (
+          <AuthPlaceholderRoute route={route} />
+        )}
+      </AuthenticatedShell>
     );
   }
 
-  if (route === "staff-signin") {
+  if (route === 'staff-signin') {
     return (
       <StaffSignInPage
         onSignIn={handleSignIn}
@@ -94,16 +95,16 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: dark ? "#40070a" : "#f2eae5" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: dark ? '#40070a' : '#f2eae5' }}>
       <PublicNavbar dark={dark} onToggle={toggleTheme} onNavigate={navigate} onHome={goHome} />
 
-      {route !== "landing" ? (
+      {route !== 'landing' ? (
         <PublicFlows route={route as PublicSubRoute} onBack={goHome} dark={dark} onNavigate={navigate} />
       ) : (
         <LandingPage onNavigate={navigate} onRequireExternalRequest={requireExternalRequest} />
       )}
 
-      {route === "landing" && <Footer onNavigate={navigate} onHome={goHome} />}
+      {route === 'landing' && <Footer onNavigate={navigate} onHome={goHome} />}
     </div>
   );
 }

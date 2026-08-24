@@ -14,22 +14,24 @@
  * asserted directly in unit tests without mounting the app.
  */
 
-import type { AuthRoute, EntryIntent, Route, Session } from "./appTypes";
+import type { AuthRoute, EntryIntent, Route, Session } from './appTypes';
 
-/** Default internal home order. First capability the account actually holds wins.
- *  Deliberately not "always Overview": an account may lack `view.internal`
- *  summary access while still owning, say, Release. */
+/** Default internal workspace-home order. First capability the account actually
+ *  holds wins. Deliberately not "always Overview": an account may lack
+ *  `view.internal` summary access while still owning, say, Release. Profile is
+ *  an authenticated personal account route, not a workspace entitlement, so it
+ *  is deliberately excluded: a profile-only projection must fail closed on a
+ *  generic staff sign-in. */
 export const STAFF_HOME_ORDER: AuthRoute[] = [
-  "overview",
-  "request-center",
-  "inventory",
-  "lending",
-  "release",
-  "restocking",
-  "procurement",
-  "events",
-  "administration",
-  "profile",
+  'overview',
+  'request-center',
+  'inventory',
+  'lending',
+  'release',
+  'restocking',
+  'procurement',
+  'events',
+  'administration',
 ];
 
 /** Capability-appropriate internal home for a session. `null` when the account
@@ -40,26 +42,23 @@ export function resolveStaffHome(session: Session | null): AuthRoute | null {
 }
 
 /** The internal destination an intent names, if it names one. */
-export function intendedInternalRoute(
-  intent: EntryIntent,
-  requested: AuthRoute | null,
-): AuthRoute | null {
-  if (intent === "INTERNAL_REQUEST_HUB") return "request-center";
-  if (intent === "OTHER_INTERNAL_DESTINATION") return requested;
+export function intendedInternalRoute(intent: EntryIntent, requested: AuthRoute | null): AuthRoute | null {
+  if (intent === 'INTERNAL_REQUEST_HUB') return 'request-center';
+  if (intent === 'OTHER_INTERNAL_DESTINATION') return requested;
   return null;
 }
 
 export type PostAuthDecision =
-  | { outcome: "authorized"; route: Route; requesterMode: boolean }
-  | { outcome: "denied"; reason: DenialReason };
+  | { outcome: 'authorized'; route: Route; requesterMode: boolean }
+  | { outcome: 'denied'; reason: DenialReason };
 
 export type DenialReason =
   /** Signed in, but the account is not an eligible USC requester. */
-  | "NOT_ELIGIBLE_REQUESTER"
+  | 'NOT_ELIGIBLE_REQUESTER'
   /** Signed in, but the account lacks the capability for the internal route asked for. */
-  | "NO_INTERNAL_CAPABILITY"
+  | 'NO_INTERNAL_CAPABILITY'
   /** Signed in, but the account holds neither requester eligibility nor any internal route. */
-  | "NO_ACCESS_AT_ALL";
+  | 'NO_ACCESS_AT_ALL';
 
 /**
  * Resolve where an authenticated session lands, given what it explicitly asked
@@ -74,18 +73,18 @@ export function resolvePostAuthDestination(
   //    DOL account that chose "Start a logistics request" is in requester mode;
   //    it keeps its operational identity and is offered Open Logistics Hub, but
   //    it is not redirected away from what it asked for.
-  if (intent === "EXTERNAL_REQUEST_CENTER") {
-    if (!session.requesterEligible) return { outcome: "denied", reason: "NOT_ELIGIBLE_REQUESTER" };
-    return { outcome: "authorized", route: "external-request", requesterMode: true };
+  if (intent === 'EXTERNAL_REQUEST_CENTER') {
+    if (!session.requesterEligible) return { outcome: 'denied', reason: 'NOT_ELIGIBLE_REQUESTER' };
+    return { outcome: 'authorized', route: 'external-request', requesterMode: true };
   }
 
   // 2. Explicit internal intent. Checked against server-derived capability.
   const internalTarget = intendedInternalRoute(intent, requestedInternalRoute);
   if (internalTarget) {
     if (!session.capabilities.includes(internalTarget)) {
-      return { outcome: "denied", reason: "NO_INTERNAL_CAPABILITY" };
+      return { outcome: 'denied', reason: 'NO_INTERNAL_CAPABILITY' };
     }
-    return { outcome: "authorized", route: internalTarget, requesterMode: false };
+    return { outcome: 'authorized', route: internalTarget, requesterMode: false };
   }
 
   // 3. No explicit destination — generic staff sign-in. Capabilities choose the
@@ -93,33 +92,33 @@ export function resolvePostAuthDestination(
   //    requesters without internal capability get the External Request Center.
   const staffHome = resolveStaffHome(session);
   if (session.internalOperator && staffHome) {
-    return { outcome: "authorized", route: staffHome, requesterMode: false };
+    return { outcome: 'authorized', route: staffHome, requesterMode: false };
   }
   if (session.requesterEligible) {
-    return { outcome: "authorized", route: "external-request", requesterMode: true };
+    return { outcome: 'authorized', route: 'external-request', requesterMode: true };
   }
   if (staffHome) {
-    return { outcome: "authorized", route: staffHome, requesterMode: false };
+    return { outcome: 'authorized', route: staffHome, requesterMode: false };
   }
-  return { outcome: "denied", reason: "NO_ACCESS_AT_ALL" };
+  return { outcome: 'denied', reason: 'NO_ACCESS_AT_ALL' };
 }
 
 /** Human-readable, non-enumerating denial copy. Never names directory membership
  *  or whether some other account would have been allowed. */
 export const DENIAL_COPY: Record<DenialReason, { title: string; detail: string }> = {
   NOT_ELIGIBLE_REQUESTER: {
-    title: "Not available for this account",
+    title: 'Not available for this account',
     detail:
-      "The External Request Center is for verified USC staff and officers. Your account is signed in but is not currently eligible to submit logistics requests. Public Lending remains open to you.",
+      'The External Request Center is for verified USC staff and officers. Your account is signed in but is not currently eligible to submit logistics requests. Public Lending remains open to you.',
   },
   NO_INTERNAL_CAPABILITY: {
-    title: "Not available for this account",
+    title: 'Not available for this account',
     detail:
-      "Your account is signed in but is not authorized to open that workspace. Return Home or continue in the areas your account does cover.",
+      'Your account is signed in but is not authorized to open that workspace. Return Home or continue in the areas your account does cover.',
   },
   NO_ACCESS_AT_ALL: {
-    title: "Not available for this account",
+    title: 'Not available for this account',
     detail:
-      "Your account is signed in but has no logistics workspace or requester access assigned. Public Lending remains open to you. Contact the Department of Logistics if you believe this is wrong.",
+      'Your account is signed in but has no logistics workspace or requester access assigned. Public Lending remains open to you. Contact the Department of Logistics if you believe this is wrong.',
   },
 };
