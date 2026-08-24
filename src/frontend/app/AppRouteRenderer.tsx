@@ -7,6 +7,7 @@ import { AuthPlaceholderRoute } from './auth/AuthPlaceholderRoute';
 import { LandingPage } from './landing/LandingPage';
 import { ProfileRoute } from './profile/ProfileRoute';
 import { InventoryRoute } from './inventory/InventoryRoute';
+import { InternalRequestHub } from './request/InternalRequestHub';
 import { Footer } from './public/Footer';
 import { PublicNavbar } from './public/PublicNavbar';
 import { ExternalRequestCenter } from './request/ExternalRequestCenter';
@@ -70,6 +71,8 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
           <ProfileRoute dark={dark} onToggle={toggleTheme} />
         ) : route === 'inventory' ? (
           <InventoryRoute dark={dark} navigate={navigate} />
+        ) : route === 'request-center' ? (
+          <InternalRequestHub dark={dark} navigate={navigate} canReviewRequests={session.canReviewRequests} />
         ) : (
           <AuthPlaceholderRoute route={route} />
         )}

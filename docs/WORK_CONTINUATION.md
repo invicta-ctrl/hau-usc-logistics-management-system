@@ -3,15 +3,15 @@
 ## Current resume block
 
 - Repository/worktree: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration.
-- Branch/HEAD/upstream: frontend-design-integration; the FI-05 checkpoint is accepted and must be verified at local/origin parity before FI-06 intake; only pre-existing .ai-bridge/ is untracked and excluded.
-- Current phase/stage: FI-05 Inventory checkpoint is complete and its writer lock is released. FI-06 is intake and repository-handshake only.
-- Accepted scope: .codex/specs/accepted/2026-08-24-fi05-inventory-frontend-integration.md, under R1/A2/A3/A4 authority. See .codex/FI05_INVENTORY_RECEIPT.md.
-- Completed work: actual authenticated read-only Inventory bootstrap adapter and route mount; server-derived ledger/reservation/availability/classification/condition/maintenance/lending presentation; v44 table/cards/search/filter/inspector/focus; truthful loading/empty/error/denied/stale states; and the isolated local-fixture A4 render with registry truth.
-- Verified evidence: units 24/24; FI-05 repair E2E 4/4 at each 320/390/768/1024/1440; AUTH-01 2/2 at 1440; exact 4173 INDEX-INSPECT 1/1 with no protected request; build and deterministic verification at SHA-256 2D4A2F8F264D726F14D409CC06217FD294A3F715F2C3E4ED81DE38F2CE4A8684. Local visual checks covered the dark desktop table/inspector and 390px cards; console warning/error count was zero.
-- External actions: Existing 127.0.0.1:4173 supervisor was reused without restart. The authorized FI-05 checkpoint commit/push is the only repository write; no Production, Playground business-data, provider, Figma, backend, D1/R2, migration, or deployment write is authorized.
-- Blocker: None. FI-06 requires a separate intake, handshake, accepted scope, and writer lock.
-- Resume commands: git status --short; git diff --check; npm.cmd test -- tests/unit/frontend-backend-adapter.test.js tests/unit/inventory-data.test.js; focused FI-05 E2E; npm.cmd run verify:dist; npm.cmd run check:agents; npm.cmd run check:continuation; npm.cmd run handoff:verify.
-- Prohibited actions: Do not touch .ai-bridge/; do not restart the healthy preview; do not fake a Session/capability/role; do not permit protected backend reads/mutations from preview; do not write Production, Playground, Figma, backend, D1/R2, migrations, deployment, main, or FI-06+ modules until separately authorized.
+- Branch/HEAD/upstream: frontend-design-integration at `d76a52208fea6229d07b01cbff02b3515a699654`; local and origin were equal before the accepted uncommitted FI-06 logical diff. The pre-existing untracked `.ai-bridge/` remains excluded and preserved.
+- Current phase/stage: FI-06 Internal Request Hub is accepted and checkpoint-ready; its writer lock is released. FI-07 is intake and repository-handshake only, with no accepted FI-07 packet or source implementation.
+- Accepted scope: `.codex/specs/accepted/2026-08-24-fi06-internal-request-hub-frontend-integration.md`, under R1/A2/A3/A4 authority. See `.codex/FI06_INTERNAL_REQUEST_HUB_RECEIPT.md`.
+- Completed work: DOL-only Internal Request Hub with strict Request bootstrap v2 projection, server-owned search/filter/page scope, explicit per-line review routing, stable retry idempotency, truthful refetch/recovery receipts, responsive v44 table/cards/inspector, accessibility containment, and Preview Index fixture-only local inspection. The External Request Center, Release action, stock/reservation math, and backend authorization semantics remain untouched.
+- Verified evidence: focused adapter/preview units 34/34; FI-06 regular browser matrix 55 passed plus 5 intentional exact-4173 Preview Index skips across 320/390/768/1024/1440; exact trusted 4173 Preview Index 1/1 with zero protected Request bootstrap/review traffic; deterministic build and verification at SHA-256 `725857F273E32239628FB241FA2A14C4E04F049D2753BAEDB72F88C058A2E1F7`.
+- External actions: Existing 127.0.0.1:4173 supervisor was reused without restart. No Production, Playground, provider, Figma, backend, D1/R2, migration, deployment, commit, or push occurred.
+- Blocker: None. FI-07 requires its own accepted packet, repository handshake, and writer lock before implementation.
+- Resume commands: `git status --short`; `git diff --check`; `npm.cmd run preview:frontend:status`; `npm.cmd run check:agents`; `npm.cmd run check:continuation`; `npm.cmd run handoff:verify`.
+- Prohibited actions: Do not touch `.ai-bridge/`; do not restart the healthy preview; do not fake a Session/capability/role; do not permit protected backend reads/mutations from preview; do not write Production, Playground, Figma, backend, D1/R2, migrations, deployment, main, or FI-07 source without separately accepted authority.
 
 ## FI-04 historical resume block
 

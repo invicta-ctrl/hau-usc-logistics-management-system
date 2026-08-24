@@ -61,4 +61,6 @@ export type Session = {
   requesterEligible: boolean;
   /** Server-derived `view.internal`. Marks a DOL/internal operator. */
   internalOperator: boolean;
+  /** Server-derived `request.review`. Presentation gate only; the Worker rechecks every mutation. */
+  canReviewRequests: boolean;
 };

@@ -106,11 +106,11 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Internal Request Hub',
     group: 'STAFF',
     description:
-      'Authenticated staff request surface with preserved visual components and no active backend calls.',
-    implementationStatus: 'SURFACE_PREVIEW',
-    backendStatus: 'VISUAL_ONLY',
+      'DOL-only Internal Request Hub projected through the existing read-only bootstrap; local inspection uses a no-network fixture.',
+    implementationStatus: 'ACCEPTED',
+    backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
-    previewMode: 'SURFACE_PREVIEW',
+    previewMode: 'REAL_MODULE',
   }),
   Object.freeze({
     id: 'lending',

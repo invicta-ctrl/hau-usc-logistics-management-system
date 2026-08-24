@@ -1,21 +1,26 @@
-# Current Bounded Task — FI-05 Inventory checkpoint complete
+# Current Bounded Task — FI-07 intake and handshake only
 
 INTENT: SOFTWARE_FEATURE
-MODE: CHECKPOINT_COMPLETE
-OBJECTIVE: Preserve the accepted FI-05 Inventory checkpoint and stop before FI-06 implementation.
-TARGET: `src/frontend/app/inventory/**`, direct adapter/route/preview integration, focused FI-05 tests, deterministic frontend artifacts, and FI-05 continuity records.
+MODE: INTAKE
+OBJECTIVE: Establish FI-07 authority, accepted scope, dependencies, and repository state without implementing FI-07.
+TARGET: FI-07 intake records and read-only authority/repository handshake only.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi05-inventory-frontend-integration.md
-AUTHORITY: Earl's continuing FI-04→FI-17 directive → R1 §12 → R1-A2 → accepted A3/A4 → FI-05 packet → existing Worker/bootstrap/auth contracts.
-REQUIRED_MODEL: GPT-5.6-Terra integration writer
-TASK_STATUS: FI05_ACCEPTED_CHECKPOINT_COMPLETE
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi06-internal-request-hub-frontend-integration.md
+FI07_ACCEPTED_SPEC: NONE — an FI-07 packet is required before implementation.
+AUTHORITY: Earl's continuing FI-04→FI-17 directive; R1/A2; accepted A3/A4; FI-06 accepted receipt and current repository state.
+REQUIRED_MODEL: GPT-5.6 Sol intake/orchestration; a new GPT-5.6-Terra lock is required for any future write.
+TASK_STATUS: FI07_INTAKE_ONLY
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
 RISK: MEDIUM
-SCOPE: Actual Inventory table/mobile cards, search/filter, inspector, loading/empty/error/denied/stale/degraded states, strict authenticated bootstrap adapter, deterministic inspection fixture adapter, registry/rendering update, focused test coverage, deterministic artifacts, and continuity records.
-OUT_OF_SCOPE: Backend/server/Worker/auth middleware/capability semantics; fake Session/roles/cookies/headers; FI-06+ implementations; provider/Figma/Playground/Production/main/deployment/migration/D1/R2 writes; `.ai-bridge/`; package changes; any new change beyond the accepted FI-05 checkpoint.
-VERIFICATION: Focused adapter/component and E2E state matrix; exact-4173 preview no-network inspection; signed-out/capability regression; responsive/theme/motion checks; build/verify:dist; targeted Prettier; check:agents; check:continuation; handoff:verify; diff check; existing healthy 4173 visual exercise.
-STOP_CONDITIONS: Unknown tracked dirt, conflicting writer, backend/auth/capability semantic change, protected preview traffic, missing/contradictory DTO semantics, unresolved verification failure, destructive Git, commit/push without Sol authorization.
-DELEGATION_LEDGER: TERRA_MAX:/root/fi05_inventory_writer | model=gpt-5.6-terra | role=sole integration writer | mode=execute | scope=FI-05 owned paths | excluded=backend/provider/deployments/.ai-bridge | status=ACCEPTED_CHECKPOINT_COMPLETE | evidence=.codex/FI05_INVENTORY_RECEIPT.md.
-NEXT_EXACT_ACTION: Perform FI-06 intake and repository handshake only; do not implement FI-06 until accepted scope and writer lock are established.
+SCOPE: Read the bounded authority chain, confirm the next FI-07 packet and dependencies, perform the required Git handshake, and record a truthful next action.
+OUT_OF_SCOPE: FI-07 source, tests, artifacts, package changes, backend/server/Worker/auth/capability changes, provider/Figma/Playground/Production/main/deployment/migration/D1/R2 writes, `.ai-bridge/`, commit, and push.
+VERIFICATION: Git handshake and accepted FI-07 authority only; no implementation verification is authorized during intake.
+STOP_CONDITIONS: Missing or contradictory FI-07 authority, unknown tracked dirt, conflicting writer, protected-preview traffic, backend/auth/capability semantic change, or any request to implement before acceptance and a new writer lock.
+DELEGATION_LEDGER:
+
+- writer=/root/fi05_inventory_writer | model=gpt-5.6-terra | role=FI-06 predecessor writer | mode=execute | scope=initial FI-06 integration handoff | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=RELEASED | evidence=FI-05 lock-release transfer records.
+- writer=/root/fi06_request_hub_writer | model=gpt-5.6-terra | role=FI-06 successor sole canonical integration writer | mode=execute | scope=accepted FI-06 frontend integration, artifacts, and continuity closeout | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=COMPLETED | evidence=.codex/FI06_INTERNAL_REQUEST_HUB_RECEIPT.md.
+
+NEXT_EXACT_ACTION: Perform FI-07 intake and repository handshake only. Do not implement FI-07 or acquire a writer lock before an FI-07 packet is accepted.

@@ -2,6 +2,7 @@ import type { AuthRoute, Route } from '../../app/appTypes';
 import { AuthPlaceholderRoute } from '../../app/auth/AuthPlaceholderRoute';
 import { ProfileRoute } from '../../app/profile/ProfileRoute';
 import { InventoryRoute } from '../../app/inventory/InventoryRoute';
+import { InternalRequestHub } from '../../app/request/InternalRequestHub';
 import { ExternalRequestCenter } from '../../app/request/ExternalRequestCenter';
 import { AuthenticatedShell } from '../../app/shell/AuthenticatedShell';
 import { LOCAL_PREVIEW_OPERATOR } from '../../app/shell/presentation';
@@ -72,6 +73,8 @@ export function PreviewInspectionRoute({
         <ProfileRoute dark={dark} onToggle={onToggleTheme} previewProfile={PREVIEW_PROFILE} />
       ) : authRoute === 'inventory' ? (
         <InventoryRoute dark={dark} navigate={onOpenRoute} inspection />
+      ) : authRoute === 'request-center' ? (
+        <InternalRequestHub dark={dark} navigate={onOpenRoute} inspection canReviewRequests />
       ) : (
         <AuthPlaceholderRoute route={authRoute} />
       )}

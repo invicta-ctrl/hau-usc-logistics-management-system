@@ -40,6 +40,96 @@ export type FrontendInventoryBootstrap = {
   scopeRevision: { token: string; updatedAt: string } | null;
 };
 
+export type FrontendRequestLine = {
+  id: string;
+  requestId: string;
+  eventId: string;
+  itemId: string;
+  description: string;
+  specification: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  fulfillmentSource: string;
+  neededAt: string;
+  returnDue: string;
+  releasedQuantity: number;
+  receivedQuantity: number;
+  status: string;
+  workflowRevision: number;
+  createdAt: string;
+  updatedAt: string;
+};
+export type FrontendRequest = {
+  id: string;
+  type: string;
+  stage: string;
+  parentRequestId: string;
+  eventSeriesId: string;
+  eventDayId: string;
+  eventId: string;
+  ownerCommitteeId: string;
+  catalogType: string;
+  department: string;
+  requesterName: string;
+  purpose: string;
+  status: string;
+  priority: string;
+  createdAt: string;
+  updatedAt: string;
+};
+export type FrontendRequestEventSeries = {
+  id: string;
+  code: string;
+  name: string;
+  status: string;
+};
+export type FrontendRequestEventDay = {
+  id: string;
+  seriesId: string;
+  name: string;
+  date: string;
+  status: string;
+};
+export type FrontendRequestEvent = {
+  id: string;
+  seriesId: string;
+  name: string;
+  startAt: string;
+  endAt: string;
+  eventDayId: string;
+  activityType: string;
+  timeStatus: string;
+  venue: string;
+  status: string;
+};
+/** Reference-only catalog projection used to contextualize a request line. */
+export type FrontendRequestInventoryReference = {
+  id: string;
+  name: string;
+  category: string;
+  unit: string;
+  status: string;
+  catalogType: string;
+};
+export type RequestBootstrapOptions = {
+  page?: number;
+  pageSize?: number;
+  query?: string;
+  filter?: string;
+  signal?: AbortSignal;
+};
+export type FrontendRequestBootstrap = {
+  requests: FrontendRequest[];
+  requestLines: FrontendRequestLine[];
+  eventSeries: FrontendRequestEventSeries[];
+  eventDays: FrontendRequestEventDay[];
+  events: FrontendRequestEvent[];
+  inventoryItems: FrontendRequestInventoryReference[];
+  pagination: { page: number; pageSize: number; total: number; hasMore: boolean };
+  scopeRevision: { token: string; updatedAt: string } | null;
+};
+
 export type FrontendProfile = {
   displayName: string;
   legalName: string;
@@ -219,16 +309,19 @@ export type AccountApplicationStatus = {
 export class FrontendApiError extends Error {
   readonly code: string;
   readonly status: number;
+  readonly correlationId: string;
 
   constructor({
     code = 'REQUEST_FAILED',
     message = 'The service could not complete that request.',
     status = 0,
-  }: { code?: string; message?: string; status?: number } = {}) {
+    correlationId = '',
+  }: { code?: string; message?: string; status?: number; correlationId?: string } = {}) {
     super(message);
     this.name = 'FrontendApiError';
     this.code = code;
     this.status = status;
+    this.correlationId = correlationId;
   }
 }
 
@@ -251,7 +344,7 @@ function asNumber(value: unknown): number {
 
 function requiredNumber(value: unknown, field: string): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
-    incomplete(`The inventory response did not include ${field}.`);
+    incomplete(`The response did not include ${field}.`);
   }
   return value;
 }
@@ -266,13 +359,57 @@ function incomplete(message: string): never {
 
 function requiredString(value: unknown, field: string): string {
   const result = asString(value);
-  if (!result) incomplete(`The profile response did not include ${field}.`);
+  if (!result) incomplete(`The response did not include ${field}.`);
   return result;
 }
 
 function requiredStrings(value: unknown, field: string): string[] {
-  if (!Array.isArray(value)) incomplete(`The profile response did not include ${field}.`);
+  if (!Array.isArray(value)) incomplete(`The response did not include ${field}.`);
   return asStrings(value);
+}
+
+function requiredBoolean(value: unknown, field: string): boolean {
+  if (typeof value !== 'boolean') incomplete(`The response did not include ${field}.`);
+  return value;
+}
+
+function requiredRecord(value: unknown, field: string): Json {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    incomplete(`The response did not include ${field}.`);
+  }
+  return value as Json;
+}
+
+function requiredRecords(value: unknown, field: string): Json[] {
+  if (!Array.isArray(value)) incomplete(`The response did not include ${field}.`);
+  return value.map((entry, index) => requiredRecord(entry, `${field}[${index}]`));
+}
+
+function projectScopeRevision(value: unknown, field: string) {
+  if (value === null) return null;
+  const revision = requiredRecord(value, field);
+  return {
+    token: requiredString(revision.token, `${field}.token`),
+    updatedAt: requiredString(revision.updatedAt, `${field}.updatedAt`),
+  };
+}
+
+function positiveInteger(value: number | undefined, fallback: number) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 1) return fallback;
+  return Math.floor(value);
+}
+
+/** Builds the exact bounded same-origin Request bootstrap URL for one server page. */
+export function buildRequestBootstrapPath({ page, pageSize, query, filter }: RequestBootstrapOptions = {}) {
+  const params = new URLSearchParams({
+    page: String(positiveInteger(page, 1)),
+    pageSize: String(positiveInteger(pageSize, 25)),
+  });
+  const normalizedQuery = asString(query);
+  const normalizedFilter = asString(filter);
+  if (normalizedQuery) params.set('query', normalizedQuery);
+  if (normalizedFilter) params.set('filter', normalizedFilter);
+  return `/api/bootstrap/request?${params.toString()}`;
 }
 
 function projectProfile(value: unknown): FrontendProfile {
@@ -396,6 +533,7 @@ export class FrontendBackend {
         code: asString(payload.code) || 'REQUEST_FAILED',
         message: asString(payload.message) || 'The service could not complete that request.',
         status: response.status,
+        correlationId: asString(payload.correlationId),
       });
     }
     return payload;
@@ -471,6 +609,133 @@ export class FrontendBackend {
         revision.token && revision.updatedAt
           ? { token: asString(revision.token), updatedAt: asString(revision.updatedAt) }
           : null,
+    };
+  }
+
+  /**
+   * FI-06: project only the existing authenticated Request bootstrap v2. The
+   * Worker controls scope, pagination, lifecycle values, and catalog truth; this
+   * adapter fails closed rather than filling in a partial review queue locally.
+   */
+  async requestBootstrap(options: RequestBootstrapOptions = {}): Promise<FrontendRequestBootstrap> {
+    const payload = await this.request(buildRequestBootstrapPath(options), {
+      method: 'GET',
+      signal: options.signal,
+    });
+    if (
+      asString(payload.contract) !== 'bootstrap-module' ||
+      asString(payload.module) !== 'request' ||
+      requiredNumber(payload.contractVersion, 'request bootstrap contractVersion') !== 2 ||
+      payload.requestOnly === true
+    ) {
+      incomplete('The response did not match the authenticated Request bootstrap v2 contract.');
+    }
+
+    const data = requiredRecord(payload.data, 'request bootstrap data');
+    const mapRequest = (row: Json): FrontendRequest => ({
+      id: requiredString(row.id, 'requests.id'),
+      type: requiredString(row.type, 'requests.type'),
+      stage: asString(row.stage),
+      parentRequestId: asString(row.parentRequestId),
+      eventSeriesId: asString(row.eventSeriesId),
+      eventDayId: asString(row.eventDayId),
+      eventId: asString(row.eventId),
+      ownerCommitteeId: asString(row.ownerCommitteeId),
+      catalogType: asString(row.catalogType),
+      department: asString(row.department),
+      requesterName: asString(row.requesterName),
+      purpose: asString(row.purpose),
+      status: requiredString(row.status, 'requests.status'),
+      priority: asString(row.priority),
+      createdAt: requiredString(row.createdAt, 'requests.createdAt'),
+      updatedAt: requiredString(row.updatedAt, 'requests.updatedAt'),
+    });
+    const mapLine = (row: Json): FrontendRequestLine => ({
+      id: requiredString(row.id, 'requestLines.id'),
+      requestId: requiredString(row.requestId, 'requestLines.requestId'),
+      eventId: asString(row.eventId),
+      itemId: asString(row.itemId),
+      description: requiredString(row.description, 'requestLines.description'),
+      specification: asString(row.specification),
+      category: asString(row.category),
+      quantity: requiredNumber(row.quantity, 'requestLines.quantity'),
+      unit: requiredString(row.unit, 'requestLines.unit'),
+      fulfillmentSource: asString(row.fulfillmentSource),
+      neededAt: asString(row.neededAt),
+      returnDue: asString(row.returnDue),
+      releasedQuantity: requiredNumber(row.releasedQuantity, 'requestLines.releasedQuantity'),
+      receivedQuantity: requiredNumber(row.receivedQuantity, 'requestLines.receivedQuantity'),
+      status: requiredString(row.status, 'requestLines.status'),
+      workflowRevision: requiredNumber(row.workflowRevision, 'requestLines.workflowRevision'),
+      createdAt: requiredString(row.createdAt, 'requestLines.createdAt'),
+      updatedAt: requiredString(row.updatedAt, 'requestLines.updatedAt'),
+    });
+    const mapEventSeries = (row: Json): FrontendRequestEventSeries => ({
+      id: requiredString(row.id, 'eventSeries.id'),
+      code: requiredString(row.code, 'eventSeries.code'),
+      name: requiredString(row.name, 'eventSeries.name'),
+      status: requiredString(row.status, 'eventSeries.status'),
+    });
+    const mapEventDay = (row: Json): FrontendRequestEventDay => ({
+      id: requiredString(row.id, 'eventDays.id'),
+      seriesId: requiredString(row.seriesId, 'eventDays.seriesId'),
+      name: requiredString(row.name, 'eventDays.name'),
+      date: requiredString(row.date, 'eventDays.date'),
+      status: requiredString(row.status, 'eventDays.status'),
+    });
+    const mapEvent = (row: Json): FrontendRequestEvent => ({
+      id: requiredString(row.id, 'events.id'),
+      seriesId: requiredString(row.seriesId, 'events.seriesId'),
+      name: requiredString(row.name, 'events.name'),
+      startAt: requiredString(row.startAt, 'events.startAt'),
+      endAt: requiredString(row.endAt, 'events.endAt'),
+      eventDayId: asString(row.eventDayId),
+      activityType: asString(row.activityType),
+      timeStatus: asString(row.timeStatus),
+      venue: asString(row.venue),
+      status: requiredString(row.status, 'events.status'),
+    });
+    const mapInventoryReference = (row: Json): FrontendRequestInventoryReference => ({
+      id: requiredString(row.id, 'inventoryItems.id'),
+      name: requiredString(row.name, 'inventoryItems.name'),
+      category: requiredString(row.category, 'inventoryItems.category'),
+      unit: requiredString(row.unit, 'inventoryItems.unit'),
+      status: requiredString(row.status, 'inventoryItems.status'),
+      catalogType: asString(row.catalogType),
+    });
+    const pagination = requiredRecord(payload.pagination, 'request pagination');
+    return {
+      requests: requiredRecords(data.requests, 'requests').map(mapRequest),
+      requestLines: requiredRecords(data.requestLines, 'requestLines').map(mapLine),
+      eventSeries: requiredRecords(data.eventSeries, 'eventSeries').map(mapEventSeries),
+      eventDays: requiredRecords(data.eventDays, 'eventDays').map(mapEventDay),
+      events: requiredRecords(data.events, 'events').map(mapEvent),
+      inventoryItems: requiredRecords(data.inventoryItems, 'inventoryItems').map(mapInventoryReference),
+      pagination: {
+        page: requiredNumber(pagination.page, 'pagination.page'),
+        pageSize: requiredNumber(pagination.pageSize, 'pagination.pageSize'),
+        total: requiredNumber(pagination.total, 'pagination.total'),
+        hasMore: requiredBoolean(pagination.hasMore, 'pagination.hasMore'),
+      },
+      scopeRevision: projectScopeRevision(payload.scopeRevision, 'request scopeRevision'),
+    };
+  }
+
+  async reviewRequest(command: {
+    requestId: string;
+    decision: 'ACCEPT' | 'REJECT' | 'MISSING_INFORMATION';
+    lineDecisions?: Array<{ lineId: string; decision: string }>;
+    note?: string;
+    clientRequestId: string;
+  }): Promise<{ requestId: string; status: string; replayed: boolean; correlationId: string }> {
+    const payload = await this.request('/api/reviewRequest', { body: command, csrf: true });
+    const requestId = asString(payload.requestId) || asString(payload.id);
+    if (!requestId) incomplete('The review receipt did not include requestId.');
+    return {
+      requestId,
+      status: requiredString(payload.status, 'review receipt.status'),
+      replayed: payload.replayed === true,
+      correlationId: asString(payload.correlationId),
     };
   }
 

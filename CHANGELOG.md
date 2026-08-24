@@ -10,6 +10,24 @@
 
 ## Unreleased
 
+### FI-06 Internal Request Hub frontend integration
+
+- Accepted the DOL-only Internal Request Hub as a real, capability-gated Request
+  bootstrap/review surface. It remains separate from the requester-facing
+  External Request Center and keeps Worker scope, review legality, inventory,
+  idempotency, and concurrency authority server-side.
+- Added the strict Request bootstrap v2 projection, server-owned
+  search/filter/pagination, per-line route validation, retry-stable command
+  identifiers, authoritative refetch/recovery, persistent truthful receipts,
+  and accessible desktop/mobile queue and inspector states.
+- Completed the local Preview Index demonstration with a deterministic fixture
+  and local-only action; it sends no protected Request bootstrap or review
+  traffic and grants no Session or capability.
+- Regenerated the deterministic frontend artifacts after FI-06 acceptance.
+  No backend/Worker/auth semantics, stock/reservation math, Release action,
+  provider, deployment, migration, D1/R2, or external business-data state was
+  changed. FI-07 remains intake-only.
+
 ### FI-05 Inventory frontend integration
 
 - Sol accepted the FI-05 checkpoint, including strict modal Tab/Shift+Tab containment, opener restoration, and a distinct truthful zero-record bootstrap state. The slice stops before FI-06 intake.

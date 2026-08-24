@@ -1,16 +1,16 @@
-import type { AuthRoute } from "../app/appTypes";
-import type { FrontendUser } from "./backend";
+import type { AuthRoute } from '../app/appTypes';
+import type { FrontendUser } from './backend';
 
 const ROUTE_CAPABILITY: Partial<Record<AuthRoute, string>> = {
-  overview: "view.internal",
-  inventory: "view.inventory",
-  "request-center": "view.request",
-  lending: "view.internal",
-  release: "fulfillment.release",
-  restocking: "view.inventory",
-  procurement: "view.internal",
-  events: "event.manage",
-  administration: "access.admin",
+  overview: 'view.internal',
+  inventory: 'view.inventory',
+  'request-center': 'view.request',
+  lending: 'view.internal',
+  release: 'fulfillment.release',
+  restocking: 'view.inventory',
+  procurement: 'view.internal',
+  events: 'event.manage',
+  administration: 'access.admin',
 };
 
 /* R3-A1-A2. Both predicates read the same server-derived capability array the
@@ -24,10 +24,14 @@ const ROUTE_CAPABILITY: Partial<Record<AuthRoute, string>> = {
  * DOL_STAFF / COMMITTEE_HEAD / DIRECTOR / ADMINISTRATOR all carry view.internal.
  * That is the product's own non-DOL-vs-DOL line, so the frontend reuses it
  * instead of inventing a parallel one. */
-const REQUESTER_CAPABILITY = "request.create";
-const INTERNAL_CAPABILITY = "view.internal";
+const REQUESTER_CAPABILITY = 'request.create';
+const INTERNAL_CAPABILITY = 'view.internal';
+const REQUEST_REVIEW_CAPABILITY = 'request.review';
 
 export function isRouteAuthorized(user: FrontendUser, route: AuthRoute): boolean {
+  if (route === 'request-center') {
+    return user.capabilities.includes('view.internal') && user.capabilities.includes('view.request');
+  }
   const required = ROUTE_CAPABILITY[route];
   return !required || user.capabilities.includes(required);
 }
@@ -40,4 +44,9 @@ export function isEligibleRequester(user: FrontendUser): boolean {
 /** DOL / internal operator — may open Main Logistics Hub surfaces. */
 export function isInternalOperator(user: FrontendUser): boolean {
   return user.capabilities.includes(INTERNAL_CAPABILITY);
+}
+
+/** Server-derived review capability used only to present enabled FI-06 controls. */
+export function canReviewInternalRequests(user: FrontendUser): boolean {
+  return user.capabilities.includes(REQUEST_REVIEW_CAPABILITY);
 }

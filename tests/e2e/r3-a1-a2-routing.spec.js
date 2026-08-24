@@ -198,6 +198,119 @@ function installInventoryBootstrap(page, { status = 200, body } = {}) {
   );
 }
 
+function requestBootstrapFixture({
+  requests,
+  requestLines,
+  eventSeries,
+  eventDays,
+  events,
+  inventoryItems,
+  pagination,
+  scopeRevision,
+} = {}) {
+  const timestamp = '2026-08-24T00:00:00.000Z';
+  return {
+    ok: true,
+    contract: 'bootstrap-module',
+    module: 'request',
+    contractVersion: 2,
+    requestOnly: false,
+    scopeRevision: scopeRevision ?? { token: 'request-r1', updatedAt: timestamp },
+    pagination: pagination ?? { page: 1, pageSize: 25, total: 1, hasMore: false },
+    data: {
+      requests: requests ?? [
+        {
+          id: 'REQ-REAL-1',
+          type: 'STANDARD',
+          stage: 'REVIEW',
+          parentRequestId: '',
+          eventSeriesId: 'SERIES-REAL-1',
+          eventDayId: 'DAY-REAL-1',
+          eventId: 'EVENT-REAL-1',
+          ownerCommitteeId: 'COM-1',
+          catalogType: 'OFFICE_INVENTORY',
+          department: 'DOL',
+          requesterName: 'Authoritative requester',
+          purpose: 'Authoritative event support',
+          status: 'FOR_REVIEW',
+          priority: 'URGENT',
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      ],
+      requestLines: requestLines ?? [
+        {
+          id: 'LINE-REAL-1',
+          requestId: 'REQ-REAL-1',
+          eventId: 'EVENT-REAL-1',
+          itemId: 'ITM-REAL-1',
+          description: 'Authoritative chair',
+          specification: 'Authoritative fixture only',
+          category: 'Equipment',
+          quantity: 4,
+          unit: 'piece',
+          fulfillmentSource: '',
+          neededAt: '2026-08-30T09:00:00.000Z',
+          returnDue: '',
+          releasedQuantity: 0,
+          receivedQuantity: 0,
+          status: 'FOR_REVIEW',
+          workflowRevision: 1,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      ],
+      eventSeries: eventSeries ?? [
+        { id: 'SERIES-REAL-1', code: 'REAL-1', name: 'Authoritative series', status: 'ACTIVE' },
+      ],
+      eventDays: eventDays ?? [
+        {
+          id: 'DAY-REAL-1',
+          seriesId: 'SERIES-REAL-1',
+          name: 'Authoritative event day',
+          date: '2026-08-30',
+          status: 'ACTIVE',
+        },
+      ],
+      events: events ?? [
+        {
+          id: 'EVENT-REAL-1',
+          seriesId: 'SERIES-REAL-1',
+          name: 'Authoritative event',
+          startAt: '2026-08-30T09:00:00.000Z',
+          endAt: '2026-08-30T12:00:00.000Z',
+          eventDayId: 'DAY-REAL-1',
+          activityType: 'ASSEMBLY',
+          timeStatus: 'SCHEDULED',
+          venue: 'Authoritative venue',
+          status: 'ACTIVE',
+        },
+      ],
+      inventoryItems: inventoryItems ?? [
+        {
+          id: 'ITM-REAL-1',
+          name: 'Authoritative folding chair',
+          category: 'Equipment',
+          unit: 'piece',
+          status: 'ACTIVE',
+          catalogType: 'OFFICE_INVENTORY',
+        },
+      ],
+    },
+  };
+}
+
+function installRequestBootstrap(page, { status = 200, body, onRequest } = {}) {
+  return page.route('**/api/bootstrap/request**', (route) => {
+    onRequest?.(route.request());
+    return route.fulfill({
+      status,
+      contentType: 'application/json',
+      body: JSON.stringify(body ?? requestBootstrapFixture()),
+    });
+  });
+}
+
 /** ROLES.REQUESTER — eligible USC requester, no view.internal. */
 const NON_DOL_REQUESTER = {
   accountId: 'ACC-USC-OFFICER',
@@ -210,6 +323,21 @@ const NON_DOL_REQUESTER = {
 const DOL_STAFF = {
   accountId: 'ACC-DOL',
   displayName: 'DOL Staff',
+  roleId: 'DOL_STAFF',
+  capabilities: [
+    'view.request',
+    'view.internal',
+    'view.inventory',
+    'request.create',
+    'request.review',
+    'lending.create',
+  ],
+};
+
+/** DOL may inspect the request queue without the review mutation capability. */
+const DOL_READ_ONLY = {
+  accountId: 'ACC-DOL-READ-ONLY',
+  displayName: 'DOL Read Only',
   roleId: 'DOL_STAFF',
   capabilities: ['view.request', 'view.internal', 'view.inventory', 'request.create', 'lending.create'],
 };
@@ -244,12 +372,37 @@ function usesMobileInventoryLayout(testInfo) {
   return ['frontend-320', 'frontend-390'].includes(testInfo.project.name);
 }
 
+function usesMobileRequestLayout(testInfo) {
+  return ['frontend-320', 'frontend-390'].includes(testInfo.project.name);
+}
+
 async function workspaceSurface(page, testInfo) {
   if (!usesMobileShell(testInfo)) return page;
   await page.getByRole('button', { name: 'Open navigation' }).click();
   const drawer = page.getByRole('dialog', { name: 'Workspace navigation' });
   await expect(drawer).toBeVisible();
   return drawer;
+}
+
+async function openInternalRequestHub(page, testInfo, { waitForQueue = true } = {}) {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await signIn(page, 'dol.staff');
+  await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Request Center' }).click();
+  if (waitForQueue) await expect(page.getByRole('heading', { name: 'Request review queue' })).toBeVisible();
+}
+
+function requestRecordButton(page, purpose) {
+  return page.locator('[aria-label="Request queue"] button:visible').filter({ hasText: purpose });
+}
+
+async function openRequestRecord(page, purpose = 'Authoritative event support') {
+  const requestRecord = requestRecordButton(page, purpose);
+  await expect(requestRecord).toHaveCount(1);
+  await requestRecord.click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  return dialog;
 }
 
 /* ---- LEND-01 / LEND-02 / LEND-03 ---------------------------------------- */
@@ -514,6 +667,476 @@ test('AUTH-01 generic staff sign-in sends a DOL account to its capability-approp
   await expect(page.getByText('Authenticated bootstrap · ledger-derived')).toBeVisible();
   await expect(page.getByText('Authoritative folding chair')).toBeVisible();
   await expect(page.getByText('This workspace route is reserved and has not yet been built.')).toHaveCount(0);
+});
+
+test('FI-06 Internal Request Hub reads the scoped bootstrap, submits explicit routes, and refetches', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  let bootstrapReads = 0;
+  await installRequestBootstrap(page, { onRequest: () => (bootstrapReads += 1) });
+  let reviews = 0;
+  await page.route('**/api/reviewRequest', (route) => {
+    reviews += 1;
+    expect(route.request().headers()['x-csrf-token']).toContain('csrf-');
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ requestId: 'REQ-REAL-1', status: 'ACCEPTED' }),
+    });
+  });
+  await openInternalRequestHub(page, testInfo);
+  const dialog = await openRequestRecord(page);
+  await dialog.getByLabel('Route Authoritative chair').selectOption('ISSUE_FROM_STOCK');
+  await dialog.getByRole('button', { name: 'Record review' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Server review recorded' })).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect.poll(() => bootstrapReads).toBeGreaterThanOrEqual(2);
+  expect(reviews).toBe(1);
+});
+
+test('FI-06 prevents duplicate review writes and keys retries from the exact command', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  await installRequestBootstrap(page);
+  const commands = [];
+  let attempt = 0;
+  await page.route('**/api/reviewRequest', (route) => {
+    commands.push(JSON.parse(route.request().postData() ?? '{}'));
+    attempt += 1;
+    if (attempt === 1) {
+      return route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ code: 'SERVICE_UNAVAILABLE', message: 'Review service is unavailable.' }),
+      });
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        requestId: 'REQ-REAL-1',
+        status: 'ACCEPTED',
+        correlationId: `review-${attempt}`,
+      }),
+    });
+  });
+
+  await openInternalRequestHub(page, testInfo);
+  let dialog = await openRequestRecord(page);
+  await dialog.getByLabel('Route Authoritative chair').selectOption('ISSUE_FROM_STOCK');
+  const recordReview = dialog.getByRole('button', { name: 'Record review' });
+  await recordReview.evaluate((element) => {
+    element.click();
+    element.click();
+  });
+  await expect.poll(() => commands.length).toBe(1);
+  await expect(page.getByRole('alert').filter({ hasText: 'Review was not recorded' })).toBeVisible();
+  await expect(page.getByText('Server review recorded')).toHaveCount(0);
+
+  await recordReview.click();
+  await expect.poll(() => commands.length).toBe(2);
+  expect(commands[1].clientRequestId).toBe(commands[0].clientRequestId);
+  await expect(page.getByRole('status').filter({ hasText: 'Server review recorded' })).toBeVisible();
+  await expect(page.locator('[data-fi06-state="ready"]')).toBeVisible();
+
+  dialog = await openRequestRecord(page);
+  await dialog.getByLabel('Route Authoritative chair').selectOption('PROCUREMENT');
+  await dialog.getByRole('button', { name: 'Record review' }).click();
+  await expect.poll(() => commands.length).toBe(3);
+  expect(commands[2].clientRequestId).not.toBe(commands[1].clientRequestId);
+  await expect(page.locator('[data-fi06-state="ready"]')).toBeVisible();
+
+  dialog = await openRequestRecord(page);
+  await dialog.getByLabel('Route Authoritative chair').selectOption('PROCUREMENT');
+  await dialog.getByLabel(/Review note/u).fill('A changed authoritative review note.');
+  await dialog.getByRole('button', { name: 'Record review' }).click();
+  await expect.poll(() => commands.length).toBe(4);
+  expect(commands[3].clientRequestId).not.toBe(commands[2].clientRequestId);
+});
+
+test('FI-06 reports conflict and denied review receipts without inventing local success', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  let useFreshProjection = false;
+  await page.route('**/api/bootstrap/request**', (route) => {
+    const payload = requestBootstrapFixture();
+    if (useFreshProjection) {
+      payload.data.requests[0] = {
+        ...payload.data.requests[0],
+        purpose: 'Fresh server projection',
+        updatedAt: '2026-08-25T00:00:00.000Z',
+      };
+    }
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(payload) });
+  });
+  let attempt = 0;
+  const commands = [];
+  await page.route('**/api/reviewRequest', (route) => {
+    commands.push(JSON.parse(route.request().postData() ?? '{}'));
+    attempt += 1;
+    return route.fulfill(
+      attempt === 1
+        ? {
+            status: 409,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              code: 'REQUEST_STATE_CONFLICT',
+              message: 'The request changed on the server.',
+              correlationId: 'conflict-1',
+            }),
+          }
+        : {
+            status: 403,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              code: 'FORBIDDEN',
+              message: 'Review authority is no longer granted.',
+              correlationId: 'denied-1',
+            }),
+          },
+    );
+  });
+
+  await openInternalRequestHub(page, testInfo);
+  const dialog = await openRequestRecord(page);
+  const routeSelect = dialog.getByLabel('Route Authoritative chair');
+  await routeSelect.selectOption('ISSUE_FROM_STOCK');
+  await dialog.getByRole('button', { name: 'Record review' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Review changed on the server' })).toBeVisible();
+  await expect(page.getByText('Server review recorded')).toHaveCount(0);
+  const recovery = dialog.getByRole('button', { name: 'Refresh authoritative queue' });
+  await expect(recovery).toBeVisible();
+  useFreshProjection = true;
+  await recovery.click();
+  await expect(page.locator('[data-fi06-state="ready"]')).toBeVisible();
+  await expect(dialog.getByRole('heading', { name: 'Fresh server projection' })).toBeVisible();
+  await expect(routeSelect).toHaveValue('ISSUE_FROM_STOCK');
+
+  await dialog.getByRole('button', { name: 'Record review' }).click();
+  await expect.poll(() => commands.length).toBe(2);
+  expect(commands[1].clientRequestId).not.toBe(commands[0].clientRequestId);
+  await expect(page.getByRole('alert').filter({ hasText: 'Review is not permitted' })).toBeVisible();
+  await expect(page.getByText('Server review recorded')).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: 'Refresh authoritative queue' })).toBeVisible();
+});
+
+test('FI-06 keeps DOL read-only capability presentation separate from server mutation authority', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_READ_ONLY);
+  await installRequestBootstrap(page);
+  let reviewRequests = 0;
+  await page.route('**/api/reviewRequest', (route) => {
+    reviewRequests += 1;
+    return route.fulfill({ status: 500, body: '{}' });
+  });
+
+  await openInternalRequestHub(page, testInfo);
+  await expect(page.getByText(/Read-only queue: the current server-projected session/u)).toBeVisible();
+  const dialog = await openRequestRecord(page);
+  await expect(dialog.getByLabel(/Route /u)).toHaveCount(0);
+  await expect(dialog.getByLabel(/Review note/u)).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: /Record review/u })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Release', exact: true })).toHaveCount(0);
+  await expect(dialog).not.toContainText(/On hand|Available to promise|Reserved/u);
+  expect(reviewRequests).toBe(0);
+});
+
+test('FI-06 renders a reduced-motion initial loading state before the first authoritative page', async ({
+  page,
+}, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  let requestStarted = false;
+  let releaseBootstrap;
+  await page.route('**/api/bootstrap/request**', async (route) => {
+    requestStarted = true;
+    await new Promise((resolve) => {
+      releaseBootstrap = resolve;
+    });
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(requestBootstrapFixture()),
+    });
+  });
+
+  await openInternalRequestHub(page, testInfo);
+  await expect.poll(() => requestStarted).toBe(true);
+  await expect(page.locator('[data-fi06-state="loading"]')).toBeVisible();
+  const skeleton = page.locator('[aria-label="Loading request queue"] .animate-pulse').first();
+  await expect(skeleton).toBeVisible();
+  const motion = await skeleton.evaluate((element) => getComputedStyle(element).animationDuration);
+  expect(motion).toMatch(/0\.01ms|0\.00001s|1e-05s/u);
+  releaseBootstrap();
+  await expect(page.locator('[data-fi06-state="ready"]')).toBeVisible();
+});
+
+test('FI-06 distinguishes a true empty authorized queue from client filter mismatch', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  await installRequestBootstrap(page, {
+    body: requestBootstrapFixture({
+      requests: [],
+      requestLines: [],
+      eventSeries: [],
+      eventDays: [],
+      events: [],
+      inventoryItems: [],
+      pagination: { page: 1, pageSize: 25, total: 0, hasMore: false },
+      scopeRevision: { token: 'request-empty', updatedAt: '2026-08-24T00:00:00.000Z' },
+    }),
+  });
+
+  await openInternalRequestHub(page, testInfo);
+  await expect(page.getByText('No requests are in this authorized scope')).toBeVisible();
+  await expect(page.getByText('No loaded request matches these status filters')).toHaveCount(0);
+});
+
+for (const scenario of [
+  {
+    label: 'bootstrap error',
+    status: 503,
+    body: { code: 'SERVICE_UNAVAILABLE', message: 'Request service is unavailable.' },
+    title: 'Request queue unavailable',
+  },
+  {
+    label: 'bootstrap denial',
+    status: 403,
+    body: { code: 'FORBIDDEN', message: 'Request scope is denied.' },
+    title: 'Access limited',
+  },
+]) {
+  test(`FI-06 presents a truthful ${scenario.label}`, async ({ page }, testInfo) => {
+    await installPublicFeed(page);
+    await installLogin(page, DOL_STAFF);
+    await installRequestBootstrap(page, { status: scenario.status, body: scenario.body });
+
+    await openInternalRequestHub(page, testInfo, { waitForQueue: false });
+    await expect(page.getByRole('heading', { name: scenario.title })).toBeVisible();
+    await expect(page.getByText('Authoritative event support')).toHaveCount(0);
+  });
+}
+
+test('FI-06 labels retained data refreshing before success and stale only after failure', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  let mode = 'initial';
+  let releaseRefreshing;
+  await page.route('**/api/bootstrap/request**', async (route) => {
+    if (mode === 'hold') {
+      mode = 'resolving';
+      await new Promise((resolve) => {
+        releaseRefreshing = resolve;
+      });
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(requestBootstrapFixture()),
+      });
+    }
+    if (mode === 'reject') {
+      return route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ code: 'SERVICE_UNAVAILABLE', message: 'Refresh unavailable.' }),
+      });
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(requestBootstrapFixture()),
+    });
+  });
+
+  await openInternalRequestHub(page, testInfo);
+  await expect(page.locator('[data-fi06-state="ready"]')).toBeVisible();
+  mode = 'hold';
+  await page.getByRole('button', { name: 'Refresh queue' }).click();
+  await expect(page.locator('[data-fi06-state="refreshing"]')).toBeVisible();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Updating the authoritative queue' }),
+  ).toBeVisible();
+  const dialog = await openRequestRecord(page);
+  await expect(dialog.getByRole('button', { name: /Record review/u })).toHaveCount(0);
+  releaseRefreshing();
+  await expect(page.locator('[data-fi06-state="ready"]')).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  mode = 'reject';
+  await page.getByRole('button', { name: 'Refresh queue' }).click();
+  await expect(page.locator('[data-fi06-state="stale"]')).toBeVisible();
+  await expect(page.getByRole('alert').filter({ hasText: 'Last known queue shown' })).toBeVisible();
+  await expect(requestRecordButton(page, 'Authoritative event support')).toHaveCount(1);
+});
+
+test('FI-06 gives server ownership to request search, archive filter, and pagination', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  const requestedUrls = [];
+  await page.route('**/api/bootstrap/request**', (route) => {
+    const url = new URL(route.request().url());
+    requestedUrls.push(url);
+    const pageNumber = Number(url.searchParams.get('page')) || 1;
+    const requestId = pageNumber === 2 ? 'REQ-REAL-2' : 'REQ-REAL-1';
+    const payload = requestBootstrapFixture({
+      pagination: { page: pageNumber, pageSize: 25, total: 50, hasMore: pageNumber === 1 },
+    });
+    payload.data.requests[0] = {
+      ...payload.data.requests[0],
+      id: requestId,
+      purpose: pageNumber === 2 ? 'Second authoritative server page' : 'Authoritative event support',
+    };
+    payload.data.requestLines[0] = {
+      ...payload.data.requestLines[0],
+      id: pageNumber === 2 ? 'LINE-REAL-2' : 'LINE-REAL-1',
+      requestId,
+    };
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(payload) });
+  });
+
+  await openInternalRequestHub(page, testInfo);
+  await expect
+    .poll(() =>
+      requestedUrls.some(
+        (url) =>
+          url.searchParams.get('page') === '1' &&
+          url.searchParams.get('pageSize') === '25' &&
+          url.searchParams.get('filter') === 'ACTIVE',
+      ),
+    )
+    .toBe(true);
+
+  await page.getByPlaceholder('Search request ID, purpose, or requester…').fill('authoritative chair');
+  await expect
+    .poll(() => requestedUrls.some((url) => url.searchParams.get('query') === 'authoritative chair'))
+    .toBe(true);
+  await page.getByRole('button', { name: 'Archive' }).click();
+  await expect
+    .poll(() =>
+      requestedUrls.some(
+        (url) =>
+          url.searchParams.get('page') === '1' &&
+          url.searchParams.get('filter') === 'ARCHIVED' &&
+          url.searchParams.get('query') === 'authoritative chair',
+      ),
+    )
+    .toBe(true);
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect
+    .poll(() =>
+      requestedUrls.some(
+        (url) =>
+          url.searchParams.get('page') === '2' &&
+          url.searchParams.get('filter') === 'ARCHIVED' &&
+          url.searchParams.get('query') === 'authoritative chair',
+      ),
+    )
+    .toBe(true);
+  const finalRequest = requestedUrls.find(
+    (url) =>
+      url.searchParams.get('page') === '2' &&
+      url.searchParams.get('filter') === 'ARCHIVED' &&
+      url.searchParams.get('query') === 'authoritative chair',
+  )?.searchParams;
+  expect(finalRequest?.get('page')).toBe('2');
+  expect(finalRequest?.get('pageSize')).toBe('25');
+  expect(finalRequest?.get('filter')).toBe('ARCHIVED');
+  expect(finalRequest?.get('query')).toBe('authoritative chair');
+  await expect(requestRecordButton(page, 'Second authoritative server page')).toHaveCount(1);
+});
+
+test('FI-06 presents one responsive queue, restores exact request focus, and supports dark presentation', async ({
+  page,
+}, testInfo) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  await installRequestBootstrap(page);
+
+  await openInternalRequestHub(page, testInfo);
+  const queue = page.locator('[aria-label="Request queue"]');
+  const opener = requestRecordButton(page, 'Authoritative event support');
+  await expect(opener).toHaveCount(1);
+  if (usesMobileRequestLayout(testInfo)) {
+    await expect(queue.locator('table')).toBeHidden();
+  } else {
+    await expect(queue.locator('table')).toBeVisible();
+  }
+
+  await opener.focus();
+  await opener.click();
+  const dialog = page.getByRole('dialog');
+  const close = dialog.getByRole('button', { name: 'Back to requests' });
+  const record = dialog.getByRole('button', { name: 'Record review' });
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(record).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(opener).toBeFocused();
+
+  if (usesMobileShell(testInfo)) {
+    const drawer = await workspaceSurface(page, testInfo);
+    await drawer.getByRole('button', { name: 'Switch to dark theme' }).click();
+    await drawer.getByRole('button', { name: 'Close navigation' }).click();
+  } else {
+    await page.getByRole('button', { name: 'Switch to dark theme' }).click();
+  }
+  await expect(page.locator('html')).toHaveClass(/dark/u);
+  await expect(page.getByRole('heading', { name: 'Request review queue' })).toBeVisible();
+});
+
+test('FI-06 preview inspection records only a local action and never contacts request services', async ({
+  page,
+}) => {
+  test.skip(
+    process.env.HAU_FRONTEND_E2E_PORT !== '4173',
+    'Requires the accepted exact-4173 local inspector.',
+  );
+  await page.route('**/api/version', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, playground: true }),
+    }),
+  );
+  await installPublicFeed(page);
+  const protectedRequests = [];
+  page.on('request', (request) => {
+    const pathname = new URL(request.url()).pathname;
+    if (pathname === '/api/bootstrap/request' || pathname === '/api/reviewRequest') {
+      protectedRequests.push({ method: request.method(), pathname });
+    }
+  });
+
+  await page.goto('/#/__preview/index');
+  await page.locator('[data-preview-route="request-center"] [data-action="open-preview"]').click();
+  await expect(
+    page.locator('[data-preview-inspection="true"][data-preview-route="request-center"]'),
+  ).toBeVisible();
+  const dialog = await openRequestRecord(page, 'Inspection-only request fixture');
+  await dialog.getByLabel('Route Preview folding chair').selectOption('ISSUE_FROM_STOCK');
+  await dialog.getByRole('button', { name: 'Record local review demonstration' }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Local review demonstration recorded' }),
+  ).toBeVisible();
+  expect(protectedRequests).toEqual([]);
 });
 
 test('FI-05 Inventory uses the authenticated bootstrap, restores inspector focus, and reports a denied read truthfully', async ({

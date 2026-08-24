@@ -1,52 +1,39 @@
 # Current Work Pointer — frontend-design-integration
 
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
-MILESTONE: R1_FI05_INVENTORY_CHECKPOINT_COMPLETE
-STATUS: FI05_ACCEPTED_CHECKPOINT_COMPLETE
-PHASE: FI06_INTAKE_ONLY
+MILESTONE: R1_FI07_INTAKE_HANDSHAKE
+STATUS: FI06_ACCEPTED_CHECKPOINT_READY
+PHASE: FI07_INTAKE_HANDSHAKE_ONLY
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: GIT_STATUS
-POST_CHECKPOINT_WORKTREE: A4_CHECKPOINT_COMMITTED__PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
+WORKTREE_STATE: DIRTY__ACCEPTED_UNCOMMITTED_FI06_LOGICAL_DIFF__PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
-HANDOFF_STATUS: FI05_CHECKPOINT_COMPLETE
-REQUIRED_MODEL: GPT-5.6-Terra integration writer
+HANDOFF_STATUS: READY_FOR_HANDOFF
+REQUIRED_MODEL: GPT-5.6 Sol intake/orchestration; a new GPT-5.6-Terra lock is required before FI-07 writes
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi05-inventory-frontend-integration.md
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi06-internal-request-hub-frontend-integration.md
+FI07_ACCEPTED_SPEC: NONE — FI-07 requires a separately accepted packet before implementation
 ACCEPTED_AMENDMENTS: R1 one-shot; R1-A2 reconciliation; accepted A3 persistent local live-preview gate; accepted A4 local Preview Index inspection
 R3A1A2_RECEIPT: .codex/R3_A1_A2_ROUTING_IDENTITY_RECEIPT.md
 F2_BASELINE: .codex/FRONTEND_F2_R3A1A2.md
 A3_PREVIEW_RECEIPT: .codex/A3_LOCAL_PREVIEW_RECEIPT.md
 FI04_RECEIPT: .codex/FI04_AUTHENTICATED_SHELL_RECEIPT.md
-A4_PREVIEW_INDEX_RECEIPT: .codex/A4_PREVIEW_INDEX_INSPECTION_RECEIPT.md
 FI05_RECEIPT: .codex/FI05_INVENTORY_RECEIPT.md
-BLOCKER: NONE — Sol accepted the FI-05 candidate; the authorized checkpoint is complete and no FI-06 implementation is authorized.
-NEXT_EXACT_ACTION: Perform FI-06 intake and repository handshake only; do not implement FI-06 until accepted scope and writer lock are established.
+FI06_RECEIPT: .codex/FI06_INTERNAL_REQUEST_HUB_RECEIPT.md
+DELEGATION_LEDGER:
+
+- writer=/root/fi05_inventory_writer | model=gpt-5.6-terra | role=FI-06 predecessor writer | mode=execute | scope=initial FI-06 integration handoff | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=RELEASED | evidence=FI-05 lock-release transfer records.
+- writer=/root/fi06_request_hub_writer | model=gpt-5.6-terra | role=FI-06 successor sole canonical integration writer | mode=execute | scope=accepted FI-06 frontend integration, artifacts, and continuity closeout | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=COMPLETED | evidence=.codex/FI06_INTERNAL_REQUEST_HUB_RECEIPT.md.
+
+BLOCKER: NONE — FI-06 is accepted and checkpoint-ready; FI-07 authority has not yet been accepted.
+NEXT_EXACT_ACTION: Perform FI-07 intake and repository handshake only. Do not implement FI-07 or acquire a writer lock before an FI-07 packet is accepted.
 
 ## Active A4 preview inspection
 
 PREVIEW_INDEX_LOCAL_INSPECTION is enabled only for the trusted development preview at `127.0.0.1:4173`, after an explicit rendered Preview Index action. It bypasses frontend route gating only to render fixture-backed or truthful preview-data-gap presentation. It creates no Session, grants no capability, bypasses no Worker authorization, and authorizes no backend reads or writes. Production and Playground remain fail-closed.
 
-Sol accepted the complete A4 logical diff. Independent evidence includes exact-4173 positive inspection, default non-4173 fail-closed coverage, real-auth regression, deterministic artifacts, and continuity/governance checks. The writer lock is released after this authorized checkpoint; FI-05 remains intake-only.
-
-## Completed FI-04 slice
-
-The authorized authenticated `AuthRoute` now mounts the capability-filtered shell. FI-05+ internal routes are explicitly truthful placeholders within that shell; no fixture business module was mounted. The read-only Profile route uses the strict same-origin `/api/me/profile` contract adapter with loading, incomplete/empty, error/retry, dark, and mobile states. The generic staff-home resolver deliberately excludes personal-only Profile so an account with no workspace capabilities stays denied even though authenticated Profile remains directly reachable.
-
-Sol-requested formatting closeout ran local Prettier only on `entryIntent.ts`, `AuthShellTopbar.tsx`, `SidebarNavItem.tsx`, and `frontend-entry-intent.test.js`. The targeted FI-04 Prettier check passed, behavior-focused source/artifact identity remained unchanged, and the lock was released again.
-
-Sol accepted the complete FI-04 logical diff. Root independent evidence confirms targeted Prettier cleanliness; adapter/entry units 34/34; focused AUTH-01 5/5; deterministic dist verification at SHA-256 `A07FCE9DF042C7244A7B1CCCC32F88573E47433BBDAAECA05B233797454BB1C6`; governance/handoff/diff checks; and runtime-identity diff scan clean. TypeScript source lint is not configured and standalone `tsc --noEmit` is unavailable; the Vite build passed.
-
-Desktop has the Design-verified 76px compact rail at 1024 and 272px full rail at 1440. The full rail uses governed USC and DOL marks; its command band is paper/cream in light mode under the truthful maroon environment strip, with search/theme at compact desktop and a filled light-mode Navigate control. Mobile preserves the truthful compact identity, capability-filtered dock/drawer, drawer focus trapping/Escape/body-lock/opener restoration, and the existing public-drawer focus repair without changing public routing semantics.
-
-## A3 local-preview and visual evidence
-
-The accepted repository-owned supervisor remained healthy at `http://127.0.0.1:4173/`; it was reused and never restarted by FI-04. Root observed the required source-save HMR gate and all subsequent material shell/profile saves: each existing 4173 tab stayed mounted with no Vite overlay or module failure. Safe local Playwright mocks intercepted all business API access and did not mutate business data. Current captures are outside Git at `C:/Users/adria/AppData/Local/Temp/fi04-visual-20260824/`; 320, 390, 1024, and 1440 surfaces were within viewport and console warning/error count was zero. Runtime-only supervisor identity remains excluded.
-
-## Boundaries and review frontier
-
-No Figma or Make write, backend/auth/capability semantic change, Profile PATCH, business-data write, Playground/Production/provider mutation, deployment, migration, D1/R2 mutation, commit, or push occurred. The preexisting untracked `.ai-bridge/` remains untouched. Sol must review the complete dirty logical diff, including deterministic generated frontend artifacts, before any commit decision.
+FI-06 reuses this bounded A4 inspection only with its labelled deterministic Internal Request Hub fixture and local action. Exact 4173 evidence confirms zero protected `/api/bootstrap/request` and `/api/reviewRequest` traffic; see `.codex/FI06_INTERNAL_REQUEST_HUB_RECEIPT.md`.

@@ -5,7 +5,7 @@ import { resolvePostAuthDestination, resolveStaffHome, type DenialReason } from 
 import { useTheme } from "./hooks/useTheme";
 import { scrollToRouteStart } from "./shared/scrollToRouteStart";
 import { FrontendApiError, frontendBackend, type FrontendUser } from "../integration/backend";
-import { isEligibleRequester, isInternalOperator, isRouteAuthorized } from "../integration/routeAccess";
+import { canReviewInternalRequests, isEligibleRequester, isInternalOperator, isRouteAuthorized } from "../integration/routeAccess";
 
 function initials(value: string) {
   const parts = value.split(/\s+/u).filter(Boolean);
@@ -21,6 +21,7 @@ function projectSession(user: FrontendUser): Session {
     capabilities: AUTH_ROUTES.filter((route) => isRouteAuthorized(user, route)),
     requesterEligible: isEligibleRequester(user),
     internalOperator: isInternalOperator(user),
+    canReviewRequests: canReviewInternalRequests(user),
   };
 }
 

@@ -1,22 +1,28 @@
-# Current Environment Handoff — FI-05 Inventory checkpoint complete
+# Current Environment Handoff — FI-06 accepted checkpoint; FI-07 intake only
 
-FROM: Sol-accepted FI-05 checkpoint
-TO: FI-06 intake and repository handshake only
+FROM: TERRA_MAX:/root/fi06_request_hub_writer (completed FI-06 successor closeout)
+TO: Sol / next designated FI-07 intake owner
 BRANCH: frontend-design-integration
-HEAD: GIT_HEAD
-UPSTREAM: origin/frontend-design-integration (verify parity before FI-06 intake)
+HEAD: d76a52208fea6229d07b01cbff02b3515a699654
+UPSTREAM: origin/frontend-design-integration (equal at FI-06 acquisition; no commit or push during FI-06)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: GIT_STATUS
+WORKTREE_STATE: DIRTY__accepted uncommitted FI-06 logical diff and regenerated deterministic artifacts; preexisting untracked `.ai-bridge/` excluded and preserved
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
-HANDOFF_STATUS: FI05_CHECKPOINT_COMPLETE
+HANDOFF_STATUS: READY_FOR_HANDOFF
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi05-inventory-frontend-integration.md
-COMPLETED: FI-05 Inventory is implemented as a read-only authenticated bootstrap projection with a separate A4 fixture path. The Sol-requested modal focus containment and real-empty-state repair are included. See .codex/FI05_INVENTORY_RECEIPT.md.
-VALIDATION: Units 24/24; FI-05 repair E2E 4/4 at 320, 390, 768, 1024, and 1440; prior AUTH-01 1440 2/2; exact 4173 INDEX-INSPECT 1/1 with no protected preview request; build and verify:dist passed at artifact SHA-256 2D4A2F8F264D726F14D409CC06217FD294A3F715F2C3E4ED81DE38F2CE4A8684.
-EXTERNAL_ACTIONS: The FI-05 checkpoint commit/push is authorized. No Production, Playground, provider, Figma, backend, D1/R2, migration, or deployment write is authorized.
-BLOCKER: NONE.
-NEXT_EXACT_ACTION: Perform FI-06 intake and repository handshake only; do not implement FI-06 until accepted scope and writer lock are established.
-RESUME_COMMANDS: `git status --short`; `git diff --check`; `npm.cmd run preview:frontend:status`; `npm.cmd test -- tests/unit/frontend-backend-adapter.test.js tests/unit/inventory-data.test.js`; focused FI-05 E2E; `npm.cmd run verify:dist`; `npm.cmd run check:agents`; `npm.cmd run check:continuation`; `npm.cmd run handoff:verify`.
-PROHIBITED_ACTIONS: Never touch `.ai-bridge/`; never fake a Session/capability/role or send protected reads/mutations from preview; never alter real auth routing; do not restart a healthy preview; do not expose runtime-only controls; do not implement FI-06 before accepted scope and a new writer lock.
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi06-internal-request-hub-frontend-integration.md
+FI07_ACCEPTED_SPEC: NONE — FI-07 requires a separate accepted packet before implementation
+COMPLETED: FI-06 Internal Request Hub is accepted and checkpoint-ready. It is a DOL-only request bootstrap/review UI, separate from External Request Center, with strict v2 projection, server-owned query scope, line routing/idempotency/recovery, accessibility, and A4 fixture-only Preview Index isolation.
+VALIDATION: Focused units 34/34 passed. The regular FI-06 Playwright matrix passed 55 with 5 intentional exact-4173-only skips across 320/390/768/1024/1440. Exact 4173 Preview Index passed 1/1 with zero protected request/review traffic. `npm.cmd run build` and `npm.cmd run verify:dist` passed; both deterministic frontend artifacts are SHA-256 `725857F273E32239628FB241FA2A14C4E04F049D2753BAEDB72F88C058A2E1F7`. Targeted formatting, governance, continuation, handoff, and diff checks are recorded in the FI-06 receipt.
+EXTERNAL_ACTIONS: The healthy 127.0.0.1:4173 supervisor was reused without restart. No Production, Playground, provider, Figma, backend, D1/R2, migration, deployment, commit, or push write occurred.
+DELEGATION_LEDGER:
+
+- writer=/root/fi05_inventory_writer | model=gpt-5.6-terra | role=FI-06 predecessor writer | mode=execute | scope=initial FI-06 integration handoff | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=RELEASED | evidence=FI-05 lock-release transfer records.
+- writer=/root/fi06_request_hub_writer | model=gpt-5.6-terra | role=FI-06 successor sole canonical integration writer | mode=execute | scope=accepted FI-06 frontend integration, artifacts, and continuity closeout | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=COMPLETED | evidence=.codex/FI06_INTERNAL_REQUEST_HUB_RECEIPT.md.
+
+BLOCKER: NONE — FI-07 authority is not yet accepted, so intake and handshake are the only next operations.
+NEXT_EXACT_ACTION: Perform FI-07 intake and repository handshake only. Do not implement FI-07 or acquire a writer lock before an FI-07 packet is accepted.
+RESUME_COMMANDS: `git status --short`; `git diff --check`; `npm.cmd run preview:frontend:status`; read the accepted FI-07 packet when available; then perform the required handshake.
+PROHIBITED_ACTIONS: Never touch `.ai-bridge/`; never fake a Session/capability/role or send protected reads/mutations from preview; never alter backend authorization; do not restart a healthy preview; do not implement FI-07, build artifacts, commit, push, or mutate provider/deploy state without separately accepted authority.
