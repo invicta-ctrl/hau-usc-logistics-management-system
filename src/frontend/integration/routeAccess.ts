@@ -27,6 +27,10 @@ const ROUTE_CAPABILITY: Partial<Record<AuthRoute, string>> = {
 const REQUESTER_CAPABILITY = 'request.create';
 const INTERNAL_CAPABILITY = 'view.internal';
 const REQUEST_REVIEW_CAPABILITY = 'request.review';
+const LENDING_APPROVE_CAPABILITY = 'lending.approve';
+const LENDING_HANDOFF_CAPABILITY = 'lending.handoff';
+const LENDING_RETURN_CAPABILITY = 'lending.return';
+const EVIDENCE_UPLOAD_CAPABILITY = 'evidence.upload';
 
 export function isRouteAuthorized(user: FrontendUser, route: AuthRoute): boolean {
   if (route === 'request-center') {
@@ -49,4 +53,21 @@ export function isInternalOperator(user: FrontendUser): boolean {
 /** Server-derived review capability used only to present enabled FI-06 controls. */
 export function canReviewInternalRequests(user: FrontendUser): boolean {
   return user.capabilities.includes(REQUEST_REVIEW_CAPABILITY);
+}
+
+/** FI-07 presentation gates only; every lending command is still re-authorized by the Worker. */
+export function canApproveInternalLending(user: FrontendUser): boolean {
+  return user.capabilities.includes(LENDING_APPROVE_CAPABILITY);
+}
+
+export function canHandoffInternalLending(user: FrontendUser): boolean {
+  return user.capabilities.includes(LENDING_HANDOFF_CAPABILITY);
+}
+
+export function canReturnInternalLending(user: FrontendUser): boolean {
+  return user.capabilities.includes(LENDING_RETURN_CAPABILITY);
+}
+
+export function canUploadLendingEvidence(user: FrontendUser): boolean {
+  return user.capabilities.includes(EVIDENCE_UPLOAD_CAPABILITY);
 }

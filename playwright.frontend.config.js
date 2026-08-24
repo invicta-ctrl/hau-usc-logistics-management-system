@@ -6,7 +6,12 @@ const localPreviewUrl = `http://127.0.0.1:${localPreviewPort}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
-  testMatch: ['frontend-cutover.spec.js', 'preview-index.spec.js', 'r3-a1-a2-routing.spec.js'],
+  testMatch: [
+    'frontend-cutover.spec.js',
+    'preview-index.spec.js',
+    'r3-a1-a2-routing.spec.js',
+    'fi07-lending-hub.spec.js',
+  ],
   timeout: 30_000,
   fullyParallel: false,
   reporter: [['list'], ['html', { open: 'never' }]],

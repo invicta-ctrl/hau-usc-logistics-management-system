@@ -388,7 +388,11 @@ async function openInternalRequestHub(page, testInfo, { waitForQueue = true } = 
   await page.goto('/');
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
-  await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Request Center' }).click();
+  await (
+    await workspaceSurface(page, testInfo)
+  )
+    .getByRole('button', { name: 'Internal Request Hub' })
+    .click();
   if (waitForQueue) await expect(page.getByRole('heading', { name: 'Request review queue' })).toBeVisible();
 }
 

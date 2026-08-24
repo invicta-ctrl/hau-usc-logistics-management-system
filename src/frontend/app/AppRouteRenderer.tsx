@@ -8,6 +8,7 @@ import { LandingPage } from './landing/LandingPage';
 import { ProfileRoute } from './profile/ProfileRoute';
 import { InventoryRoute } from './inventory/InventoryRoute';
 import { InternalRequestHub } from './request/InternalRequestHub';
+import { InternalLendingHub } from './lending/InternalLendingHub';
 import { Footer } from './public/Footer';
 import { PublicNavbar } from './public/PublicNavbar';
 import { ExternalRequestCenter } from './request/ExternalRequestCenter';
@@ -73,6 +74,15 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
           <InventoryRoute dark={dark} navigate={navigate} />
         ) : route === 'request-center' ? (
           <InternalRequestHub dark={dark} navigate={navigate} canReviewRequests={session.canReviewRequests} />
+        ) : route === 'lending' ? (
+          <InternalLendingHub
+            dark={dark}
+            navigate={navigate}
+            canApproveLending={session.canApproveLending}
+            canHandoffLending={session.canHandoffLending}
+            canReturnLending={session.canReturnLending}
+            canUploadLendingEvidence={session.canUploadLendingEvidence}
+          />
         ) : (
           <AuthPlaceholderRoute route={route} />
         )}

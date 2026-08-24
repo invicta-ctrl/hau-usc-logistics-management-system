@@ -130,6 +130,116 @@ export type FrontendRequestBootstrap = {
   scopeRevision: { token: string; updatedAt: string } | null;
 };
 
+/** FI-07: a deliberately narrow projection of the existing authenticated lending module. */
+export type FrontendLendingAssetOption = {
+  id: string;
+  itemId: string;
+  assetTag: string;
+  serialNumber: string;
+  condition: string;
+  status: string;
+};
+
+export type FrontendLendingHistoryEntry = {
+  previousStatus: string;
+  newStatus: string;
+  changedAt: string;
+  changedBy: string;
+  reason: string;
+  metadata: Json;
+};
+
+export type FrontendLendingTicket = {
+  id: string;
+  itemId: string;
+  requestedItemId: string;
+  quantity: number;
+  requestedQuantity: number;
+  unit: string;
+  studentIdNumber: string;
+  borrowerName: string;
+  borrowerType: string;
+  department: string;
+  contact: string;
+  email: string;
+  courseYear: string;
+  positionRole: string;
+  purpose: string;
+  dueAt: string;
+  requestedStartAt: string;
+  requestedEndAt: string;
+  ticketType: string;
+  status: string;
+  reviewDecision: string;
+  reviewNotes: string;
+  rejectionReason: string;
+  substitutionNote: string;
+  eligibilitySource: string;
+  eligibilityReviewedBy: string;
+  eligibilityReviewedAt: string;
+  assetOptions: FrontendLendingAssetOption[];
+  history: FrontendLendingHistoryEntry[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** Optional inventory values remain absent when the server redacts them. */
+export type FrontendLendingInventoryItem = {
+  id: string;
+  name: string;
+  category: string;
+  unit: string;
+  status: string;
+  catalogType: string;
+  stockArea: string;
+  storageLocation?: string;
+  isLendable: boolean;
+  lendingKind: string;
+  lendingStatus: string;
+  lendingAudience: string;
+  eligibilityRule: string;
+  conditionTracked: boolean;
+  conditionReviewState?: string;
+  maintenanceReviewState?: string;
+  availableToPromise?: number;
+  lendableAvailable?: number;
+  readyToClaim?: number;
+  onLoan?: number;
+  overdue?: number;
+  damaged?: number;
+  maintenance?: number;
+  traceableAssets?: number;
+  availableAssets?: number;
+  maximumLoanQuantity?: number;
+};
+
+export type LendingBootstrapOptions = {
+  page?: number;
+  pageSize?: number;
+  signal?: AbortSignal;
+};
+
+export type FrontendLendingBootstrap = {
+  lendingTickets: FrontendLendingTicket[];
+  inventoryItems: FrontendLendingInventoryItem[];
+  pagination: { page: number; pageSize: number; total: number; hasMore: boolean };
+  scopeRevision: { token: string; updatedAt: string };
+};
+
+export type FrontendLendingMutationReceipt = {
+  ticketId: string;
+  status: string;
+  replayed: boolean;
+  correlationId: string;
+};
+
+export type FrontendEvidenceReceipt = {
+  evidenceId: string;
+  uploadStatus: string;
+  duplicate: boolean;
+  correlationId: string;
+};
+
 export type FrontendProfile = {
   displayName: string;
   legalName: string;
@@ -349,6 +459,32 @@ function requiredNumber(value: unknown, field: string): number {
   return value;
 }
 
+function requiredPositiveInteger(value: unknown, field: string, maximum?: number): number {
+  if (
+    typeof value !== 'number' ||
+    !Number.isInteger(value) ||
+    value < 1 ||
+    (maximum !== undefined && value > maximum)
+  ) {
+    incomplete(`The response included an invalid ${field}.`);
+  }
+  return value;
+}
+
+function requiredNonNegativeInteger(value: unknown, field: string): number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    incomplete(`The response included an invalid ${field}.`);
+  }
+  return value;
+}
+
+/** Never turn a redacted inventory value into a misleading zero. */
+function optionalNumber(value: unknown, field: string): number | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  incomplete(`The response included an invalid ${field}.`);
+}
+
 function records(value: unknown): Json[] {
   return Array.isArray(value) ? value.map(asRecord) : [];
 }
@@ -361,6 +497,19 @@ function requiredString(value: unknown, field: string): string {
   const result = asString(value);
   if (!result) incomplete(`The response did not include ${field}.`);
   return result;
+}
+
+/** A canonical nullable text field may be blank, but may not be omitted or malformed. */
+function requiredText(value: unknown, field: string): string {
+  if (value !== null && typeof value !== 'string') incomplete(`The response did not include ${field}.`);
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+/** A capability-redacted text field may be absent, but cannot silently coerce malformed data. */
+function optionalText(value: unknown, field: string): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === 'string') return value.trim();
+  incomplete(`The response included an invalid ${field}.`);
 }
 
 function requiredStrings(value: unknown, field: string): string[] {
@@ -410,6 +559,26 @@ export function buildRequestBootstrapPath({ page, pageSize, query, filter }: Req
   if (normalizedQuery) params.set('query', normalizedQuery);
   if (normalizedFilter) params.set('filter', normalizedFilter);
   return `/api/bootstrap/request?${params.toString()}`;
+}
+
+/** Builds the exact bounded same-origin Lending bootstrap URL for one server page. */
+export function buildLendingBootstrapPath({ page, pageSize }: LendingBootstrapOptions = {}) {
+  const params = new URLSearchParams({
+    page: String(positiveInteger(page, 1)),
+    pageSize: String(Math.min(positiveInteger(pageSize, 25), 50)),
+  });
+  return `/api/bootstrap/lending?${params.toString()}`;
+}
+
+function lendingMutationReceipt(payload: Json, field: string): FrontendLendingMutationReceipt {
+  const ticketId = asString(payload.ticketId) || asString(payload.id);
+  if (!ticketId) incomplete(`The ${field} receipt did not include ticketId.`);
+  return {
+    ticketId,
+    status: requiredString(payload.status, `${field} receipt.status`),
+    replayed: payload.replayed === true,
+    correlationId: asString(payload.correlationId),
+  };
 }
 
 function projectProfile(value: unknown): FrontendProfile {
@@ -719,6 +888,215 @@ export class FrontendBackend {
       },
       scopeRevision: projectScopeRevision(payload.scopeRevision, 'request scopeRevision'),
     };
+  }
+
+  /**
+   * FI-07: project the canonical authenticated lending queue and fail closed on
+   * a wrong module/version/request-only payload or any partial queue row.
+   */
+  async lendingBootstrap(options: LendingBootstrapOptions = {}): Promise<FrontendLendingBootstrap> {
+    const payload = await this.request(buildLendingBootstrapPath(options), {
+      method: 'GET',
+      signal: options.signal,
+    });
+    if (
+      payload.ok !== true ||
+      asString(payload.contract) !== 'bootstrap-module' ||
+      asString(payload.module) !== 'lending' ||
+      requiredNumber(payload.contractVersion, 'lending bootstrap contractVersion') !== 2 ||
+      payload.requestOnly !== false
+    ) {
+      incomplete('The response did not match the authenticated Lending bootstrap v2 contract.');
+    }
+    const data = requiredRecord(payload.data, 'lending bootstrap data');
+    const mapAsset = (row: Json): FrontendLendingAssetOption => {
+      const status = requiredString(row.status, 'assetOptions.status');
+      if (status !== 'AVAILABLE') {
+        incomplete('The response included an asset option that is not an available review candidate.');
+      }
+      return {
+        id: requiredString(row.id, 'assetOptions.id'),
+        itemId: requiredString(row.itemId, 'assetOptions.itemId'),
+        assetTag: requiredText(row.assetTag, 'assetOptions.assetTag'),
+        serialNumber: requiredText(row.serialNumber, 'assetOptions.serialNumber'),
+        condition: requiredText(row.condition, 'assetOptions.condition'),
+        status,
+      };
+    };
+    const mapHistory = (row: Json): FrontendLendingHistoryEntry => ({
+      previousStatus: requiredText(row.previousStatus, 'history.previousStatus'),
+      newStatus: requiredString(row.newStatus, 'history.newStatus'),
+      changedAt: requiredString(row.changedAt, 'history.changedAt'),
+      changedBy: requiredText(row.changedBy, 'history.changedBy'),
+      reason: requiredText(row.reason, 'history.reason'),
+      metadata: requiredRecord(row.metadata, 'history.metadata'),
+    });
+    const mapTicket = (row: Json): FrontendLendingTicket => ({
+      id: requiredString(row.id, 'lendingTickets.id'),
+      itemId: requiredString(row.itemId, 'lendingTickets.itemId'),
+      requestedItemId: requiredString(row.requestedItemId, 'lendingTickets.requestedItemId'),
+      quantity: requiredNumber(row.quantity, 'lendingTickets.quantity'),
+      requestedQuantity: requiredNumber(row.requestedQuantity, 'lendingTickets.requestedQuantity'),
+      unit: requiredString(row.unit, 'lendingTickets.unit'),
+      studentIdNumber: requiredText(row.studentIdNumber, 'lendingTickets.studentIdNumber'),
+      borrowerName: requiredText(row.borrowerName, 'lendingTickets.borrowerName'),
+      borrowerType: requiredString(row.borrowerType, 'lendingTickets.borrowerType'),
+      department: requiredText(row.department, 'lendingTickets.department'),
+      contact: requiredText(row.contact, 'lendingTickets.contact'),
+      email: requiredText(row.email, 'lendingTickets.email'),
+      courseYear: requiredText(row.courseYear, 'lendingTickets.courseYear'),
+      positionRole: requiredText(row.positionRole, 'lendingTickets.positionRole'),
+      purpose: requiredText(row.purpose, 'lendingTickets.purpose'),
+      dueAt: requiredText(row.dueAt, 'lendingTickets.dueAt'),
+      requestedStartAt: requiredText(row.requestedStartAt, 'lendingTickets.requestedStartAt'),
+      requestedEndAt: requiredText(row.requestedEndAt, 'lendingTickets.requestedEndAt'),
+      ticketType: requiredString(row.ticketType, 'lendingTickets.ticketType'),
+      status: requiredString(row.status, 'lendingTickets.status'),
+      reviewDecision: requiredText(row.reviewDecision, 'lendingTickets.reviewDecision'),
+      reviewNotes: requiredText(row.reviewNotes, 'lendingTickets.reviewNotes'),
+      rejectionReason: requiredText(row.rejectionReason, 'lendingTickets.rejectionReason'),
+      substitutionNote: requiredText(row.substitutionNote, 'lendingTickets.substitutionNote'),
+      eligibilitySource: requiredText(row.eligibilitySource, 'lendingTickets.eligibilitySource'),
+      eligibilityReviewedBy: requiredText(row.eligibilityReviewedBy, 'lendingTickets.eligibilityReviewedBy'),
+      eligibilityReviewedAt: requiredText(row.eligibilityReviewedAt, 'lendingTickets.eligibilityReviewedAt'),
+      assetOptions: requiredRecords(row.assetOptions, 'lendingTickets.assetOptions').map(mapAsset),
+      history: requiredRecords(row.history, 'lendingTickets.history').map(mapHistory),
+      createdAt: requiredString(row.createdAt, 'lendingTickets.createdAt'),
+      updatedAt: requiredString(row.updatedAt, 'lendingTickets.updatedAt'),
+    });
+    const mapInventoryItem = (row: Json): FrontendLendingInventoryItem => {
+      const storageLocation = optionalText(row.storageLocation, 'inventoryItems.storageLocation');
+      const conditionReviewState = optionalText(
+        row.conditionReviewState,
+        'inventoryItems.conditionReviewState',
+      );
+      const maintenanceReviewState = optionalText(
+        row.maintenanceReviewState,
+        'inventoryItems.maintenanceReviewState',
+      );
+      const availableToPromise = optionalNumber(row.availableToPromise, 'inventoryItems.availableToPromise');
+      const lendableAvailable = optionalNumber(row.lendableAvailable, 'inventoryItems.lendableAvailable');
+      const readyToClaim = optionalNumber(row.readyToClaim, 'inventoryItems.readyToClaim');
+      const onLoan = optionalNumber(row.onLoan, 'inventoryItems.onLoan');
+      const overdue = optionalNumber(row.overdue, 'inventoryItems.overdue');
+      const damaged = optionalNumber(row.damaged, 'inventoryItems.damaged');
+      const maintenance = optionalNumber(row.maintenance, 'inventoryItems.maintenance');
+      const traceableAssets = optionalNumber(row.traceableAssets, 'inventoryItems.traceableAssets');
+      const availableAssets = optionalNumber(row.availableAssets, 'inventoryItems.availableAssets');
+      const maximumLoanQuantity = optionalNumber(
+        row.maximumLoanQuantity,
+        'inventoryItems.maximumLoanQuantity',
+      );
+      return {
+        id: requiredString(row.id, 'inventoryItems.id'),
+        name: requiredString(row.name, 'inventoryItems.name'),
+        category: requiredString(row.category, 'inventoryItems.category'),
+        unit: requiredString(row.unit, 'inventoryItems.unit'),
+        status: requiredString(row.status, 'inventoryItems.status'),
+        catalogType: requiredText(row.catalogType, 'inventoryItems.catalogType'),
+        stockArea: requiredText(row.stockArea, 'inventoryItems.stockArea'),
+        ...(storageLocation ? { storageLocation } : {}),
+        isLendable: requiredBoolean(row.isLendable, 'inventoryItems.isLendable'),
+        lendingKind: requiredText(row.lendingKind, 'inventoryItems.lendingKind'),
+        lendingStatus: requiredText(row.lendingStatus, 'inventoryItems.lendingStatus'),
+        lendingAudience: requiredText(row.lendingAudience, 'inventoryItems.lendingAudience'),
+        eligibilityRule: requiredText(row.eligibilityRule, 'inventoryItems.eligibilityRule'),
+        conditionTracked: requiredBoolean(row.conditionTracked, 'inventoryItems.conditionTracked'),
+        ...(conditionReviewState ? { conditionReviewState } : {}),
+        ...(maintenanceReviewState ? { maintenanceReviewState } : {}),
+        ...(availableToPromise !== undefined ? { availableToPromise } : {}),
+        ...(lendableAvailable !== undefined ? { lendableAvailable } : {}),
+        ...(readyToClaim !== undefined ? { readyToClaim } : {}),
+        ...(onLoan !== undefined ? { onLoan } : {}),
+        ...(overdue !== undefined ? { overdue } : {}),
+        ...(damaged !== undefined ? { damaged } : {}),
+        ...(maintenance !== undefined ? { maintenance } : {}),
+        ...(traceableAssets !== undefined ? { traceableAssets } : {}),
+        ...(availableAssets !== undefined ? { availableAssets } : {}),
+        ...(maximumLoanQuantity !== undefined ? { maximumLoanQuantity } : {}),
+      };
+    };
+    const pagination = requiredRecord(payload.pagination, 'lending pagination');
+    const scopeRevision = projectScopeRevision(payload.scopeRevision, 'lending scopeRevision');
+    if (!scopeRevision) incomplete('The response did not include lending scopeRevision.');
+    return {
+      lendingTickets: requiredRecords(data.lendingTickets, 'lendingTickets').map(mapTicket),
+      inventoryItems: requiredRecords(data.inventoryItems, 'inventoryItems').map(mapInventoryItem),
+      pagination: {
+        page: requiredPositiveInteger(pagination.page, 'lending pagination.page'),
+        pageSize: requiredPositiveInteger(pagination.pageSize, 'lending pagination.pageSize', 50),
+        total: requiredNonNegativeInteger(pagination.total, 'lending pagination.total'),
+        hasMore: requiredBoolean(pagination.hasMore, 'lending pagination.hasMore'),
+      },
+      scopeRevision,
+    };
+  }
+
+  async approveLendingTicket(command: {
+    ticketId: string;
+    decision: 'APPROVE' | 'PARTIAL_APPROVE' | 'SUBSTITUTE' | 'REJECT';
+    identityVerified?: boolean;
+    identityVerificationSource?: string;
+    approvedQuantity?: number;
+    substitutionItemId?: string;
+    reviewReason?: string;
+    reviewNotes?: string;
+    assetIds?: string[];
+    clientRequestId: string;
+  }): Promise<FrontendLendingMutationReceipt> {
+    return lendingMutationReceipt(
+      await this.request('/api/approveLendingTicket', { body: command, csrf: true }),
+      'lending review',
+    );
+  }
+
+  async confirmLendingHandoff(command: {
+    ticketId: string;
+    conditionLabel?: string;
+    notes?: string;
+    clientRequestId: string;
+  }): Promise<FrontendLendingMutationReceipt> {
+    return lendingMutationReceipt(
+      await this.request('/api/confirmLendingHandoff', { body: command, csrf: true }),
+      'lending handoff',
+    );
+  }
+
+  async uploadLendingReturnEvidence(command: {
+    evidenceType: 'LENDING_RETURN_PHOTO';
+    relatedEntityType: 'LENDING';
+    relatedEntityId: string;
+    lendingTicketId: string;
+    originalFileName: string;
+    mimeType: string;
+    base64: string;
+    clientRequestId: string;
+  }): Promise<FrontendEvidenceReceipt> {
+    const payload = await this.request('/api/uploadEvidence', { body: command, csrf: true });
+    const evidenceId = asString(payload.evidenceId) || asString(payload.id);
+    if (!evidenceId) incomplete('The lending evidence receipt did not include evidenceId.');
+    return {
+      evidenceId,
+      uploadStatus: requiredString(payload.uploadStatus, 'lending evidence receipt.uploadStatus'),
+      duplicate: payload.duplicate === true,
+      correlationId: asString(payload.correlationId),
+    };
+  }
+
+  async confirmLendingReturn(command: {
+    ticketId: string;
+    conditionLabel: string;
+    evidenceId: string;
+    returnedQuantity: number;
+    lostQuantity: number;
+    damagedBeyondUseQuantity: number;
+    notes?: string;
+    clientRequestId: string;
+  }): Promise<FrontendLendingMutationReceipt> {
+    return lendingMutationReceipt(
+      await this.request('/api/confirmReturn', { body: command, csrf: true }),
+      'lending return',
+    );
   }
 
   async reviewRequest(command: {

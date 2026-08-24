@@ -3,6 +3,7 @@ import { AuthPlaceholderRoute } from '../../app/auth/AuthPlaceholderRoute';
 import { ProfileRoute } from '../../app/profile/ProfileRoute';
 import { InventoryRoute } from '../../app/inventory/InventoryRoute';
 import { InternalRequestHub } from '../../app/request/InternalRequestHub';
+import { InternalLendingHub } from '../../app/lending/InternalLendingHub';
 import { ExternalRequestCenter } from '../../app/request/ExternalRequestCenter';
 import { AuthenticatedShell } from '../../app/shell/AuthenticatedShell';
 import { LOCAL_PREVIEW_OPERATOR } from '../../app/shell/presentation';
@@ -75,6 +76,16 @@ export function PreviewInspectionRoute({
         <InventoryRoute dark={dark} navigate={onOpenRoute} inspection />
       ) : authRoute === 'request-center' ? (
         <InternalRequestHub dark={dark} navigate={onOpenRoute} inspection canReviewRequests />
+      ) : authRoute === 'lending' ? (
+        <InternalLendingHub
+          dark={dark}
+          navigate={onOpenRoute}
+          inspection
+          canApproveLending
+          canHandoffLending
+          canReturnLending
+          canUploadLendingEvidence
+        />
       ) : (
         <AuthPlaceholderRoute route={authRoute} />
       )}

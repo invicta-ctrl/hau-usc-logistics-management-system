@@ -117,6 +117,12 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
     page.locator('[data-preview-route="landing"] [data-preview-entry-meta="backend"] dd'),
   ).toHaveText('REAL BACKEND');
   await expect(
+    page.locator('[data-preview-route="lending"] [data-preview-entry-meta="status"] dd'),
+  ).toHaveText('ACCEPTED');
+  await expect(
+    page.locator('[data-preview-route="lending"] [data-preview-entry-meta="backend"] dd'),
+  ).toHaveText('REAL BACKEND');
+  await expect(
     page.locator('[data-preview-route="overview"] [data-preview-entry-meta="status"] dd'),
   ).toHaveText('SURFACE PREVIEW');
   await expect(
@@ -134,7 +140,7 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   await page.locator('[data-filter="PUBLIC"]').click();
   await expect(page.locator('[data-preview-route]')).toHaveCount(4);
   await page.locator('[data-filter="PREVIEW_ONLY"]').click();
-  await expect(page.locator('[data-preview-route]')).toHaveCount(9);
+  await expect(page.locator('[data-preview-route]')).toHaveCount(6);
   await page.locator('[data-filter="IN_PROGRESS"]').click();
   await expect(page.locator('[data-preview-empty]')).toBeVisible();
   await expect(page.locator('[data-preview-count]')).toHaveText('0 routes');

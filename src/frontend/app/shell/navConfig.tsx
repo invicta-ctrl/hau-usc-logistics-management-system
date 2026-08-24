@@ -22,8 +22,8 @@ export type NavItem = {
 export const NAV_OPERATIONS: NavItem[] = [
   { route: 'overview', label: 'Overview', Icon: LayoutDashboard },
   { route: 'inventory', label: 'Inventory', Icon: Package },
-  { route: 'request-center', label: 'Request Center', Icon: ClipboardList },
-  { route: 'lending', label: 'Lending', Icon: ArrowRightLeft },
+  { route: 'request-center', label: 'Internal Request Hub', Icon: ClipboardList },
+  { route: 'lending', label: 'Internal Lending Hub', Icon: ArrowRightLeft },
   { route: 'release', label: 'Release', Icon: ArrowUpFromLine },
   { route: 'restocking', label: 'Restocking', Icon: RefreshCw },
   { route: 'procurement', label: 'Procurement', Icon: ShoppingCart },
@@ -37,8 +37,8 @@ export const NAV_ADMINISTRATION: NavItem[] = [
 
 export const MOBILE_DOCK: NavItem[] = [
   { route: 'overview', label: 'Overview', Icon: LayoutDashboard },
-  { route: 'request-center', label: 'Requests', Icon: ClipboardList },
-  { route: 'lending', label: 'Lending', Icon: ArrowRightLeft },
+  { route: 'request-center', label: 'Internal Request Hub', Icon: ClipboardList },
+  { route: 'lending', label: 'Internal Lending Hub', Icon: ArrowRightLeft },
   { route: 'inventory', label: 'Inventory', Icon: Package },
   { route: 'release', label: 'Release', Icon: ArrowUpFromLine },
 ];

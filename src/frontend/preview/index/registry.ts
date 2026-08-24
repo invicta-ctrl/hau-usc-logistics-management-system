@@ -115,14 +115,14 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
   Object.freeze({
     id: 'lending',
     route: 'lending',
-    label: 'Lending Hub',
+    label: 'Internal Lending Hub',
     group: 'STAFF',
     description:
-      'Authenticated lending hub surface with preserved visual components and no active backend calls.',
-    implementationStatus: 'SURFACE_PREVIEW',
-    backendStatus: 'VISUAL_ONLY',
+      'DOL-only lending queue projected from the strict lending bootstrap; local inspection uses a deterministic no-network fixture and action simulation.',
+    implementationStatus: 'ACCEPTED',
+    backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
-    previewMode: 'SURFACE_PREVIEW',
+    previewMode: 'REAL_MODULE',
   }),
   Object.freeze({
     id: 'release',

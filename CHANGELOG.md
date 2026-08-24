@@ -10,6 +10,27 @@
 
 ## Unreleased
 
+### FI-07 Internal Lending Hub frontend integration
+
+- Accepted the DOL-only Internal Lending Hub as a strict, capability-gated
+  operational counterpart to Public Lending. It projects the existing lending
+  bootstrap v2 contract and sends only existing review, handoff/issue, governed
+  evidence-upload, and return commands; server scope, identity, availability,
+  custody, evidence, lifecycle, and idempotency remain authoritative.
+- Added truthful loaded-page queue/search/pagination, responsive table/cards and
+  inspector, derived display-only overdue, review/traceable-candidate handling,
+  exact return reconciliation, recovery receipts, and accessible modal/focus
+  behavior. Traceable or unknown reusable return state now fails closed on mixed
+  outcome buckets while verified aggregate and consumable semantics remain
+  explicit.
+- Added deterministic local-only A4 Preview Index demonstrations for review,
+  issue, and return, each with zero protected session/bootstrap/mutation/evidence
+  traffic. Sol independently accepted the exact candidate with no findings;
+  deterministic frontend artifacts are SHA-256
+  `707A00FDF4DC4BC6EB2C2053007B21F9997A9D51ADDF65F7EE1B65CAA091F738`.
+- No backend/Worker/auth/permission/schema/migration/provider/Figma/Playground/
+  Production/deployment/D1/R2 mutation occurred. FI-08 remains intake-only.
+
 ### FI-06 Internal Request Hub frontend integration
 
 - Accepted the DOL-only Internal Request Hub as a real, capability-gated Request
