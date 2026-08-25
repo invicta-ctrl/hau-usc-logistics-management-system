@@ -1,23 +1,24 @@
 # Current Work Pointer — frontend-design-integration
 
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
-MILESTONE: R1_FI08R_RELEASE_DESK_ACCEPTANCE_REPAIR
-STATUS: FI08R_ACCEPTANCE_REPAIR__VERIFIED
-PHASE: FI08R_CLOSED__AWAITING_NEXT_OWNER_AUTHORIZATION
+MILESTONE: R1_FI09_RESTOCKING_PROCUREMENT_RECEIVING_FRONTEND_INTEGRATION
+STATUS: FI09_CLOSED__SOL_ACCEPTED
+PHASE: FI09_CLOSED__SOL_ACCEPTED__COMMITTED_PUSHED
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
+START_HEAD: 8dc595b80a3eabe3aab550e698c4c7f279776fd3
 PRODUCT_HEAD_AT_CLOSURE_HANDSHAKE: 8120cf78f653d06a66f7bd37a3feba17543ccdd5 (FI-08 product implementation; pushed before the separate closure-documentation commit)
 CLOSURE_DOCUMENTATION_COMMIT: GIT_HEAD (dynamic closure-only commit marker; distinct from FI08_PRODUCT_COMMIT)
-UPSTREAM: origin/frontend-design-integration (closure documentation is pushed separately; FI08_PRODUCT_COMMIT remains the product implementation)
+UPSTREAM: origin/frontend-design-integration @ GIT_HEAD (FI-09 closure push verified after commit)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: DIRTY__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
 ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED__FI08R_COMPLETED
-HANDOFF_STATUS: READY_FOR_HANDOFF__FI08R_CLOSED__SOL_ACCEPTED
+WRITER_LOCK: RELEASED__FI09_SOL_ACCEPTED
+HANDOFF_STATUS: FI09_CLOSED__SOL_ACCEPTED__COMMITTED_PUSHED
 REQUIRED_MODEL: GPT-5.6 Terra / Max sole frontend writer; GPT-5.6 Sol remains read-only orchestration and final acceptance
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-25-fi08-release-desk-frontend-integration.md
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi09-restocking-procurement-receiving-frontend-integration.md
 FI07_ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi07-internal-lending-hub-frontend-integration.md
 FI08_PACKET_STATUS: ACCEPTED_BASELINE__FI08R_REPAIRED_REVERIFIED_CLOSED__OWNER_AUTHORIZED_2026-08-26
 FI08_INTAKE_HISTORY: 2026-08-24 intake-only state completed; superseded for this bounded slice by Earl's explicit 2026-08-25 execution authorization
@@ -39,10 +40,17 @@ FI08_BASELINE_VERIFICATION: Focused units 13/13; targeted Preview Index Playwrig
 FI08R_REQUIRED_REPAIR: Only Focused task preview-state rendering and truthful Release Details/Focused Release Task keyboard-focus lifecycle: entry focus, Tab/Shift+Tab containment, Escape dismissal, and safe focus restoration. No visual redesign or backend/auth/provider behavior change.
 FI08R_VERIFICATION: Focused static unit 3/3 passed. Exact canonical-4173 FI-08R Playwright ran serially 5/5 at 320/390/768/1024/1440 and proved Focused task visibility; dialog entry focus; Tab/Shift+Tab containment; Escape; exact detail/task restoration; successful-confirmation focus to Next release; and zero protected requests. Fresh 390px browser inspection found heading `Confirm physical release`, one task/detail dialog as invoked, focus inside each active dialog, visible 3px outline, and zero horizontal overflow. Console contained only the known out-of-scope `/favicon.ico` 404. `npm.cmd run build`, `npm.cmd run verify:dist`, `npm.cmd run check:continuation` (14 required fields), `npm.cmd run handoff:verify`, and `git diff --check` passed; deterministic `dist/index.html` and `HAU-USC_Logistics-Frontend-Shareable.html` share SHA-256 `A6D5B764A695A53F6F0E37EE4566478CE76C73282DFBDEBE08B8A5AEB0BFE9BB`.
 FI08R_RECEIPT: .codex/FI08R_RELEASE_DESK_ACCEPTANCE_REPAIR_RECEIPT.md
+FI09_PACKET_STATUS: CLOSED__SOL_ACCEPTED__COMMITTED_PUSHED
+FI09_AUTHORITY: Earl's FI09-FI17-SOL-COGNEE-2026-08-26 attachment; TOKEN-OPT-001-A8; .agents/PROJECT_POLICY.md; accepted A3/A4 Preview Index authority; repository route/authorization contracts; live authenticated Make-v44 evidence recorded by Sol.
+FI09_SCOPE: Bounded local deterministic Make-v44 SupplyRoutes integration for authenticated restocking and procurement plus A4 inspection, truthful VISUAL_ONLY registry metadata, semantic task-dialog hardening, and focused verification. No backend adapter or supply-domain write is accepted.
+FI09_IMPLEMENTATION: Authenticated restocking and procurement plus trusted A4 inspection now render the existing SupplyRoutes module; registry truth is ACCEPTED / VISUAL_ONLY / AUTHENTICATED / REAL_MODULE; bounded task-dialog focus semantics and deterministic Selected record truth are present; Procurement now has responsive local equivalents for Canvassing and Deliverables below the preserved table breakpoint.
+FI09_VERIFICATION: Focused FI-09 unit 5/5 passed. Exact canonical-4173 FI-09 Preview Index behavior ran serially 5/5 at 320/390/768/1024/1440, proving no protected traffic or console errors, no horizontal overflow, cumulative PO-2026-0031 truth, panel behavior, Escape and confirm-path task focus restoration, and synthetic confirmation text. `npm.cmd run build`, `npm.cmd run verify:dist` (SHA-256 4D40970A5FDA1718450DE5903029582ED7D9E9437FFDB71E4D9EFB4AA12781C1), `npm.cmd run check:continuation`, `npm.cmd run handoff:verify`, and `git diff --check` passed. Sol accepted with no actionable findings; Hallmark accepted 0 critical/0 major/0 minor; Impeccable accepted 20/20.
+FI09_RECEIPT: .codex/FI09_SUPPLY_OPERATIONS_RECEIPT.md
 FI08_REVIEW: Parent Hallmark + Impeccable FI-08 baseline closure accepted the bounded integration. The only detector advisory is the pre-existing out-of-diff `#fff4d6` Preview Inspection banner color. No ReleaseDeskRoute visual rewrite was authorized or needed.
 FI08R_REVIEW: Sol final pre-commit code/test review accepted FI-08R with NO ACTIONABLE FINDINGS. Bounded Hallmark audit found 0 critical/0 major/0 minor FI-08R issues. Impeccable interaction audit accepted entry focus, containment, Escape, restoration, responsive behavior, and semantics; its only detector advisories are unchanged/out-of-diff current CSS duplicate-side-tab plus `#120b0bba`/`#b12630` items.
 DELEGATION_LEDGER:
 
+- writer=/root/fi09_terra_writer | model=gpt-5.6-terra | reasoning=max | role=FI-09 sole canonical frontend writer | mode=execute | scope=accepted Restocking/Procurement/Receiving frontend integration, A4 Preview Index wiring, semantic focus hardening, verification, and closure | owned=FI-09 packet/current-chain/receipt,AppRouteRenderer,SupplyRoutes,PreviewInspectionRoute,registry,FI-09 unit test,bounded Preview Index additions,accepted generated artifacts | excluded=backend/auth/permissions/schema/migration/provider/Figma/Make/Playground/Production/main/deployments/.ai-bridge/FI-10+ | status=COMPLETED__RELEASED__SOL_ACCEPTED | evidence=focused unit 5/5; exact-4173 matrix 5/5; build/dist SHA; Sol/Hallmark/Impeccable acceptance.
 - writer=/root/fi05_inventory_writer | model=gpt-5.6-terra | role=FI-06 predecessor writer | mode=execute | scope=initial FI-06 integration handoff | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=RELEASED | evidence=FI-05 lock-release transfer records.
 - writer=/root/fi06_request_hub_writer | model=gpt-5.6-terra | role=FI-06 successor sole canonical integration writer | mode=execute | scope=accepted FI-06 frontend integration, artifacts, and continuity closeout | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=COMPLETED | evidence=.codex/FI06_INTERNAL_REQUEST_HUB_RECEIPT.md.
 - writer=/root/fi07_lending_hub_writer | model=gpt-5.6-terra | role=FI-07 sole canonical integration writer | mode=execute | scope=accepted internal lending frontend, A4 preview fixture, focused tests/artifacts/continuity | owned=FI-07 docs + approved frontend paths | excluded=backend/auth/permissions/schema/provider/Figma/deployments/.ai-bridge/FI-08+ | status=COMPLETED__RELEASED | evidence=independent Sol ACCEPTED_NO_FINDINGS, root independent evidence, and deterministic artifact SHA-256 707A00FDF4DC4BC6EB2C2053007B21F9997A9D51ADDF65F7EE1B65CAA091F738.
@@ -50,10 +58,10 @@ DELEGATION_LEDGER:
 - writer=/root/fi08r_terra_writer | model=gpt-5.6-terra | reasoning=max | role=FI-08R sole canonical frontend writer | mode=execute | scope=two owner-reproduced Release Desk acceptance defects, behavioral regression coverage, generated artifacts, and continuity closeout | owned=.codex/CURRENT.md,.codex/CURRENT_TASK.md,.codex/CURRENT_HANDOFF.md,.codex/FI08R_RELEASE_DESK_ACCEPTANCE_REPAIR_RECEIPT.md,src/frontend/app/ReleaseDeskRoute.tsx,tests/unit/fi08-release-desk.test.js,tests/e2e/preview-index.spec.js,dist/index.html,HAU-USC_Logistics-Frontend-Shareable.html | excluded=backend/auth/permissions/schema/migration/provider/Figma/Make/Playground/Production/main/deployments/.ai-bridge/FI-09+ | status=COMPLETED__LOCK_RELEASED__SOL_ACCEPTED | evidence=focused unit 3/3; serial exact-4173 FI-08R Playwright 5/5; browser focus/outline/overflow/console review; build/dist artifact SHA; Sol/Hallmark/Impeccable final acceptance.
 
 FI07_RECEIPT: .codex/FI07_INTERNAL_LENDING_HUB_RECEIPT.md
-BLOCKER: NONE — FI-08R and FI-08 are closed. Do not begin FI-09, deployment, backend work, a visual redesign, or another product slice without Earl's explicit authorization.
+BLOCKER: NONE — FI-09 is closed and accepted. Preserve all scope boundaries; FI-10 implementation remains out of scope pending its own preflight and handshake.
 PREVIEW_TARGET: http://127.0.0.1:4173/
 PREVIEW_STATUS: RUNNING__HEALTHY__VERIFIED_2026-08-26
-NEXT_EXACT_ACTION: Await Earl's explicit authorization for FI-09.
+NEXT_EXACT_ACTION: Begin the already owner-authorized FI-10 Accounts/Directory/Activity History preflight only; do not implement FI-10 until its bounded authority, current pointer, and repository handshake are established.
 
 ## Active A4 preview inspection
 

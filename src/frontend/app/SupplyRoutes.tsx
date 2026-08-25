@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 type Mode = "restocking" | "procurement" | "events";
 type Prev =
   | "Populated"
@@ -11,6 +11,43 @@ type Prev =
   | "Denied"
   | "Unavailable"
   | "Locally confirmed";
+const focusableSelector = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
+const focusableIn = (dialog: HTMLElement) =>
+  Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+    (element) =>
+      element.getAttribute("aria-hidden") !== "true" &&
+      element.offsetParent !== null,
+  );
+const focusDialog = (dialog: HTMLElement | null) => {
+  if (!dialog) return;
+  (focusableIn(dialog)[0] || dialog).focus({ preventScroll: true });
+};
+const keepFocusInDialog = (event: KeyboardEvent, dialog: HTMLElement) => {
+  if (event.key !== "Tab") return;
+  const targets = focusableIn(dialog);
+  if (!targets.length) {
+    event.preventDefault();
+    dialog.focus({ preventScroll: true });
+    return;
+  }
+  const first = targets[0];
+  const last = targets[targets.length - 1];
+  const active = document.activeElement;
+  if (event.shiftKey && (active === first || !dialog.contains(active))) {
+    event.preventDefault();
+    last.focus({ preventScroll: true });
+  } else if (!event.shiftKey && (active === last || !dialog.contains(active))) {
+    event.preventDefault();
+    first.focus({ preventScroll: true });
+  }
+};
 export default function SupplyRoutes({
   dark,
   mode,
@@ -25,6 +62,46 @@ export default function SupplyRoutes({
     [panel, setPanel] = useState("Canvassing"),
     [task, setTask] = useState(""),
     [notice, setNotice] = useState("");
+  const taskDialogRef = useRef<HTMLElement | null>(null);
+  const taskTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const openTask = (kind: string, opener?: HTMLButtonElement | null) => {
+    if (opener) taskTriggerRef.current = opener;
+    setTask(kind);
+  };
+  const closeTask = () => {
+    const restoreTarget = taskTriggerRef.current;
+    setTask("");
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        (restoreTarget?.isConnected ? restoreTarget : null)?.focus({
+          preventScroll: true,
+        }),
+      ),
+    );
+  };
+  useEffect(() => {
+    if (mode !== "restocking" || prev !== "Selected record") return;
+    setSelected("RST-2026-0044");
+  }, [mode, prev]);
+  useEffect(() => {
+    if (!task) return;
+    const frame = requestAnimationFrame(() => focusDialog(taskDialogRef.current));
+    return () => cancelAnimationFrame(frame);
+  }, [task]);
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const dialog = taskDialogRef.current;
+      if (!task || !dialog) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeTask();
+        return;
+      }
+      keepFocusInDialog(event, dialog);
+    };
+    addEventListener("keydown", onKeyDown);
+    return () => removeEventListener("keydown", onKeyDown);
+  }, [task]);
   const states = [
     "Populated",
     "Loading",
@@ -161,7 +238,7 @@ export default function SupplyRoutes({
               <Restocking
                 selected={selected}
                 setSelected={setSelected}
-                setTask={setTask}
+                setTask={openTask}
               />
             ) : mode === "procurement" ? (
               <Procurement
@@ -174,7 +251,7 @@ export default function SupplyRoutes({
               <Events
                 selected={selected}
                 setSelected={setSelected}
-                setTask={setTask}
+                setTask={openTask}
               />
             )}
           </div>
@@ -183,10 +260,11 @@ export default function SupplyRoutes({
       {task && (
         <Task
           kind={task}
-          close={() => setTask("")}
+          close={closeTask}
+          dialogRef={taskDialogRef}
           invalid={prev === "Validation error"}
           confirm={() => {
-            setTask("");
+            closeTask();
             setPrev("Locally confirmed");
             setNotice(
               "Locally confirmed · synthetic fixture only · no service write",
@@ -233,7 +311,7 @@ function Restocking({
 }: {
   selected: string;
   setSelected: (x: string) => void;
-  setTask: (x: string) => void;
+  setTask: (x: string, opener?: HTMLButtonElement | null) => void;
 }) {
   const rows = [
     [
@@ -286,7 +364,7 @@ function Restocking({
               aria-label="Search restocking records"
               placeholder="Request or item"
             />
-            <button onClick={() => setTask("restock")}>
+            <button onClick={(event) => setTask("restock", event.currentTarget)}>
               Restock an item
             </button>
           </div>
@@ -358,7 +436,7 @@ function Restocking({
               </dl>
               <button
                 className="primary"
-                onClick={() => setTask("receive")}
+                onClick={(event) => setTask("receive", event.currentTarget)}
               >
                 Receiving
               </button>
@@ -437,6 +515,7 @@ function Procurement({
           <b>Selected record persists</b>
         </div>
         {panel === "Canvassing" ? (
+          <>
           <table>
             <thead>
               <tr>
@@ -484,6 +563,37 @@ function Procurement({
               </tr>
             </tbody>
           </table>
+          <div className="cards">
+            <article>
+              <div>
+                <b>PRC-2026-0044</b>
+                <em>Canvassing</em>
+              </div>
+              <h3>Wireless microphone ×12</h3>
+              <p>3 quotes · Supplier A · lowest compliant</p>
+              <button
+                className="primary"
+                onClick={() => setSelected("PRC-2026-0044")}
+              >
+                Open procurement
+              </button>
+            </article>
+            <article>
+              <div>
+                <b>PRC-2026-0041</b>
+                <em>Awaiting approval</em>
+              </div>
+              <h3>Folding chair ×120</h3>
+              <p>3 quotes · Supplier B · approval pending</p>
+              <button
+                className="primary"
+                onClick={() => setSelected("PRC-2026-0041")}
+              >
+                Open procurement
+              </button>
+            </article>
+          </div>
+          </>
         ) : panel === "Suppliers" ? (
           <div className="dense">
             <article>
@@ -503,6 +613,7 @@ function Procurement({
             <p>No price, award, or contract is invented.</p>
           </div>
         ) : (
+          <>
           <table>
             <thead>
               <tr>
@@ -542,6 +653,25 @@ function Procurement({
               </tr>
             </tbody>
           </table>
+          <div className="cards">
+            <article>
+              <div>
+                <b>DLV-2026-0022</b>
+                <em>Received</em>
+              </div>
+              <h3>Sound system hire</h3>
+              <p>EVT-2026-009 · Day 1 · 1 of 1 received</p>
+            </article>
+            <article>
+              <div>
+                <b>DLV-2026-0019</b>
+                <em>Ordered</em>
+              </div>
+              <h3>Food packs ×500</h3>
+              <p>EVT-2026-009 · Day 2 · 0 of 1 received</p>
+            </article>
+          </div>
+          </>
         )}
       </section>
     </>
@@ -554,7 +684,7 @@ function Events({
 }: {
   selected: string;
   setSelected: (x: string) => void;
-  setTask: (x: string) => void;
+  setTask: (x: string, opener?: HTMLButtonElement | null) => void;
 }) {
   return (
     <>
@@ -574,7 +704,7 @@ function Events({
               <p className="eye">Event series</p>
               <h2>Series and governed relationships</h2>
             </div>
-            <button onClick={() => setTask("event")}>
+            <button onClick={(event) => setTask("event", event.currentTarget)}>
               New event
             </button>
           </div>
@@ -696,23 +826,33 @@ function Cards({
 function Task({
   kind,
   close,
+  dialogRef,
   invalid,
   confirm,
 }: {
   kind: string;
   close: () => void;
+  dialogRef: React.RefObject<HTMLElement | null>;
   invalid: boolean;
   confirm: () => void;
 }) {
   return (
     <div className="veil">
-      <section className="task" role="dialog" aria-modal="true">
+      <section
+        ref={dialogRef}
+        className="task"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="supply-task-title"
+        aria-describedby="supply-task-description"
+        tabIndex={-1}
+      >
         <p className="eye">
           {kind === "event"
             ? "New event"
             : "Record-native task"}
         </p>
-        <h2>
+        <h2 id="supply-task-title">
           {kind === "event"
             ? "Create synthetic event"
             : "Update selected supply record"}
@@ -747,9 +887,10 @@ function Task({
         {invalid && (
           <p role="alert">Complete required fields.</p>
         )}
-        <p className="warning">
-          Local prototype only. No inventory, procurement,
-          event, or ledger write.
+        <p id="supply-task-description" className="warning">
+          Local prototype only. No inventory, procurement, receiving,
+          event, or ledger write. Receiving values are cumulative and prior
+          receipts remain unchanged.
         </p>
         <div className="actions">
           <button className="primary" onClick={confirm}>

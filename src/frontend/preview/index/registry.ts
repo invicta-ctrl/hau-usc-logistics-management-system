@@ -142,11 +142,11 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Restocking',
     group: 'STAFF',
     description:
-      'Authenticated restocking surface with preserved visual components and no active backend calls.',
-    implementationStatus: 'SURFACE_PREVIEW',
+      'Authenticated Restocking and receiving real module. Local inspection is deterministic synthetic presentation with no protected request or mutation.',
+    implementationStatus: 'ACCEPTED',
     backendStatus: 'VISUAL_ONLY',
     access: 'AUTHENTICATED',
-    previewMode: 'SURFACE_PREVIEW',
+    previewMode: 'REAL_MODULE',
   }),
   Object.freeze({
     id: 'procurement',
@@ -154,11 +154,11 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Procurement',
     group: 'STAFF',
     description:
-      'Authenticated procurement surface with preserved visual components and no active backend calls.',
-    implementationStatus: 'SURFACE_PREVIEW',
+      'Authenticated Procurement lifecycle real module. Local inspection is deterministic synthetic presentation with no protected request or mutation.',
+    implementationStatus: 'ACCEPTED',
     backendStatus: 'VISUAL_ONLY',
     access: 'AUTHENTICATED',
-    previewMode: 'SURFACE_PREVIEW',
+    previewMode: 'REAL_MODULE',
   }),
   Object.freeze({
     id: 'events',

@@ -137,6 +137,24 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   await expect(
     page.locator('[data-preview-route="release"] [data-preview-entry-meta="mode"] dd'),
   ).toHaveText('Real module');
+  await expect(
+    page.locator('[data-preview-route="restocking"] [data-preview-entry-meta="status"] dd'),
+  ).toHaveText('ACCEPTED');
+  await expect(
+    page.locator('[data-preview-route="restocking"] [data-preview-entry-meta="backend"] dd'),
+  ).toHaveText('VISUAL ONLY');
+  await expect(
+    page.locator('[data-preview-route="restocking"] [data-preview-entry-meta="mode"] dd'),
+  ).toHaveText('Real module');
+  await expect(
+    page.locator('[data-preview-route="procurement"] [data-preview-entry-meta="status"] dd'),
+  ).toHaveText('ACCEPTED');
+  await expect(
+    page.locator('[data-preview-route="procurement"] [data-preview-entry-meta="backend"] dd'),
+  ).toHaveText('VISUAL ONLY');
+  await expect(
+    page.locator('[data-preview-route="procurement"] [data-preview-entry-meta="mode"] dd'),
+  ).toHaveText('Real module');
 
   await page.locator('[data-preview-search]').fill('release');
   await expect(page.locator('[data-preview-route]')).toHaveCount(1);
@@ -149,7 +167,7 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   await page.locator('[data-filter="PUBLIC"]').click();
   await expect(page.locator('[data-preview-route]')).toHaveCount(4);
   await page.locator('[data-filter="PREVIEW_ONLY"]').click();
-  await expect(page.locator('[data-preview-route]')).toHaveCount(5);
+  await expect(page.locator('[data-preview-route]')).toHaveCount(3);
   await page.locator('[data-filter="IN_PROGRESS"]').click();
   await expect(page.locator('[data-preview-empty]')).toBeVisible();
   await expect(page.locator('[data-preview-count]')).toHaveText('0 routes');
@@ -347,6 +365,153 @@ test('FI-08R keeps focused-task preview and both dialog focus lifecycles inside 
   await expect(nextRelease).toBeFocused();
 
   expect(protectedRequests).toEqual([]);
+});
+
+test('FI-09 opens deterministic Restocking and Procurement modules with cumulative receiving truth and contained task focus', async ({
+  page,
+}) => {
+  test.skip(!exactInspectionPort, 'Run explicitly against the accepted 4173 supervisor.');
+  await installVersion(page, true);
+  await installEmptyFeed(page);
+  const protectedRequests = [];
+  const consoleErrors = [];
+  page.on('request', (request) => {
+    const pathname = new URL(request.url()).pathname;
+    if (
+      pathname.startsWith('/api/') &&
+      pathname !== '/api/version' &&
+      pathname !== '/api/public/advertisements'
+    ) {
+      protectedRequests.push({ method: request.method(), pathname });
+    }
+  });
+  page.on('console', (message) => {
+    if (message.type() === 'error' && !message.text().includes('/favicon.ico')) {
+      consoleErrors.push(message.text());
+    }
+  });
+
+  await page.goto('/#/__preview/index');
+  await page.locator('[data-preview-route="restocking"] [data-action="open-preview"]').click();
+  await expect(
+    page.locator('[data-preview-inspection="true"][data-preview-route="restocking"]'),
+  ).toBeVisible();
+  const restocking = page.locator('.sup');
+  const previewState = restocking.getByLabel('Preview state');
+  await expect(page.getByRole('heading', { name: 'Restocking and receiving' })).toBeVisible();
+  await expect(restocking.getByText('Synthetic prototype · no backend')).toBeVisible();
+
+  const restockTaskOpener = restocking.getByRole('button', { name: 'Restock an item' });
+  await expect(restockTaskOpener).toHaveCount(1);
+  await restockTaskOpener.click();
+  const supplyTask = restocking.locator('.task[role="dialog"]');
+  const quantity = supplyTask.getByRole('spinbutton', { name: 'Quantity' });
+  const cancel = supplyTask.getByRole('button', { name: 'Cancel' });
+  const confirm = supplyTask.getByRole('button', { name: 'Confirm local preview' });
+  await expect(supplyTask).toBeVisible();
+  await expect(supplyTask).toHaveAttribute('aria-labelledby', 'supply-task-title');
+  await expect(
+    supplyTask.getByRole('heading', { name: 'Update selected supply record' }),
+  ).toBeVisible();
+  await expect(quantity).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(supplyTask).toHaveCount(0);
+  await expect(restockTaskOpener).toBeFocused();
+
+  await previewState.selectOption('Selected record');
+  const receivingDetail = restocking.locator('.detail').filter({ hasText: 'Receiving detail' });
+  await expect(receivingDetail).toBeVisible();
+  await expect(receivingDetail.getByText('PO-2026-0031', { exact: true })).toBeVisible();
+  await expect(receivingDetail.locator('dt:has-text("Ordered") + dd')).toHaveText('12');
+  await expect(receivingDetail.locator('dt:has-text("Received") + dd')).toHaveText('6');
+  await expect(receivingDetail.locator('dt:has-text("Outstanding") + dd')).toHaveText('6');
+
+  const receivingTaskOpener = receivingDetail.getByRole('button', { name: 'Receiving' });
+  await expect(receivingTaskOpener).toHaveCount(1);
+  await expect(receivingTaskOpener).toBeVisible();
+  await receivingTaskOpener.click();
+  await expect(supplyTask).toBeVisible();
+  await expect(quantity).toBeFocused();
+  await cancel.focus();
+  await page.keyboard.press('Tab');
+  await expect(quantity).toBeFocused();
+  await quantity.focus();
+  await page.keyboard.press('Shift+Tab');
+  await expect(cancel).toBeFocused();
+  await confirm.click();
+  await expect(supplyTask).toHaveCount(0);
+  await expect(receivingTaskOpener).toBeFocused();
+  await expect(restocking.getByRole('heading', { name: 'Local fixture updated' })).toBeVisible();
+  await expect(restocking.getByRole('status')).toHaveText(
+    'Locally confirmed · synthetic fixture only · no service write',
+  );
+
+  await previewState.selectOption('Loading');
+  await expect(restocking.locator('[aria-busy="true"]')).toBeVisible();
+  await previewState.selectOption('Empty');
+  await expect(restocking.getByRole('heading', { name: 'No records match this view' })).toBeVisible();
+  await previewState.selectOption('Filtered empty');
+  await expect(restocking.locator('.state .eye')).toHaveText('Filtered empty');
+  await previewState.selectOption('Validation error');
+  await restockTaskOpener.click();
+  await expect(supplyTask.getByRole('alert')).toHaveText('Complete required fields.');
+  await page.keyboard.press('Escape');
+  await previewState.selectOption('Stale revision');
+  await expect(restocking.getByText('Last-known record · actions paused')).toBeVisible();
+  await previewState.selectOption('Denied');
+  await expect(
+    restocking.getByRole('heading', { name: 'Supply records are not available to this account' }),
+  ).toBeVisible();
+  await previewState.selectOption('Unavailable');
+  await expect(restocking.getByRole('heading', { name: 'Supply service unavailable' })).toBeVisible();
+  await previewState.selectOption('Locally confirmed');
+  await expect(restocking.getByRole('heading', { name: 'Local fixture updated' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+  await page.locator('[data-preview-route="procurement"] [data-action="open-preview"]').click();
+  await expect(
+    page.locator('[data-preview-inspection="true"][data-preview-route="procurement"]'),
+  ).toBeVisible();
+  const procurement = page.locator('.sup');
+  await expect(page.getByRole('heading', { name: 'Procurement lifecycle' })).toBeVisible();
+  await expect(procurement.locator('.recordband > b')).toHaveText('PRC-2026-0044');
+  await expect(procurement.getByRole('button', { name: 'Contracts · unavailable' })).toBeDisabled();
+  const desktopCanvassingRecord = procurement.getByRole('button', {
+    name: /Wireless microphone ×12/u,
+  });
+  const mobileCanvassingRecord = procurement
+    .locator('.cards article')
+    .filter({ hasText: 'PRC-2026-0044' })
+    .getByRole('button', { name: 'Open procurement' });
+  if (await desktopCanvassingRecord.isVisible()) {
+    await desktopCanvassingRecord.click();
+  } else {
+    await expect(mobileCanvassingRecord).toBeVisible();
+    await mobileCanvassingRecord.click();
+  }
+  await expect(procurement.locator('.recordband > b')).toHaveText('PRC-2026-0044');
+  await procurement.getByRole('button', { name: 'Suppliers' }).click();
+  await expect(procurement.getByRole('heading', { name: 'Named supplier summaries' })).toBeVisible();
+  await expect(procurement.getByText('Supplier A', { exact: true })).toBeVisible();
+  await expect(procurement.locator('.recordband > b')).toHaveText('PRC-2026-0044');
+  await procurement.getByRole('button', { name: 'Deliverables' }).click();
+  await expect(procurement.getByRole('heading', { name: 'Delivery relationships' })).toBeVisible();
+  const desktopDeliverable = procurement.locator('table').filter({ hasText: 'DLV-2026-0022' });
+  const mobileDeliverable = procurement
+    .locator('.cards article')
+    .filter({ hasText: 'DLV-2026-0022' });
+  if (await desktopDeliverable.isVisible()) {
+    await expect(desktopDeliverable).toContainText('DLV-2026-0022');
+  } else {
+    await expect(mobileDeliverable).toBeVisible();
+    await expect(mobileDeliverable).toContainText('Sound system hire');
+  }
+
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+  ).toBeLessThanOrEqual(1);
+  expect(protectedRequests).toEqual([]);
+  expect(consoleErrors).toEqual([]);
 });
 
 test('reaches the real staff sign-in page through Test Real Login Flow', async ({ page }) => {

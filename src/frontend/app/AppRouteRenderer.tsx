@@ -10,6 +10,7 @@ import { InventoryRoute } from './inventory/InventoryRoute';
 import { InternalRequestHub } from './request/InternalRequestHub';
 import { InternalLendingHub } from './lending/InternalLendingHub';
 import ReleaseDeskRoute from './ReleaseDeskRoute';
+import SupplyRoutes from './SupplyRoutes';
 import { Footer } from './public/Footer';
 import { PublicNavbar } from './public/PublicNavbar';
 import { ExternalRequestCenter } from './request/ExternalRequestCenter';
@@ -86,6 +87,10 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
           />
         ) : route === 'release' ? (
           <ReleaseDeskRoute dark={dark} navigate={navigate} />
+        ) : route === 'restocking' ? (
+          <SupplyRoutes dark={dark} mode="restocking" navigate={navigate} />
+        ) : route === 'procurement' ? (
+          <SupplyRoutes dark={dark} mode="procurement" navigate={navigate} />
         ) : (
           <AuthPlaceholderRoute route={route} />
         )}
