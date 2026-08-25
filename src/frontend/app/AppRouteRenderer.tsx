@@ -9,6 +9,7 @@ import { ProfileRoute } from './profile/ProfileRoute';
 import { InventoryRoute } from './inventory/InventoryRoute';
 import { InternalRequestHub } from './request/InternalRequestHub';
 import { InternalLendingHub } from './lending/InternalLendingHub';
+import ReleaseDeskRoute from './ReleaseDeskRoute';
 import { Footer } from './public/Footer';
 import { PublicNavbar } from './public/PublicNavbar';
 import { ExternalRequestCenter } from './request/ExternalRequestCenter';
@@ -83,6 +84,8 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
             canReturnLending={session.canReturnLending}
             canUploadLendingEvidence={session.canUploadLendingEvidence}
           />
+        ) : route === 'release' ? (
+          <ReleaseDeskRoute dark={dark} navigate={navigate} />
         ) : (
           <AuthPlaceholderRoute route={route} />
         )}

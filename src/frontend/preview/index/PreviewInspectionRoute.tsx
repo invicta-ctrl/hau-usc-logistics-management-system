@@ -4,6 +4,7 @@ import { ProfileRoute } from '../../app/profile/ProfileRoute';
 import { InventoryRoute } from '../../app/inventory/InventoryRoute';
 import { InternalRequestHub } from '../../app/request/InternalRequestHub';
 import { InternalLendingHub } from '../../app/lending/InternalLendingHub';
+import ReleaseDeskRoute from '../../app/ReleaseDeskRoute';
 import { ExternalRequestCenter } from '../../app/request/ExternalRequestCenter';
 import { AuthenticatedShell } from '../../app/shell/AuthenticatedShell';
 import { LOCAL_PREVIEW_OPERATOR } from '../../app/shell/presentation';
@@ -86,6 +87,8 @@ export function PreviewInspectionRoute({
           canReturnLending
           canUploadLendingEvidence
         />
+      ) : authRoute === 'release' ? (
+        <ReleaseDeskRoute dark={dark} navigate={onOpenRoute} />
       ) : (
         <AuthPlaceholderRoute route={authRoute} />
       )}

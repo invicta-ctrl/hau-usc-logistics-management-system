@@ -128,6 +128,15 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   await expect(
     page.locator('[data-preview-route="overview"] [data-preview-entry-meta="backend"] dd'),
   ).toHaveText('VISUAL ONLY');
+  await expect(
+    page.locator('[data-preview-route="release"] [data-preview-entry-meta="status"] dd'),
+  ).toHaveText('ACCEPTED');
+  await expect(
+    page.locator('[data-preview-route="release"] [data-preview-entry-meta="backend"] dd'),
+  ).toHaveText('VISUAL ONLY');
+  await expect(
+    page.locator('[data-preview-route="release"] [data-preview-entry-meta="mode"] dd'),
+  ).toHaveText('Real module');
 
   await page.locator('[data-preview-search]').fill('release');
   await expect(page.locator('[data-preview-route]')).toHaveCount(1);
@@ -140,7 +149,7 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   await page.locator('[data-filter="PUBLIC"]').click();
   await expect(page.locator('[data-preview-route]')).toHaveCount(4);
   await page.locator('[data-filter="PREVIEW_ONLY"]').click();
-  await expect(page.locator('[data-preview-route]')).toHaveCount(6);
+  await expect(page.locator('[data-preview-route]')).toHaveCount(5);
   await page.locator('[data-filter="IN_PROGRESS"]').click();
   await expect(page.locator('[data-preview-empty]')).toBeVisible();
   await expect(page.locator('[data-preview-count]')).toHaveText('0 routes');
@@ -235,6 +244,14 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or prot
   await page.locator('[data-preview-route="profile"] [data-action="open-preview"]').click();
   await expect(page.locator('[data-preview-inspection="true"][data-preview-route="profile"]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Preview Operator' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+  await page.locator('[data-preview-route="release"] [data-action="open-preview"]').click();
+  await expect(
+    page.locator('[data-preview-inspection="true"][data-preview-route="release"]'),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Confirm physical release' })).toBeVisible();
+  await expect(page.getByText('Synthetic prototype · no backend')).toBeVisible();
 
   await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
   await page.locator('[data-preview-route="external-request"] [data-action="open-preview"]').click();

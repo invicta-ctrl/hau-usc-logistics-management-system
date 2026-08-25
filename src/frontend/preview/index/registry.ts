@@ -130,11 +130,11 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Release Desk',
     group: 'STAFF',
     description:
-      'Authenticated release desk surface with preserved visual components and no active backend calls.',
-    implementationStatus: 'SURFACE_PREVIEW',
+      'Capability-gated Release Desk visual module. Local inspection uses deterministic synthetic states and action simulation with no protected request or mutation.',
+    implementationStatus: 'ACCEPTED',
     backendStatus: 'VISUAL_ONLY',
     access: 'AUTHENTICATED',
-    previewMode: 'SURFACE_PREVIEW',
+    previewMode: 'REAL_MODULE',
   }),
   Object.freeze({
     id: 'restocking',
