@@ -29,7 +29,9 @@ describe('FI-08 Release Desk frontend integration', () => {
     expect(releaseDesk).toContain('Synthetic prototype · no backend');
     expect(releaseDesk).toContain('Synthetic confirmation only · no service or ledger write');
     expect(releaseDesk).toContain('data-release-trigger');
-    expect(releaseDesk).toContain('e.key !== "Escape"');
+    expect(releaseDesk).toContain('state === "Focused task"');
+    expect(releaseDesk).toContain('keepFocusInDialog');
+    expect(releaseDesk).toContain('e.key === "Escape"');
   });
 
   it('records real-module delivery accurately without claiming a backend binding', () => {

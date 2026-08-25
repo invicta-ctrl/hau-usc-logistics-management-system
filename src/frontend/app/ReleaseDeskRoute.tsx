@@ -53,6 +53,47 @@ type Prev =
   | "Unavailable"
   | "Validation error"
   | "Confirmed success";
+const isTaskPreviewState = (state: Prev) =>
+  state === "Focused task" ||
+  state === "Required correction" ||
+  state === "Validation error";
+const focusableSelector = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
+const focusableIn = (dialog: HTMLElement) =>
+  Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+    (element) =>
+      element.getAttribute("aria-hidden") !== "true" &&
+      element.offsetParent !== null,
+  );
+const focusDialog = (dialog: HTMLElement | null) => {
+  if (!dialog) return;
+  (focusableIn(dialog)[0] || dialog).focus({ preventScroll: true });
+};
+const keepFocusInDialog = (event: KeyboardEvent, dialog: HTMLElement) => {
+  if (event.key !== "Tab") return;
+  const targets = focusableIn(dialog);
+  if (!targets.length) {
+    event.preventDefault();
+    dialog.focus({ preventScroll: true });
+    return;
+  }
+  const first = targets[0];
+  const last = targets[targets.length - 1];
+  const active = document.activeElement;
+  if (event.shiftKey && (active === first || !dialog.contains(active))) {
+    event.preventDefault();
+    last.focus({ preventScroll: true });
+  } else if (!event.shiftKey && (active === last || !dialog.contains(active))) {
+    event.preventDefault();
+    first.focus({ preventScroll: true });
+  }
+};
 export default function ReleaseDeskRoute({
   dark,
   navigate,
@@ -68,24 +109,36 @@ export default function ReleaseDeskRoute({
     [handoffConfirmed, setHandoffConfirmed] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const taskTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const previewStateRef = useRef<HTMLSelectElement | null>(null);
+  const detailDialogRef = useRef<HTMLElement | null>(null);
+  const taskDialogRef = useRef<HTMLElement | null>(null);
+  const confirmedActionRef = useRef<HTMLButtonElement | null>(null);
   const focusIdRef = useRef<string | null>(null);
   const restorePendingRef = useRef(false);
   const refs = useRef<Record<string, HTMLButtonElement | null>>(
     {},
   );
+  const taskPreviewState = isTaskPreviewState(prev);
+  const taskVisible = task || taskPreviewState;
   const closeDetails = () => {
     restorePendingRef.current = true;
     setTask(false);
     setSel(null);
   };
   const closeTask = () => {
+    const restoreTarget = task
+      ? taskTriggerRef.current
+      : previewStateRef.current;
     setTask(false);
+    if (taskPreviewState) setPrev("Populated");
     requestAnimationFrame(() => requestAnimationFrame(() =>
-      taskTriggerRef.current?.focus({ preventScroll: true }),
+      (restoreTarget?.isConnected
+        ? restoreTarget
+        : previewStateRef.current)?.focus({ preventScroll: true }),
     ));
   };
   useEffect(() => {
-    if (task || sel || !restorePendingRef.current) return;
+    if (taskVisible || sel || !restorePendingRef.current) return;
     restorePendingRef.current = false;
     const id = focusIdRef.current;
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -95,16 +148,43 @@ export default function ReleaseDeskRoute({
       const target = candidates.find((el) => el.offsetParent !== null) || triggerRef.current;
       target?.focus({ preventScroll: true });
     }));
-  }, [task, sel]);
+  }, [taskVisible, sel]);
   useEffect(() => {
     const f = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      if (task || prev === "Required correction" || prev === "Validation error") closeTask();
-      else if (sel) closeDetails();
+      const dialog = taskVisible
+        ? taskDialogRef.current
+        : sel
+          ? detailDialogRef.current
+          : null;
+      if (!dialog) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (taskVisible) closeTask();
+        else closeDetails();
+        return;
+      }
+      keepFocusInDialog(e, dialog);
     };
     addEventListener("keydown", f);
     return () => removeEventListener("keydown", f);
-  }, [sel, task, prev]);
+  }, [sel, task, taskPreviewState, taskVisible]);
+  useEffect(() => {
+    if (!sel || taskVisible) return;
+    const frame = requestAnimationFrame(() => focusDialog(detailDialogRef.current));
+    return () => cancelAnimationFrame(frame);
+  }, [sel, taskVisible]);
+  useEffect(() => {
+    if (!taskVisible) return;
+    const frame = requestAnimationFrame(() => focusDialog(taskDialogRef.current));
+    return () => cancelAnimationFrame(frame);
+  }, [taskVisible]);
+  useEffect(() => {
+    if (prev !== "Confirmed success") return;
+    const frame = requestAnimationFrame(() =>
+      confirmedActionRef.current?.focus({ preventScroll: true }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [prev]);
   const pick = (r: Rec, el?: HTMLButtonElement | null) => {
     if (el) triggerRef.current = el;
     focusIdRef.current = r.id;
@@ -216,6 +296,7 @@ export default function ReleaseDeskRoute({
         <label>
           Preview state
           <select
+            ref={previewStateRef}
             value={prev}
             onChange={(e) => setPrev(e.target.value as Prev)}
           >
@@ -315,6 +396,7 @@ export default function ReleaseDeskRoute({
           p="Three lines against REQ-2026-0136 · ledger preview 09:42 · no real audit write."
         >
           <button
+            ref={confirmedActionRef}
             className="primary"
             onClick={() => setPrev("Populated")}
           >
@@ -357,10 +439,12 @@ export default function ReleaseDeskRoute({
             {queue}
             {sel ? (
               <aside
+                ref={detailDialogRef}
                 className="detail"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="release-title"
+                tabIndex={-1}
               >
                 <div className="head">
                   <div>
@@ -475,15 +559,15 @@ export default function ReleaseDeskRoute({
           </div>
         </>
       )}
-      {(task ||
-        prev === "Required correction" ||
-        prev === "Validation error") && (
+      {taskVisible && (
         <div className="veil">
           <section
+            ref={taskDialogRef}
             className="task"
             role="dialog"
             aria-modal="true"
             aria-labelledby="task-title"
+            tabIndex={-1}
           >
             <p className="eye">Focused release task</p>
             <h2 id="task-title">

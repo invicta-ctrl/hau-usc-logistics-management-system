@@ -263,6 +263,92 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or prot
   expect(protectedRequests).toEqual([]);
 });
 
+test('FI-08R keeps focused-task preview and both dialog focus lifecycles inside the Release Desk', async ({
+  page,
+}) => {
+  test.skip(!exactInspectionPort, 'Run explicitly against the accepted 4173 supervisor.');
+  await installVersion(page, true);
+  await installEmptyFeed(page);
+  const protectedRequests = [];
+  page.on('request', (request) => {
+    const pathname = new URL(request.url()).pathname;
+    if (
+      pathname.startsWith('/api/') &&
+      pathname !== '/api/version' &&
+      pathname !== '/api/public/advertisements'
+    ) {
+      protectedRequests.push({ method: request.method(), pathname });
+    }
+  });
+
+  await page.goto('/#/__preview/index');
+  await page.locator('[data-preview-route="release"] [data-action="open-preview"]').click();
+  await expect(
+    page.locator('[data-preview-inspection="true"][data-preview-route="release"]'),
+  ).toBeVisible();
+
+  const previewState = page.getByLabel('Preview state');
+  const task = page.locator('.task[role="dialog"]');
+  const taskNote = task.getByRole('textbox', { name: 'Required correction note' });
+
+  await previewState.selectOption('Focused task');
+  await expect(task).toBeVisible();
+  await expect(taskNote).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(task).toHaveCount(0);
+  await expect(previewState).toBeFocused();
+
+  await previewState.selectOption('Populated');
+  const releaseTrigger = page.locator(
+    '[data-release-trigger="REQ-2026-0136"]:visible',
+  );
+  await expect(releaseTrigger).toBeVisible();
+  await releaseTrigger.click();
+
+  const detail = page.locator('.detail[role="dialog"]');
+  const detailClose = detail.getByRole('button', { name: 'Close release details' });
+  const detailLast = detail.getByRole('button', { name: 'Open request' });
+  await expect(detail).toBeVisible();
+  await expect(detailClose).toBeFocused();
+  await detailLast.focus();
+  await page.keyboard.press('Tab');
+  await expect(detailClose).toBeFocused();
+  await detailClose.focus();
+  await page.keyboard.press('Shift+Tab');
+  await expect(detailLast).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(detail).toHaveCount(0);
+  await expect(releaseTrigger).toBeFocused();
+
+  await releaseTrigger.click();
+  await page.getByLabel(/Recipient confirmed the physical handoff/u).check();
+  const taskTrigger = page.getByRole('button', { name: 'Record physical release' });
+  await expect(taskTrigger).toBeEnabled();
+  await taskTrigger.click();
+
+  const taskCancel = task.getByRole('button', { name: 'Cancel' });
+  await expect(task).toBeVisible();
+  await expect(taskNote).toBeFocused();
+  await taskCancel.focus();
+  await page.keyboard.press('Tab');
+  await expect(taskNote).toBeFocused();
+  await taskNote.focus();
+  await page.keyboard.press('Shift+Tab');
+  await expect(taskCancel).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(task).toHaveCount(0);
+  await expect(taskTrigger).toBeFocused();
+
+  await taskTrigger.click();
+  await taskNote.fill('Microphone shortfall confirmed for synthetic release review.');
+  await task.getByRole('button', { name: 'Confirm release of 3 lines' }).click();
+  const nextRelease = page.getByRole('button', { name: 'Next release' });
+  await expect(task).toHaveCount(0);
+  await expect(nextRelease).toBeFocused();
+
+  expect(protectedRequests).toEqual([]);
+});
+
 test('reaches the real staff sign-in page through Test Real Login Flow', async ({ page }) => {
   await installVersion(page, true);
   await installEmptyFeed(page);

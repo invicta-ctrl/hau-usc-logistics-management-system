@@ -1,34 +1,30 @@
-# Current Bounded Task — FI-08 Release Desk frontend integration (complete)
+# Current Bounded Task — FI-08R Release Desk acceptance repair (complete)
 
-INTENT: SOFTWARE_FEATURE
+INTENT: BUG_FIX + TESTING
 MODE: COMPLETE
-OBJECTIVE: Integrate the already-present Make-v44-parity Release Desk into the existing authenticated route and accepted A4 local Preview Index inspection path without changing backend, auth, permission, release, inventory, or ledger behavior.
-TARGET: `.codex/specs/accepted/2026-08-25-fi08-release-desk-frontend-integration.md`; `src/frontend/app/AppRouteRenderer.tsx`; `src/frontend/preview/index/PreviewInspectionRoute.tsx`; `src/frontend/preview/index/registry.ts`; focused FI-08 tests and required Preview Index assertions.
+OBJECTIVE: Repaired and reverified only the two independently reproduced FI-08 acceptance gaps: the deterministic `Focused task` now renders the existing focused task UI, and both existing `aria-modal="true"` surfaces have a correct keyboard-focus lifecycle. The accepted Make-v44 visual composition and all synthetic/no-backend truth remain preserved.
+TARGET: `.codex/specs/accepted/2026-08-25-fi08-release-desk-frontend-integration.md`; `src/frontend/app/ReleaseDeskRoute.tsx`; `tests/unit/fi08-release-desk.test.js`; `tests/e2e/preview-index.spec.js`; the three current-chain records.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-25-fi08-release-desk-frontend-integration.md
-LAST_COMPLETED_SPEC: .codex/specs/accepted/2026-08-24-fi07-internal-lending-hub-frontend-integration.md
-LAST_COMPLETED_FI07: INDEPENDENT_SOL_ACCEPTED_NO_FINDINGS__ROOT_INDEPENDENT_EVIDENCE_RECORDED__ARTIFACT_SHA256_707A00FDF4DC4BC6EB2C2053007B21F9997A9D51ADDF65F7EE1B65CAA091F738
-FI08_PACKET_STATUS: ACCEPTED_FOR_IMPLEMENTATION__IMPLEMENTED_VERIFIED__OWNER_AUTHORIZED_2026-08-25
-AUTHORITY: Earl's 2026-08-25 owner instruction; accepted R1 one-shot/R1-A2/A3/A4 amendments; TOKEN-OPT-001-A8; .agents/PROJECT_POLICY.md; live repository contract truth; current Figma Make visual authority; accepted FI-08 packet.
-REQUIRED_MODEL: GPT-5.6 Terra / Max sole canonical frontend writer; Sol remains read-only orchestrator/final reviewer.
-TASK_STATUS: FI08_COMPLETE__VERIFIED__WRITER_LOCK_RELEASED
+BASELINE_PRODUCT_COMMIT: 8120cf78f653d06a66f7bd37a3feba17543ccdd5
+REOPEN_BASELINE_HEAD: d282ea9bf5aab609335c00eca7192b717b514b86
+AUTHORITY: Earl's 2026-08-26 `HAU-USC Logistics — FI-08R Acceptance Repair + Final Closure` instruction; accepted FI-08 packet; TOKEN-OPT-001-A8; `.agents/PROJECT_POLICY.md`; repository functional contracts.
+REQUIRED_MODEL: GPT-5.6 Terra / Max sole canonical frontend writer; Sol remains read-only orchestrator, reviewer, and final acceptance authority.
+TASK_STATUS: FI08R_COMPLETE__VERIFIED__SOL_ACCEPTED__WRITER_LOCK_RELEASED
 ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED__FI08_COMPLETED
+WRITER_LOCK: RELEASED__FI08R_COMPLETED
 RISK: MEDIUM
-SCOPE: Wire the existing deterministic Release Desk UI into the authenticated route and A4 local Preview Index inspection, update truthful registry metadata, preserve synthetic states/interactions and visual/accessibility behavior, and add focused coverage. Reuse existing architecture; modify `ReleaseDeskRoute.tsx` only when direct live Make comparison proves a bounded fidelity defect.
-OUT_OF_SCOPE: Backend/API/Worker/auth/capability/permission/schema/migration/provider/Figma write/Playground/Production/main/deployment/D1/R2/release or ledger domain semantics; real release mutation binding; `.ai-bridge/`; and any unrelated frontend work.
-VERIFICATION: Canonical 4173 preview status/reachability; live Make comparison; focused FI-08 units; Preview Index foundation/targeted browser assertions; no protected request/mutation traffic through A4; semantic/keyboard/focus/responsive inspection; console; frontend build; `git diff --check`; complete logical-diff review.
-PRODUCT_COMMIT: 8120cf78f653d06a66f7bd37a3feba17543ccdd5 (pushed to origin/frontend-design-integration)
-COMPLETION_EVIDENCE: Focused units 13/13; targeted canonical-4173 Preview Index Playwright 10/10 at 320/390/768/1024/1440; browser proof of semantic Release Desk render, solid 3px focus visibility, no horizontal overflow at 390px, and no new protected preview traffic. Escape focus restoration is source and focused-unit evidence, not browser-confirmed; build and deterministic dist verification passed; parent Hallmark + Impeccable closure accepted.
-STOP_CONDITIONS: Missing or contradictory authority; unknown tracked dirt other than preserved `.ai-bridge/`; conflicting writer; a needed backend/auth/capability/release-domain semantic change; provider/deploy/destructive action; live design access failure after documented recovery; or failed verification that cannot be resolved within this scope.
+SCOPE: Existing focused-task presentation render condition; modal entry focus; Tab/Shift+Tab containment; Escape dismissal; exact visible release-trigger restoration for details; `Record physical release` restoration for live task flow; safe preview-state fallback; focused behavioral regression coverage at desktop/mobile. Preview remains canonical `127.0.0.1:4173` and is not restarted while healthy.
+OUT_OF_SCOPE: Backend/API/Worker/auth/capability/permission/schema/migration/provider/Figma/Make/Playground/Production/main/deployment/D1/R2/release or ledger domain semantics; visual redesign; real release mutation binding; `.ai-bridge/`; favicon and unrelated Preview Inspection advisories; FI-09+.
+INVARIANTS: Retain `Synthetic prototype · no backend` and `Synthetic confirmation only · no service or ledger write`; A4 Preview Index remains local-only fixture presentation with zero protected reads/mutations; preserve visible 3px `:focus-visible` treatment.
+VERIFICATION: Focused FI-08 unit 3/3 passed. Serial exact-4173 FI-08R Playwright 5/5 passed at 320/390/768/1024/1440, including Focused task rendering, dialog entry focus, Tab/Shift+Tab containment, Escape, detail/task restoration, successful-confirmation Next release focus, responsive behavior, and zero protected traffic. Fresh 390px browser inspection verified the Release Desk heading, active focus inside both dialog types, visible 3px outline, and no horizontal overflow; console only had the known favicon 404. `npm.cmd run build`, `npm.cmd run verify:dist`, `npm.cmd run check:continuation` (14 required fields), `npm.cmd run handoff:verify`, and `git diff --check` passed.
+REVIEW: Sol final pre-commit code/test review accepted FI-08R with NO ACTIONABLE FINDINGS; Hallmark 0 critical/0 major/0 minor FI-08R findings; Impeccable interaction review green with only unchanged/out-of-diff detector advisories.
+STOP_CONDITIONS: The accepted FI-08R work unit is complete. Do not begin FI-09, deployment, backend work, visual redesign, or another product slice without Earl's explicit authorization.
 DELEGATION_LEDGER:
 
-- writer=/root/fi05_inventory_writer | model=gpt-5.6-terra | role=FI-06 predecessor writer | mode=execute | scope=initial FI-06 integration handoff | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=RELEASED | evidence=FI-05 lock-release transfer records.
-- writer=/root/fi06_request_hub_writer | model=gpt-5.6-terra | role=FI-06 successor sole canonical integration writer | mode=execute | scope=accepted FI-06 frontend integration, artifacts, and continuity closeout | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=COMPLETED | evidence=.codex/FI06_INTERNAL_REQUEST_HUB_RECEIPT.md.
-- writer=/root/fi07_lending_hub_writer | model=gpt-5.6-terra | role=FI-07 sole canonical integration writer | mode=execute | scope=accepted FI-07 frontend integration, A4 fixture, focused tests/artifacts/continuity | excluded=backend/auth/permissions/schema/provider/Figma/deployments/.ai-bridge/FI-08+ | status=COMPLETED__RELEASED | evidence=independent Sol ACCEPTED_NO_FINDINGS; root independent evidence; artifact SHA-256 707A00FDF4DC4BC6EB2C2053007B21F9997A9D51ADDF65F7EE1B65CAA091F738.
-- writer=/root/fi08_terra_writer | model=gpt-5.6-terra | role=FI-08 sole canonical frontend writer | mode=execute | scope=accepted Release Desk route/Preview Index integration, focused tests, local preview verification | owned=FI-08 packet/current-chain,AppRouteRenderer,PreviewInspectionRoute,registry,focused tests | excluded=backend/auth/permissions/schema/provider/Figma/deployments/.ai-bridge | status=COMPLETED__LOCK_RELEASED | evidence=8120cf78f653d06a66f7bd37a3feba17543ccdd5 and recorded FI-08 verification.
+- writer=/root/fi08r_terra_writer | model=gpt-5.6-terra | reasoning=max | role=sole canonical FI-08R frontend writer | mode=execute | scope=two owner-reproduced interaction acceptance defects, behavioral coverage, generated artifacts, and continuity closeout | owned=.codex/CURRENT.md,.codex/CURRENT_TASK.md,.codex/CURRENT_HANDOFF.md,.codex/FI08R_RELEASE_DESK_ACCEPTANCE_REPAIR_RECEIPT.md,src/frontend/app/ReleaseDeskRoute.tsx,tests/unit/fi08-release-desk.test.js,tests/e2e/preview-index.spec.js,dist/index.html,HAU-USC_Logistics-Frontend-Shareable.html | excluded=backend/auth/permissions/schema/migration/provider/Figma/Make/Playground/Production/main/deployment/.ai-bridge/FI-09+ | status=COMPLETED__LOCK_RELEASED__SOL_ACCEPTED | evidence=focused unit 3/3; serial exact-4173 FI-08R Playwright 5/5; browser focus/outline/overflow/console review; build/dist; Sol/Hallmark/Impeccable final acceptance.
 
 PREVIEW_TARGET: http://127.0.0.1:4173/
 PREVIEW_STATUS: RUNNING__HEALTHY__VERIFIED_2026-08-26
-NEXT_EXACT_ACTION: Preserve the healthy canonical 127.0.0.1:4173 preview and stop at the completed FI-08 owner gate. Await a new explicit owner authorization and accepted packet before FI-09, deployment, or any additional mutation.
+NEXT_EXACT_ACTION: Await Earl's explicit authorization for FI-09.
