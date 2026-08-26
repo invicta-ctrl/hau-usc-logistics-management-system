@@ -555,13 +555,14 @@ test('FI-10 renders the bounded Administration inspection safely at every accept
     await expect(
       administration.getByText('Synthetic preview · no session, backend, or protected data', { exact: true }),
     ).toBeVisible();
-    await expect(administration.getByRole('button', { name: 'Reference administration' })).toHaveCount(0);
-    await expect(administration.getByRole('button', { name: 'Link registry' })).toHaveCount(0);
-    await expect(administration.getByRole('button', { name: 'Brand & media' })).toHaveCount(0);
-    await expect(administration.getByRole('button', { name: 'System status' })).toHaveCount(0);
+    for (const name of ['Reference administration', 'Link registry', 'Brand & media', 'System status']) {
+      const tab = administration.getByRole('button', { name });
+      if (width <= 768) await expect(tab).toHaveCount(0);
+      else await expect(tab).toHaveCount(1);
+    }
     await expect(administration).not.toContainText('preview-fi10-person-a');
 
-    const previewState = administration.getByLabel('FI-10 preview state');
+    const previewState = administration.getByLabel('Administration preview state');
     await previewState.selectOption('Loading');
     await expect(administration.locator('[aria-busy="true"]')).toBeVisible();
     await previewState.selectOption('Populated');

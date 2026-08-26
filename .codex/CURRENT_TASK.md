@@ -1,29 +1,29 @@
-# Current Bounded Task — FI-12 Cross-Surface Design Convergence Closure
+# Current Bounded Task — FI-13 Hallmark + Impeccable Final Craft / Exact Frontend Freeze
 
-INTENT: SOFTWARE_MAINTENANCE + TESTING
+INTENT: SOFTWARE_MAINTENANCE + TESTING + FRONTEND_DESIGN_INTEGRATION
 MODE: EXECUTE
-OBJECTIVE: FI-12 is complete: repair the proven deployed route-style cascade without redesigning, flattening module-specific IA, or altering repository-owned behavior.
-TARGET: .codex/specs/accepted/2026-08-26-fi12-cross-surface-design-convergence.md; .codex/FI12_CROSS_SURFACE_CONVERGENCE_RECEIPT.md; only the accepted FI-12 source, tests, deterministic artifacts, and current-chain closure records.
+OBJECTIVE: Complete the final local candidate craft gate using the persistent canonical preview, then provide Sol with the exact candidate and recorded acceptance evidence. This is not a redesign or FI-14 deployment work.
+TARGET: .codex/specs/accepted/2026-08-26-fi13-final-craft-exact-frontend-freeze.md; the three current-chain records; only source/tests directly implicated by a reproducible material FI-13 defect; deterministic artifacts only after an accepted source change.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi12-cross-surface-design-convergence.md
-START_HEAD: 81480a05c46b20f2979d5428b1ecd474dc05ff57
-UPSTREAM_AT_HANDSHAKE: origin/frontend-design-integration @ 81480a05c46b20f2979d5428b1ecd474dc05ff57 (+0/-0)
-AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment; accepted FI-12 packet; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-11 records; live Make-v44 visual evidence; current repository contracts.
-REQUIRED_MODEL: GPT-5.6 Terra / Max was the sole canonical frontend writer; Sol is final acceptance authority.
-TASK_STATUS: FI12_CLOSED__SOL_ACCEPTED__COMMIT_PENDING
-ACTIVE_WRITER: NONE__FI12_RELEASED
-WRITER_LOCK: RELEASED__FI12
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi13-final-craft-exact-frontend-freeze.md
+START_HEAD: 67504579aa062ae809c7fb44c629518042a77b3d
+UPSTREAM_AT_HANDSHAKE: origin/frontend-design-integration @ 67504579aa062ae809c7fb44c629518042a77b3d (+0/-0)
+AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, section 15; accepted FI-13 packet; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-12 records; accepted live Make-v44/Figma Design evidence; current repository contracts.
+REQUIRED_MODEL: GPT-5.6 Terra / Max is the sole canonical frontend writer; Sol remains read-only planner, integrator, reviewer, and final acceptance authority.
+TASK_STATUS: FI13_AUTHORIZED__EXECUTE__LOCAL_CRAFT_GATE
+ACTIVE_WRITER: TERRA_MAX:/root/fi13_terra_writer
+WRITER_LOCK: ACQUIRED__FI13
 RISK: HIGH
-SCOPE: Completed only the proven Authenticated Shell cascade repair for deployed Administration, Release, and Supply route CSS. The unmounted legacy LendingHub component was excluded.
-OUT_OF_SCOPE: FI-13+ implementation; visual redesign; backend/API/Worker/auth/authorization/capability/permission/session/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment; data/provider mutation; `.ai-bridge/`.
-INVARIANTS: Contracts remain functional authority and live Make remains visual authority. Preserve route distinctions, A3/A4 isolation, visible 3px focus treatment, privacy, domain semantics, and zero protected/public Preview Index transport.
-VERIFICATION: PASSED — initial FI-12 helper 9/9; final focused FI-06 through FI-12 unit batch 48/48; exact canonical-4173 deployed-route isolation 5/5 at 320/390/768/1024/1440; bounded Hallmark/Impeccable no new actionable finding; build/dist SHA-256 D72C215E61CF5768F04A7776CB684E1C55C0D2C23A691F783B3B4C68A7249965; continuation, handoff, and diff checks passed after closure synchronization; Sol final review ACCEPTED.
-STOP_CONDITIONS: REACHED — FI-12 is complete. Do not begin FI-13 implementation.
+SCOPE: One bounded complete quality cycle: Hallmark final audit; Impeccable Operate-mode audit/polish; accessibility, responsive 320/390/768/1024/1440, contrast, keyboard, focus visibility/containment/restoration, motion/reduced motion, console/network, truthful real/synthetic labels, and public/requester/DOL route separation. Prove any defect before product mutation, batch related repairs once, then confirm once and stop when green.
+OUT_OF_SCOPE: Make or Figma write; visual-world replacement; module-IA flattening; backend/API/Worker/auth/authorization/capability/permission/session/schema/migration/D1/R2/provider/data mutation; Playground/Production/main/deployment; FI-14+; `.ai-bridge/`.
+INVARIANTS: Repository contracts remain functional authority and accepted live Make-v44 remains visual authority. Preserve existing brand language/product truth/module IA, A3/A4 isolation, visible 3px focus treatment, privacy, domain semantics, and zero protected/public Preview Index transport.
+VERIFICATION: Record source/candidate/tree/toolchain/lockfile/artifact identity; direct focused/convergence evidence; serial exact canonical-4173 browser matrix; Hallmark/Impeccable results; accessibility/route-separation/traffic/console evidence; `npm.cmd run build`, `npm.cmd run verify:dist`, `npm.cmd run check:continuation`, `npm.cmd run handoff:verify`, `git diff --check`, and Sol complete logical review before closure.
+STOP_CONDITIONS: Any proposed repair changes a protected boundary; a material unresolved P0/P1/privacy/accessibility/route-separation defect; a conflicting writer/unknown tracked state/live-authority contradiction; or FI-13 evidence is complete, at which point stop and await Sol acceptance before closure/commit/push.
 DELEGATION_LEDGER:
 
-- writer=/root/fi12_terra_writer | model=gpt-5.6-terra | reasoning=max | role=sole canonical FI-12 frontend writer | mode=execute | scope=accepted cascade repair, focused verification, artifact generation, and closure | owned=FI-12 packet/current-chain/receipt,routeStyleScope,AdministrationRoute,ReleaseDeskRoute,SupplyRoutes,FI-09 parity test,FI-12 tests,artifacts | excluded=backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment/.ai-bridge/FI-13+ | status=COMPLETED__RELEASED__SOL_ACCEPTED | evidence=initial helper 9/9; final units 48/48; exact-4173 5/5; build/dist SHA; Sol/Hallmark/Impeccable acceptance.
+- writer=/root/fi13_terra_writer | model=gpt-5.6-terra | reasoning=max | role=sole canonical FI-13 frontend writer | mode=execute | scope=bounded local craft audit, only proven frontend repair, exact candidate evidence, and pre-Sol handoff | owned=.codex/CURRENT.md,.codex/CURRENT_TASK.md,.codex/CURRENT_HANDOFF.md,.codex/specs/accepted/2026-08-26-fi13-final-craft-exact-frontend-freeze.md,FI-13 receipt if authorized,directly implicated frontend source/tests,accepted regenerated artifacts only if source changes | excluded=backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment/.ai-bridge/FI-14+ | status=ACTIVE__LOCK_ACQUIRED | evidence=preflight branch/head/upstream parity, only preserved .ai-bridge residue, Sol-provided preview HTTP 200 evidence.
 
 PREVIEW_TARGET: http://127.0.0.1:4173/
-PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART
-NEXT_EXACT_ACTION: Begin owner-authorized FI-13 preflight only; do not mutate FI-13 until its fresh accepted packet, handshake, and sole-writer lock are recorded.
+PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART (Sol-provided post-FI12 HTTP 200 evidence)
+NEXT_EXACT_ACTION: Perform the bounded FI-13 local craft audit; do not close, commit, push, deploy, or begin FI-14 before Sol accepts the complete candidate.

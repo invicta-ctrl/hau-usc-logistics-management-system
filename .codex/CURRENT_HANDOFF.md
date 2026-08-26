@@ -1,20 +1,25 @@
-# Current Environment Handoff — FI-12 Cross-Surface Design Convergence
+# Current Environment Handoff — FI-13 Final Craft / Exact Frontend Freeze
 
-FROM: /root/fi12_terra_writer after Sol acceptance
-TO: Earl / next authorized Terra writer for FI-13 preflight only
+FROM: Sol after FI-12 closure
+TO: /root/fi13_terra_writer for owner-authorized FI-13 execution only
 BRANCH: frontend-design-integration
-HEAD: 81480a05c46b20f2979d5428b1ecd474dc05ff57
-START_HEAD: 81480a05c46b20f2979d5428b1ecd474dc05ff57
-CLOSURE_DOCUMENTATION_COMMIT: GIT_HEAD (dynamic FI-12 closure commit)
-UPSTREAM: origin/frontend-design-integration @ 81480a05c46b20f2979d5428b1ecd474dc05ff57 (+0/-0 verified)
+HEAD: 67504579aa062ae809c7fb44c629518042a77b3d
+START_HEAD: 67504579aa062ae809c7fb44c629518042a77b3d
+CLOSURE_DOCUMENTATION_COMMIT: 67504579aa062ae809c7fb44c629518042a77b3d (FI-12 closure)
+UPSTREAM: origin/frontend-design-integration @ 67504579aa062ae809c7fb44c629518042a77b3d (+0/-0 verified)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY__FI12_CLOSURE_PENDING_COMMIT__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
-ACTIVE_WRITER: NONE__FI12_RELEASED
-WRITER_LOCK: RELEASED__FI12
-HANDOFF_STATUS: FI12_CLOSED__SOL_ACCEPTED
+WORKTREE_STATE: DIRTY__FI13_PACKET_AND_LOCK_RECORDS__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
+ACTIVE_WRITER: TERRA_MAX:/root/fi13_terra_writer
+WRITER_LOCK: ACQUIRED__FI13
+HANDOFF_STATUS: FI13_EXECUTE__WRITER_ACTIVE
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi12-cross-surface-design-convergence.md
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi13-final-craft-exact-frontend-freeze.md
+FI13_PACKET_STATUS: ACCEPTED__OWNER_AUTHORIZED__EXECUTE
+FI13_SCOPE: Final local candidate craft/freeze only. Audit and, only with reproduced material evidence, repair bounded frontend quality. Use persistent 4173, preserve Make-v44 composition/product truth/module IA, and stop for Sol acceptance before closure or a commit.
+FI13_INVARIANTS: No backend/Worker/API/auth/authorization/capability/permission/session/schema/migration/D1/R2/provider/data/Figma/Make/Playground/Production/main/deployment mutation; no generic dashboard redesign; no route-boundary flattening; `.ai-bridge/` remains excluded and untouched.
+FI13_HANDSHAKE: branch frontend-design-integration; HEAD/upstream 67504579aa062ae809c7fb44c629518042a77b3d +0/-0; only untracked `.ai-bridge/`; no conflicting active writer; Sol reverified canonical `http://127.0.0.1:4173/` HTTP 200 after FI-12 push, so the healthy supervisor is reused with no restart.
+FI13_REQUIRED_EVIDENCE: Hallmark final audit; Impeccable Operate audit/polish; a11y/contrast/keyboard/focus/motion/reduced-motion; serial 320/390/768/1024/1440 exact-4173 review; console/network and Preview Index zero-traffic check; truthful labels and public/requester/DOL separation; source/tree/toolchain/lockfile/artifact/Worker-schema-migration identity from current evidence; build/dist/continuation/handoff/diff checks; complete logical diff and Sol review.
 FI12_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED
 FI12_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 attachment; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-11 records; live Make-v44 visual evidence; repository functional contracts.
 FI12_SCOPE: Bounded material convergence audit and only proven frontend repairs across accepted FI-04 through FI-11 surfaces. No redesign, no module flattening, no new feature, and no protected boundary change.
@@ -62,6 +67,6 @@ PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART
 FI09_RECEIPT: .codex/FI09_SUPPLY_OPERATIONS_RECEIPT.md
 FI10_RECEIPT: .codex/FI10_ACCOUNTS_DIRECTORY_ACTIVITY_HISTORY_RECEIPT.md
 FI11_RECEIPT: .codex/FI11_GOVERNED_REFERENCE_SURFACES_RECEIPT.md
-NEXT_EXACT_ACTION: Begin owner-authorized FI-13 preflight only; do not mutate FI-13 until its fresh accepted packet, handshake, and sole-writer lock are recorded.
+NEXT_EXACT_ACTION: Perform the bounded FI-13 local craft audit; do not close, commit, push, deploy, or begin FI-14 before Sol accepts the complete candidate.
 RESUME_COMMANDS: git status --short; git diff --check; npm.cmd run preview:frontend:status; do not restart the healthy preview.
-PROHIBITED_ACTIONS: Never touch .ai-bridge/; never alter backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment; never bind a mutation; do not begin FI-13 implementation.
+PROHIBITED_ACTIONS: Never touch .ai-bridge/; never alter backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment; never bind a mutation; do not begin FI-14 or any deployment before FI-13 closure.

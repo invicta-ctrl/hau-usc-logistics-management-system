@@ -23,8 +23,11 @@ export function scopeRouteCss(
   const boundary = rootRuleAt + rootRuleEnd.length;
   const localRules = source
     .slice(boundary)
-    .replaceAll(`@media(max-width:768px){${rootSelector}{`, "@media(max-width:768px){:scope{")
-    .replaceAll(`@media(max-width:390px){${rootSelector}{`, "@media(max-width:390px){:scope{");
+    // Once inside @scope, a second copy of the root selector no longer selects
+    // the scope root. Convert post-boundary rooted rules so desktop and mobile
+    // descendants retain their intended route-local behavior.
+    .replaceAll(`${rootSelector}{`, ':scope{')
+    .replaceAll(`${rootSelector} `, ':scope ');
 
   return `${source.slice(0, boundary)}@scope (${rootSelector}){${localRules}}`;
 }

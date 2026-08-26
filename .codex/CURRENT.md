@@ -1,23 +1,30 @@
 # Current Work Pointer — frontend-design-integration
 
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
-MILESTONE: R1_FI12_CROSS_SURFACE_CONVERGENCE_CLOSED
-STATUS: FI12_CLOSED__SOL_ACCEPTED__CLOSURE_COMMIT_PENDING
-PHASE: FI12_RECEIPT_RECORDED__WRITER_LOCK_RELEASED
+MILESTONE: R1_FI13_FINAL_CRAFT_EXACT_FRONTEND_FREEZE_IN_PROGRESS
+STATUS: FI13_AUTHORIZED__EXECUTE__SOLE_TERRA_WRITER_ACTIVE
+PHASE: FI13_PACKET_ACCEPTED__LOCAL_CRAFT_AUDIT_AND_FREEZE
 BRANCH: frontend-design-integration
-HEAD: 81480a05c46b20f2979d5428b1ecd474dc05ff57
-START_HEAD: 81480a05c46b20f2979d5428b1ecd474dc05ff57
-CLOSURE_DOCUMENTATION_COMMIT: GIT_HEAD (dynamic FI-12 closure commit)
-UPSTREAM: origin/frontend-design-integration @ 81480a05c46b20f2979d5428b1ecd474dc05ff57 (FI-12 handshake verified +0/-0)
+HEAD: 67504579aa062ae809c7fb44c629518042a77b3d
+START_HEAD: 67504579aa062ae809c7fb44c629518042a77b3d
+CLOSURE_DOCUMENTATION_COMMIT: 67504579aa062ae809c7fb44c629518042a77b3d (FI-12 closure)
+UPSTREAM: origin/frontend-design-integration @ 67504579aa062ae809c7fb44c629518042a77b3d (FI-13 handshake verified +0/-0)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY__FI12_CLOSURE_PENDING_COMMIT__PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
-ACTIVE_WRITER: NONE__FI12_RELEASED
-WRITER_LOCK: RELEASED__FI12
-HANDOFF_STATUS: FI12_CLOSED__SOL_ACCEPTED
+WORKTREE_STATE: DIRTY__FI13_PACKET_AND_LOCK_RECORDS__PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
+ACTIVE_WRITER: TERRA_MAX:/root/fi13_terra_writer
+WRITER_LOCK: ACQUIRED__FI13
+HANDOFF_STATUS: FI13_EXECUTE__WRITER_ACTIVE
 REQUIRED_MODEL: GPT-5.6 Terra / Max sole frontend writer; GPT-5.6 Sol remains read-only orchestration and final acceptance
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi12-cross-surface-design-convergence.md
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi13-final-craft-exact-frontend-freeze.md
+FI13_PACKET_STATUS: ACCEPTED__OWNER_AUTHORIZED__EXECUTE
+FI13_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, section 15; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-12 records; current repository contracts; accepted live Make-v44 and Figma Design evidence.
+FI13_SCOPE: Final local candidate craft gate only: bounded Hallmark audit, Impeccable Operate-mode audit/polish, semantic/accessibility/responsive/contrast/keyboard/focus/motion/console/network checks, truthful real/synthetic labels, route-separation proof, and exact frontend candidate freeze. Prove a defect before a product change; use one related batch and one confirmation pass.
+FI13_INVARIANTS: Preserve accepted Make-v44 composition, brand language, product truth, module IA, capability and privacy boundaries, A3/A4 Preview Index isolation, backend/auth/Worker/data/provider/Figma/Make/Playground/Production/main invariants, and `.ai-bridge/` untouched.
+FI13_ACCEPTANCE_THRESHOLD: OPEN_VISUAL_P0=0; OPEN_VISUAL_P1=0; OPEN_VISUAL_UNWAIVED_P2=0; KNOWN_REPRODUCIBLE_SCOPED_UI_BUGS=0; SEMANTIC_REGRESSIONS=0; AUTHORIZATION_REGRESSIONS=0; PRIVACY_REGRESSIONS=0; DATA_INVARIANT_REGRESSIONS=0.
+FI13_PREVIEW: http://127.0.0.1:4173/ — parent Sol handshake evidence HTTP 200 after FI-12 push; persistent supervisor is reused and must not be restarted absent a proved failure.
+FI13_NEXT_ACTION: Complete bounded local craft audit and report candidate/evidence to Sol before any closure, commit, push, FI-14 action, or deployment.
 FI12_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED
 FI12_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 attachment; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-11 packets and receipts; live Make-v44 visual evidence; current repository contracts.
 FI12_SCOPE: Bounded audit and repair of proven material cross-surface drift only. Preserve module-specific IA, route/capability boundaries, A3/A4 isolation, accepted Make-v44 composition, semantics, privacy, and all backend/domain invariants.
@@ -84,7 +91,7 @@ FI07_RECEIPT: .codex/FI07_INTERNAL_LENDING_HUB_RECEIPT.md
 BLOCKER: NONE — FI-12 is closed and its sole Terra writer lock is released.
 PREVIEW_TARGET: http://127.0.0.1:4173/
 PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART
-NEXT_EXACT_ACTION: Begin owner-authorized FI-13 preflight only; do not mutate FI-13 until its fresh accepted packet, handshake, and sole-writer lock are recorded.
+NEXT_EXACT_ACTION: Perform the bounded FI-13 local craft audit; do not close, commit, push, deploy, or begin FI-14 before Sol accepts the complete candidate.
 
 ## Active A4 preview inspection
 
