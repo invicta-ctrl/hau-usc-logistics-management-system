@@ -63,7 +63,7 @@ jobs:
           path: |
             .release/candidate.json
             dist/index.html
-            HAU-USC_Logistics-Prototype-Shareable.html
+            HAU-USC_Logistics-Frontend-Shareable.html
           if-no-files-found: error
           retention-days: 14
 

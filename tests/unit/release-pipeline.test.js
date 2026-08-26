@@ -93,6 +93,8 @@ describe('authoritative release pipeline', () => {
     expect(workflow).toContain('.release/candidate.json');
     expect(workflow).toContain('release-candidate-${{ steps.identity.outputs.sha }}');
     expect(workflow).toContain('actions/upload-artifact@v4');
+    expect(workflow).toContain('HAU-USC_Logistics-Frontend-Shareable.html');
+    expect(workflow).not.toContain('HAU-USC_Logistics-Prototype-Shareable.html');
     expect(workflow).not.toContain('apps-script/');
     expect(workflow).toContain('environment: isolated-staging-playground');
     expect(workflow).toContain('deploy-playground.mjs');
