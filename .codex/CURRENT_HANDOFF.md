@@ -3,7 +3,7 @@
 FROM: /root/fi13_terra_writer after Sol FI-13 acceptance
 TO: Earl / next authorized Terra writer for FI-14 preflight only
 BRANCH: frontend-design-integration
-HEAD: 7c2321f9cf1754d2781b57748cea5bf37be75d3f
+HEAD: GIT_HEAD
 START_HEAD: 67504579aa062ae809c7fb44c629518042a77b3d
 CLOSURE_DOCUMENTATION_COMMIT: GIT_HEAD (FI-13 closure documentation commit after this record is committed)
 UPSTREAM: origin/frontend-design-integration @ 67504579aa062ae809c7fb44c629518042a77b3d (FI-13 source and closure commits pending safe push)
