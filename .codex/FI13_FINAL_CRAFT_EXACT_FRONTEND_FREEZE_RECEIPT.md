@@ -49,11 +49,11 @@ AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, FI-13 accepted
 
 ## FI-14 candidate-gate refreeze
 
-- The preserved first candidate workflow run failed before private-manifest decode, Cloudflare/provider access, or deployment because its repository gate still asserted obsolete A6/A7 staffing phrases. After that A8 validator repair, the unchanged global lint exposed only the historical, non-shipped `prototypes/public-portals-r3/**` prototype warnings.
+- The preserved first candidate workflow run failed before private-manifest decode, any Cloudflare operation, or deployment because its repository gate still asserted obsolete A6/A7 staffing phrases. After that A8 validator repair, the unchanged global lint exposed only the historical, non-shipped `prototypes/public-portals-r3/**` prototype lint errors.
 - Under Earl's accepted FI-14 section-20 authority and Sol's bounded decision, `check-agent-instructions.mjs` and its deterministic test now require active A8 semantics and reject obsolete zero-child/Sol-child clauses. `lint:release-candidate` excludes only that historical prototype, and `check:release-candidate` keeps the global governance, build, unit test, Apps Script, dist verification, and Cloudflare dry-run stages unchanged; only the candidate workflow uses the scoped check.
 - Refrozen source/config commit: `a377f079ce39f6c8b8e5e76f80f59b62e932d80e`; tree: `4177693026d0b239dff6255d5a4cbaa52cf26d86`. Its complete source diff is limited to the A8 validator/test, candidate-only package scripts, candidate workflow command, and direct release-pipeline assertion.
 - Focused governance/release-pipeline coverage passed 19/19. The exact candidate gate passed governance, candidate lint with zero errors (two pre-existing warnings), build, 155 test files/1160 tests, Apps Script validation, deterministic dist verification, and Cloudflare dry-run. Both deterministic application artifacts remain SHA-256 `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`.
-- The existing temporary release ref remains at the prior rollback-guard candidate with its failed pre-provider workflow evidence. This source refreeze does not update that ref, decode a manifest, contact a provider, or dispatch another workflow. Sol review and a new exact-candidate preflight are required before any such action.
+- The existing temporary release ref remains at the prior rollback-guard candidate with its failed pre-Cloudflare and pre-deployment workflow evidence. This source refreeze does not update that ref, decode a manifest, contact Cloudflare, or dispatch another workflow. Sol review and a new exact-candidate preflight are required before any such action.
 
 ## Verification evidence
 
