@@ -1,6 +1,6 @@
 # FI-13 Final Craft / Exact Frontend Freeze Receipt
 
-STATUS: CLOSED__SOL_ACCEPTED__LOCAL_FRONTEND_FREEZE__FI14_CONFIG_REFROZEN__ROLLBACK_GUARD_REFROZEN
+STATUS: CLOSED__SOL_ACCEPTED__LOCAL_FRONTEND_FREEZE__FI14_CANDIDATE_GATE_REFROZEN
 DATE: 2026-08-26
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
 BRANCH: frontend-design-integration
@@ -9,8 +9,10 @@ PRIOR_FROZEN_FRONTEND_SOURCE_COMMIT: 7c2321f9cf1754d2781b57748cea5bf37be75d3f
 PRIOR_FROZEN_FRONTEND_SOURCE_TREE: d0362449654998dc238beaa58f973ea5af30d7d1
 PREVIOUS_FI14_CONFIG_FREEZE_COMMIT: 1c8ac73b88078fc08c96b8836348f29cf418bc6a
 PREVIOUS_FI14_CONFIG_FREEZE_TREE: dc2e4e2286d68efc4b48ea15076d43435949dedf
-FROZEN_FRONTEND_SOURCE_COMMIT: 1751fd390fc79a6a691c7410107e8b7e1cc36226
-FROZEN_FRONTEND_SOURCE_TREE: 586cf5f7a7679d6dcabea21b204ce7fb6b5d9d05
+PREVIOUS_FI14_ROLLBACK_GUARD_FREEZE_COMMIT: 1751fd390fc79a6a691c7410107e8b7e1cc36226
+PREVIOUS_FI14_ROLLBACK_GUARD_FREEZE_TREE: 586cf5f7a7679d6dcabea21b204ce7fb6b5d9d05
+FROZEN_FRONTEND_SOURCE_COMMIT: a377f079ce39f6c8b8e5e76f80f59b62e932d80e
+FROZEN_FRONTEND_SOURCE_TREE: 4177693026d0b239dff6255d5a4cbaa52cf26d86
 AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, FI-13 accepted packet, TOKEN-OPT-001-A8, project policy, current repository contracts, and accepted Make-v44/Figma Design evidence.
 
 ## Bounded repair
@@ -45,6 +47,14 @@ AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, FI-13 accepted
 - `npm.cmd run build` and `npm.cmd run verify:dist` reproved both deterministic application artifacts at SHA-256 `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`; browser, Hallmark, and Impeccable evidence remains reusable only on that exact application-byte basis.
 - The canonical local preview was recovered through its documented stale-state clear and runtime-only private manifest flow after verifying the live staging target in memory; no private path, hostname, manifest content, source artifact, or repository residue was committed.
 
+## FI-14 candidate-gate refreeze
+
+- The preserved first candidate workflow run failed before private-manifest decode, Cloudflare/provider access, or deployment because its repository gate still asserted obsolete A6/A7 staffing phrases. After that A8 validator repair, the unchanged global lint exposed only the historical, non-shipped `prototypes/public-portals-r3/**` prototype warnings.
+- Under Earl's accepted FI-14 section-20 authority and Sol's bounded decision, `check-agent-instructions.mjs` and its deterministic test now require active A8 semantics and reject obsolete zero-child/Sol-child clauses. `lint:release-candidate` excludes only that historical prototype, and `check:release-candidate` keeps the global governance, build, unit test, Apps Script, dist verification, and Cloudflare dry-run stages unchanged; only the candidate workflow uses the scoped check.
+- Refrozen source/config commit: `a377f079ce39f6c8b8e5e76f80f59b62e932d80e`; tree: `4177693026d0b239dff6255d5a4cbaa52cf26d86`. Its complete source diff is limited to the A8 validator/test, candidate-only package scripts, candidate workflow command, and direct release-pipeline assertion.
+- Focused governance/release-pipeline coverage passed 19/19. The exact candidate gate passed governance, candidate lint with zero errors (two pre-existing warnings), build, 155 test files/1160 tests, Apps Script validation, deterministic dist verification, and Cloudflare dry-run. Both deterministic application artifacts remain SHA-256 `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`.
+- The existing temporary release ref remains at the prior rollback-guard candidate with its failed pre-provider workflow evidence. This source refreeze does not update that ref, decode a manifest, contact a provider, or dispatch another workflow. Sol review and a new exact-candidate preflight are required before any such action.
+
 ## Verification evidence
 
 - `npm.cmd exec -- vitest run tests/unit/fi12-route-style-scope.test.js tests/unit/frontend-backend-adapter.test.js tests/unit/fi07-lending-hub.test.js tests/unit/fi08-release-desk.test.js tests/unit/fi09-supply-operations.test.js tests/unit/fi10-administration.test.js tests/unit/fi11-reference-surfaces.test.js` — passed 7 files, 48/48.
@@ -52,7 +62,7 @@ AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, FI-13 accepted
 - Exact persistent `http://127.0.0.1:4173/` Playwright ran serially at 320, 390, 768, 1024, and 1440. It verified responsive rendering, keyboard/focus lifecycle and visible focus, modal containment/restoration, reduced motion, truthful real/synthetic labels, Preview Index zero protected traffic, console assertions, and public/requester/DOL route separation.
 - The full 365-selection serial run completed all executable checks through selection 334 and 336–350. REQ-04 at 1440 hit the temporary CLI 90-second limit only after accumulated runner load; its exact isolated run with the original 30-second limit passed in 3.7s. The focused serial rerun of REQ-04 plus selections 351–365 completed 16 selections: 15 passed and 1 expected desktop mobile-drawer skip; REQ-04 passed in 2.8s. This is harness-load sensitivity, not a reproducible product defect.
 - Preview Index registry evidence remains 15 entries and preserves `ACCEPTED` / `VISUAL ONLY` / `Real module` truth without a backend binding or protected request.
-- `npm.cmd run check:continuation`, `npm.cmd run handoff:verify`, and `git diff --check` pass after this closure record is synchronized.
+- The candidate-gate refreeze passed `npm.cmd run check:continuation`, `npm.cmd run handoff:verify`, and `git diff --check` both before and after this docs-only synchronization.
 
 ## Craft and safety audits
 
@@ -70,4 +80,4 @@ AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, FI-13 accepted
 ## Closure boundary
 
 - The FI-13 Terra writer lock remains released; the separate FI-14 Terra writer lock is recorded only in the active FI-14 current chain.
-- NEXT_EXACT_ACTION: re-run the FI-14 exact-candidate, Cloudflare/GitHub authorization, isolation, and rollback preflight for `1751fd390fc79a6a691c7410107e8b7e1cc36226`; only then create the exact temporary release ref and dispatch the existing isolated workflow. Do not alter Production from this receipt.
+- NEXT_EXACT_ACTION: Await Sol review of `a377f079ce39f6c8b8e5e76f80f59b62e932d80e`; only after explicit authorization re-run the FI-14 exact-candidate, Cloudflare/GitHub authorization, isolation, and rollback preflight, update the preserved temporary ref to that exact commit, and dispatch the existing isolated workflow only if every gate remains green. Do not alter Production from this receipt.
