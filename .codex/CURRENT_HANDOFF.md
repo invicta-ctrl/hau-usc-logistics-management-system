@@ -7,10 +7,10 @@ HEAD: GIT_HEAD
 START_HEAD: e1c90fda32bc62566807ce4ebc8d747a034ea740
 UPSTREAM: origin/frontend-design-integration @ e1c90fda32bc62566807ce4ebc8d747a034ea740 (+0/-0 at FI-14 handshake)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY__FI14_PACKET_AND_LOCK_RECORDS_PENDING_COMMIT__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
+WORKTREE_STATE: DIRTY__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
 ACTIVE_WRITER: /root/fi14_terra_writer__GPT-5.6_TERRA_MAX__SOLE_CANONICAL_WRITER
 WRITER_LOCK: ACQUIRED__FI14__frontend-design-integration
-HANDOFF_STATUS: FI14_ACTIVE__RELEASE_PIPELINE_PREP
+HANDOFF_STATUS: FI14_ACTIVE__REFROZEN_CANDIDATE__PREDEPLOY_PREFLIGHT
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi14-isolated-playground-deployment-acceptance.md
@@ -18,8 +18,8 @@ FI14_PACKET_STATUS: ACCEPTED__OWNER_AUTHORIZED__IN_PROGRESS
 FI14_SCOPE: Correct only the retired candidate-workflow shareable path and direct assertion, refreeze the unchanged frontend application, create the exact temporary candidate ref, deploy through the isolated workflow, and record bounded acceptance.
 FI14_INVARIANTS: No application behavior/backend/Worker/API/auth/authorization/session/schema/migration/D1/R2/data/provider/Figma/Make/Production/main mutation; no resource creation/crossover; `.ai-bridge/` remains excluded and untouched; no preview restart; no private value in evidence.
 FI14_HANDSHAKE: branch frontend-design-integration; start HEAD/upstream e1c90fda32bc62566807ce4ebc8d747a034ea740 +0/-0; `.ai-bridge/` preserved; canonical 4173 preview remains reused; GitHub workflow/environment-secret presence and Cloudflare auth were read-only verified without private values.
-FI14_PREDEPLOY_FINDING: The accepted workflow's upload path references retired `HAU-USC_Logistics-Prototype-Shareable.html` while the exact FI-13 tree contains only `HAU-USC_Logistics-Frontend-Shareable.html`; Sol routed the smallest workflow-only repair and mandatory refreeze as in-scope FI-14 release preparation.
-FI13_PRIOR_EVIDENCE: 48/48 focused units; exact-4173 responsive matrix including focus, motion, console/network, labels, and route separation; one accumulated-load REQ-04 timeout isolated with an original-30s PASS and focused tail PASS; app artifact hash `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`; Hallmark/Impeccable no actionable finding; Sol accepted. The prior source commit `7c2321f9cf1754d2781b57748cea5bf37be75d3f` / tree `d0362449654998dc238beaa58f973ea5af30d7d1` is invalidated only by the authorized tracked workflow repair; application bytes must be reproven identical.
+FI14_PREDEPLOY_FINDING: The accepted workflow's retired `HAU-USC_Logistics-Prototype-Shareable.html` path was corrected to the existing deterministic `HAU-USC_Logistics-Frontend-Shareable.html` path with its direct assertion. The authorized configuration-only refreeze is source commit `1c8ac73b88078fc08c96b8836348f29cf418bc6a` / tree `dc2e4e2286d68efc4b48ea15076d43435949dedf`; no release ref or deployment exists yet.
+FI13_PRIOR_EVIDENCE: 48/48 focused units; exact-4173 responsive matrix including focus, motion, console/network, labels, and route separation; one accumulated-load REQ-04 timeout isolated with an original-30s PASS and focused tail PASS; app artifact hash `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`; Hallmark/Impeccable no actionable finding; Sol accepted. The refreeze focused release-pipeline/Playground governance/config tests passed 12/12, build and verify:dist passed, and both application artifacts reproved the identical B1B1 hash; browser/Hallmark/Impeccable evidence is reused only on that byte-identity basis.
 FI12_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED
 FI12_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 attachment; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-11 records; live Make-v44 visual evidence; repository functional contracts.
 FI12_SCOPE: Bounded material convergence audit and only proven frontend repairs across accepted FI-04 through FI-11 surfaces. No redesign, no module flattening, no new feature, and no protected boundary change.
@@ -67,6 +67,6 @@ PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART
 FI09_RECEIPT: .codex/FI09_SUPPLY_OPERATIONS_RECEIPT.md
 FI10_RECEIPT: .codex/FI10_ACCOUNTS_DIRECTORY_ACTIVITY_HISTORY_RECEIPT.md
 FI11_RECEIPT: .codex/FI11_GOVERNED_REFERENCE_SURFACES_RECEIPT.md
-NEXT_EXACT_ACTION: Apply the smallest release-candidate artifact-path correction and its narrow assertion, then prove the new FI-13 source/config candidate keeps the application artifact byte-identical before any release ref or workflow dispatch.
+NEXT_EXACT_ACTION: Re-run full FI-14 preflight for exact source/config commit `1c8ac73b88078fc08c96b8836348f29cf418bc6a` / tree `dc2e4e2286d68efc4b48ea15076d43435949dedf`; only if identity, authorization, isolation, and rollback gates are green create the exact temporary release ref and dispatch the existing isolated workflow.
 RESUME_COMMANDS: git status --short; git diff --check; npm.cmd run preview:frontend:status; do not restart the healthy preview.
 PROHIBITED_ACTIONS: Never touch .ai-bridge/; never alter frontend application behavior, backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/data/provider configuration/Figma/Make/Production/main; never create a candidate ref or dispatch the isolated workflow before exact identity/isolation/rollback preflight; never bind a Production resource or expose a private value.

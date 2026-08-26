@@ -1,12 +1,14 @@
 # FI-13 Final Craft / Exact Frontend Freeze Receipt
 
-STATUS: CLOSED__SOL_ACCEPTED__LOCAL_FRONTEND_FREEZE
+STATUS: CLOSED__SOL_ACCEPTED__LOCAL_FRONTEND_FREEZE__FI14_CONFIG_REFROZEN
 DATE: 2026-08-26
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
 BRANCH: frontend-design-integration
 START_HEAD: 67504579aa062ae809c7fb44c629518042a77b3d
-FROZEN_FRONTEND_SOURCE_COMMIT: 7c2321f9cf1754d2781b57748cea5bf37be75d3f
-FROZEN_FRONTEND_SOURCE_TREE: d0362449654998dc238beaa58f973ea5af30d7d1
+PRIOR_FROZEN_FRONTEND_SOURCE_COMMIT: 7c2321f9cf1754d2781b57748cea5bf37be75d3f
+PRIOR_FROZEN_FRONTEND_SOURCE_TREE: d0362449654998dc238beaa58f973ea5af30d7d1
+FROZEN_FRONTEND_SOURCE_COMMIT: 1c8ac73b88078fc08c96b8836348f29cf418bc6a
+FROZEN_FRONTEND_SOURCE_TREE: dc2e4e2286d68efc4b48ea15076d43435949dedf
 AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, FI-13 accepted packet, TOKEN-OPT-001-A8, project policy, current repository contracts, and accepted Make-v44/Figma Design evidence.
 
 ## Bounded repair
@@ -22,6 +24,15 @@ AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, FI-13 accepted
 - Deterministic frontend artifacts: `dist/index.html` and `HAU-USC_Logistics-Frontend-Shareable.html` share SHA-256 `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`.
 - Repository-only backend identity, unchanged by FI-13: `wrangler.jsonc` blob `8f0a2f2f3b3fc79167616b1884cb4cac19dc80d4`; `cloudflare/wrangler.preview.jsonc` blob `d8fa2a8519c7be9b033b1c1856fe81707903352b`; `migrations/` tree `eabf44d962a2eb36343ed59e67fc6bea7c9af89f`.
 - No Worker, schema, migration, provider, Playground, or Production verification was attempted or implied; all are out of FI-13 scope.
+
+## FI-14 release-path configuration refreeze
+
+- The prior FI-13 source identity is retained as historical evidence, but it is not a lawful FI-14 deployment candidate because the tracked `release-candidate.yml` upload step named a retired shareable artifact that does not exist in the frozen tree.
+- Under Earl's accepted FI-14 authority and Sol's bounded release-preparation decision, only that upload path changed from `HAU-USC_Logistics-Prototype-Shareable.html` to the existing deterministic `HAU-USC_Logistics-Frontend-Shareable.html`; the directly coupled release-pipeline assertion now proves the retired path is absent.
+- Refrozen source/config commit: `1c8ac73b88078fc08c96b8836348f29cf418bc6a`; tree: `dc2e4e2286d68efc4b48ea15076d43435949dedf`.
+- The refreeze ran focused release-pipeline/Playground governance/config tests (12/12), `npm.cmd run build`, and `npm.cmd run verify:dist`. Both deterministic application artifacts remain SHA-256 `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`.
+- This is a configuration-only candidate update: no application source, visual composition, route behavior, backend identity, schema, provider binding, or deployed environment changed. FI-13 browser, Hallmark, and Impeccable evidence is reused only because the two application artifacts are byte-identical.
+- The prospective temporary release ref must point exactly to this refrozen source/config commit, never to the old FI-13 source or a docs-only closure commit.
 
 ## Verification evidence
 
@@ -47,5 +58,5 @@ AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, FI-13 accepted
 
 ## Closure boundary
 
-- The FI-13 Terra writer lock is released after this receipt/current-chain closure commit.
-- NEXT_EXACT_ACTION: owner-authorized FI-14 preflight only, beginning with a fresh accepted FI-14 packet and writer lock. Do not implement FI-14, deploy, or alter Playground/Production from this receipt.
+- The FI-13 Terra writer lock remains released; the separate FI-14 Terra writer lock is recorded only in the active FI-14 current chain.
+- NEXT_EXACT_ACTION: re-run the FI-14 exact-candidate, Cloudflare/GitHub authorization, isolation, and rollback preflight for `1c8ac73b88078fc08c96b8836348f29cf418bc6a`; only then create the exact temporary release ref and dispatch the existing isolated workflow. Do not alter Production from this receipt.

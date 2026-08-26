@@ -2,7 +2,7 @@
 
 INTENT: RELEASE_PREPARATION + TESTING + ISOLATED_PLAYGROUND_DEPLOYMENT
 MODE: EXECUTE
-OBJECTIVE: Repair the retired release-candidate shareable upload path, refreeze the exact FI-13 application candidate, then deploy and accept only that exact candidate through the existing isolated Playground workflow. Production remains untouched.
+OBJECTIVE: Run the full exact-candidate/isolation/rollback preflight for the refrozen FI-13 application candidate, then deploy and accept only that exact candidate through the existing isolated Playground workflow if every gate remains green. Production remains untouched.
 TARGET: .codex/specs/accepted/2026-08-26-fi14-isolated-playground-deployment-acceptance.md; .github/workflows/release-candidate.yml; tests/unit/release-pipeline.test.js; FI-13 receipt; new FI-14 receipt and current-chain records after verified deployment.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
@@ -11,7 +11,7 @@ START_HEAD: e1c90fda32bc62566807ce4ebc8d747a034ea740
 UPSTREAM_AT_HANDSHAKE: origin/frontend-design-integration @ e1c90fda32bc62566807ce4ebc8d747a034ea740 (+0/-0)
 AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 sections 16 and 20; Sol FI-14 route decision; TOKEN-OPT-001-A8; project policy; accepted FI-13 freeze; accepted isolated Playground governance; current repository contracts.
 REQUIRED_MODEL: GPT-5.6 Terra / Max is the sole canonical frontend writer; Sol remains read-only planner, integrator, reviewer, and final acceptance authority.
-TASK_STATUS: FI14_ACCEPTED__PREDEPLOY_RELEASE_PATH_REPAIR_AND_REFREEZE
+TASK_STATUS: FI14_ACCEPTED__REFROZEN_CANDIDATE__PREDEPLOY_PREFLIGHT_REQUIRED
 ACTIVE_WRITER: /root/fi14_terra_writer__GPT-5.6_TERRA_MAX
 WRITER_LOCK: ACQUIRED__FI14__frontend-design-integration
 RISK: HIGH
@@ -26,4 +26,4 @@ DELEGATION_LEDGER:
 
 PREVIEW_TARGET: http://127.0.0.1:4173/
 PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART
-NEXT_EXACT_ACTION: Apply the smallest release-candidate artifact-path correction and its narrow assertion, then prove the new FI-13 source/config candidate keeps the application artifact byte-identical before any release ref or workflow dispatch.
+NEXT_EXACT_ACTION: Re-run full FI-14 preflight for exact source/config commit `1c8ac73b88078fc08c96b8836348f29cf418bc6a` / tree `dc2e4e2286d68efc4b48ea15076d43435949dedf`; only if identity, authorization, isolation, and rollback gates are green create the exact temporary release ref and dispatch the existing isolated workflow.

@@ -2,17 +2,17 @@
 
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
 MILESTONE: R1_FI14_ISOLATED_PLAYGROUND_DEPLOYMENT_ACCEPTANCE
-STATUS: FI14_AUTHORIZED__PREDEPLOY_REPAIR_AND_REFREEZE_IN_PROGRESS
-PHASE: FI14_EXACT_CANDIDATE_REPAIR__WRITER_LOCK_ACQUIRED__NO_DEPLOY_YET
+STATUS: FI14_AUTHORIZED__REFROZEN_CANDIDATE__PREDEPLOY_PREFLIGHT_IN_PROGRESS
+PHASE: FI14_EXACT_CANDIDATE_PREFLIGHT__WRITER_LOCK_ACQUIRED__NO_DEPLOY_YET
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
 START_HEAD: e1c90fda32bc62566807ce4ebc8d747a034ea740
 UPSTREAM: origin/frontend-design-integration @ e1c90fda32bc62566807ce4ebc8d747a034ea740 (+0/-0 at FI-14 handshake)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY__FI14_PACKET_AND_LOCK_RECORDS_PENDING_COMMIT__PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
+WORKTREE_STATE: DIRTY__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
 ACTIVE_WRITER: /root/fi14_terra_writer__GPT-5.6_TERRA_MAX__SOLE_CANONICAL_WRITER
 WRITER_LOCK: ACQUIRED__FI14__frontend-design-integration
-HANDOFF_STATUS: FI14_ACTIVE__WRITER_OWNS_RELEASE_PIPELINE_PREP
+HANDOFF_STATUS: FI14_ACTIVE__REFROZEN_CANDIDATE__PREDEPLOY_PREFLIGHT
 REQUIRED_MODEL: GPT-5.6 Terra / Max sole frontend writer; GPT-5.6 Sol remains read-only orchestration and final acceptance
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
@@ -20,20 +20,20 @@ ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi14-isolated-playground-deploym
 FI14_PACKET_STATUS: ACCEPTED__OWNER_AUTHORIZED__IN_PROGRESS
 FI14_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 sections 16 and 20; TOKEN-OPT-001-A8; project policy; accepted FI-13 freeze; accepted isolated Playground governance; Sol FI-14 route decision.
 FI14_SCOPE: Smallest release-candidate workflow artifact-path repair, new FI-13 source/config freeze with unchanged frontend application artifact proof, exact temporary release ref, isolated workflow deployment/acceptance, and closure evidence only.
-FI14_INVARIANTS: No frontend application/runtime/backend/Worker/API/auth/authorization/session/schema/migration/D1/R2/data/provider/Figma/Make/Production/main mutation; `.ai-bridge/` excluded and untouched; no local-preview restart; no branch/identity spoofing; no private value disclosure.
-FI14_PREDEPLOY_STATE: Native release workflow is active and GitHub/Cloudflare authorization checks passed; the exact FI-13 application candidate is temporarily invalidated only because the workflow still referenced a retired shareable artifact path. The smallest tracked workflow correction and refreeze are authorized before any candidate ref or deployment.
-FI14_NEXT_ACTION: Repair the retired workflow artifact path and its directly coupled assertion, prove application artifact bytes unchanged, then re-run exact candidate/isolation/rollback preflight before release ref creation or workflow dispatch.
-FI13_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED__PRIOR_SOURCE_FREEZE_INVALIDATED_BY_AUTHORIZED_WORKFLOW_CONFIG_REPAIR
+FI14_INVARIANTS: No frontend application behavior/runtime or backend/API/auth/authorization/session/schema/migration mutation; no provider configuration/resource creation/crossover beyond deployment of the exact isolated Worker candidate; no D1/R2/data or Production/main mutation; `.ai-bridge/` excluded and untouched; no local-preview restart; no branch/identity spoofing; no private value disclosure.
+FI14_PREDEPLOY_STATE: Native release workflow remains active and GitHub/Cloudflare authorization was read-only verified without private values. The sole tracked workflow repair and its direct assertion are source-frozen at `1c8ac73b88078fc08c96b8836348f29cf418bc6a` / `dc2e4e2286d68efc4b48ea15076d43435949dedf`; both deterministic application artifacts remain byte-identical. No candidate ref or deployment exists yet; fresh exact-candidate/isolation/rollback preflight remains required before either external write.
+FI14_NEXT_ACTION: Re-run exact candidate, Cloudflare/GitHub authorization, Worker/API identity, D1/R2/secrets/binding/recipient/queue isolation, and rollback preflight for `1c8ac73b88078fc08c96b8836348f29cf418bc6a`; only if green create the exact temporary release ref and dispatch the existing isolated workflow.
+FI13_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED__FI14_CONFIG_REFROZEN__APP_ARTIFACT_BYTE_IDENTICAL
 FI13_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, section 15; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-12 records; current repository contracts; accepted live Make-v44 and Figma Design evidence.
 FI13_SCOPE: Final local candidate craft gate only: bounded Hallmark audit, Impeccable Operate-mode audit/polish, semantic/accessibility/responsive/contrast/keyboard/focus/motion/console/network checks, truthful real/synthetic labels, route-separation proof, and exact frontend candidate freeze. Prove a defect before a product change; use one related batch and one confirmation pass.
 FI13_INVARIANTS: Preserve accepted Make-v44 composition, brand language, product truth, module IA, capability and privacy boundaries, A3/A4 Preview Index isolation, backend/auth/Worker/data/provider/Figma/Make/Playground/Production/main invariants, and `.ai-bridge/` untouched.
 FI13_ACCEPTANCE_THRESHOLD: OPEN_VISUAL_P0=0; OPEN_VISUAL_P1=0; OPEN_VISUAL_UNWAIVED_P2=0; KNOWN_REPRODUCIBLE_SCOPED_UI_BUGS=0; SEMANTIC_REGRESSIONS=0; AUTHORIZATION_REGRESSIONS=0; PRIVACY_REGRESSIONS=0; DATA_INVARIANT_REGRESSIONS=0.
 FI13_PREVIEW: http://127.0.0.1:4173/ — parent Sol handshake evidence HTTP 200 after FI-12 push; persistent supervisor is reused and must not be restarted absent a proved failure.
-FROZEN_FRONTEND_SOURCE_COMMIT: 7c2321f9cf1754d2781b57748cea5bf37be75d3f
-FROZEN_FRONTEND_SOURCE_TREE: d0362449654998dc238beaa58f973ea5af30d7d1
+FROZEN_FRONTEND_SOURCE_COMMIT: 1c8ac73b88078fc08c96b8836348f29cf418bc6a
+FROZEN_FRONTEND_SOURCE_TREE: dc2e4e2286d68efc4b48ea15076d43435949dedf
 FI13_ARTIFACT_SHA256: B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556 (dist/index.html = shareable)
 FI13_RECEIPT: .codex/FI13_FINAL_CRAFT_EXACT_FRONTEND_FREEZE_RECEIPT.md
-FI13_NEXT_ACTION: Begin only owner-authorized FI-14 preflight with a fresh accepted FI-14 packet and writer lock; do not implement FI-14 or deploy.
+FI13_NEXT_ACTION: Retained as a closed local-craft receipt; FI-14 must use only the separately recorded exact refrozen source/config commit after its mandatory deployment preflight.
 FI12_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED
 FI12_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 attachment; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-11 packets and receipts; live Make-v44 visual evidence; current repository contracts.
 FI12_SCOPE: Bounded audit and repair of proven material cross-surface drift only. Preserve module-specific IA, route/capability boundaries, A3/A4 isolation, accepted Make-v44 composition, semantics, privacy, and all backend/domain invariants.
@@ -100,7 +100,7 @@ FI07_RECEIPT: .codex/FI07_INTERNAL_LENDING_HUB_RECEIPT.md
 BLOCKER: NONE — the prior retired workflow artifact path is a proven, authorized FI-14 release-preparation repair; no external deployment has occurred.
 PREVIEW_TARGET: http://127.0.0.1:4173/
 PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART
-NEXT_EXACT_ACTION: Apply the smallest release-candidate artifact-path correction and its narrow assertion, then prove the new FI-13 source/config candidate keeps the application artifact byte-identical before any release ref or workflow dispatch.
+NEXT_EXACT_ACTION: Re-run full FI-14 preflight for exact source/config commit `1c8ac73b88078fc08c96b8836348f29cf418bc6a` / tree `dc2e4e2286d68efc4b48ea15076d43435949dedf`; only if identity, authorization, isolation, and rollback gates are green create the exact temporary release ref and dispatch the existing isolated workflow.
 
 ## Active A4 preview inspection
 
