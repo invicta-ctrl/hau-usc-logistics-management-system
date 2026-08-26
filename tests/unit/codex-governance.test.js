@@ -37,12 +37,12 @@ describe('Codex governance validators', () => {
     );
   });
 
-  it('requires the canonical Sol/Terra/Luna and Quick Document Fix policies', () => {
+  it('requires the A8 Sol/Terra/Luna and Quick Document Fix policies', () => {
     const valid = [
       'extension_id: HAU-USC-LOGISTICS-PROJECT-POLICY-V1',
       'Read the byte-identical universal root `AGENTS.md` first',
       'universal AGENTS.md -> .agents/PROJECT_POLICY.md -> .codex/CURRENT.md',
-      'TOKEN-OPT-001 is the sole account-wide token/context-efficiency authority',
+      'TOKEN-OPT-001-A8 is the active account-wide routing authority',
       'skill registry',
       '.codex/TASK_ROUTING.md',
       '.codex/CAVEMAN_WORKFLOW.md',
@@ -59,21 +59,26 @@ describe('Codex governance validators', () => {
       'Legacy current/task REQUIRED_MODEL: CODEX remains superseded and non-authoritative and does not require a current-chain rewrite for this explicitly accepted bootstrap',
       'ORCHESTRATOR_MODEL: GPT-5.6 Sol',
       'ORCHESTRATOR_WRITES: FORBIDDEN',
-      'SOL_SUBAGENTS: FORBIDDEN',
-      'MAX_SOL_SUBAGENTS: 0',
+      'SOL_SUBAGENTS: PROHIBITED',
+      'MAX_LUNA_MAX_SUBAGENTS: 16',
+      'MAX_TERRA_MAX_SUBAGENTS: 2',
+      'MAX_OX_ALPHA_SUBAGENTS: 16',
+      'MAX_TOTAL_DIRECT_SUBAGENTS: 16',
       'WRITER_MODEL: Terra MAX',
-      'DEFAULT_CHILDREN: 0',
-      'MAX_ACTIVE_CHILDREN: 1',
-      'CANONICAL_ACTIVE_WRITER: one Terra Integration Writer',
+      'FRONTEND_WRITER: exactly one GPT-5.6 Terra / Max when implementation is required',
       'READER_MODEL: Luna MAX',
-      'LUNA_WRITES: FORBIDDEN',
-      'ORDINARY_REASONING: high or lower',
+      'FRONTEND_LUNA: READ_ONLY',
       'ROUTINE_INDEPENDENT_REVIEW: false',
       'ROUTINE_FULL_SUITE_AFTER_SMALL_MODULE: false',
       'STOP_WHEN_GREEN: true',
       'DELEGATION_DEPTH: 1',
+      'RECURSIVE_CHILD_SPAWNING: FORBIDDEN',
+      'AUTOMATIC_MODEL_FALLBACK: DISABLED',
+      'MAX_ACTIVE_WRITERS_ACCOUNT_WIDE: 2',
+      'MAX_WRITERS_PER_REPOSITORY_OR_WORKTREE: 1',
       'SUBAGENT_SPAWNER: Sol only',
       'MODEL_SUBSTITUTION: forbidden unless Earl explicitly amends the task',
+      'The Sol advisor may choose no workers or multiple direct workers.',
       'On main, legacy REQUIRED_MODEL: CODEX metadata is explicitly superseded and non-authoritative for model routing.',
       'Permanent Git branch and playground release policy',
       '## Permanent Git and recovery policy',
@@ -90,7 +95,7 @@ describe('Codex governance validators', () => {
       'deletion of unknown work',
       'executable security, authentication, or authorization changes',
       'broad architecture decisions',
-      'Default staffing is one Terra Integration Writer, zero Luna reviewers, and zero Sol children.',
+      'Default topology is task-justified; the Sol advisor may choose no workers or multiple direct workers.',
       '### Fast workflow (10 steps)',
       '1. Sol reads the exact target and direct authority',
       '2. Sol defines the minimal diff',
@@ -127,17 +132,59 @@ describe('Codex governance validators', () => {
     expect(
       validateAgentInstructions(
         valid.replace(
-          'TOKEN-OPT-001 is the sole account-wide token/context-efficiency authority',
+          'TOKEN-OPT-001-A8 is the active account-wide routing authority',
           'local efficiency policy',
         ),
       ),
-    ).toContain('TOKEN-OPT sole efficiency authority');
-    expect(validateAgentInstructions(valid.replace('DEFAULT_CHILDREN: 0', 'DEFAULT_CHILDREN: 1'))).toContain(
-      'zero default children',
-    );
-    expect(
-      validateAgentInstructions(valid.replace('MAX_ACTIVE_CHILDREN: 1', 'MAX_ACTIVE_CHILDREN: 2')),
-    ).toContain('one active child maximum');
+    ).toContain('TOKEN-OPT A8 authority');
+    for (const [from, to, missing] of [
+      ['SOL_SUBAGENTS: PROHIBITED', 'SOL_SUBAGENTS: ALLOWED', 'Sol subagents prohibited'],
+      ['MAX_LUNA_MAX_SUBAGENTS: 16', 'MAX_LUNA_MAX_SUBAGENTS: 15', 'Luna Max cap 16'],
+      ['MAX_TERRA_MAX_SUBAGENTS: 2', 'MAX_TERRA_MAX_SUBAGENTS: 3', 'Terra Max cap 2'],
+      ['MAX_OX_ALPHA_SUBAGENTS: 16', 'MAX_OX_ALPHA_SUBAGENTS: 15', 'Ox Alpha cap 16'],
+      [
+        'MAX_TOTAL_DIRECT_SUBAGENTS: 16',
+        'MAX_TOTAL_DIRECT_SUBAGENTS: 15',
+        'total direct worker cap 16',
+      ],
+      ['DELEGATION_DEPTH: 1', 'DELEGATION_DEPTH: 2', 'delegation depth one'],
+      [
+        'RECURSIVE_CHILD_SPAWNING: FORBIDDEN',
+        'RECURSIVE_CHILD_SPAWNING: ALLOWED',
+        'recursive child spawning forbidden',
+      ],
+      [
+        'AUTOMATIC_MODEL_FALLBACK: DISABLED',
+        'AUTOMATIC_MODEL_FALLBACK: ALLOWED',
+        'automatic model fallback disabled',
+      ],
+      [
+        'MAX_WRITERS_PER_REPOSITORY_OR_WORKTREE: 1',
+        'MAX_WRITERS_PER_REPOSITORY_OR_WORKTREE: 2',
+        'one writer per worktree',
+      ],
+      [
+        'FRONTEND_WRITER: exactly one GPT-5.6 Terra / Max when implementation is required',
+        'FRONTEND_WRITER: two GPT-5.6 Terra / Max writers',
+        'one frontend Terra writer',
+      ],
+      ['FRONTEND_LUNA: READ_ONLY', 'FRONTEND_LUNA: WRITES', 'frontend Luna read-only'],
+      [
+        'may choose no workers or multiple direct workers',
+        'must begin with zero workers',
+        'no mandatory zero-worker start',
+      ],
+    ]) {
+      expect(validateAgentInstructions(valid.replaceAll(from, to))).toContain(missing);
+    }
+    for (const [legacyClause, missing] of [
+      ['DEFAULT_CHILDREN: 0', 'obsolete DEFAULT_CHILDREN startup policy'],
+      ['MAX_ACTIVE_CHILDREN: 1', 'obsolete MAX_ACTIVE_CHILDREN limit'],
+      ['MAX_SOL_SUBAGENTS: 16', 'obsolete Sol child capacity'],
+      ['Default staffing is zero Sol children.', 'obsolete zero-Sol-child staffing semantics'],
+    ]) {
+      expect(validateAgentInstructions(`${valid}\n${legacyClause}`)).toContain(missing);
+    }
     expect(
       validateAgentInstructions(
         valid.replace('ROUTINE_INDEPENDENT_REVIEW: false', 'ROUTINE_INDEPENDENT_REVIEW: true'),

@@ -81,9 +81,10 @@ describe('authoritative release pipeline', () => {
   });
 
   it('packages an exact checked candidate, deploys only to playground, and stops for Earl', async () => {
-    const [workflow, playgroundDeploy] = await Promise.all([
+    const [workflow, playgroundDeploy, packageJson] = await Promise.all([
       read('.github/workflows/release-candidate.yml'),
       read('scripts/playground/deploy-playground.mjs'),
+      read('package.json').then(JSON.parse),
     ]);
 
     expect(workflow).toContain('workflow_dispatch:');
@@ -91,7 +92,13 @@ describe('authoritative release pipeline', () => {
     expect(workflow).toContain('environment: release-candidate');
     expect(workflow).toContain('ref: ${{ inputs.candidate_sha }}');
     expect(workflow).toContain('refs/remotes/origin/${EXPECTED_BRANCH}');
-    expect(workflow).toContain('npm run check');
+    expect(workflow).toContain('npm run check:release-candidate');
+    expect(packageJson.scripts['lint:release-candidate']).toBe(
+      'eslint . --ignore-pattern "prototypes/public-portals-r3/**"',
+    );
+    expect(packageJson.scripts['check:release-candidate']).toBe(
+      'npm run check:governance && npm run lint:release-candidate && npm run build && npm run test && npm run check:apps-script && npm run verify:dist && npm run check:cloudflare',
+    );
     expect(workflow).toContain('create-release-candidate-manifest.mjs');
     expect(workflow).toContain('.release/candidate.json');
     expect(workflow).toContain('release-candidate-${{ steps.identity.outputs.sha }}');
