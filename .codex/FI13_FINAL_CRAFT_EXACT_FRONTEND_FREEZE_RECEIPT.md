@@ -1,14 +1,16 @@
 # FI-13 Final Craft / Exact Frontend Freeze Receipt
 
-STATUS: CLOSED__SOL_ACCEPTED__LOCAL_FRONTEND_FREEZE__FI14_CONFIG_REFROZEN
+STATUS: CLOSED__SOL_ACCEPTED__LOCAL_FRONTEND_FREEZE__FI14_CONFIG_REFROZEN__ROLLBACK_GUARD_REFROZEN
 DATE: 2026-08-26
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
 BRANCH: frontend-design-integration
 START_HEAD: 67504579aa062ae809c7fb44c629518042a77b3d
 PRIOR_FROZEN_FRONTEND_SOURCE_COMMIT: 7c2321f9cf1754d2781b57748cea5bf37be75d3f
 PRIOR_FROZEN_FRONTEND_SOURCE_TREE: d0362449654998dc238beaa58f973ea5af30d7d1
-FROZEN_FRONTEND_SOURCE_COMMIT: 1c8ac73b88078fc08c96b8836348f29cf418bc6a
-FROZEN_FRONTEND_SOURCE_TREE: dc2e4e2286d68efc4b48ea15076d43435949dedf
+PREVIOUS_FI14_CONFIG_FREEZE_COMMIT: 1c8ac73b88078fc08c96b8836348f29cf418bc6a
+PREVIOUS_FI14_CONFIG_FREEZE_TREE: dc2e4e2286d68efc4b48ea15076d43435949dedf
+FROZEN_FRONTEND_SOURCE_COMMIT: 1751fd390fc79a6a691c7410107e8b7e1cc36226
+FROZEN_FRONTEND_SOURCE_TREE: 586cf5f7a7679d6dcabea21b204ce7fb6b5d9d05
 AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, FI-13 accepted packet, TOKEN-OPT-001-A8, project policy, current repository contracts, and accepted Make-v44/Figma Design evidence.
 
 ## Bounded repair
@@ -33,6 +35,15 @@ AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, FI-13 accepted
 - The refreeze ran focused release-pipeline/Playground governance/config tests (12/12), `npm.cmd run build`, and `npm.cmd run verify:dist`. Both deterministic application artifacts remain SHA-256 `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`.
 - This is a configuration-only candidate update: no application source, visual composition, route behavior, backend identity, schema, provider binding, or deployed environment changed. FI-13 browser, Hallmark, and Impeccable evidence is reused only because the two application artifacts are byte-identical.
 - The prospective temporary release ref must point exactly to this refrozen source/config commit, never to the old FI-13 source or a docs-only closure commit.
+
+## FI-14 rollback-target guard refreeze
+
+- A final read-only FI-14 predeploy gate could prove existing isolated staging version inventory but could not safely prove the private manifest rollback tuple before upload. Under Earl's section-20 authority and Sol's bounded decision, the native Playground guard was strengthened before any candidate ref or deployment.
+- `deploy-playground.mjs` now resolves the private manifest's rollback staging version through a read-only staging version view before upload. `playground-config.mjs` rejects an absent/mismatched rollback version, D1, brand R2, or evidence R2 tuple; it also rejects any rollback D1/R2 equality with the current Production bindings and an incomplete Production comparison tuple.
+- Direct release-pipeline coverage and functional Playground-config coverage prove the fail-closed tuple behavior. Focused release-pipeline/Playground tests passed 13/13.
+- Refrozen source/config commit: `1751fd390fc79a6a691c7410107e8b7e1cc36226`; tree: `586cf5f7a7679d6dcabea21b204ce7fb6b5d9d05`. This supersedes `1c8ac73b88078fc08c96b8836348f29cf418bc6a` only as the FI-14 candidate because of the authorized guard change.
+- `npm.cmd run build` and `npm.cmd run verify:dist` reproved both deterministic application artifacts at SHA-256 `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`; browser, Hallmark, and Impeccable evidence remains reusable only on that exact application-byte basis.
+- The canonical local preview was recovered through its documented stale-state clear and runtime-only private manifest flow after verifying the live staging target in memory; no private path, hostname, manifest content, source artifact, or repository residue was committed.
 
 ## Verification evidence
 
@@ -59,4 +70,4 @@ AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, FI-13 accepted
 ## Closure boundary
 
 - The FI-13 Terra writer lock remains released; the separate FI-14 Terra writer lock is recorded only in the active FI-14 current chain.
-- NEXT_EXACT_ACTION: re-run the FI-14 exact-candidate, Cloudflare/GitHub authorization, isolation, and rollback preflight for `1c8ac73b88078fc08c96b8836348f29cf418bc6a`; only then create the exact temporary release ref and dispatch the existing isolated workflow. Do not alter Production from this receipt.
+- NEXT_EXACT_ACTION: re-run the FI-14 exact-candidate, Cloudflare/GitHub authorization, isolation, and rollback preflight for `1751fd390fc79a6a691c7410107e8b7e1cc36226`; only then create the exact temporary release ref and dispatch the existing isolated workflow. Do not alter Production from this receipt.
