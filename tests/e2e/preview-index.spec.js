@@ -514,6 +514,102 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   expect(consoleErrors).toEqual([]);
 });
 
+test('FI-10 renders the bounded Administration inspection safely at every accepted viewport', async ({ page }) => {
+  test.setTimeout(90_000);
+  test.skip(!exactInspectionPort, 'Run explicitly against the accepted 4173 supervisor.');
+  await installVersion(page, true);
+  await installEmptyFeed(page);
+  const protectedRequests = [];
+  const consoleErrors = [];
+  page.on('request', (request) => {
+    const pathname = new URL(request.url()).pathname;
+    if (
+      pathname.startsWith('/api/') &&
+      pathname !== '/api/version' &&
+      pathname !== '/api/public/advertisements'
+    ) {
+      protectedRequests.push({ method: request.method(), pathname });
+    }
+  });
+  page.on('console', (message) => {
+    if (message.type() === 'error' && !message.text().includes('/favicon.ico')) {
+      consoleErrors.push(message.text());
+    }
+  });
+
+  await page.setViewportSize({ width: 320, height: 1000 });
+  await page.goto('/#/__preview/index');
+  for (const width of [320, 390, 768, 1024, 1440]) {
+    if (width !== 320) {
+      await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+      await expect(page.locator('[data-preview-index]')).toBeVisible();
+    }
+    await page.setViewportSize({ width, height: 1000 });
+    await page.locator('[data-preview-route="administration"] [data-action="open-preview"]').click();
+
+    const administration = page.locator(
+      '[data-preview-inspection="true"][data-preview-route="administration"] [data-fi10-administration="true"]',
+    );
+    await expect(administration).toBeVisible();
+    await expect(administration.getByText('Sanitized local inspection', { exact: true })).toBeVisible();
+    await expect(
+      administration.getByText('Synthetic preview · no session, backend, or protected data', { exact: true }),
+    ).toBeVisible();
+    await expect(administration.getByRole('button', { name: 'Reference administration' })).toHaveCount(0);
+    await expect(administration.getByRole('button', { name: 'Link registry' })).toHaveCount(0);
+    await expect(administration.getByRole('button', { name: 'Brand & media' })).toHaveCount(0);
+    await expect(administration.getByRole('button', { name: 'System status' })).toHaveCount(0);
+    await expect(administration).not.toContainText('preview-fi10-person-a');
+
+    const previewState = administration.getByLabel('FI-10 preview state');
+    await previewState.selectOption('Loading');
+    await expect(administration.locator('[aria-busy="true"]')).toBeVisible();
+    await previewState.selectOption('Populated');
+
+    const staffTab = administration.getByRole('button', { name: 'Staff directory' });
+    if (await staffTab.isVisible()) {
+      await staffTab.focus();
+      await page.keyboard.press('Enter');
+      await expect(staffTab).toHaveAttribute('aria-current', 'page');
+    } else {
+      const sectionSelect = administration.getByLabel('Administration section', { exact: true });
+      await sectionSelect.focus();
+      await sectionSelect.selectOption('Staff directory');
+      await expect(sectionSelect).toHaveValue('Staff directory');
+    }
+    const desktopStaffRow = administration.locator('tbody tr').filter({
+      hasText: 'Identity withheld by directory policy',
+    }).first();
+    const mobileStaffCard = administration.locator('.cards article').filter({
+      hasText: 'Identity withheld by directory policy',
+    }).first();
+    if (await desktopStaffRow.isVisible()) {
+      await expect(desktopStaffRow).toContainText('Identity withheld by directory policy');
+    } else {
+      await expect(mobileStaffCard).toContainText('Identity withheld by directory policy');
+    }
+    await administration
+      .locator('button[aria-label="Review activity for directory record 1"]:visible')
+      .click();
+    await expect(administration.locator('[data-fi10-activity="true"]')).toBeVisible();
+    await expect(
+      administration.getByText('Preview inspection intentionally withholds staff activity.', { exact: false }),
+    ).toBeVisible();
+
+    await previewState.selectOption('Empty');
+    await expect(
+      administration.getByRole('heading', { name: 'No administration records are shown in this preview state' }),
+    ).toBeVisible();
+    await previewState.selectOption('Populated');
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+    ).toBeLessThanOrEqual(1);
+  }
+
+  expect(protectedRequests).toEqual([]);
+  expect(consoleErrors).toEqual([]);
+});
+
 test('reaches the real staff sign-in page through Test Real Login Flow', async ({ page }) => {
   await installVersion(page, true);
   await installEmptyFeed(page);

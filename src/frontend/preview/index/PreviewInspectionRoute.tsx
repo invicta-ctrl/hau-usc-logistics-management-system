@@ -6,6 +6,7 @@ import { InternalRequestHub } from '../../app/request/InternalRequestHub';
 import { InternalLendingHub } from '../../app/lending/InternalLendingHub';
 import ReleaseDeskRoute from '../../app/ReleaseDeskRoute';
 import SupplyRoutes from '../../app/SupplyRoutes';
+import AdministrationRoute from '../../app/AdministrationRoute';
 import { ExternalRequestCenter } from '../../app/request/ExternalRequestCenter';
 import { AuthenticatedShell } from '../../app/shell/AuthenticatedShell';
 import { LOCAL_PREVIEW_OPERATOR } from '../../app/shell/presentation';
@@ -94,6 +95,8 @@ export function PreviewInspectionRoute({
         <SupplyRoutes dark={dark} mode="restocking" navigate={onOpenRoute} />
       ) : authRoute === 'procurement' ? (
         <SupplyRoutes dark={dark} mode="procurement" navigate={onOpenRoute} />
+      ) : authRoute === 'administration' ? (
+        <AdministrationRoute dark={dark} navigate={onOpenRoute} inspection />
       ) : (
         <AuthPlaceholderRoute route={authRoute} />
       )}

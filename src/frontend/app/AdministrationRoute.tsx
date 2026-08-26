@@ -1,4 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import {
+  FrontendApiError,
+  frontendBackend,
+  type FrontendAdminAccount,
+  type FrontendStaffActivityHistory,
+  type FrontendStaffDirectoryItem,
+} from "../integration/backend";
 import {
   uscLogo,
   dolLogo,
@@ -35,7 +42,603 @@ const tabs: Tab[] = [
   "System status",
   "Activity",
 ];
+type Fi10Tab = "Accounts & access" | "Staff directory" | "Activity";
+type Fi10LoadState = "loading" | "ready" | "denied" | "unavailable";
+type Fi10PreviewState = "Populated" | "Loading" | "Empty" | "Denied" | "Unavailable";
+
+const fi10Tabs: Fi10Tab[] = ["Accounts & access", "Staff directory", "Activity"];
+const previewAccounts: FrontendAdminAccount[] = [
+  {
+    accessId: "SANITIZED-ACCOUNT-A",
+    displayName: "Sanitized account fixture",
+    roleId: "WITHHELD_IN_PREVIEW",
+    status: "PREVIEW_ONLY",
+    firstLoginPending: false,
+    locked: false,
+  },
+  {
+    accessId: "SANITIZED-ACCOUNT-B",
+    displayName: "Sanitized account fixture",
+    roleId: "WITHHELD_IN_PREVIEW",
+    status: "PREVIEW_ONLY",
+    firstLoginPending: false,
+    locked: false,
+  },
+];
+const previewDirectory: FrontendStaffDirectoryItem[] = [
+  {
+    opaquePersonId: "preview-fi10-person-a",
+    displayName: null,
+    accessId: null,
+    linkState: "PREVIEW_ONLY",
+    emailState: "NOT_EXPOSED",
+    assignmentSummary: {
+      activeCount: 0,
+      historicalCount: 0,
+      quarantinedCount: 0,
+      provenanceState: "PREVIEW_ONLY",
+    },
+  },
+  {
+    opaquePersonId: "preview-fi10-person-b",
+    displayName: null,
+    accessId: null,
+    linkState: "PREVIEW_ONLY",
+    emailState: "NOT_EXPOSED",
+    assignmentSummary: {
+      activeCount: 0,
+      historicalCount: 0,
+      quarantinedCount: 0,
+      provenanceState: "PREVIEW_ONLY",
+    },
+  },
+];
+
+function humanize(value: string) {
+  return value
+    ? value
+        .replaceAll("_", " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    : "Not reported";
+}
+
+function dateLabel(value: string) {
+  if (!value) return "Not reported";
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf())
+    ? value
+    : new Intl.DateTimeFormat("en-PH", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(date);
+}
+
 export default function AdministrationRoute({
+  dark,
+  navigate,
+  inspection = false,
+  accessAllowed = true,
+}: {
+  dark: boolean;
+  navigate?: (r: string) => void;
+  /** A4-only inspection mode. It never requests protected administration data. */
+  inspection?: boolean;
+  /** Presentation aid only; the Worker still enforces access.admin independently. */
+  accessAllowed?: boolean;
+}) {
+  const [tab, setTab] = useState<Fi10Tab>("Accounts & access");
+  const [previewState, setPreviewState] = useState<Fi10PreviewState>("Populated");
+  const [loadState, setLoadState] = useState<Fi10LoadState>(inspection ? "ready" : "loading");
+  const [accounts, setAccounts] = useState<FrontendAdminAccount[]>(inspection ? previewAccounts : []);
+  const [directory, setDirectory] = useState<FrontendStaffDirectoryItem[]>(
+    inspection ? previewDirectory : [],
+  );
+  const [selectedAccount, setSelectedAccount] = useState<FrontendAdminAccount | null>(
+    inspection ? previewAccounts[0] : null,
+  );
+  const [selectedStaff, setSelectedStaff] = useState<FrontendStaffDirectoryItem | null>(null);
+  const [activity, setActivity] = useState<FrontendStaffActivityHistory | null>(null);
+  const [activityState, setActivityState] = useState<Fi10LoadState | "selection">("selection");
+  const [reloadKey, setReloadKey] = useState(0);
+  const [activityReloadKey, setActivityReloadKey] = useState(0);
+
+  useEffect(() => {
+    if (inspection) {
+      setAccounts(previewAccounts);
+      setDirectory(previewDirectory);
+      setSelectedAccount(previewAccounts[0]);
+      setLoadState("ready");
+      return;
+    }
+    if (!accessAllowed) {
+      setLoadState("denied");
+      return;
+    }
+    const abort = new AbortController();
+    setLoadState("loading");
+    void Promise.all([
+      frontendBackend.adminAccountDirectory(abort.signal),
+      frontendBackend.staffDirectory(abort.signal),
+    ])
+      .then(([accountResult, directoryResult]) => {
+        if (abort.signal.aborted) return;
+        setAccounts(accountResult.items);
+        setDirectory(directoryResult.items);
+        setSelectedAccount(accountResult.items[0] ?? null);
+        setLoadState("ready");
+      })
+      .catch((error: unknown) => {
+        if (abort.signal.aborted) return;
+        setLoadState(error instanceof FrontendApiError && [401, 403].includes(error.status) ? "denied" : "unavailable");
+      });
+    return () => abort.abort();
+  }, [accessAllowed, inspection, reloadKey]);
+
+  useEffect(() => {
+    if (inspection || tab !== "Activity" || !selectedStaff) {
+      setActivity(null);
+      setActivityState("selection");
+      return;
+    }
+    const abort = new AbortController();
+    setActivityState("loading");
+    void frontendBackend
+      .staffAccountActivityHistory(selectedStaff.opaquePersonId, abort.signal)
+      .then((result) => {
+        if (abort.signal.aborted) return;
+        setActivity(result);
+        setActivityState("ready");
+      })
+      .catch((error: unknown) => {
+        if (abort.signal.aborted) return;
+        setActivityState(error instanceof FrontendApiError && [401, 403].includes(error.status) ? "denied" : "unavailable");
+      });
+    return () => abort.abort();
+  }, [activityReloadKey, inspection, selectedStaff, tab]);
+
+  const visibleState: Fi10LoadState | "empty" =
+    inspection
+      ? previewState === "Loading"
+        ? "loading"
+        : previewState === "Denied"
+          ? "denied"
+          : previewState === "Unavailable"
+            ? "unavailable"
+            : previewState === "Empty"
+              ? "empty"
+              : "ready"
+      : loadState;
+
+  function retry() {
+    if (inspection) {
+      setPreviewState("Populated");
+      return;
+    }
+    setReloadKey((value) => value + 1);
+  }
+
+  function reviewStaffActivity(staff: FrontendStaffDirectoryItem) {
+    setSelectedStaff(staff);
+    setTab("Activity");
+  }
+
+  let content: React.ReactNode;
+  if (visibleState === "loading") {
+    content = <div className="skeleton" aria-busy="true" aria-label="Loading administration records" />;
+  } else if (visibleState === "denied") {
+    content = (
+      <State
+        k="Denied"
+        h="Access administration is not available to your account"
+        p="This message does not confirm whether an account or person exists."
+      >
+        <button className="primary" onClick={() => navigate?.("overview")}>
+          Back to overview
+        </button>
+      </State>
+    );
+  } else if (visibleState === "unavailable") {
+    content = (
+      <State
+        k="Unavailable"
+        h="Administration records are temporarily unavailable"
+        p="No account, staff, or activity record was changed."
+      >
+        <button className="primary" onClick={retry}>
+          Retry read-only load
+        </button>
+      </State>
+    );
+  } else if (visibleState === "empty") {
+    content = (
+      <State
+        k="Sanitized preview"
+        h="No administration records are shown in this preview state"
+        p="Local inspection has no protected roster or activity data."
+      >
+        <button className="primary" onClick={retry}>
+          Restore preview fixture
+        </button>
+      </State>
+    );
+  } else {
+    content = (
+      <Fi10Panel
+        tab={tab}
+        accounts={accounts}
+        directory={directory}
+        selectedAccount={selectedAccount}
+        selectedStaff={selectedStaff}
+        activity={inspection ? null : activity}
+        activityState={inspection ? "selection" : activityState}
+        inspection={inspection}
+        onSelectAccount={setSelectedAccount}
+        onReviewActivity={reviewStaffActivity}
+        onRetryActivity={() => setActivityReloadKey((value) => value + 1)}
+      />
+    );
+  }
+
+  return (
+    <div className={"adm " + (dark ? "dark" : "light")} data-fi10-administration="true">
+      <style>{css}</style>
+      {inspection ? (
+        <section className="sandbox" data-fi10-inspection="true">
+          <b>Sanitized local inspection</b>
+          <span>Synthetic preview · no session, backend, or protected data</span>
+          <label>
+            Preview state
+            <select
+              aria-label="FI-10 preview state"
+              value={previewState}
+              onChange={(event) => setPreviewState(event.target.value as Fi10PreviewState)}
+            >
+              {(["Populated", "Loading", "Empty", "Denied", "Unavailable"] as Fi10PreviewState[]).map((state) => (
+                <option key={state}>{state}</option>
+              ))}
+            </select>
+          </label>
+        </section>
+      ) : null}
+      <header>
+        <div>
+          <p className="eye">Administration + governance</p>
+          <h1>Authorized system controls</h1>
+          <p>Review current access and retained activity without changing authority.</p>
+        </div>
+        <small>{inspection ? "Sanitized fixture · not production data" : "Authenticated read-only data"}</small>
+      </header>
+      <nav className="tabs" aria-label="Administration sections" data-fi10-tabs="true">
+        {fi10Tabs.map((item) => (
+          <button
+            className={tab === item ? "active" : ""}
+            key={item}
+            type="button"
+            aria-current={tab === item ? "page" : undefined}
+            onClick={() => setTab(item)}
+          >
+            {item}
+          </button>
+        ))}
+      </nav>
+      <select
+        className="tab-select"
+        value={tab}
+        aria-label="Administration section"
+        onChange={(event) => setTab(event.target.value as Fi10Tab)}
+      >
+        {fi10Tabs.map((item) => (
+          <option key={item}>{item}</option>
+        ))}
+      </select>
+      {content}
+    </div>
+  );
+}
+
+function Fi10Panel({
+  tab,
+  accounts,
+  directory,
+  selectedAccount,
+  selectedStaff,
+  activity,
+  activityState,
+  inspection,
+  onSelectAccount,
+  onReviewActivity,
+  onRetryActivity,
+}: {
+  tab: Fi10Tab;
+  accounts: FrontendAdminAccount[];
+  directory: FrontendStaffDirectoryItem[];
+  selectedAccount: FrontendAdminAccount | null;
+  selectedStaff: FrontendStaffDirectoryItem | null;
+  activity: FrontendStaffActivityHistory | null;
+  activityState: Fi10LoadState | "selection";
+  inspection: boolean;
+  onSelectAccount: (account: FrontendAdminAccount) => void;
+  onReviewActivity: (staff: FrontendStaffDirectoryItem) => void;
+  onRetryActivity: () => void;
+}) {
+  if (tab === "Accounts & access") {
+    return (
+      <div className="grid">
+        <section className="plane">
+          <div className="head">
+            <div>
+              <p className="eye">Account access</p>
+              <h2>Assigned identity and access</h2>
+            </div>
+            <b>Read-only server projection</b>
+          </div>
+          {accounts.length === 0 ? (
+            <p className="note">No account records are available in the current response.</p>
+          ) : (
+            <>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Account</th>
+                    <th>Access ID</th>
+                    <th>Role</th>
+                    <th>State</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {accounts.map((account) => (
+                    <tr key={account.accessId}>
+                      <td>
+                        <button className="row" type="button" onClick={() => onSelectAccount(account)}>
+                          <b>{account.displayName}</b>
+                          <span>Server-provided display identity</span>
+                        </button>
+                      </td>
+                      <td>{account.accessId}</td>
+                      <td>{humanize(account.roleId)}</td>
+                      <td>
+                        <em>{account.locked ? "Locked" : account.firstLoginPending ? "Pending activation" : humanize(account.status)}</em>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="cards">
+                {accounts.map((account) => (
+                  <article key={account.accessId}>
+                    <div>
+                      <b>{account.displayName}</b>
+                      <em>{account.locked ? "Locked" : humanize(account.status)}</em>
+                    </div>
+                    <p>{account.accessId} · {humanize(account.roleId)}</p>
+                    <button className="primary" type="button" onClick={() => onSelectAccount(account)}>
+                      Inspect account
+                    </button>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+        <aside className="detail">
+          <p className="eye">Read-only account record</p>
+          <h2>{selectedAccount?.displayName || "No account selected"}</h2>
+          {selectedAccount ? (
+            <dl>
+              <div>
+                <dt>Access ID</dt>
+                <dd>{selectedAccount.accessId}</dd>
+              </div>
+              <div>
+                <dt>Role</dt>
+                <dd>{humanize(selectedAccount.roleId)}</dd>
+              </div>
+              <div>
+                <dt>Account state</dt>
+                <dd>{selectedAccount.locked ? "Locked" : humanize(selectedAccount.status)}</dd>
+              </div>
+              <div>
+                <dt>Activation</dt>
+                <dd>{selectedAccount.firstLoginPending ? "Pending activation" : "No pending activation reported"}</dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="note">Select an account record to inspect the supported read-only fields.</p>
+          )}
+          <section className="gate">
+            <b>READ-ONLY · MUTATION NOT IN THIS SLICE</b>
+            <p>Changes to access, roles, approval, or account state remain in their existing authorized workflow.</p>
+            <button disabled type="button">Modify access unavailable</button>
+          </section>
+        </aside>
+      </div>
+    );
+  }
+
+  if (tab === "Staff directory") {
+    return (
+      <div className="grid">
+        <section className="plane">
+          <div className="head">
+            <div>
+              <p className="eye">Canonical directory</p>
+              <h2>Authorized staff records</h2>
+            </div>
+            <b>{inspection ? "Sanitized fixture" : "Identity exposure is contract-gated"}</b>
+          </div>
+          {directory.length === 0 ? (
+            <p className="note">No canonical staff records are available in the current response.</p>
+          ) : (
+            <>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Person</th>
+                    <th>Access identity</th>
+                    <th>Link state</th>
+                    <th>Assignment summary</th>
+                    <th>Activity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {directory.map((staff, index) => (
+                    <tr key={staff.opaquePersonId}>
+                      <td>{staff.displayName || "Identity withheld by directory policy"}</td>
+                      <td>{staff.accessId || "Withheld"}</td>
+                      <td><em>{humanize(staff.linkState)}</em></td>
+                      <td>{staff.assignmentSummary.activeCount} current · {staff.assignmentSummary.historicalCount} retained</td>
+                      <td>
+                        <button
+                          className="row"
+                          type="button"
+                          aria-label={"Review activity for directory record " + (index + 1)}
+                          onClick={() => onReviewActivity(staff)}
+                        >
+                          <b>Review activity</b>
+                          <span>Read-only retained history</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="cards">
+                {directory.map((staff, index) => (
+                  <article key={staff.opaquePersonId}>
+                    <div>
+                      <b>{staff.displayName || "Identity withheld by directory policy"}</b>
+                      <em>{humanize(staff.linkState)}</em>
+                    </div>
+                    <p>{staff.accessId || "Access identity withheld"} · {staff.assignmentSummary.activeCount} current assignment(s)</p>
+                    <button
+                      className="primary"
+                      type="button"
+                      aria-label={"Review activity for directory record " + (index + 1)}
+                      onClick={() => onReviewActivity(staff)}
+                    >
+                      Review activity
+                    </button>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+        <aside className="detail">
+          <p className="eye">Directory privacy</p>
+          <h2>{selectedStaff?.displayName || "Select a staff record"}</h2>
+          {selectedStaff ? (
+            <dl>
+              <div>
+                <dt>Access identity</dt>
+                <dd>{selectedStaff.accessId || "Withheld by directory policy"}</dd>
+              </div>
+              <div>
+                <dt>Link state</dt>
+                <dd>{humanize(selectedStaff.linkState)}</dd>
+              </div>
+              <div>
+                <dt>Email state</dt>
+                <dd>{humanize(selectedStaff.emailState)}</dd>
+              </div>
+              <div>
+                <dt>Assignment provenance</dt>
+                <dd>{humanize(selectedStaff.assignmentSummary.provenanceState)}</dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="note">Select a record to review retained activity without exposing protected identifiers.</p>
+          )}
+          <section className="gate">
+            <b>PRIVACY-BOUND · READ-ONLY</b>
+            <p>Contact details, birthdays, raw person identifiers, and roster editing are not exposed here.</p>
+            <button disabled type="button">Edit directory unavailable</button>
+          </section>
+        </aside>
+      </div>
+    );
+  }
+
+  return (
+    <section className="plane" data-fi10-activity="true">
+      <div className="head">
+        <div>
+          <p className="eye">Append-only activity</p>
+          <h2>Retained staff account activity</h2>
+        </div>
+        <b>{inspection ? "Sanitized preview · no live history" : "One row per retained event"}</b>
+      </div>
+      {inspection ? (
+        <p className="note">Preview inspection intentionally withholds staff activity. Use authenticated administration for the supported read-only history projection.</p>
+      ) : !selectedStaff || activityState === "selection" ? (
+        <p className="note">Select a canonical staff directory record to load its retained activity. Raw account, person, and correlation identifiers are never shown.</p>
+      ) : activityState === "loading" ? (
+        <div className="skeleton" aria-busy="true" aria-label="Loading selected staff activity" />
+      ) : activityState === "denied" ? (
+        <State
+          k="Denied"
+          h="Activity history is not available to your account"
+          p="This message does not confirm whether an activity record exists."
+        >
+          <button className="primary" type="button" onClick={onRetryActivity}>Retry read-only load</button>
+        </State>
+      ) : activityState === "unavailable" ? (
+        <State
+          k="Unavailable"
+          h="Retained activity is temporarily unavailable"
+          p="No history was changed or removed."
+        >
+          <button className="primary" type="button" onClick={onRetryActivity}>Retry read-only load</button>
+        </State>
+      ) : !activity || activity.items.length === 0 ? (
+        <p className="note">No retained activity is available in the current response. The history remains append-only and read-only.</p>
+      ) : (
+        <>
+          <table>
+            <thead>
+              <tr>
+                <th>Occurred</th>
+                <th>Event</th>
+                <th>Action</th>
+                <th>State transition</th>
+                <th>Effective window</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activity.items.map((entry, index) => (
+                <tr key={entry.occurredAt + entry.eventType + entry.actionCode + index}>
+                  <td>{dateLabel(entry.occurredAt)}</td>
+                  <td>{humanize(entry.eventType)}</td>
+                  <td>{humanize(entry.actionCode)}</td>
+                  <td>{humanize(entry.previousLinkState || entry.previousAssignmentState)} → {humanize(entry.linkState || entry.assignmentState)}</td>
+                  <td>{dateLabel(entry.newEffectiveFrom || entry.oldEffectiveFrom)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="cards">
+            {activity.items.map((entry, index) => (
+              <article key={entry.occurredAt + entry.eventType + entry.actionCode + index}>
+                <div>
+                  <b>{humanize(entry.actionCode)}</b>
+                  <em>{humanize(entry.eventType)}</em>
+                </div>
+                <p>{dateLabel(entry.occurredAt)} · {humanize(entry.linkState || entry.assignmentState)}</p>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
+      <p className="note">No raw account, person, correlation, or account-access snapshot is rendered in this history view.</p>
+    </section>
+  );
+}
+
+export function LegacyAdministrationFixture({
   dark,
   navigate,
 }: {
@@ -748,5 +1351,5 @@ function State({
   );
 }
 const css = `
-.adm{--bg:#fffdf8;--m1:#fff;--m2:#f7f0e2;--text:#241416;--muted:#6f5a60;--line:#e6dcc9;--ox:#6f1624;--gold:#a77417;min-height:100%;min-width:0;padding:24px;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans",Inter,Arial,sans-serif}.adm.dark{--bg:#1c1917;--m1:#242120;--m2:#2d2927;--text:#faf9f7;--muted:#b9aaa7;--line:#49413d;--ox:#8e2134;--gold:#d0a64a}.adm *{box-sizing:border-box}.adm button,.adm input,.adm select{font:inherit;min-height:44px;padding:10px 12px;border:1px solid var(--line);background:var(--m1);color:var(--text)}.adm button:focus-visible,.adm input:focus-visible,.adm select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}.adm button:disabled{opacity:.45}.sandbox,header,.head{display:flex;justify-content:space-between;align-items:center;gap:14px}.sandbox,header,.tabs,.grid,.plane,.state,.skeleton,.live{max-width:1440px;margin-left:auto;margin-right:auto}.sandbox{padding:10px 12px;border:1px dashed var(--line);background:var(--m2);font-size:12px}.sandbox span{color:var(--muted)}.sandbox label{display:flex;gap:8px;align-items:center}header{margin-top:22px;align-items:flex-end}header h1{font:700 clamp(28px,3vw,38px)/1.08 "Bricolage Grotesque","IBM Plex Sans",sans-serif;margin:4px 0 10px}header p{margin:0;color:var(--muted)}header small{border:1px solid var(--line);padding:8px}.eye{margin:0;color:var(--gold)!important;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.tabs{display:grid;grid-template-columns:repeat(7,1fr);margin-top:20px}.tabs .active{background:var(--ox);color:#fff;border-color:var(--ox);font-weight:800}.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(340px,.75fr);gap:16px;margin-top:16px;align-items:start}.plane,.detail,.state{background:var(--m1);border:1px solid var(--line)}.head{padding:17px;border-bottom:1px solid var(--line)}h2{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;margin:3px 0}.adm table{width:100%;border-collapse:collapse}.adm th,.adm td{text-align:left;padding:13px 15px;border-bottom:1px solid var(--line);font-size:13px}.adm th{background:var(--m2);font-size:10px;color:var(--muted);text-transform:uppercase}.row{display:grid;text-align:left;border:0!important;padding:0!important;background:transparent!important}.row span{color:var(--muted);font-size:11px}em{font-style:normal;display:inline-block;padding:5px 8px;background:var(--m2);border:1px solid var(--line);font-size:11px;font-weight:800}.cards{display:none}.detail{position:sticky;top:16px;padding:17px}.detail dl{display:grid;gap:9px}.detail dl div{display:grid;grid-template-columns:145px 1fr;gap:8px}.detail dt{color:var(--muted)}.detail dd{margin:0;font-weight:700}.detail label{display:grid;gap:5px;margin:14px 0}.check{grid-template-columns:24px 1fr!important;align-items:center}.check input{min-height:20px}.actions{display:flex;gap:8px;flex-wrap:wrap}.primary{background:var(--ox)!important;color:#fff!important;border-color:var(--ox)!important;font-weight:800}.gate{display:grid;gap:7px;padding:13px;margin:14px 0;background:var(--m2);border-left:4px solid var(--gold)}.gate>b{font-size:10px;color:var(--gold)}.gate p{color:var(--muted);font-size:12px}.state{padding:42px 20px;margin-top:16px}.state p{color:var(--muted)}.skeleton{height:520px;margin-top:16px;background:var(--m2);border:1px solid var(--line)}.note{padding:12px;color:var(--muted)}.live{min-height:24px;margin-top:12px;color:var(--muted);font-size:12px}
+.adm{--bg:#fffdf8;--m1:#fff;--m2:#f7f0e2;--text:#241416;--muted:#6f5a60;--line:#e6dcc9;--ox:#6f1624;--gold:#a77417;min-height:100%;min-width:0;padding:24px;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans",Inter,Arial,sans-serif}.adm.dark{--bg:#1c1917;--m1:#242120;--m2:#2d2927;--text:#faf9f7;--muted:#b9aaa7;--line:#49413d;--ox:#8e2134;--gold:#d0a64a}.adm *{box-sizing:border-box}.adm button,.adm input,.adm select{font:inherit;min-height:44px;padding:10px 12px;border:1px solid var(--line);background:var(--m1);color:var(--text)}.adm button:focus-visible,.adm input:focus-visible,.adm select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}.adm button:disabled{opacity:.45}.sandbox,header,.head{display:flex;justify-content:space-between;align-items:center;gap:14px}.sandbox,header,.tabs,.grid,.plane,.state,.skeleton,.live{max-width:1440px;margin-left:auto;margin-right:auto}.sandbox{padding:10px 12px;border:1px dashed var(--line);background:var(--m2);font-size:12px}.sandbox span{color:var(--muted)}.sandbox label{display:flex;gap:8px;align-items:center}header{margin-top:22px;align-items:flex-end}header h1{font:700 clamp(28px,3vw,38px)/1.08 "Bricolage Grotesque","IBM Plex Sans",sans-serif;margin:4px 0 10px}header p{margin:0;color:var(--muted)}header small{border:1px solid var(--line);padding:8px}.eye{margin:0;color:var(--gold)!important;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.tabs{display:grid;grid-template-columns:repeat(3,1fr);margin-top:20px}.tabs .active{background:var(--ox);color:#fff;border-color:var(--ox);font-weight:800}.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(340px,.75fr);gap:16px;margin-top:16px;align-items:start}.plane,.detail,.state{background:var(--m1);border:1px solid var(--line)}.head{padding:17px;border-bottom:1px solid var(--line)}h2{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;margin:3px 0}.adm table{width:100%;border-collapse:collapse}.adm th,.adm td{text-align:left;padding:13px 15px;border-bottom:1px solid var(--line);font-size:13px}.adm th{background:var(--m2);font-size:10px;color:var(--muted);text-transform:uppercase}.row{display:grid;text-align:left;border:0!important;padding:0!important;background:transparent!important}.row span{color:var(--muted);font-size:11px}em{font-style:normal;display:inline-block;padding:5px 8px;background:var(--m2);border:1px solid var(--line);font-size:11px;font-weight:800}.cards{display:none}.detail{position:sticky;top:16px;padding:17px}.detail dl{display:grid;gap:9px}.detail dl div{display:grid;grid-template-columns:145px 1fr;gap:8px}.detail dt{color:var(--muted)}.detail dd{margin:0;font-weight:700}.detail label{display:grid;gap:5px;margin:14px 0}.check{grid-template-columns:24px 1fr!important;align-items:center}.check input{min-height:20px}.actions{display:flex;gap:8px;flex-wrap:wrap}.primary{background:var(--ox)!important;color:#fff!important;border-color:var(--ox)!important;font-weight:800}.gate{display:grid;gap:7px;padding:13px;margin:14px 0;background:var(--m2);border-left:4px solid var(--gold)}.gate>b{font-size:10px;color:var(--gold)}.gate p{color:var(--muted);font-size:12px}.state{padding:42px 20px;margin-top:16px}.state p{color:var(--muted)}.skeleton{height:520px;margin-top:16px;background:var(--m2);border:1px solid var(--line)}.note{padding:12px;color:var(--muted)}.live{min-height:24px;margin-top:12px;color:var(--muted);font-size:12px}
 .asset-preview{width:64px;height:48px;object-fit:contain;background:var(--m2);border:1px solid var(--line)}.asset-cards{display:none}.tab-select{display:none}@media(max-width:900px){.tabs{grid-template-columns:repeat(2,1fr)}}@media(max-width:768px){.adm{padding:14px}.sandbox,header{flex-direction:column;align-items:flex-start}.tabs{display:none}.tab-select{display:block;width:100%;margin-top:14px}.grid{grid-template-columns:1fr}.adm table{display:none}.asset-cards{display:grid;gap:0}.asset-cards article{display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center;padding:12px;border-bottom:1px solid var(--line)}.asset-cards article div{display:grid;gap:3px}.asset-cards span,.asset-cards small{color:var(--muted)}.cards{display:grid;gap:10px;padding:12px}.cards article{border:1px solid var(--line);padding:13px}.cards article>div{display:flex;justify-content:space-between}.cards .primary{width:100%;min-height:48px}.detail{position:relative;top:auto}.actions{display:grid}.actions button{width:100%;min-height:48px}}@media(max-width:390px){.adm{padding:12px}header h1{font-size:32px}.head{flex-direction:column;align-items:flex-start}.detail dl div{grid-template-columns:1fr}}`;

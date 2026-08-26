@@ -16,6 +16,68 @@ export type FrontendVersion = {
   playground: boolean;
 };
 
+export type FrontendAdminAccount = {
+  accessId: string;
+  displayName: string;
+  roleId: string;
+  status: string;
+  firstLoginPending: boolean;
+  locked: boolean;
+};
+
+export type FrontendAdminAccountDirectory = {
+  page: number;
+  pageSize: number;
+  total: number;
+  items: FrontendAdminAccount[];
+};
+
+export type FrontendStaffDirectoryItem = {
+  /** Opaque runtime-only key. It must never be rendered or copied into the DOM. */
+  opaquePersonId: string;
+  displayName: string | null;
+  accessId: string | null;
+  linkState: string;
+  emailState: string;
+  assignmentSummary: {
+    activeCount: number;
+    historicalCount: number;
+    quarantinedCount: number;
+    provenanceState: string;
+  };
+};
+
+export type FrontendStaffDirectory = {
+  page: number;
+  pageSize: number;
+  query: string;
+  total: number;
+  items: FrontendStaffDirectoryItem[];
+};
+
+export type FrontendStaffActivityItem = {
+  occurredAt: string;
+  eventType: string;
+  actionCode: string;
+  linkState: string;
+  previousLinkState: string;
+  assignmentState: string;
+  previousAssignmentState: string;
+  oldEffectiveFrom: string;
+  oldEffectiveTo: string;
+  newEffectiveFrom: string;
+  newEffectiveTo: string;
+};
+
+export type FrontendStaffActivityHistory = {
+  historyStartsAt: string;
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  items: FrontendStaffActivityItem[];
+};
+
 export type FrontendInventoryItem = {
   id: string;
   name: string;
@@ -737,6 +799,118 @@ export class FrontendBackend {
   async version(signal?: AbortSignal): Promise<FrontendVersion> {
     const payload = await this.request('/api/version', { method: 'GET', signal });
     return { playground: payload.playground === true };
+  }
+
+  /**
+   * FI-10: read only the existing access-admin account directory. Raw account
+   * identifiers and revision tokens deliberately do not cross this projection.
+   */
+  async adminAccountDirectory(signal?: AbortSignal): Promise<FrontendAdminAccountDirectory> {
+    const payload = await this.request('/api/admin/access/directory', {
+      body: { page: 1, pageSize: 25, status: 'ALL' },
+      csrf: true,
+      signal,
+    });
+    if (payload.ok !== true || !Array.isArray(payload.items)) {
+      incomplete('The account directory response did not match the supported access-admin contract.');
+    }
+    return {
+      page: requiredNumber(payload.page, 'account directory page'),
+      pageSize: requiredNumber(payload.pageSize, 'account directory pageSize'),
+      total: requiredNumber(payload.total, 'account directory total'),
+      items: records(payload.items).map((row) => ({
+        accessId: requiredString(row.accessId, 'account directory accessId'),
+        displayName: requiredString(row.displayName, 'account directory displayName'),
+        roleId: requiredString(row.roleId, 'account directory roleId'),
+        status: requiredString(row.status, 'account directory status'),
+        firstLoginPending: row.firstLoginPending === true,
+        locked: row.locked === true,
+      })),
+    };
+  }
+
+  /**
+   * FI-10: preserve the canonical directory's conditional business-identity
+   * exposure. The opaque person identifier is retained only to read a selected
+   * record's activity and is never part of a display projection.
+   */
+  async staffDirectory(signal?: AbortSignal): Promise<FrontendStaffDirectory> {
+    const payload = await this.request('/api/admin/staff-directory', {
+      body: { page: 1, pageSize: 25 },
+      signal,
+    });
+    if (payload.ok !== true || !Array.isArray(payload.items)) {
+      incomplete('The staff directory response did not match the supported canonical directory contract.');
+    }
+    return {
+      page: requiredNumber(payload.page, 'staff directory page'),
+      pageSize: requiredNumber(payload.pageSize, 'staff directory pageSize'),
+      query: asString(payload.query),
+      total: requiredNumber(payload.total, 'staff directory total'),
+      items: records(payload.items).map((row) => {
+        const assignmentSummary = asRecord(row.assignmentSummary);
+        return {
+          opaquePersonId: requiredString(row.personId, 'staff directory personId'),
+          displayName: asString(row.displayName) || null,
+          accessId: asString(row.accessId) || null,
+          linkState: requiredString(row.linkState, 'staff directory linkState'),
+          emailState: requiredString(row.emailState, 'staff directory emailState'),
+          assignmentSummary: {
+            activeCount: requiredNumber(assignmentSummary.activeCount, 'staff directory active assignments'),
+            historicalCount: requiredNumber(
+              assignmentSummary.historicalCount,
+              'staff directory historical assignments',
+            ),
+            quarantinedCount: requiredNumber(
+              assignmentSummary.quarantinedCount,
+              'staff directory quarantined assignments',
+            ),
+            provenanceState: requiredString(
+              assignmentSummary.provenanceState,
+              'staff directory assignment provenance',
+            ),
+          },
+        };
+      }),
+    };
+  }
+
+  /**
+   * FI-10: project only non-sensitive retained activity fields. The Worker
+   * supplies account/correlation identifiers for backend traceability, but this
+   * presentation model intentionally drops them before React receives data.
+   */
+  async staffAccountActivityHistory(
+    opaquePersonId: string,
+    signal?: AbortSignal,
+  ): Promise<FrontendStaffActivityHistory> {
+    const payload = await this.request('/api/admin/staff-account-activity-history', {
+      body: { personId: opaquePersonId, page: 1, pageSize: 25 },
+      signal,
+    });
+    if (payload.ok !== true || !Array.isArray(payload.items)) {
+      incomplete('The staff activity response did not match the supported retained-history contract.');
+    }
+    return {
+      historyStartsAt: asString(payload.historyStartsAt),
+      page: requiredNumber(payload.page, 'staff activity page'),
+      pageSize: requiredNumber(payload.pageSize, 'staff activity pageSize'),
+      total: requiredNumber(payload.total, 'staff activity total'),
+      totalPages: requiredNumber(payload.totalPages, 'staff activity totalPages'),
+      items: records(payload.items).map((row) => ({
+        occurredAt: asString(row.occurredAt),
+        eventType: asString(row.eventType),
+        actionCode: asString(row.actionCode),
+        linkState: asString(row.linkState),
+        previousLinkState: asString(row.previousLinkState),
+        assignmentState: asString(row.assignmentState),
+        previousAssignmentState: asString(row.previousAssignmentState),
+        oldEffectiveFrom: asString(row.oldEffectiveFrom),
+        oldEffectiveTo: asString(row.oldEffectiveTo),
+        newEffectiveFrom: asString(row.newEffectiveFrom),
+        newEffectiveTo: asString(row.newEffectiveTo),
+      })),
+    };
   }
 
   /**

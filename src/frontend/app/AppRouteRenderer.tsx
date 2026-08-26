@@ -11,6 +11,7 @@ import { InternalRequestHub } from './request/InternalRequestHub';
 import { InternalLendingHub } from './lending/InternalLendingHub';
 import ReleaseDeskRoute from './ReleaseDeskRoute';
 import SupplyRoutes from './SupplyRoutes';
+import AdministrationRoute from './AdministrationRoute';
 import { Footer } from './public/Footer';
 import { PublicNavbar } from './public/PublicNavbar';
 import { ExternalRequestCenter } from './request/ExternalRequestCenter';
@@ -91,6 +92,12 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
           <SupplyRoutes dark={dark} mode="restocking" navigate={navigate} />
         ) : route === 'procurement' ? (
           <SupplyRoutes dark={dark} mode="procurement" navigate={navigate} />
+        ) : route === 'administration' ? (
+          <AdministrationRoute
+            dark={dark}
+            navigate={navigate}
+            accessAllowed={session.user.capabilities.includes('access.admin')}
+          />
         ) : (
           <AuthPlaceholderRoute route={route} />
         )}

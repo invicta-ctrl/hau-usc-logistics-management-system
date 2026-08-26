@@ -177,11 +177,11 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Administration',
     group: 'ADMINISTRATION',
     description:
-      'Authenticated administration surface with preserved visual components and no active backend calls.',
-    implementationStatus: 'SURFACE_PREVIEW',
-    backendStatus: 'VISUAL_ONLY',
+      'Authenticated FI-10 Accounts, Directory, and Activity module uses supported read-only administration data. Local inspection is a sanitized deterministic presentation with no protected request or mutation.',
+    implementationStatus: 'ACCEPTED',
+    backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
-    previewMode: 'SURFACE_PREVIEW',
+    previewMode: 'REAL_MODULE',
   }),
   Object.freeze({
     id: 'profile',
