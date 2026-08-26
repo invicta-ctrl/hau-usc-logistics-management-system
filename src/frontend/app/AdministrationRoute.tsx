@@ -3,8 +3,11 @@ import {
   FrontendApiError,
   frontendBackend,
   type FrontendAdminAccount,
+  type FrontendBrandAssetSlot,
+  type FrontendReferenceLink,
   type FrontendStaffActivityHistory,
   type FrontendStaffDirectoryItem,
+  type FrontendSystemStatus,
 } from "../integration/backend";
 import {
   uscLogo,
@@ -43,10 +46,14 @@ const tabs: Tab[] = [
   "Activity",
 ];
 type Fi10Tab = "Accounts & access" | "Staff directory" | "Activity";
+type Fi11Tab = "Reference administration" | "Link registry" | "Brand & media" | "System status";
+type AdminTab = Fi10Tab | Fi11Tab;
 type Fi10LoadState = "loading" | "ready" | "denied" | "unavailable";
 type Fi10PreviewState = "Populated" | "Loading" | "Empty" | "Denied" | "Unavailable";
 
 const fi10Tabs: Fi10Tab[] = ["Accounts & access", "Staff directory", "Activity"];
+const fi11Tabs: Fi11Tab[] = ["Reference administration", "Link registry", "Brand & media", "System status"];
+const administrationTabs: AdminTab[] = [...fi10Tabs, ...fi11Tabs];
 const previewAccounts: FrontendAdminAccount[] = [
   {
     accessId: "SANITIZED-ACCOUNT-A",
@@ -93,6 +100,30 @@ const previewDirectory: FrontendStaffDirectoryItem[] = [
     },
   },
 ];
+const previewReferenceLinks: FrontendReferenceLink[] = [
+  {
+    label: "Sanitized governed destination",
+    destination: "/preview/reference",
+    linkType: "INTERNAL",
+    audience: "PREVIEW_ONLY",
+    status: "PREVIEW_ONLY",
+    syncState: "NOT_LIVE",
+    updatedAt: "",
+    archivedAt: "",
+  },
+];
+const previewBrandSlots: FrontendBrandAssetSlot[] = [
+  {
+    label: "Sanitized brand slot",
+    publicPath: "/brand/preview-only",
+    publicationState: "NOT_PUBLISHED",
+    publishedAt: "",
+  },
+];
+const previewSystemStatus: FrontendSystemStatus = {
+  technicalResponse: "RESPONSE_RECEIVED",
+  readiness: "NOT_REPORTED_READY",
+};
 
 function humanize(value: string) {
   return value
@@ -122,6 +153,7 @@ export default function AdministrationRoute({
   navigate,
   inspection = false,
   accessAllowed = true,
+  capabilities = [],
 }: {
   dark: boolean;
   navigate?: (r: string) => void;
@@ -129,8 +161,10 @@ export default function AdministrationRoute({
   inspection?: boolean;
   /** Presentation aid only; the Worker still enforces access.admin independently. */
   accessAllowed?: boolean;
+  /** Presentation gates only; each server endpoint remains independently authoritative. */
+  capabilities?: readonly string[];
 }) {
-  const [tab, setTab] = useState<Fi10Tab>("Accounts & access");
+  const [tab, setTab] = useState<AdminTab>("Accounts & access");
   const [previewState, setPreviewState] = useState<Fi10PreviewState>("Populated");
   const [loadState, setLoadState] = useState<Fi10LoadState>(inspection ? "ready" : "loading");
   const [accounts, setAccounts] = useState<FrontendAdminAccount[]>(inspection ? previewAccounts : []);
@@ -145,6 +179,14 @@ export default function AdministrationRoute({
   const [activityState, setActivityState] = useState<Fi10LoadState | "selection">("selection");
   const [reloadKey, setReloadKey] = useState(0);
   const [activityReloadKey, setActivityReloadKey] = useState(0);
+  const [referenceLinks, setReferenceLinks] = useState<FrontendReferenceLink[]>([]);
+  const [referenceState, setReferenceState] = useState<Fi10LoadState>(inspection ? "ready" : "loading");
+  const [brandSlots, setBrandSlots] = useState<FrontendBrandAssetSlot[]>([]);
+  const [brandState, setBrandState] = useState<Fi10LoadState>(inspection ? "ready" : "loading");
+  const [systemStatus, setSystemStatus] = useState<FrontendSystemStatus | null>(null);
+  const [systemState, setSystemState] = useState<Fi10LoadState>(inspection ? "ready" : "loading");
+  const [fi11ReloadKey, setFi11ReloadKey] = useState(0);
+  const hasCapability = (capability: string) => inspection || capabilities.includes(capability);
 
   useEffect(() => {
     if (inspection) {
@@ -200,6 +242,87 @@ export default function AdministrationRoute({
     return () => abort.abort();
   }, [activityReloadKey, inspection, selectedStaff, tab]);
 
+  useEffect(() => {
+    if (tab !== "Link registry") return;
+    if (inspection) {
+      setReferenceLinks(previewReferenceLinks);
+      setReferenceState("ready");
+      return;
+    }
+    if (!hasCapability("reference.manage")) {
+      setReferenceState("denied");
+      return;
+    }
+    const abort = new AbortController();
+    setReferenceState("loading");
+    void frontendBackend
+      .referenceLinks(abort.signal)
+      .then((items) => {
+        if (abort.signal.aborted) return;
+        setReferenceLinks(items);
+        setReferenceState("ready");
+      })
+      .catch((error: unknown) => {
+        if (abort.signal.aborted) return;
+        setReferenceState(error instanceof FrontendApiError && [401, 403].includes(error.status) ? "denied" : "unavailable");
+      });
+    return () => abort.abort();
+  }, [capabilities, fi11ReloadKey, inspection, tab]);
+
+  useEffect(() => {
+    if (tab !== "Brand & media") return;
+    if (inspection) {
+      setBrandSlots(previewBrandSlots);
+      setBrandState("ready");
+      return;
+    }
+    if (!hasCapability("brand.manage")) {
+      setBrandState("denied");
+      return;
+    }
+    const abort = new AbortController();
+    setBrandState("loading");
+    void frontendBackend
+      .brandAssetSlots(abort.signal)
+      .then((items) => {
+        if (abort.signal.aborted) return;
+        setBrandSlots(items);
+        setBrandState("ready");
+      })
+      .catch((error: unknown) => {
+        if (abort.signal.aborted) return;
+        setBrandState(error instanceof FrontendApiError && [401, 403].includes(error.status) ? "denied" : "unavailable");
+      });
+    return () => abort.abort();
+  }, [capabilities, fi11ReloadKey, inspection, tab]);
+
+  useEffect(() => {
+    if (tab !== "System status") return;
+    if (inspection) {
+      setSystemStatus(previewSystemStatus);
+      setSystemState("ready");
+      return;
+    }
+    if (!hasCapability("system.admin")) {
+      setSystemState("denied");
+      return;
+    }
+    const abort = new AbortController();
+    setSystemState("loading");
+    void frontendBackend
+      .systemStatus(abort.signal)
+      .then((status) => {
+        if (abort.signal.aborted) return;
+        setSystemStatus(status);
+        setSystemState("ready");
+      })
+      .catch((error: unknown) => {
+        if (abort.signal.aborted) return;
+        setSystemState(error instanceof FrontendApiError && [401, 403].includes(error.status) ? "denied" : "unavailable");
+      });
+    return () => abort.abort();
+  }, [capabilities, fi11ReloadKey, inspection, tab]);
+
   const visibleState: Fi10LoadState | "empty" =
     inspection
       ? previewState === "Loading"
@@ -226,8 +349,32 @@ export default function AdministrationRoute({
     setTab("Activity");
   }
 
+  function retryFi11() {
+    if (inspection) {
+      setPreviewState("Populated");
+      return;
+    }
+    setFi11ReloadKey((value) => value + 1);
+  }
+
   let content: React.ReactNode;
-  if (visibleState === "loading") {
+  const isFi10Tab = fi10Tabs.includes(tab as Fi10Tab);
+  if (!isFi10Tab) {
+    content = (
+      <Fi11Panel
+        tab={tab as Fi11Tab}
+        inspection={inspection}
+        previewState={previewState}
+        links={referenceLinks}
+        referenceState={referenceState}
+        brandSlots={brandSlots}
+        brandState={brandState}
+        systemStatus={systemStatus}
+        systemState={systemState}
+        onRetry={retryFi11}
+      />
+    );
+  } else if (visibleState === "loading") {
     content = <div className="skeleton" aria-busy="true" aria-label="Loading administration records" />;
   } else if (visibleState === "denied") {
     content = (
@@ -284,7 +431,7 @@ export default function AdministrationRoute({
   }
 
   return (
-    <div className={"adm " + (dark ? "dark" : "light")} data-fi10-administration="true">
+    <div className={"adm " + (dark ? "dark" : "light")} data-fi10-administration="true" data-fi11-administration="true">
       <style>{css}</style>
       {inspection ? (
         <section className="sandbox" data-fi10-inspection="true">
@@ -293,7 +440,7 @@ export default function AdministrationRoute({
           <label>
             Preview state
             <select
-              aria-label="FI-10 preview state"
+              aria-label="Administration preview state"
               value={previewState}
               onChange={(event) => setPreviewState(event.target.value as Fi10PreviewState)}
             >
@@ -308,12 +455,12 @@ export default function AdministrationRoute({
         <div>
           <p className="eye">Administration + governance</p>
           <h1>Authorized system controls</h1>
-          <p>Review current access and retained activity without changing authority.</p>
+          <p>Review only the current authorized read-only projection without changing authority.</p>
         </div>
         <small>{inspection ? "Sanitized fixture · not production data" : "Authenticated read-only data"}</small>
       </header>
-      <nav className="tabs" aria-label="Administration sections" data-fi10-tabs="true">
-        {fi10Tabs.map((item) => (
+      <nav className="tabs" aria-label="Administration sections" data-fi10-tabs="true" data-fi11-tabs="true">
+        {administrationTabs.map((item) => (
           <button
             className={tab === item ? "active" : ""}
             key={item}
@@ -329,9 +476,9 @@ export default function AdministrationRoute({
         className="tab-select"
         value={tab}
         aria-label="Administration section"
-        onChange={(event) => setTab(event.target.value as Fi10Tab)}
+        onChange={(event) => setTab(event.target.value as AdminTab)}
       >
-        {fi10Tabs.map((item) => (
+        {administrationTabs.map((item) => (
           <option key={item}>{item}</option>
         ))}
       </select>
@@ -634,6 +781,219 @@ function Fi10Panel({
         </>
       )}
       <p className="note">No raw account, person, correlation, or account-access snapshot is rendered in this history view.</p>
+    </section>
+  );
+}
+
+function Fi11Panel({
+  tab,
+  inspection,
+  previewState,
+  links,
+  referenceState,
+  brandSlots,
+  brandState,
+  systemStatus,
+  systemState,
+  onRetry,
+}: {
+  tab: Fi11Tab;
+  inspection: boolean;
+  previewState: Fi10PreviewState;
+  links: FrontendReferenceLink[];
+  referenceState: Fi10LoadState;
+  brandSlots: FrontendBrandAssetSlot[];
+  brandState: Fi10LoadState;
+  systemStatus: FrontendSystemStatus | null;
+  systemState: Fi10LoadState;
+  onRetry: () => void;
+}) {
+  const fixtureState: Fi10LoadState | 'empty' =
+    previewState === 'Loading'
+      ? 'loading'
+      : previewState === 'Denied'
+        ? 'denied'
+        : previewState === 'Unavailable'
+          ? 'unavailable'
+          : previewState === 'Empty'
+            ? 'empty'
+            : 'ready';
+  const state = inspection ? fixtureState : tab === 'Link registry' ? referenceState : tab === 'Brand & media' ? brandState : tab === 'System status' ? systemState : 'ready';
+
+  if (state === 'loading') {
+    return <div className="skeleton" aria-busy="true" aria-label={`Loading ${tab.toLowerCase()} records`} />;
+  }
+  if (state === 'denied') {
+    return (
+      <State
+        k="Denied"
+        h={`${tab} is not available to your account`}
+        p="This message does not confirm whether protected records or technical detail exist."
+      />
+    );
+  }
+  if (state === 'unavailable') {
+    return (
+      <State
+        k="Unavailable"
+        h={`${tab} is temporarily unavailable`}
+        p="No reference, brand, event, provider, or system record was changed."
+      >
+        <button className="primary" type="button" onClick={onRetry}>Retry read-only load</button>
+      </State>
+    );
+  }
+  if (state === 'empty') {
+    return (
+      <State
+        k="Sanitized preview"
+        h={`No ${tab.toLowerCase()} records are shown in this preview state`}
+        p="Local inspection has no protected or live technical data."
+      >
+        <button className="primary" type="button" onClick={onRetry}>Restore preview fixture</button>
+      </State>
+    );
+  }
+
+  if (tab === 'Reference administration') {
+    return (
+      <section className="plane" data-fi11-reference-administration="true">
+        <div className="head">
+          <div>
+            <p className="eye">Reference administration</p>
+            <h2>Reference-set data is not available in this frontend contract</h2>
+          </div>
+          <b>Truthful contract gap</b>
+        </div>
+        <p className="note">
+          This frontend does not receive a supported read-only reference-set projection. The Link Registry tab separately shows only the governed destination records supplied by its own contract.
+        </p>
+        <section className="gate">
+          <b>READ-ONLY · NO REFERENCE-SET MUTATION</b>
+          <p>Creating, editing, publishing, synchronizing, or inferring reference-set data is outside this FI-11 frontend slice.</p>
+          <button type="button" disabled>Reference-set actions unavailable</button>
+        </section>
+      </section>
+    );
+  }
+
+  if (tab === 'Link registry') {
+    return (
+      <section className="plane" data-fi11-link-registry="true">
+        <div className="head">
+          <div>
+            <p className="eye">Governed destinations</p>
+            <h2>Link Registry</h2>
+          </div>
+          <b>{inspection ? 'Sanitized fixture · no live read' : 'Read-only server projection'}</b>
+        </div>
+        {links.length === 0 ? (
+          <p className="note">No governed destinations are available in the current response.</p>
+        ) : (
+          <>
+            <table>
+              <thead>
+                <tr><th>Label</th><th>Destination</th><th>Audience</th><th>State</th><th>Verification</th></tr>
+              </thead>
+              <tbody>
+                {links.map((link, index) => (
+                  <tr key={`${link.label}-${index}`}>
+                    <td><b>{link.label}</b><br /><span>{humanize(link.linkType)}</span></td>
+                    <td>{link.destination}</td>
+                    <td>{humanize(link.audience)}</td>
+                    <td><em>{humanize(link.status)}</em></td>
+                    <td>{humanize(link.syncState)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="cards">
+              {links.map((link, index) => (
+                <article key={`${link.label}-card-${index}`}>
+                  <div><b>{link.label}</b><em>{humanize(link.status)}</em></div>
+                  <p>{link.destination}</p>
+                  <p>{humanize(link.audience)} · {humanize(link.syncState)}</p>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
+        <p className="note">Raw link identifiers, revision internals, and correlation data are not shown.</p>
+      </section>
+    );
+  }
+
+  if (tab === 'Brand & media') {
+    return (
+      <section className="plane" data-fi11-brand-media="true">
+        <div className="head">
+          <div>
+            <p className="eye">Governed brand media</p>
+            <h2>Published public asset references</h2>
+          </div>
+          <b>{inspection ? 'Sanitized fixture · no R2 read' : 'R2 authority preserved'}</b>
+        </div>
+        {brandSlots.length === 0 ? (
+          <p className="note">No public brand asset slots are available in the current response.</p>
+        ) : (
+          <>
+            <table>
+              <thead><tr><th>Slot</th><th>Public path</th><th>Publication state</th><th>Published</th></tr></thead>
+              <tbody>
+                {brandSlots.map((slot, index) => (
+                  <tr key={`${slot.label}-${index}`}>
+                    <td><b>{slot.label}</b></td>
+                    <td>{slot.publicPath}</td>
+                    <td><em>{humanize(slot.publicationState)}</em></td>
+                    <td>{dateLabel(slot.publishedAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="cards">
+              {brandSlots.map((slot, index) => (
+                <article key={`${slot.label}-card-${index}`}>
+                  <div><b>{slot.label}</b><em>{humanize(slot.publicationState)}</em></div>
+                  <p>{slot.publicPath}</p>
+                  <p>{slot.publishedAt ? `Published ${dateLabel(slot.publishedAt)}` : 'No published timestamp reported'}</p>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
+        <section className="gate">
+          <b>R2-GOVERNED · READ-ONLY</b>
+          <p>Upload, replacement, publish, rollback, provider synchronization, hashes, and storage internals remain outside this frontend slice.</p>
+          <button type="button" disabled>Brand media actions unavailable</button>
+        </section>
+      </section>
+    );
+  }
+
+  return (
+    <section className="plane" data-fi11-system-status="true">
+      <div className="head">
+        <div>
+          <p className="eye">Owner system report</p>
+          <h2>Redacted technical response</h2>
+        </div>
+        <b>{inspection ? 'Synthetic inspection · no live request' : 'system.admin presentation gate'}</b>
+      </div>
+      {inspection ? (
+        <p className="note">No live technical or readiness request was made in local Preview Index inspection.</p>
+      ) : systemStatus ? (
+        <dl>
+          <div><dt>Technical response</dt><dd>Current response received</dd></div>
+          <div><dt>Readiness response</dt><dd>{systemStatus.readiness === 'REPORTED_READY' ? 'Current readiness response reports ready' : 'Current readiness response does not report ready'}</dd></div>
+        </dl>
+      ) : (
+        <p className="note">No current technical response is available to present.</p>
+      )}
+      <section className="gate">
+        <b>REDACTED · READ-ONLY</b>
+        <p>Release, schema, migration, dependency, provider, correlation, and internal diagnostic fields are not shown here.</p>
+        <button type="button" disabled>System actions unavailable</button>
+      </section>
     </section>
   );
 }

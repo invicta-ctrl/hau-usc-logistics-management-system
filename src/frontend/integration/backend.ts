@@ -78,6 +78,48 @@ export type FrontendStaffActivityHistory = {
   items: FrontendStaffActivityItem[];
 };
 
+/** FI-11 deliberately omits the reference-link identifier and revision internals. */
+export type FrontendReferenceLink = {
+  label: string;
+  destination: string;
+  linkType: string;
+  audience: string;
+  status: string;
+  syncState: string;
+  updatedAt: string;
+  archivedAt: string;
+};
+
+/** FI-11 projects only public slot metadata; R2 and version internals never cross this boundary. */
+export type FrontendBrandAssetSlot = {
+  label: string;
+  publicPath: string;
+  publicationState: 'PUBLISHED' | 'NOT_PUBLISHED';
+  publishedAt: string;
+};
+
+/** FI-11 flattens supported event data without exposing relational or audit identifiers. */
+export type FrontendManagedEvent = {
+  name: string;
+  seriesName: string;
+  date: string;
+  activityType: string;
+  status: string;
+  timeStatus: string;
+};
+
+export type FrontendEventManagement = {
+  series: Array<{ name: string; code: string; status: string }>;
+  days: Array<{ seriesName: string; name: string; date: string; status: string }>;
+  activities: FrontendManagedEvent[];
+};
+
+/** A successful technical response is not itself a user-facing health assertion. */
+export type FrontendSystemStatus = {
+  technicalResponse: 'RESPONSE_RECEIVED';
+  readiness: 'REPORTED_READY' | 'NOT_REPORTED_READY';
+};
+
 export type FrontendInventoryItem = {
   id: string;
   name: string;
@@ -561,6 +603,20 @@ function requiredString(value: unknown, field: string): string {
   return result;
 }
 
+/** Strip query/hash data from a governed destination before it reaches visible UI. */
+function governedDestination(value: string): string {
+  try {
+    const parsed = new URL(value, 'https://governed.local');
+    if (value.startsWith('/')) return parsed.pathname || '/';
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      incomplete('The reference link destination did not use a supported protocol.');
+    }
+    return `${parsed.protocol}//${parsed.host}${parsed.pathname === '/' ? '' : parsed.pathname}`;
+  } catch {
+    incomplete('The reference link destination did not match the supported contract.');
+  }
+}
+
 /** A canonical nullable text field may be blank, but may not be omitted or malformed. */
 function requiredText(value: unknown, field: string): string {
   if (value !== null && typeof value !== 'string') incomplete(`The response did not include ${field}.`);
@@ -911,6 +967,129 @@ export class FrontendBackend {
         newEffectiveTo: asString(row.newEffectiveTo),
       })),
     };
+  }
+
+  /**
+   * FI-11: render only governed, human-readable reference-link fields. IDs,
+   * revisions, and correlation data are intentionally removed before React.
+   */
+  async referenceLinks(signal?: AbortSignal): Promise<FrontendReferenceLink[]> {
+    const payload = await this.request('/api/admin/reference-links/list', {
+      body: { page: 1, pageSize: 50 },
+      csrf: true,
+      signal,
+    });
+    if (payload.ok !== true || !Array.isArray(payload.items)) {
+      incomplete('The Reference Link Registry response did not match the supported read-only contract.');
+    }
+    return records(payload.items).map((row) => ({
+      label: requiredString(row.label, 'reference link label'),
+      destination: governedDestination(requiredString(row.url, 'reference link url')),
+      linkType: requiredString(row.linkType, 'reference link type'),
+      audience: requiredString(row.audience, 'reference link audience'),
+      status: requiredString(row.status, 'reference link status'),
+      syncState: requiredString(row.syncState, 'reference link syncState'),
+      updatedAt: asString(row.updatedAt),
+      archivedAt: asString(row.archivedAt),
+    }));
+  }
+
+  /**
+   * FI-11: the only permitted brand view is public slot/path/publication
+   * metadata. Version, object, hash, actor, and audit data remain server-only.
+   */
+  async brandAssetSlots(signal?: AbortSignal): Promise<FrontendBrandAssetSlot[]> {
+    const payload = await this.request('/api/owner/brand-assets/list', {
+      body: {},
+      csrf: true,
+      signal,
+    });
+    if (payload.ok !== true || !Array.isArray(payload.slots)) {
+      incomplete('The governed brand asset response did not match the supported read-only contract.');
+    }
+    return records(payload.slots).map((row) => ({
+      label: requiredString(row.label, 'brand asset label'),
+      publicPath: requiredString(row.public_path ?? row.publicPath, 'brand asset public path'),
+      publicationState: asString(row.published_version_id ?? row.publishedVersionId)
+        ? 'PUBLISHED'
+        : 'NOT_PUBLISHED',
+      publishedAt: asString(row.published_at ?? row.publishedAt),
+    }));
+  }
+
+  /**
+   * FI-11: retain event relationships only long enough to assemble a safe
+   * read-only display projection. No raw link, source, history, or actor data
+   * is returned to the UI.
+   */
+  async eventManagement(signal?: AbortSignal): Promise<FrontendEventManagement> {
+    const payload = await this.request('/api/getEventManagement', {
+      body: {},
+      csrf: true,
+      signal,
+    });
+    if (
+      payload.ok !== true ||
+      !Array.isArray(payload.eventSeries) ||
+      !Array.isArray(payload.eventDays) ||
+      !Array.isArray(payload.activities)
+    ) {
+      incomplete('The Event Management response did not match the supported read-only contract.');
+    }
+    const series = records(payload.eventSeries).map((row) => ({
+      opaqueId: requiredString(row.id, 'event series id'),
+      name: requiredString(row.name, 'event series name'),
+      code: asString(row.code),
+      status: requiredString(row.status, 'event series status'),
+    }));
+    const seriesById = new Map(series.map((entry) => [entry.opaqueId, entry]));
+    const days = records(payload.eventDays).map((row) => ({
+      opaqueId: requiredString(row.id, 'event day id'),
+      seriesId: requiredString(row.seriesId, 'event day seriesId'),
+      name: requiredString(row.name, 'event day name'),
+      date: asString(row.date),
+      status: requiredString(row.status, 'event day status'),
+    }));
+    const dayById = new Map(days.map((entry) => [entry.opaqueId, entry]));
+    return {
+      series: series.map(({ opaqueId: _opaqueId, ...entry }) => entry),
+      days: days.map(({ opaqueId: _opaqueId, seriesId, ...entry }) => ({
+        ...entry,
+        seriesName: seriesById.get(seriesId)?.name || 'Series not reported',
+      })),
+      activities: records(payload.activities).map((row) => {
+        const day = dayById.get(asString(row.eventDayId));
+        return {
+          name: requiredString(row.name, 'event activity name'),
+          seriesName: day ? seriesById.get(day.seriesId)?.name || 'Series not reported' : 'Series not reported',
+          date: day?.date || '',
+          activityType: asString(row.activityType),
+          status: requiredString(row.status, 'event activity status'),
+          timeStatus: asString(row.timeStatus),
+        };
+      }),
+    };
+  }
+
+  /**
+   * FI-11: public technical endpoints are read only after system.admin has
+   * admitted presentation. Their raw release, schema, migration, dependency,
+   * and correlation fields deliberately never cross this projection.
+   */
+  async systemStatus(signal?: AbortSignal): Promise<FrontendSystemStatus> {
+    await this.request('/api/health', { method: 'GET', signal });
+    try {
+      const readiness = await this.request('/api/readiness', { method: 'GET', signal });
+      return {
+        technicalResponse: 'RESPONSE_RECEIVED',
+        readiness: readiness.ok === true && readiness.ready === true ? 'REPORTED_READY' : 'NOT_REPORTED_READY',
+      };
+    } catch (error) {
+      if (error instanceof FrontendApiError && error.status === 503) {
+        return { technicalResponse: 'RESPONSE_RECEIVED', readiness: 'NOT_REPORTED_READY' };
+      }
+      throw error;
+    }
   }
 
   /**

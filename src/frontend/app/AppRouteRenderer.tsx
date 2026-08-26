@@ -92,11 +92,19 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
           <SupplyRoutes dark={dark} mode="restocking" navigate={navigate} />
         ) : route === 'procurement' ? (
           <SupplyRoutes dark={dark} mode="procurement" navigate={navigate} />
+        ) : route === 'events' ? (
+          <SupplyRoutes
+            dark={dark}
+            mode="events"
+            navigate={navigate}
+            eventAllowed={session.user.capabilities.includes('event.manage')}
+          />
         ) : route === 'administration' ? (
           <AdministrationRoute
             dark={dark}
             navigate={navigate}
             accessAllowed={session.user.capabilities.includes('access.admin')}
+            capabilities={session.user.capabilities}
           />
         ) : (
           <AuthPlaceholderRoute route={route} />

@@ -177,17 +177,17 @@ describe('preview index trusted gate and registry foundations', () => {
     const entries = listPreviewRoutes();
     const count = (predicate) => entries.filter(predicate).length;
 
-    expect(count((entry) => entry.implementationStatus === 'ACCEPTED')).toBe(10);
-    expect(count((entry) => entry.implementationStatus === 'SURFACE_PREVIEW')).toBe(5);
+    expect(count((entry) => entry.implementationStatus === 'ACCEPTED')).toBe(14);
+    expect(count((entry) => entry.implementationStatus === 'SURFACE_PREVIEW')).toBe(1);
     expect(count((entry) => entry.implementationStatus === 'IN_PROGRESS')).toBe(0);
     expect(count((entry) => entry.implementationStatus === 'NOT_STARTED')).toBe(0);
-    expect(count((entry) => entry.backendStatus === 'REAL_BACKEND')).toBe(9);
+    expect(count((entry) => entry.backendStatus === 'REAL_BACKEND')).toBe(11);
     expect(count((entry) => entry.backendStatus === 'PARTIAL')).toBe(0);
-    expect(count((entry) => entry.backendStatus === 'VISUAL_ONLY')).toBe(6);
+    expect(count((entry) => entry.backendStatus === 'VISUAL_ONLY')).toBe(4);
     expect(count((entry) => entry.access === 'PUBLIC')).toBe(4);
     expect(count((entry) => entry.access === 'AUTHENTICATED')).toBe(11);
-    expect(count((entry) => entry.previewMode === 'REAL_MODULE')).toBe(10);
-    expect(count((entry) => entry.previewMode === 'SURFACE_PREVIEW')).toBe(5);
+    expect(count((entry) => entry.previewMode === 'REAL_MODULE')).toBe(14);
+    expect(count((entry) => entry.previewMode === 'SURFACE_PREVIEW')).toBe(1);
 
     for (const route of PUBLIC_ROUTES) {
       expect(entries.find((entry) => entry.route === route)).toMatchObject({
@@ -209,7 +209,7 @@ describe('preview index trusted gate and registry foundations', () => {
       });
     }
     for (const route of AUTH_ROUTES.filter(
-      (route) => !['profile', 'inventory', 'request-center', 'lending', 'release'].includes(route),
+      (route) => !['profile', 'inventory', 'request-center', 'lending', 'release', 'restocking', 'procurement', 'events', 'administration'].includes(route),
     )) {
       expect(entries.find((entry) => entry.route === route)).toMatchObject({
         implementationStatus: 'SURFACE_PREVIEW',
@@ -244,6 +244,20 @@ describe('preview index trusted gate and registry foundations', () => {
       previewMode: 'REAL_MODULE',
       group: 'STAFF',
     });
+    expect(entries.find((entry) => entry.route === 'events')).toMatchObject({
+      implementationStatus: 'ACCEPTED',
+      backendStatus: 'REAL_BACKEND',
+      access: 'AUTHENTICATED',
+      previewMode: 'REAL_MODULE',
+      group: 'STAFF',
+    });
+    expect(entries.find((entry) => entry.route === 'administration')).toMatchObject({
+      implementationStatus: 'ACCEPTED',
+      backendStatus: 'REAL_BACKEND',
+      access: 'AUTHENTICATED',
+      previewMode: 'REAL_MODULE',
+      group: 'ADMINISTRATION',
+    });
   });
 
   it('derives search, filter, and group results deterministically from the registry', () => {
@@ -264,9 +278,13 @@ describe('preview index trusted gate and registry foundations', () => {
       'profile',
       'release',
       'request-center',
+      'restocking',
+      'procurement',
+      'events',
+      'administration',
     ].sort());
-    expect(filterPreviewRoutes('BACKEND_WIRED')).toHaveLength(9);
-    expect(filterPreviewRoutes('PREVIEW_ONLY')).toHaveLength(5);
+    expect(filterPreviewRoutes('BACKEND_WIRED')).toHaveLength(11);
+    expect(filterPreviewRoutes('PREVIEW_ONLY')).toHaveLength(1);
     expect(filterPreviewRoutes('IN_PROGRESS')).toEqual([]);
     expect(filterPreviewRoutes('NOT_STARTED')).toEqual([]);
     expect(filterPreviewRoutes('PUBLIC')).toHaveLength(4);

@@ -167,7 +167,7 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   await page.locator('[data-filter="PUBLIC"]').click();
   await expect(page.locator('[data-preview-route]')).toHaveCount(4);
   await page.locator('[data-filter="PREVIEW_ONLY"]').click();
-  await expect(page.locator('[data-preview-route]')).toHaveCount(3);
+  await expect(page.locator('[data-preview-route]')).toHaveCount(1);
   await page.locator('[data-filter="IN_PROGRESS"]').click();
   await expect(page.locator('[data-preview-empty]')).toBeVisible();
   await expect(page.locator('[data-preview-count]')).toHaveText('0 routes');

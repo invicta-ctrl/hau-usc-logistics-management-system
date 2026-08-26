@@ -1,24 +1,31 @@
 # Current Work Pointer — frontend-design-integration
 
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
-MILESTONE: R1_FI10_ACCOUNTS_DIRECTORY_ACTIVITY_HISTORY_FRONTEND_INTEGRATION
-STATUS: FI10_CLOSED__SOL_ACCEPTED
-PHASE: FI10_CLOSED__SOL_ACCEPTED__COMMITTED_PUSHED
+MILESTONE: R1_FI11_GOVERNED_REFERENCE_SURFACES_CLOSED
+STATUS: FI11_CLOSED__SOL_ACCEPTED__FI12_PREFLIGHT_AUTHORIZED_AFTER_PUSH
+PHASE: FI11_RECEIPT_RECORDED__WRITER_LOCK_RELEASED
 BRANCH: frontend-design-integration
-HEAD: GIT_HEAD
-START_HEAD: 88aa02d8598040b6d7c9689965ee6750672f34bb
+HEAD: 66f06aa99cdf96317f1107c937862832c8be02d8
+START_HEAD: 66f06aa99cdf96317f1107c937862832c8be02d8
 PRODUCT_HEAD_AT_CLOSURE_HANDSHAKE: 8120cf78f653d06a66f7bd37a3feba17543ccdd5 (FI-08 product implementation; pushed before the separate closure-documentation commit)
 CLOSURE_DOCUMENTATION_COMMIT: GIT_HEAD (dynamic FI-10 closure commit)
-UPSTREAM: origin/frontend-design-integration @ GIT_HEAD (FI-10 closure verified +0/-0)
+UPSTREAM: origin/frontend-design-integration @ 66f06aa99cdf96317f1107c937862832c8be02d8 (FI-11 handshake verified +0/-0)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY__FI10_CLOSURE_PENDING__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED__FI10
-HANDOFF_STATUS: FI10_CLOSED__SOL_ACCEPTED
+WORKTREE_STATE: DIRTY__FI11_CLOSURE_PENDING_COMMIT__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
+ACTIVE_WRITER: NONE__FI11_RELEASED
+WRITER_LOCK: RELEASED__FI11
+HANDOFF_STATUS: FI11_CLOSED__SOL_ACCEPTED
 REQUIRED_MODEL: GPT-5.6 Terra / Max sole frontend writer; GPT-5.6 Sol remains read-only orchestration and final acceptance
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi10-accounts-directory-activity-history-frontend-integration.md
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi11-references-links-brand-events-owner-health-frontend-integration.md
+FI11_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED
+FI11_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 attachment; TOKEN-OPT-001-A8; project policy; accepted A3/A4 Preview Index authority; current reference.manage, brand.manage, event.manage, and system.admin contract boundaries; live Make-v44 evidence recorded by Sol.
+FI11_SCOPE: Bounded Reference Administration, Link Registry, Brand/media references, Events/reference data, and Owner/system health/readiness integration. Runtime remains read-only and capability-distinct; A4 remains visibly synthetic, sanitized, deterministic, and zero-traffic. No backend, Worker, auth, provider, R2, Figma, or deployment change is authorized.
+FI11_INVARIANTS: Never infer cross-domain capability from administration visibility. Never render raw provider/Sheet/Drive/R2/domain/account/person/actor/correlation/version/storage/internal linkage data, private contacts, stack traces, or internal diagnostics. Never claim healthy/synced/ready/connected/up-to-date without current contract evidence. R2 remains authoritative for governed media.
+FI11_IMPLEMENTATION: Authenticated `administration` now adds a truthful Reference Administration contract-gap state plus independently presentation-gated Link Registry, Brand/media, and redacted Owner/System panels. Authenticated `events` now renders an `event.manage` read-only series/day/activity projection; it has no event creation or mutation binding. A4 uses deterministic sanitized fixtures with no protected/public data request.
+FI11_VERIFICATION: Focused unit suites 36/36 passed. Exact canonical-4173 FI-11 Playwright passed serially at 320/390/768/1024/1440 with zero protected preview traffic, no asserted console error, no overflow, mobile selector operation, no mutation UI, and sanitized surfaces. Targeted Preview Index registry check passed at all five widths after an isolated 320 retry following a pre-assertion navigation timeout. Build/dist, continuation, handoff, and diff checks passed; artifacts share SHA-256 1097D8B112511D0488CD7FBDC898B74349354ACFB26321AB76C3FDC3F4012DA7. Sol review found no actionable issue; Hallmark/Impeccable found no FI-11-introduced actionable finding. See `.codex/FI11_GOVERNED_REFERENCE_SURFACES_RECEIPT.md`.
+FI11_RECEIPT: .codex/FI11_GOVERNED_REFERENCE_SURFACES_RECEIPT.md
 FI10_PACKET_STATUS: CLOSED__SOL_ACCEPTED__COMMITTED_PUSHED
 FI10_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 attachment; TOKEN-OPT-001-A8; project policy; A3/A4 Preview Index authority; existing access-admin and read-only staff-directory/activity contracts; live Make-v44 administration composition recorded by Sol.
 FI10_SCOPE: Bounded authenticated Accounts and access, Staff directory, and Activity integration plus deterministic sanitized A4 inspection. Runtime may use only existing access-admin read-only endpoints; raw account/person/correlation identifiers are never rendered. No mutation, backend contract, authorization, provider, or FI-11 surface change is authorized.
@@ -59,6 +66,7 @@ DELEGATION_LEDGER:
 
 - writer=/root/fi09_terra_writer | model=gpt-5.6-terra | reasoning=max | role=FI-09 sole canonical frontend writer | mode=execute | scope=accepted Restocking/Procurement/Receiving frontend integration, A4 Preview Index wiring, semantic focus hardening, verification, and closure | owned=FI-09 packet/current-chain/receipt,AppRouteRenderer,SupplyRoutes,PreviewInspectionRoute,registry,FI-09 unit test,bounded Preview Index additions,accepted generated artifacts | excluded=backend/auth/permissions/schema/migration/provider/Figma/Make/Playground/Production/main/deployments/.ai-bridge/FI-10+ | status=COMPLETED__RELEASED__SOL_ACCEPTED | evidence=focused unit 5/5; exact-4173 matrix 5/5; build/dist SHA; Sol/Hallmark/Impeccable acceptance.
 - writer=/root/fi10_terra_writer | model=gpt-5.6-terra | reasoning=max | role=FI-10 sole canonical frontend writer | mode=execute | scope=accepted Accounts/access, Staff directory, Activity integration, sanitized A4 inspection, focused verification, generated artifacts, and closure | owned=FI-10 packet/current-chain/receipt,AppRouteRenderer,AdministrationRoute,frontend backend adapter,PreviewInspectionRoute,registry,focused FI-10 unit,bounded Preview Index additions,accepted generated artifacts | excluded=backend/Worker/auth/authorization/permissions/schema/migration/provider/Figma/Make/Playground/Production/main/deployment/.ai-bridge/FI-11+ | status=COMPLETED__RELEASED__SOL_ACCEPTED | evidence=focused tests 25/25; exact-4173 five-width serial case; manual desktop/mobile audit; build/dist SHA; Sol/Hallmark/Impeccable acceptance.
+- writer=/root/fi11_terra_writer | model=gpt-5.6-terra | reasoning=max | role=FI-11 sole canonical frontend writer | mode=execute | scope=accepted Reference Administration, Link Registry, Brand/media, Events/reference data, Owner/system health, bounded A4 inspection, focused verification, artifacts, and closure | owned=FI-11 packet/current-chain/receipt,AppRouteRenderer,AdministrationRoute,SupplyRoutes Events route,frontend backend adapter,PreviewInspectionRoute,registry,focused FI-11 unit,bounded Preview Index additions,accepted generated artifacts | excluded=backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment/.ai-bridge/FI-12+ | status=COMPLETED__RELEASED__SOL_ACCEPTED | evidence=focused suites 36/36; exact-4173 FI-11 matrix 5/5; targeted registry matrix 5/5; build/dist SHA; Sol/Hallmark/Impeccable acceptance.
 - writer=/root/fi05_inventory_writer | model=gpt-5.6-terra | role=FI-06 predecessor writer | mode=execute | scope=initial FI-06 integration handoff | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=RELEASED | evidence=FI-05 lock-release transfer records.
 - writer=/root/fi06_request_hub_writer | model=gpt-5.6-terra | role=FI-06 successor sole canonical integration writer | mode=execute | scope=accepted FI-06 frontend integration, artifacts, and continuity closeout | excluded=backend/provider/deployments/.ai-bridge/FI-07+ | status=COMPLETED | evidence=.codex/FI06_INTERNAL_REQUEST_HUB_RECEIPT.md.
 - writer=/root/fi07_lending_hub_writer | model=gpt-5.6-terra | role=FI-07 sole canonical integration writer | mode=execute | scope=accepted internal lending frontend, A4 preview fixture, focused tests/artifacts/continuity | owned=FI-07 docs + approved frontend paths | excluded=backend/auth/permissions/schema/provider/Figma/deployments/.ai-bridge/FI-08+ | status=COMPLETED__RELEASED | evidence=independent Sol ACCEPTED_NO_FINDINGS, root independent evidence, and deterministic artifact SHA-256 707A00FDF4DC4BC6EB2C2053007B21F9997A9D51ADDF65F7EE1B65CAA091F738.
@@ -66,10 +74,10 @@ DELEGATION_LEDGER:
 - writer=/root/fi08r_terra_writer | model=gpt-5.6-terra | reasoning=max | role=FI-08R sole canonical frontend writer | mode=execute | scope=two owner-reproduced Release Desk acceptance defects, behavioral regression coverage, generated artifacts, and continuity closeout | owned=.codex/CURRENT.md,.codex/CURRENT_TASK.md,.codex/CURRENT_HANDOFF.md,.codex/FI08R_RELEASE_DESK_ACCEPTANCE_REPAIR_RECEIPT.md,src/frontend/app/ReleaseDeskRoute.tsx,tests/unit/fi08-release-desk.test.js,tests/e2e/preview-index.spec.js,dist/index.html,HAU-USC_Logistics-Frontend-Shareable.html | excluded=backend/auth/permissions/schema/migration/provider/Figma/Make/Playground/Production/main/deployments/.ai-bridge/FI-09+ | status=COMPLETED__LOCK_RELEASED__SOL_ACCEPTED | evidence=focused unit 3/3; serial exact-4173 FI-08R Playwright 5/5; browser focus/outline/overflow/console review; build/dist artifact SHA; Sol/Hallmark/Impeccable final acceptance.
 
 FI07_RECEIPT: .codex/FI07_INTERNAL_LENDING_HUB_RECEIPT.md
-BLOCKER: NONE — FI-10 is closed and the Terra writer lock is released. Do not begin FI-11 without Earl's next explicit authorization.
+BLOCKER: NONE — Earl explicitly authorized FI-11. The sole Terra writer lock is acquired for the bounded packet.
 PREVIEW_TARGET: http://127.0.0.1:4173/
 PREVIEW_STATUS: RUNNING__HEALTHY__VERIFIED_2026-08-26
-NEXT_EXACT_ACTION: Await Earl's explicit authorization for FI-11 preflight only; do not implement FI-11.
+NEXT_EXACT_ACTION: Begin owner-authorized FI-12 convergence preflight after FI-11 push/parity; do not mutate FI-12 until its fresh packet/lock handshake.
 
 ## Active A4 preview inspection
 

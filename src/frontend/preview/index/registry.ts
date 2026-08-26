@@ -165,11 +165,12 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     route: 'events',
     label: 'Events',
     group: 'STAFF',
-    description: 'Authenticated events surface with preserved visual components and no active backend calls.',
-    implementationStatus: 'SURFACE_PREVIEW',
-    backendStatus: 'VISUAL_ONLY',
+    description:
+      'Authenticated event.manage read-only projection. Local inspection uses a deterministic sanitized fixture with no protected request or mutation.',
+    implementationStatus: 'ACCEPTED',
+    backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
-    previewMode: 'SURFACE_PREVIEW',
+    previewMode: 'REAL_MODULE',
   }),
   Object.freeze({
     id: 'administration',
@@ -177,7 +178,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Administration',
     group: 'ADMINISTRATION',
     description:
-      'Authenticated FI-10 Accounts, Directory, and Activity module uses supported read-only administration data. Local inspection is a sanitized deterministic presentation with no protected request or mutation.',
+      'Authenticated FI-10 Accounts, Directory, and Activity module plus independently gated FI-11 Reference, Link, Brand, and System read-only panels. Local inspection is a sanitized deterministic presentation with no protected request or mutation.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',

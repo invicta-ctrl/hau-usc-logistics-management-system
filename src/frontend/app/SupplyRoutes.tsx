@@ -1,4 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
+import {
+  FrontendApiError,
+  frontendBackend,
+  type FrontendEventManagement,
+} from "../integration/backend";
 type Mode = "restocking" | "procurement" | "events";
 type Prev =
   | "Populated"
@@ -52,10 +57,16 @@ export default function SupplyRoutes({
   dark,
   mode,
   navigate,
+  inspection = false,
+  eventAllowed = false,
 }: {
   dark: boolean;
   mode: Mode;
   navigate?: (r: string) => void;
+  /** A4-only inspection mode. It never requests protected event data. */
+  inspection?: boolean;
+  /** Presentation gate only; the Worker remains authoritative for event.manage. */
+  eventAllowed?: boolean;
 }) {
   const [prev, setPrev] = useState<Prev>("Populated"),
     [selected, setSelected] = useState(""),
@@ -102,6 +113,16 @@ export default function SupplyRoutes({
     addEventListener("keydown", onKeyDown);
     return () => removeEventListener("keydown", onKeyDown);
   }, [task]);
+  if (mode === "events") {
+    return (
+      <ManagedEventsRoute
+        dark={dark}
+        inspection={inspection}
+        eventAllowed={eventAllowed}
+        navigate={navigate}
+      />
+    );
+  }
   const states = [
     "Populated",
     "Loading",
@@ -677,120 +698,248 @@ function Procurement({
     </>
   );
 }
-function Events({
-  selected,
-  setSelected,
-  setTask,
+type EventLoadState = "loading" | "ready" | "denied" | "unavailable";
+
+const previewEventManagement: FrontendEventManagement = {
+  series: [
+    {
+      name: "Sanitized event series",
+      code: "PREVIEW-SERIES",
+      status: "PREVIEW_ONLY",
+    },
+  ],
+  days: [
+    {
+      seriesName: "Sanitized event series",
+      name: "Preview day",
+      date: "",
+      status: "PREVIEW_ONLY",
+    },
+  ],
+  activities: [
+    {
+      name: "Preview activity",
+      seriesName: "Sanitized event series",
+      date: "",
+      activityType: "PREVIEW_ONLY",
+      status: "PREVIEW_ONLY",
+      timeStatus: "NOT_LIVE",
+    },
+  ],
+};
+
+function readableEventValue(value: string) {
+  return value
+    ? value
+        .replaceAll("_", " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    : "Not reported";
+}
+
+function ManagedEventsRoute({
+  dark,
+  inspection,
+  eventAllowed,
+  navigate,
 }: {
-  selected: string;
-  setSelected: (x: string) => void;
-  setTask: (x: string, opener?: HTMLButtonElement | null) => void;
+  dark: boolean;
+  inspection: boolean;
+  eventAllowed: boolean;
+  navigate?: (route: string) => void;
 }) {
-  return (
-    <>
-      <Rail
-        labels={[
-          "SERIES",
-          "DAY",
-          "ACTIVITY",
-          "REQUEST",
-          "INVENTORY TRANSFER",
-        ]}
-      />
-      <div className="grid">
-        <section className="plane">
+  const [eventManagement, setEventManagement] = useState<FrontendEventManagement | null>(
+    inspection ? previewEventManagement : null,
+  );
+  const [loadState, setLoadState] = useState<EventLoadState>(inspection ? "ready" : "loading");
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    if (inspection) {
+      setEventManagement(previewEventManagement);
+      setLoadState("ready");
+      return;
+    }
+    if (!eventAllowed) {
+      setEventManagement(null);
+      setLoadState("denied");
+      return;
+    }
+    const abort = new AbortController();
+    setLoadState("loading");
+    void frontendBackend
+      .eventManagement(abort.signal)
+      .then((result) => {
+        if (abort.signal.aborted) return;
+        setEventManagement(result);
+        setLoadState("ready");
+      })
+      .catch((error: unknown) => {
+        if (abort.signal.aborted) return;
+        setLoadState(error instanceof FrontendApiError && [401, 403].includes(error.status) ? "denied" : "unavailable");
+      });
+    return () => abort.abort();
+  }, [eventAllowed, inspection, reloadKey]);
+
+  const isEmpty =
+    eventManagement !== null &&
+    eventManagement.series.length === 0 &&
+    eventManagement.days.length === 0 &&
+    eventManagement.activities.length === 0;
+
+  let content: React.ReactNode;
+  if (loadState === "loading") {
+    content = <div className="skeleton" aria-busy="true" aria-label="Loading event relationships" />;
+  } else if (loadState === "denied") {
+    content = (
+      <State
+        k="Denied"
+        h="Event records are not available to this account"
+        p="This message does not confirm whether an event record exists."
+      >
+        <button className="primary" type="button" onClick={() => navigate?.("overview")}>
+          Return to overview
+        </button>
+      </State>
+    );
+  } else if (loadState === "unavailable") {
+    content = (
+      <State
+        k="Unavailable"
+        h="Event relationships are temporarily unavailable"
+        p="No event, activity, request, inventory, or ledger record was changed."
+      >
+        <button className="primary" type="button" onClick={() => setReloadKey((value) => value + 1)}>
+          Retry read-only load
+        </button>
+      </State>
+    );
+  } else if (isEmpty) {
+    content = (
+      <State
+        k="No current records"
+        h="No event relationships are currently reported"
+        p="This read-only view does not create or infer event, activity, request, or inventory links."
+      >
+        <button className="primary" type="button" onClick={() => setReloadKey((value) => value + 1)}>
+          Refresh read-only view
+        </button>
+      </State>
+    );
+  } else {
+    const data = eventManagement ?? previewEventManagement;
+    content = (
+      <div className="event-stack">
+        <section className="plane" aria-labelledby="event-series-title">
           <div className="head">
             <div>
               <p className="eye">Event series</p>
-              <h2>Series and governed relationships</h2>
+              <h2 id="event-series-title">Series and governed relationships</h2>
             </div>
-            <button onClick={(event) => setTask("event", event.currentTarget)}>
-              New event
-            </button>
+            <b>Read-only projection</b>
           </div>
           <table>
             <thead>
-              <tr>
-                <th>Series</th>
-                <th>Dates</th>
-                <th>Released</th>
-                <th>State</th>
-              </tr>
+              <tr><th>Series</th><th>Display code</th><th>State</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td>
-                  <button
-                    className="row"
-                    onClick={() => setSelected("EVT-2026-009")}
-                  >
-                    <b>General Assembly week</b>
-                    <span>EVT-2026-009 · 7 sub-events</span>
-                  </button>
-                </td>
-                <td>02–04 Sep</td>
-                <td>4/7</td>
-                <td>
-                  <em>Active</em>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <button
-                    className="row"
-                    onClick={() => setSelected("EVT-2026-007")}
-                  >
-                    <b>Leadership Summit</b>
-                    <span>EVT-2026-007 · 1 sub-event</span>
-                  </button>
-                </td>
-                <td>03 Sep</td>
-                <td>1/1</td>
-                <td>
-                  <em>Archived</em>
-                </td>
-              </tr>
+              {data.series.map((series) => (
+                <tr key={`${series.name}-${series.code}`}>
+                  <td><b>{series.name}</b></td>
+                  <td>{series.code || "Not reported"}</td>
+                  <td><em>{readableEventValue(series.status)}</em></td>
+                </tr>
+              ))}
             </tbody>
           </table>
+          <div className="event-cards" aria-label="Event series">
+            {data.series.map((series) => (
+              <article key={`${series.name}-${series.code}`}>
+                <b>{series.name}</b><span>{series.code || "No display code reported"}</span><em>{readableEventValue(series.status)}</em>
+              </article>
+            ))}
+          </div>
         </section>
-        <aside className="detail">
-          {selected ? (
-            <>
-              <p className="eye">{selected}</p>
-              <h2>Relationship trail</h2>
-              <ol>
-                <li>
-                  <b>Day 1 · Opening assembly</b>
-                  <span>
-                    2 activities · Request link pending fixture
-                    correction
-                  </span>
-                </li>
-                <li>
-                  <b>Day 2 · Committee sessions</b>
-                  <span>
-                    3 activities · REQ-2026-0142 · In DOL review
-                  </span>
-                </li>
-                <li>
-                  <b>Day 3 · Closing programme</b>
-                  <span>1 activity · No request yet</span>
-                </li>
-              </ol>
-              <p className="warning">
-                REQ-2026-0136 is Sports Fest — sound system and
-                is not attached to this series.
-              </p>
-            </>
-          ) : (
-            <p>
-              Select a series to inspect day, activity, request,
-              and transfer continuity.
-            </p>
-          )}
-        </aside>
+        <section className="plane" aria-labelledby="event-days-title">
+          <div className="head">
+            <div>
+              <p className="eye">Event days</p>
+              <h2 id="event-days-title">Current day relationships</h2>
+            </div>
+            <b>No write controls</b>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Series</th><th>Day</th><th>Date</th><th>State</th></tr>
+            </thead>
+            <tbody>
+              {data.days.map((day) => (
+                <tr key={`${day.seriesName}-${day.name}-${day.date}`}>
+                  <td>{day.seriesName}</td><td><b>{day.name}</b></td><td>{day.date || "Not reported"}</td><td><em>{readableEventValue(day.status)}</em></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="event-cards" aria-label="Event days">
+            {data.days.map((day) => (
+              <article key={`${day.seriesName}-${day.name}-${day.date}`}>
+                <b>{day.name}</b><span>{day.seriesName} · {day.date || "Date not reported"}</span><em>{readableEventValue(day.status)}</em>
+              </article>
+            ))}
+          </div>
+        </section>
+        <section className="plane" aria-labelledby="event-activities-title">
+          <div className="head">
+            <div>
+              <p className="eye">Activities</p>
+              <h2 id="event-activities-title">Read-only activity relationships</h2>
+            </div>
+            <b>Server projection is authoritative</b>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Activity</th><th>Series</th><th>Type</th><th>Timing</th><th>State</th></tr>
+            </thead>
+            <tbody>
+              {data.activities.map((activity) => (
+                <tr key={`${activity.seriesName}-${activity.name}-${activity.date}-${activity.activityType}`}>
+                  <td><b>{activity.name}</b></td><td>{activity.seriesName}</td><td>{readableEventValue(activity.activityType)}</td><td>{readableEventValue(activity.timeStatus)}</td><td><em>{readableEventValue(activity.status)}</em></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="event-cards" aria-label="Event activities">
+            {data.activities.map((activity) => (
+              <article key={`${activity.seriesName}-${activity.name}-${activity.date}-${activity.activityType}`}>
+                <b>{activity.name}</b><span>{activity.seriesName} · {readableEventValue(activity.activityType)} · {readableEventValue(activity.timeStatus)}</span><em>{readableEventValue(activity.status)}</em>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div className={`sup ${dark ? "dark" : "light"}`} data-fi11-events="true">
+      <style>{css}</style>
+      {inspection ? (
+        <section className="sandbox" data-fi11-events-inspection="true">
+          <b>Sanitized local inspection</b>
+          <span>Synthetic preview · no session, backend, or protected data</span>
+        </section>
+      ) : null}
+      <header>
+        <div>
+          <p className="eye">Events</p>
+          <h1>Read-only event relationships</h1>
+          <p>Review the current authorized projection without creating or changing an event record.</p>
+        </div>
+        <small>{inspection ? "Sanitized fixture · not production data" : "Authenticated read-only data"}</small>
+      </header>
+      <Rail labels={["SERIES", "DAY", "ACTIVITY", "READ-ONLY", "NO CHANGES"]} />
+      {content}
+    </div>
   );
 }
 function Cards({
@@ -923,5 +1072,7 @@ function State({
   );
 }
 const css = `
+.event-stack{display:grid;gap:16px;margin-top:16px}.event-stack .plane{overflow:auto}.event-cards{display:none}
+@media(max-width:768px){.event-cards{display:grid;gap:10px;padding:12px}.event-cards article{display:grid;gap:8px;border:1px solid var(--line);padding:13px}.event-cards span{color:var(--muted);font-size:12px}}
 .sup{--bg:#fffdf8;--m1:#fff;--m2:#f7f0e2;--text:#241416;--muted:#6f5a60;--line:#e6dcc9;--ox:#6f1624;--gold:#a77417;min-height:100%;min-width:0;padding:24px;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans",Inter,Arial,sans-serif}.sup.dark{--bg:#1c1917;--m1:#242120;--m2:#2d2927;--text:#faf9f7;--muted:#b9aaa7;--line:#49413d;--ox:#8e2134;--gold:#d0a64a}.sup *{box-sizing:border-box}.sup button,.sup input,.sup select,.sup textarea{font:inherit;min-height:44px;padding:10px 12px;border:1px solid var(--line);background:var(--m1);color:var(--text)}.sup button:focus-visible,.sup input:focus-visible,.sup select:focus-visible,.sup textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}.sup button:disabled{opacity:.45}.sandbox,header,.head,.toolbar,.stale,.recordband{display:flex;justify-content:space-between;align-items:center;gap:14px}.sandbox,.modes,header,.rail,.grid,.plane,.stale,.recordband,.segments,.state,.skeleton,.live{max-width:1440px;margin-left:auto;margin-right:auto}.sandbox{padding:10px 12px;border:1px dashed var(--line);background:var(--m2);font-size:12px}.sandbox span{color:var(--muted)}.sandbox label{display:flex;gap:8px;align-items:center}.modes,.segments{display:flex;margin-top:12px}.modes button,.segments button{flex:1;text-transform:capitalize}.modes .active,.segments .active{background:var(--ox);color:#fff;border-color:var(--ox);font-weight:800}header{margin-top:22px;align-items:flex-end}header h1{font:700 clamp(28px,3vw,38px)/1.08 "Bricolage Grotesque","IBM Plex Sans",sans-serif;margin:4px 0 10px}header p{margin:0;color:var(--muted)}header small{border:1px solid var(--line);padding:8px}.eye{margin:0;color:var(--gold)!important;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.rail{display:grid;grid-template-columns:repeat(5,1fr);list-style:none;padding:0;margin-top:20px;border:1px solid var(--line);background:var(--m2)}.rail li{padding:10px;border-right:1px solid var(--line);font-size:10px;font-weight:800}.rail b{display:block;color:var(--gold)}.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,.75fr);gap:16px;margin-top:16px;align-items:start}.plane,.detail,.state,.task{background:var(--m1);border:1px solid var(--line)}.head{padding:17px;border-bottom:1px solid var(--line)}h2{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;margin:3px 0}.toolbar{justify-content:flex-start;padding:12px;background:var(--m2)}.toolbar input{width:min(360px,48vw)}.sup table{width:100%;border-collapse:collapse}.sup th,.sup td{text-align:left;padding:13px 15px;border-bottom:1px solid var(--line);font-size:13px}.sup th{background:var(--m2);font-size:10px;color:var(--muted);text-transform:uppercase}.row{display:grid;text-align:left;border:0!important;padding:0!important;background:transparent!important}.row span{color:var(--muted);font-size:11px}em{font-style:normal;display:inline-block;padding:5px 8px;background:var(--m2);border:1px solid var(--line);font-size:11px;font-weight:800}.cards{display:none}.detail{position:sticky;top:16px;padding:17px}.detail dl{display:grid;gap:8px}.detail dl div{display:grid;grid-template-columns:120px 1fr}.detail dt{color:var(--muted)}.detail dd{margin:0;font-weight:700}.detail li{padding:8px 0}.detail li span{display:block;color:var(--muted)}.warning{padding:12px;background:var(--m2);color:var(--muted)}.recordband{margin-top:14px;padding:12px;background:var(--m2);border:1px solid var(--line);font-size:12px}.segments{margin-top:8px}.dense{display:grid;gap:8px;padding:16px}.dense article{display:flex;justify-content:space-between;padding:12px;border-bottom:1px solid var(--line)}.stale{margin-top:14px;padding:12px;border:1px solid var(--line);border-left:4px solid var(--gold)}.stale span{color:var(--muted)}.paused{opacity:.65;pointer-events:none}.state{padding:42px 20px;margin-top:16px}.state p{color:var(--muted)}.skeleton{height:520px;margin-top:16px;background:var(--m2);border:1px solid var(--line)}.primary{background:var(--ox)!important;color:#fff!important;border-color:var(--ox)!important;font-weight:800}.veil{position:fixed;inset:0;z-index:60;background:#120b0bba;display:grid;place-items:center;padding:16px}.task{width:min(580px,100%);padding:22px;display:grid;gap:13px}.task label{display:grid;gap:5px}.actions{display:flex;gap:8px}.live{min-height:24px;margin-top:12px;color:var(--muted);font-size:12px}
 @media(max-width:768px){.sup{padding:14px}.sandbox,header,.stale,.recordband{flex-direction:column;align-items:flex-start}.modes,.segments{display:grid;grid-template-columns:1fr}.rail{grid-template-columns:1fr}.rail li{border-bottom:1px solid var(--line)}.grid{grid-template-columns:1fr}.sup table{display:none}.cards{display:grid;gap:10px;padding:12px}.cards article{border:1px solid var(--line);padding:13px}.cards article>div{display:flex;justify-content:space-between}.cards .primary{width:100%;min-height:48px}.detail{position:relative;top:auto}.toolbar{flex-direction:column;align-items:stretch}.toolbar input,.toolbar button{width:100%}.actions{display:grid}.actions button{width:100%;min-height:48px}}@media(max-width:390px){.sup{padding:12px}header h1{font-size:32px}.head,.dense article{flex-direction:column;align-items:flex-start}.detail dl div{grid-template-columns:1fr}}`;;

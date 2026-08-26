@@ -95,6 +95,8 @@ export function PreviewInspectionRoute({
         <SupplyRoutes dark={dark} mode="restocking" navigate={onOpenRoute} />
       ) : authRoute === 'procurement' ? (
         <SupplyRoutes dark={dark} mode="procurement" navigate={onOpenRoute} />
+      ) : authRoute === 'events' ? (
+        <SupplyRoutes dark={dark} mode="events" navigate={onOpenRoute} inspection eventAllowed />
       ) : authRoute === 'administration' ? (
         <AdministrationRoute dark={dark} navigate={onOpenRoute} inspection />
       ) : (
