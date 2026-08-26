@@ -10,6 +10,7 @@ export default defineConfig({
     'frontend-cutover.spec.js',
     'preview-index.spec.js',
     'fi11-reference-surfaces.spec.js',
+    'fi12-convergence.spec.js',
     'r3-a1-a2-routing.spec.js',
     'fi07-lending-hub.spec.js',
   ],

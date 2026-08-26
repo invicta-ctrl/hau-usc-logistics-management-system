@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { scopeRouteCss } from "./routeStyleScope";
 type Rec = {
   id: string;
   title: string;
@@ -289,7 +290,7 @@ export default function ReleaseDeskRoute({
   );
   return (
     <div className={"rel " + (dark ? "dark" : "light")}>
-      <style>{css}</style>
+      <style>{scopeRouteCss(".rel", css)}</style>
       <section className="sandbox">
         <b>Design fixture</b>
         <span>Synthetic prototype · no backend</span>

@@ -4,6 +4,7 @@ import {
   frontendBackend,
   type FrontendEventManagement,
 } from "../integration/backend";
+import { scopeRouteCss } from "./routeStyleScope";
 type Mode = "restocking" | "procurement" | "events";
 type Prev =
   | "Populated"
@@ -212,7 +213,7 @@ export default function SupplyRoutes({
     ) : null;
   return (
     <div className={"sup " + (dark ? "dark" : "light")}>
-      <style>{css}</style>
+      <style>{scopeRouteCss(".sup", css, [".event-stack", ".event-cards"])}</style>
       {top}
       <header>
         <div>
@@ -922,7 +923,7 @@ function ManagedEventsRoute({
 
   return (
     <div className={`sup ${dark ? "dark" : "light"}`} data-fi11-events="true">
-      <style>{css}</style>
+      <style>{scopeRouteCss(".sup", css, [".event-stack", ".event-cards"])}</style>
       {inspection ? (
         <section className="sandbox" data-fi11-events-inspection="true">
           <b>Sanitized local inspection</b>

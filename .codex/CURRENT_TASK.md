@@ -1,29 +1,29 @@
-# Current Bounded Task — FI-11 References, Links, Brand, Events, and Owner Health Frontend Integration
+# Current Bounded Task — FI-12 Cross-Surface Design Convergence Closure
 
-INTENT: SOFTWARE_FEATURE + TESTING
+INTENT: SOFTWARE_MAINTENANCE + TESTING
 MODE: EXECUTE
-OBJECTIVE: Integrate only existing Reference Administration, Link Registry, Brand/media references, Events/reference data, and Owner/system health/readiness presentation with supported read-only projections, distinct capabilities, truthful redaction, and a deterministic zero-traffic A4 inspection surface.
-TARGET: .codex/specs/accepted/2026-08-26-fi11-references-links-brand-events-owner-health-frontend-integration.md; src/frontend/app/AppRouteRenderer.tsx; src/frontend/app/AdministrationRoute.tsx; src/frontend/app/SupplyRoutes.tsx Events route; src/frontend/integration/backend.ts; src/frontend/preview/index/PreviewInspectionRoute.tsx; src/frontend/preview/index/registry.ts; focused FI-11 unit and bounded Preview Index behavior coverage; deterministic artifacts; the three current-chain records; `.codex/FI11_GOVERNED_REFERENCE_SURFACES_RECEIPT.md`.
+OBJECTIVE: FI-12 is complete: repair the proven deployed route-style cascade without redesigning, flattening module-specific IA, or altering repository-owned behavior.
+TARGET: .codex/specs/accepted/2026-08-26-fi12-cross-surface-design-convergence.md; .codex/FI12_CROSS_SURFACE_CONVERGENCE_RECEIPT.md; only the accepted FI-12 source, tests, deterministic artifacts, and current-chain closure records.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi11-references-links-brand-events-owner-health-frontend-integration.md
-START_HEAD: 66f06aa99cdf96317f1107c937862832c8be02d8
-UPSTREAM_AT_HANDSHAKE: origin/frontend-design-integration @ 66f06aa99cdf96317f1107c937862832c8be02d8 (+0/-0)
-AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment; accepted FI-11 packet; TOKEN-OPT-001-A8; project policy; A3/A4 Preview Index authority; existing read-only reference-link/brand/event/technical-status contracts; live Make-v44 evidence recorded by Sol.
-REQUIRED_MODEL: GPT-5.6 Terra / Max sole canonical frontend writer; Sol remains read-only orchestrator, reviewer, and final acceptance authority.
-TASK_STATUS: FI11_CLOSED__SOL_ACCEPTED__FI12_PREFLIGHT_AUTHORIZED_AFTER_PUSH
-ACTIVE_WRITER: NONE__FI11_RELEASED
-WRITER_LOCK: RELEASED__FI11
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi12-cross-surface-design-convergence.md
+START_HEAD: 81480a05c46b20f2979d5428b1ecd474dc05ff57
+UPSTREAM_AT_HANDSHAKE: origin/frontend-design-integration @ 81480a05c46b20f2979d5428b1ecd474dc05ff57 (+0/-0)
+AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment; accepted FI-12 packet; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-11 records; live Make-v44 visual evidence; current repository contracts.
+REQUIRED_MODEL: GPT-5.6 Terra / Max was the sole canonical frontend writer; Sol is final acceptance authority.
+TASK_STATUS: FI12_CLOSED__SOL_ACCEPTED__COMMIT_PENDING
+ACTIVE_WRITER: NONE__FI12_RELEASED
+WRITER_LOCK: RELEASED__FI12
 RISK: HIGH
-SCOPE: Render only Reference Administration, Link Registry, Brand and media, Events/reference data, and System status as existing authenticated frontend surfaces. Runtime uses only supported read-only contracts and preserves the independent reference.manage, brand.manage, event.manage, and system.admin boundaries. A4 is visibly synthetic, sanitized, deterministic, and makes zero protected or public request. Preserve R2 media authority, plain-language role-appropriate labels, truth separation between technical response and user-facing readiness, responsive/keyboard/focus/contrast behavior, and visible 3px focus treatment.
-OUT_OF_SCOPE: Backend/API/Worker/service/authorization/capability/permission/auth/session/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment; all mutations, media uploads, provider sync, event management, exports, prints, advertisements, FI-12+, and .ai-bridge/. Accepted deterministic artifacts and the FI-11 closure receipt are included only because Sol accepted the candidate.
-INVARIANTS: Existing Worker-derived capability and data contracts remain authoritative; UI visibility is never authorization. Never infer one capability from another. Do not render raw provider/Sheet/Drive/R2/domain/account/person/actor/correlation/version/storage/internal linkage IDs, private contact, stack trace, internal diagnostic, or unsupported operational fact. Never claim healthy, synced, ready, connected, or up-to-date without a current supporting response. A4 creates no session/capability and sends no protected/public backend request or mutation.
-VERIFICATION: PASSED — focused unit suites 36/36; exact canonical-4173 FI-11 Playwright 5/5 at 320/390/768/1024/1440; targeted Preview Index registry check 5/5 after isolated retry of a pre-assertion 320 navigation timeout; capability boundary, redaction and 503 uncertainty projection, A4 zero protected/public traffic, no asserted console error, mobile selector/keyboard semantics, focus-visible, overflow, bounded Make-v44/Hallmark/Impeccable audit, final `npm run build`, `npm run verify:dist`, `npm run check:continuation`, `npm run handoff:verify`, and `git diff --check`; deterministic artifact SHA 1097D8B112511D0488CD7FBDC898B74349354ACFB26321AB76C3FDC3F4012DA7.
-STOP_CONDITIONS: REACHED — FI-11 is closed and the writer lock is released. FI-12 convergence preflight is owner-authorized only after FI-11 push/parity; do not mutate FI-12 until its fresh packet/lock handshake.
+SCOPE: Completed only the proven Authenticated Shell cascade repair for deployed Administration, Release, and Supply route CSS. The unmounted legacy LendingHub component was excluded.
+OUT_OF_SCOPE: FI-13+ implementation; visual redesign; backend/API/Worker/auth/authorization/capability/permission/session/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment; data/provider mutation; `.ai-bridge/`.
+INVARIANTS: Contracts remain functional authority and live Make remains visual authority. Preserve route distinctions, A3/A4 isolation, visible 3px focus treatment, privacy, domain semantics, and zero protected/public Preview Index transport.
+VERIFICATION: PASSED — initial FI-12 helper 9/9; final focused FI-06 through FI-12 unit batch 48/48; exact canonical-4173 deployed-route isolation 5/5 at 320/390/768/1024/1440; bounded Hallmark/Impeccable no new actionable finding; build/dist SHA-256 D72C215E61CF5768F04A7776CB684E1C55C0D2C23A691F783B3B4C68A7249965; continuation, handoff, and diff checks passed after closure synchronization; Sol final review ACCEPTED.
+STOP_CONDITIONS: REACHED — FI-12 is complete. Do not begin FI-13 implementation.
 DELEGATION_LEDGER:
 
-- writer=/root/fi11_terra_writer | model=gpt-5.6-terra | reasoning=max | role=sole canonical FI-11 frontend writer | mode=execute | scope=accepted References/Links/Brand/Events/Owner Health integration, sanitized A4 inspection, focused verification, artifacts, and closure | owned=FI-11 packet/current-chain/receipt,AppRouteRenderer,AdministrationRoute,SupplyRoutes Events route,frontend backend adapter,PreviewInspectionRoute,registry,focused FI-11 unit,bounded Preview Index additions,accepted artifacts | excluded=backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment/.ai-bridge/FI-12+ | status=COMPLETED__RELEASED__SOL_ACCEPTED | evidence=focused suites 36/36; exact-4173 FI-11 matrix 5/5; targeted registry matrix 5/5; build/dist SHA; Sol/Hallmark/Impeccable acceptance.
+- writer=/root/fi12_terra_writer | model=gpt-5.6-terra | reasoning=max | role=sole canonical FI-12 frontend writer | mode=execute | scope=accepted cascade repair, focused verification, artifact generation, and closure | owned=FI-12 packet/current-chain/receipt,routeStyleScope,AdministrationRoute,ReleaseDeskRoute,SupplyRoutes,FI-09 parity test,FI-12 tests,artifacts | excluded=backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment/.ai-bridge/FI-13+ | status=COMPLETED__RELEASED__SOL_ACCEPTED | evidence=initial helper 9/9; final units 48/48; exact-4173 5/5; build/dist SHA; Sol/Hallmark/Impeccable acceptance.
 
 PREVIEW_TARGET: http://127.0.0.1:4173/
-PREVIEW_STATUS: RUNNING__HEALTHY__VERIFIED_2026-08-26
-NEXT_EXACT_ACTION: Begin owner-authorized FI-12 convergence preflight after FI-11 push/parity; do not mutate FI-12 until its fresh packet/lock handshake.
+PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART
+NEXT_EXACT_ACTION: Begin owner-authorized FI-13 preflight only; do not mutate FI-13 until its fresh accepted packet, handshake, and sole-writer lock are recorded.

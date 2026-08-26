@@ -17,6 +17,7 @@ import {
   favicon,
   defaultItemImage,
 } from "../../ProductionAssets";
+import { scopeRouteCss } from "./routeStyleScope";
 type Tab =
   | "Accounts & access"
   | "Staff directory"
@@ -432,7 +433,7 @@ export default function AdministrationRoute({
 
   return (
     <div className={"adm " + (dark ? "dark" : "light")} data-fi10-administration="true" data-fi11-administration="true">
-      <style>{css}</style>
+      <style>{scopeRouteCss(".adm", css)}</style>
       {inspection ? (
         <section className="sandbox" data-fi10-inspection="true">
           <b>Sanitized local inspection</b>
@@ -1106,7 +1107,7 @@ export function LegacyAdministrationFixture({
     );
   return (
     <div className={"adm " + (dark ? "dark" : "light")}>
-      <style>{css}</style>
+      <style>{scopeRouteCss(".adm", css)}</style>
       <section className="sandbox">
         <b>Design fixture</b>
         <span>Synthetic prototype · no backend</span>

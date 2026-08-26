@@ -6,6 +6,11 @@ import { listPreviewRoutes } from '../../src/frontend/preview/index/registry';
 const root = resolve(import.meta.dirname, '../..');
 const readSource = (relativePath) => readFileSync(resolve(root, relativePath), 'utf8');
 const cssFrom = (source) => source.match(/const css = `([\s\S]*)`;;\s*$/)?.[1];
+const supplyCssFrom = (source) => {
+  const css = cssFrom(source);
+  const rootAt = css?.indexOf('.sup{') ?? -1;
+  return rootAt >= 0 ? css?.slice(rootAt).trim() : undefined;
+};
 
 describe('FI-09 Supply operations frontend integration', () => {
   it('uses the existing SupplyRoutes module only after the normal authenticated route gate', () => {
@@ -32,7 +37,12 @@ describe('FI-09 Supply operations frontend integration', () => {
     const runtime = readSource('src/frontend/app/SupplyRoutes.tsx');
     const makeV44 = readSource('output/design/make-provider-export-v44/src/app/SupplyRoutes.tsx');
 
-    expect(cssFrom(runtime)).toBe(cssFrom(makeV44));
+    // FI-11 adds the Events-only responsive helpers before the FI-09 Make-v44
+    // `.sup` payload. Keep that accepted delta explicit without weakening the
+    // core Make parity assertion.
+    expect(supplyCssFrom(runtime)).toBe(cssFrom(makeV44)?.trim());
+    expect(cssFrom(runtime)).toContain('.event-stack{display:grid;gap:16px;margin-top:16px}');
+    expect(cssFrom(runtime)).toContain('@media(max-width:768px){.event-cards{display:grid;gap:10px;padding:12px}');
     expect(runtime).toContain('Restocking and receiving');
     expect(runtime).toContain('REQUEST');
     expect(runtime).toContain('CANVASS');

@@ -1,27 +1,27 @@
-# Current Environment Handoff — FI-11 References, Links, Brand, Events, and Owner Health Frontend Integration
+# Current Environment Handoff — FI-12 Cross-Surface Design Convergence
 
-FROM: /root/fi11_terra_writer closed FI-11
-TO: Earl / next authorized Terra writer for FI-12 convergence preflight after FI-11 push/parity
+FROM: /root/fi12_terra_writer after Sol acceptance
+TO: Earl / next authorized Terra writer for FI-13 preflight only
 BRANCH: frontend-design-integration
-HEAD: 66f06aa99cdf96317f1107c937862832c8be02d8
-START_HEAD: 66f06aa99cdf96317f1107c937862832c8be02d8
-PRODUCT_HEAD_AT_CLOSURE_HANDSHAKE: 8120cf78f653d06a66f7bd37a3feba17543ccdd5 (FI-08 product implementation; pushed before the separate closure-documentation commit)
-CLOSURE_DOCUMENTATION_COMMIT: GIT_HEAD (dynamic FI-10 closure commit)
-UPSTREAM: origin/frontend-design-integration @ 66f06aa99cdf96317f1107c937862832c8be02d8 (+0/-0 verified)
+HEAD: 81480a05c46b20f2979d5428b1ecd474dc05ff57
+START_HEAD: 81480a05c46b20f2979d5428b1ecd474dc05ff57
+CLOSURE_DOCUMENTATION_COMMIT: GIT_HEAD (dynamic FI-12 closure commit)
+UPSTREAM: origin/frontend-design-integration @ 81480a05c46b20f2979d5428b1ecd474dc05ff57 (+0/-0 verified)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY__FI11_CLOSURE_PENDING_COMMIT__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
-ACTIVE_WRITER: NONE__FI11_RELEASED
-WRITER_LOCK: RELEASED__FI11
-HANDOFF_STATUS: FI11_CLOSED__SOL_ACCEPTED
+WORKTREE_STATE: DIRTY__FI12_CLOSURE_PENDING_COMMIT__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
+ACTIVE_WRITER: NONE__FI12_RELEASED
+WRITER_LOCK: RELEASED__FI12
+HANDOFF_STATUS: FI12_CLOSED__SOL_ACCEPTED
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi11-references-links-brand-events-owner-health-frontend-integration.md
-FI10_PACKET_STATUS: CLOSED__SOL_ACCEPTED__COMMITTED_PUSHED
-FI11_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED
-FI11_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 attachment; TOKEN-OPT-001-A8; project policy; accepted A3/A4 boundaries; current read-only reference-link/brand/event/technical-status contracts; live Make-v44 evidence recorded by Sol.
-FI11_SCOPE: Bounded Reference Administration, Link Registry, Brand/media references, Events/reference data, and Owner/system health/readiness integration. Runtime may consume only supported read-only contracts under distinct capability gates. A4 is sanitized deterministic presentation with zero protected/public traffic. No mutation, backend, Worker, authorization, R2/provider, Figma, or deployment work is authorized.
-FI11_CONTRACT_NOTE: reference.manage governs reference links; brand.manage governs brand assets; event.manage governs getEventManagement; system.admin gates redacted Owner/system status. Do not infer a capability from access.admin or another tab. Project safe link data to plain-language display fields; project brand public slot/path/published metadata only; project Events series/day/activity only; redact technical status and never overstate health/readiness. Advertisements remain separate under advertisement.manage.
-FI11_PRIVACY: Never render raw provider/Sheet/Drive/R2/domain/account/person/actor/correlation/version/storage/internal linkage IDs, hashes, private contacts, stack traces, or internal diagnostics. Never fabricate health/sync/readiness/connection/currency or operational records. R2 remains authoritative where the repository says so.
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi12-cross-surface-design-convergence.md
+FI12_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED
+FI12_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 attachment; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-11 records; live Make-v44 visual evidence; repository functional contracts.
+FI12_SCOPE: Bounded material convergence audit and only proven frontend repairs across accepted FI-04 through FI-11 surfaces. No redesign, no module flattening, no new feature, and no protected boundary change.
+FI12_INITIAL_AUDIT: CLOSED — exact 4173 computed-style evidence proved Administration's bare route-local header rule escaped into the Authenticated Shell. The accepted repair contains deployed Administration, Release, and Supply local CSS only; the orphaned legacy LendingHub component remains unmodified.
+FI12_INVARIANTS: Preserve route/context separation, A3/A4 zero-traffic isolation, capability/privacy/domain boundaries, 3px focus-visible treatment, accepted Make-v44 composition, and `.ai-bridge/` untouched.
+PREVIEW: `http://127.0.0.1:4173/` remains the healthy canonical HMR supervisor; do not restart absent a proved health/isolation/ownership trigger.
+FI12_RECEIPT: .codex/FI12_CROSS_SURFACE_CONVERGENCE_RECEIPT.md
 FI09_PACKET_STATUS: CLOSED__SOL_ACCEPTED__COMMITTED_PUSHED
 FI09_AUTHORITY: Earl's FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment; TOKEN-OPT-001-A8; .agents/PROJECT_POLICY.md; accepted A3/A4 Preview Index authority; repository route/authorization contracts; live authenticated Make-v44 evidence recorded by Sol.
 FI07_ACCEPTED_SPEC: .codex/specs/accepted/2026-08-24-fi07-internal-lending-hub-frontend-integration.md
@@ -30,9 +30,9 @@ FI08_INTAKE_HISTORY: 2026-08-24 intake-only handoff remains historical evidence;
 FI08_AUTHORITY: Earl's 2026-08-25 FI-08 instruction; Earl's 2026-08-26 FI-08R Acceptance Repair + Final Closure instruction; accepted R1 one-shot/R1-A2/A3/A4 amendments; TOKEN-OPT-001-A8; `.agents/PROJECT_POLICY.md`; repository functional-contract truth.
 FI07_RECEIPT: .codex/FI07_INTERNAL_LENDING_HUB_RECEIPT.md
 FI08_PRODUCT_COMMIT: 8120cf78f653d06a66f7bd37a3feba17543ccdd5 (FI-08 product implementation; pushed to origin/frontend-design-integration before this closure-documentation commit)
-COMPLETED: FI-08R, FI-09, FI-10, and FI-11 are closed and Sol-accepted. FI-11 completed the bounded Reference/Link/Brand/Event/Owner Health frontend integration; the Terra writer lock is released. The preexisting untracked `.ai-bridge/` remains excluded and untouched.
+COMPLETED: FI-08R, FI-09, FI-10, FI-11, and FI-12 are closed and Sol-accepted. FI-12 contained the material shared-shell route-style cascade; the Terra writer lock is released. The preexisting untracked `.ai-bridge/` remains excluded and untouched.
 FI09_IMPLEMENTATION: Authenticated restocking and procurement plus trusted A4 inspection render the existing SupplyRoutes module with truthful ACCEPTED / VISUAL_ONLY / AUTHENTICATED / REAL_MODULE registry metadata; bounded dialog focus lifecycle, canonical Selected record truth, and mobile Canvassing/Deliverables equivalents are included. No backend, protected request, or mutation binding was added.
-VALIDATION: FI-11 focused suites passed 36/36. Exact canonical-4173 FI-11 Playwright passed serially at 320/390/768/1024/1440 with sanitized Events/Administration inspection, zero protected traffic, no asserted console error, responsive mobile selector behavior, and no overflow. Targeted Preview Index registry checks passed at all five widths after an isolated serial 320 retry of a pre-assertion navigation timeout. Bounded manual 1440/320 review confirmed readable Events table/card adaptation; only known favicon 404 appeared. `npm run build`, `npm run verify:dist`, `npm run check:continuation`, `npm run handoff:verify`, and `git diff --check` passed; both deterministic artifacts SHA-256 1097D8B112511D0488CD7FBDC898B74349354ACFB26321AB76C3FDC3F4012DA7. Sol found no actionable issue; Hallmark/Impeccable found no FI-11-introduced actionable issue. See `.codex/FI11_GOVERNED_REFERENCE_SURFACES_RECEIPT.md`.
+VALIDATION: Initial FI-12 helper test passed 9/9. Final focused FI-06 through FI-12 unit batch passed 48/48. Exact canonical-4173 deployed Administration/Release/Restocking isolation passed serially 5/5 at 320/390/768/1024/1440. Bounded Hallmark/Impeccable found no FI-12-introduced actionable issue. `npm.cmd run build`, `npm.cmd run verify:dist`, `npm.cmd run check:continuation`, `npm.cmd run handoff:verify`, and `git diff --check` passed after closure synchronization; deterministic artifacts SHA-256 D72C215E61CF5768F04A7776CB684E1C55C0D2C23A691F783B3B4C68A7249965. Sol accepted with no actionable finding. See `.codex/FI12_CROSS_SURFACE_CONVERGENCE_RECEIPT.md`.
 FI07_COMPLETED: The FI-07 DOL-only Internal Lending Hub is independently **ACCEPTED with no Sol findings**. It delivers strict lending bootstrap-v2 projection, capability-derived presentation gates, canonical queue/inspector/lifecycle UI, existing-command review/handoff/return flows, governed return evidence upload, and deterministic A4 fixture-only local inspection with no protected network traffic. The accepted repair set includes candidate-not-assignment asset truth, ticket-page traversal, status-safe modal reload recovery, traceability fail-closed behavior, content-aware evidence identity, strict pagination, condition/outcome consistency, blank-borrower display, vocabulary, and nested-modal accessibility. Canonical return-item traceability now prevents mixed outcome buckets for traceable/unknown reusable loans, while verified aggregate and consumable semantics remain explicit.
 FI06_VALIDATION: Focused units 34/34 passed. The regular FI-06 Playwright matrix passed 55 with 5 intentional exact-4173-only skips across 320/390/768/1024/1440. Exact 4173 Preview Index passed 1/1 with zero protected request/review traffic. `npm.cmd run build` and `npm.cmd run verify:dist` passed; both deterministic frontend artifacts are SHA-256 `725857F273E32239628FB241FA2A14C4E04F049D2753BAEDB72F88C058A2E1F7`. Targeted formatting, governance, continuation, handoff, and diff checks are recorded in the FI-06 receipt.
 FI07_VALIDATION: Root independently recorded the same exact candidate evidence accepted by Sol: focused FI-07 plus adapter units 30/30; regular FI-07 Playwright 30 authenticated viewport cases at 320/390/768/1024/1440 with five intentional A4 skips; exact trusted 4173 A4 5 local review/issue/return inspection cases with zero protected session/bootstrap/mutation/evidence traffic; build and `verify:dist`; targeted formatting, governance, continuation, handoff, and diff checks. Both deterministic frontend artifacts are SHA-256 `707A00FDF4DC4BC6EB2C2053007B21F9997A9D51ADDF65F7EE1B65CAA091F738`.
@@ -52,16 +52,16 @@ DELEGATION_LEDGER:
 - writer=/root/fi08_terra_writer | model=gpt-5.6-terra | role=FI-08 sole canonical frontend writer | mode=execute | scope=accepted Release Desk route/Preview Index integration, focused tests, local preview verification | owned=FI-08 packet/current-chain,AppRouteRenderer,PreviewInspectionRoute,registry,focused tests | excluded=backend/auth/permissions/schema/provider/Figma/deployments/.ai-bridge | status=COMPLETED__LOCK_RELEASED | evidence=8120cf78f653d06a66f7bd37a3feba17543ccdd5 and recorded verification.
 - writer=/root/fi08r_terra_writer | model=gpt-5.6-terra | reasoning=max | role=FI-08R sole canonical frontend writer | mode=execute | scope=two owner-reproduced interaction acceptance defects, behavioral coverage, generated artifacts, and continuity closeout | owned=.codex/CURRENT.md,.codex/CURRENT_TASK.md,.codex/CURRENT_HANDOFF.md,.codex/FI08R_RELEASE_DESK_ACCEPTANCE_REPAIR_RECEIPT.md,src/frontend/app/ReleaseDeskRoute.tsx,tests/unit/fi08-release-desk.test.js,tests/e2e/preview-index.spec.js,dist/index.html,HAU-USC_Logistics-Frontend-Shareable.html | excluded=backend/auth/permissions/schema/migration/provider/Figma/Make/Playground/Production/main/deployment/.ai-bridge/FI-09+ | status=COMPLETED__LOCK_RELEASED__SOL_ACCEPTED | evidence=focused unit 3/3; serial exact-4173 FI-08R Playwright 5/5; browser focus/outline/overflow/console review; build/dist artifact SHA; Sol/Hallmark/Impeccable final acceptance.
 
-HANDSHAKE: FI-11 began at 66f06aa99cdf96317f1107c937862832c8be02d8, matching origin/frontend-design-integration +0/-0. The worktree retains only the preexisting excluded untracked `.ai-bridge/`; it remains untouched. A8/project policy permitted the owner-started Terra writer; Sol acceptance released the FI-11 lock.
-SOURCE_EVIDENCE: Sol recorded live authenticated Make-v44 administration composition. Existing Worker contracts expose the distinct read-only reference, brand, event, and technical-status paths. The frontend must project all raw/private/internal fields out before normal UI rendering.
-SCOPE: FI-11 includes only References/Links/Brand/Events/Owner Health in authenticated administration and trusted A4 preview. Runtime uses only existing read-only contracts; A4 is sanitized deterministic presentation with zero protected/public traffic. No mutation binding, backend/Worker change, provider, Figma, or deployment change is authorized.
-INVARIANTS: Each capability remains server-owned and distinct. UI hiding never authorizes. No raw/internal/provider/private data or fabricated health/readiness/event/media truth may render. R2 media authority remains intact.
-BLOCKER: NONE — FI-11 is complete. FI-12 convergence preflight is owner-authorized after FI-11 push/parity, but no FI-12 mutation may occur before its fresh packet/lock handshake.
+HANDSHAKE: FI-12 began at 81480a05c46b20f2979d5428b1ecd474dc05ff57, matching origin/frontend-design-integration +0/-0. The worktree retains only the preexisting excluded untracked `.ai-bridge/`; it remains untouched. A8/project policy permitted the owner-started Terra writer; Sol acceptance released the FI-12 lock.
+SOURCE_EVIDENCE: Exact canonical-4173 runtime proof demonstrated the shared-shell selector cascade. Live Make-v44 visual composition and repository contracts remained authoritative; no product or contract source was rewritten.
+SCOPE: FI-12 includes only containment of the material deployed route-style cascade in Administration, Release, and Supply plus focused regression/closure evidence. No mutation binding, backend/Worker change, provider, Figma, or deployment change is authorized.
+INVARIANTS: Each route/capability remains distinct and server-owned. A4 remains sanitized/local/zero-traffic. No raw/internal/provider/private data or fabricated operational truth may render.
+BLOCKER: NONE — FI-12 is complete and the writer lock is released.
 PREVIEW_TARGET: http://127.0.0.1:4173/
-PREVIEW_STATUS: RUNNING__HEALTHY__VERIFIED_2026-08-26
+PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART
 FI09_RECEIPT: .codex/FI09_SUPPLY_OPERATIONS_RECEIPT.md
 FI10_RECEIPT: .codex/FI10_ACCOUNTS_DIRECTORY_ACTIVITY_HISTORY_RECEIPT.md
 FI11_RECEIPT: .codex/FI11_GOVERNED_REFERENCE_SURFACES_RECEIPT.md
-NEXT_EXACT_ACTION: Begin owner-authorized FI-12 convergence preflight after FI-11 push/parity; do not mutate FI-12 until its fresh packet/lock handshake.
+NEXT_EXACT_ACTION: Begin owner-authorized FI-13 preflight only; do not mutate FI-13 until its fresh accepted packet, handshake, and sole-writer lock are recorded.
 RESUME_COMMANDS: git status --short; git diff --check; npm.cmd run preview:frontend:status; do not restart the healthy preview.
-PROHIBITED_ACTIONS: Never touch .ai-bridge/; never alter backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment; never bind a mutation; never expose raw/internal/provider/private data; never fabricate health/readiness; do not begin FI-12.
+PROHIBITED_ACTIONS: Never touch .ai-bridge/; never alter backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment; never bind a mutation; do not begin FI-13 implementation.
