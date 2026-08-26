@@ -4,6 +4,33 @@ import tailwindcss from '@tailwindcss/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import { parsePlaygroundOrigin, verifyPlaygroundOrigin } from './scripts/playground-proxy-guard.mjs';
 
+const CLOUDFLARE_BUILD_MODES = new Set(['staging', 'production']);
+const DEPLOY_ARTIFACT_MARKER_NAME = 'hau-deploy-target';
+
+function deployArtifactMarker(mode) {
+  const normalizedMode = String(mode ?? '')
+    .trim()
+    .toLowerCase();
+  if (!CLOUDFLARE_BUILD_MODES.has(normalizedMode)) return undefined;
+
+  return {
+    name: 'hau-deploy-artifact-marker',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler() {
+        return [
+          {
+            tag: 'meta',
+            attrs: { name: DEPLOY_ARTIFACT_MARKER_NAME, content: normalizedMode },
+            injectTo: 'head',
+          },
+        ];
+      },
+    },
+  };
+}
+
 async function playgroundProxy() {
   const configured = String(process.env.HAU_PLAYGROUND_PROXY_ORIGIN ?? '').trim();
   if (!configured) return undefined;
@@ -23,10 +50,10 @@ async function playgroundProxy() {
   return { '/api': options(), '/brand': options(), '/media': options() };
 }
 
-export default defineConfig(async () => ({
+export default defineConfig(async ({ mode }) => ({
   root: 'src',
   base: './',
-  plugins: [react(), tailwindcss(), viteSingleFile()],
+  plugins: [react(), tailwindcss(), viteSingleFile(), deployArtifactMarker(mode)].filter(Boolean),
   server: { host: '127.0.0.1', proxy: await playgroundProxy() },
   preview: { host: '127.0.0.1' },
   build: {

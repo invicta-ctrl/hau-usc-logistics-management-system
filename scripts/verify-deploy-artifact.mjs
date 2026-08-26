@@ -5,9 +5,9 @@
 // directory can legitimately hold either variant at any moment. Deploying the
 // preview artifact would publish a mock-backend Main Hub against live D1.
 //
-// `src/app/config.js` derives the backend mode from `import.meta.env.MODE`,
-// which Vite inlines as a string literal, so the built artifact states its own
-// build mode. This asserts that literal before any upload.
+// `vite.config.js` adds one canonical HTML marker only to staging and production
+// builds. Assert that marker before any upload; Vite/minifier JavaScript shapes
+// are not a deployment-identity contract.
 //
 // Usage: node scripts/verify-deploy-artifact.mjs [staging|production] [artifact-directory]
 
@@ -16,6 +16,11 @@ import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 
 const CLOUDFLARE_MODES = new Set(['staging', 'production']);
+const DEPLOY_ARTIFACT_MARKER_NAME = 'hau-deploy-target';
+const canonicalMarkerPattern = new RegExp(
+  `<meta name="${DEPLOY_ARTIFACT_MARKER_NAME}" content="([^"]*)"\\s*/?>`,
+  'gu',
+);
 const target = String(process.argv[2] ?? '')
   .trim()
   .toLowerCase();
@@ -32,45 +37,30 @@ try {
   throw new Error(`${artifactPath} is missing. Run the target-specific Cloudflare build before deploying.`);
 }
 
-// Matches the compiled form of:
-//   String(import.meta.env?.MODE ?? 'development').trim().toLowerCase()
-const modeMatches = [...html.matchAll(/["']([a-z]+)["']\s*\)?\s*\.trim\(\)\s*\.toLowerCase\(\)/gu)].map(
-  (match) => match[1],
-);
-
-if (!modeMatches.length) {
-  throw new Error('Could not determine the build mode of the isolated artifact. Refusing to deploy it.');
-}
-
-const cloudflareModes = modeMatches.filter((mode) => CLOUDFLARE_MODES.has(mode));
-const previewModes = modeMatches.filter((mode) => ['preview', 'development', 'mock'].includes(mode));
-
-if (previewModes.length) {
+const markers = [...html.matchAll(canonicalMarkerPattern)].map((match) => match[1]);
+if (markers.length !== 1) {
   throw new Error(
-    `The isolated artifact is a ${previewModes[0]} build. That artifact runs the mock backend and must never be ` +
-      'deployed against live D1. Rebuild with npm run build:cloudflare and re-run this preflight.',
+    'The isolated artifact must contain exactly one canonical deploy target marker. Refusing to deploy.',
   );
 }
 
-if (!cloudflareModes.length) {
-  throw new Error(
-    `The isolated artifact does not declare a Cloudflare build mode (found: ${[...new Set(modeMatches)].join(', ')}). ` +
-      'Refusing to deploy.',
-  );
+const buildMode = markers[0];
+if (!CLOUDFLARE_MODES.has(buildMode)) {
+  throw new Error('The isolated artifact declares an invalid deploy target marker. Refusing to deploy.');
 }
 
 // The declared build mode must equal the deploy target. Accepting a staging
 // artifact for a production deploy would ship a bundle whose baked-in
 // appEnvironment says "staging", defeating the RV-01.8 identity proof.
-if (target && !cloudflareModes.includes(target)) {
+if (target && buildMode !== target) {
   throw new Error(
-    `The isolated artifact declares build mode "${cloudflareModes[0]}", which does not satisfy the ${target} deploy. ` +
+    `The isolated artifact deploy target marker does not satisfy the ${target} deploy. ` +
       `Rebuild with the ${target} Cloudflare build path.`,
   );
 }
 
 const digest = createHash('sha256').update(html).digest('hex');
 process.stdout.write(
-  `Deploy artifact verified: build mode ${cloudflareModes[0]}, ${html.length} bytes, sha256 ${digest.slice(0, 16)}...\n` +
+  `Deploy artifact verified: build mode ${buildMode}, ${html.length} bytes, sha256 ${digest.slice(0, 16)}...\n` +
     `${target ? `Target: ${target}\n` : ''}`,
 );

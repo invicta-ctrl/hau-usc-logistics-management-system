@@ -81,10 +81,12 @@ describe('authoritative release pipeline', () => {
   });
 
   it('packages an exact checked candidate, deploys only to playground, and stops for Earl', async () => {
-    const [workflow, playgroundDeploy, packageJson] = await Promise.all([
+    const [workflow, playgroundDeploy, packageJson, viteConfig, artifactVerifier] = await Promise.all([
       read('.github/workflows/release-candidate.yml'),
       read('scripts/playground/deploy-playground.mjs'),
       read('package.json').then(JSON.parse),
+      read('vite.config.js'),
+      read('scripts/verify-deploy-artifact.mjs'),
     ]);
 
     expect(workflow).toContain('workflow_dispatch:');
@@ -117,11 +119,24 @@ describe('authoritative release pipeline', () => {
     expect(workflow).not.toContain('deploy-environment.mjs production');
     expect(workflow).not.toContain('pull_request_target');
     expect(playgroundDeploy).toContain('function rollbackStagingBindings(manifest)');
-    expect(playgroundDeploy).toContain("['versions', 'view', stagingVersionId, '--env', 'staging', '--json']");
+    expect(playgroundDeploy).toContain(
+      "['versions', 'view', stagingVersionId, '--env', 'staging', '--json']",
+    );
     expect(playgroundDeploy).toContain('rollbackBindings: rollbackStagingBindings(manifest)');
     expect(playgroundDeploy).toContain('return JSON.parse(result.stdout);');
-    expect(playgroundDeploy).toContain("throw new Error('Playground deployment provider preflight failed.');");
-    expect(playgroundDeploy).toContain("if (!versionId || typeof versionId !== 'string') throw new Error('Playground deployment provider preflight failed.');");
+    expect(playgroundDeploy).toContain(
+      "throw new Error('Playground deployment provider preflight failed.');",
+    );
+    expect(playgroundDeploy).toContain(
+      "if (!versionId || typeof versionId !== 'string') throw new Error('Playground deployment provider preflight failed.');",
+    );
+    expect(viteConfig).toContain("const DEPLOY_ARTIFACT_MARKER_NAME = 'hau-deploy-target';");
+    expect(viteConfig).toContain('name: DEPLOY_ARTIFACT_MARKER_NAME');
+    expect(viteConfig).toContain('content: normalizedMode');
+    expect(artifactVerifier).toContain("const DEPLOY_ARTIFACT_MARKER_NAME = 'hau-deploy-target';");
+    expect(artifactVerifier).toContain('must contain exactly one canonical deploy target marker');
+    expect(artifactVerifier).toContain('invalid deploy target marker');
+    expect(artifactVerifier).not.toContain('const modeMatches =');
   });
 
   it('binds the candidate manifest to the release, commit, and generated artifacts', async () => {
