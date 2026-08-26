@@ -12,6 +12,7 @@ export function validatePlaygroundConfig({
   config,
   manifest,
   productionBindings,
+  rollbackBindings,
   expectedSha,
   expectedTree,
   expectedBranch,
@@ -76,6 +77,31 @@ export function validatePlaygroundConfig({
   }
   if (boundBuckets.includes(productionBindings?.evidenceBucket)) {
     issues.push('Playground evidence R2 cannot equal production R2');
+  }
+  if (!productionBindings?.d1Id || !productionBindings?.brandBucket || !productionBindings?.evidenceBucket) {
+    issues.push('Current production binding tuple must be available for playground preflight');
+  }
+  const rollback = manifest?.rollback ?? {};
+  if (!rollback.stagingVersionId || rollbackBindings?.versionId !== rollback.stagingVersionId) {
+    issues.push('Rollback staging version must match private playground manifest');
+  }
+  if (!rollback.stagingD1Id || rollbackBindings?.d1Id !== rollback.stagingD1Id) {
+    issues.push('Rollback staging D1 must match private playground manifest');
+  }
+  if (!rollback.stagingBrandBucket || rollbackBindings?.brandBucket !== rollback.stagingBrandBucket) {
+    issues.push('Rollback staging brand R2 must match private playground manifest');
+  }
+  if (!rollback.stagingEvidenceBucket || rollbackBindings?.evidenceBucket !== rollback.stagingEvidenceBucket) {
+    issues.push('Rollback staging evidence R2 must match private playground manifest');
+  }
+  if (rollbackBindings?.d1Id && rollbackBindings.d1Id === productionBindings?.d1Id) {
+    issues.push('Rollback staging D1 cannot equal production D1');
+  }
+  if (rollbackBindings?.brandBucket && rollbackBindings.brandBucket === productionBindings?.brandBucket) {
+    issues.push('Rollback staging brand R2 cannot equal production R2');
+  }
+  if (rollbackBindings?.evidenceBucket && rollbackBindings.evidenceBucket === productionBindings?.evidenceBucket) {
+    issues.push('Rollback staging evidence R2 cannot equal production R2');
   }
   if (config?.workers_dev !== true || config?.preview_urls !== false) {
     issues.push('Playground must use workers_dev with preview URLs disabled');

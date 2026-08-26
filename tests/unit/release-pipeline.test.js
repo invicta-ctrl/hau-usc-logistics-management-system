@@ -81,7 +81,10 @@ describe('authoritative release pipeline', () => {
   });
 
   it('packages an exact checked candidate, deploys only to playground, and stops for Earl', async () => {
-    const workflow = await read('.github/workflows/release-candidate.yml');
+    const [workflow, playgroundDeploy] = await Promise.all([
+      read('.github/workflows/release-candidate.yml'),
+      read('scripts/playground/deploy-playground.mjs'),
+    ]);
 
     expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).not.toMatch(/^\s+push:/mu);
@@ -106,6 +109,12 @@ describe('authoritative release pipeline', () => {
     expect(workflow).toContain('WAIT FOR EARL. No production job exists in this workflow.');
     expect(workflow).not.toContain('deploy-environment.mjs production');
     expect(workflow).not.toContain('pull_request_target');
+    expect(playgroundDeploy).toContain('function rollbackStagingBindings(manifest)');
+    expect(playgroundDeploy).toContain("['versions', 'view', stagingVersionId, '--env', 'staging', '--json']");
+    expect(playgroundDeploy).toContain('rollbackBindings: rollbackStagingBindings(manifest)');
+    expect(playgroundDeploy).toContain('return JSON.parse(result.stdout);');
+    expect(playgroundDeploy).toContain("throw new Error('Playground deployment provider preflight failed.');");
+    expect(playgroundDeploy).toContain("if (!versionId || typeof versionId !== 'string') throw new Error('Playground deployment provider preflight failed.');");
   });
 
   it('binds the candidate manifest to the release, commit, and generated artifacts', async () => {

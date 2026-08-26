@@ -31,15 +31,18 @@ function wranglerJson(args) {
     windowsHide: true,
   });
   if (result.status !== 0) throw new Error('Playground deployment provider preflight failed.');
-  return JSON.parse(result.stdout);
+  try {
+    return JSON.parse(result.stdout);
+  } catch {
+    throw new Error('Playground deployment provider preflight failed.');
+  }
 }
 
-function currentProductionBindings() {
-  const deployments = wranglerJson(['deployments', 'list', '--env', 'production', '--json']);
-  const versionId = deployments?.[0]?.versions?.[0]?.version_id;
-  const version = wranglerJson(['versions', 'view', versionId, '--env', 'production', '--json']);
-  const bindings = version.resources.bindings;
+function bindingsForVersion(version, versionId) {
+  const bindings = version?.resources?.bindings;
+  if (!Array.isArray(bindings)) throw new Error('Playground deployment provider preflight failed.');
   return {
+    versionId,
     d1Id: bindings.find((entry) => entry.name === 'DB' && entry.type === 'd1')?.database_id,
     brandBucket: bindings.find((entry) => entry.name === 'BRAND_ASSETS' && entry.type === 'r2_bucket')
       ?.bucket_name,
@@ -47,6 +50,21 @@ function currentProductionBindings() {
       (entry) => entry.name === 'EVIDENCE_ASSETS' && entry.type === 'r2_bucket',
     )?.bucket_name,
   };
+}
+
+function currentProductionBindings() {
+  const deployments = wranglerJson(['deployments', 'list', '--env', 'production', '--json']);
+  const versionId = deployments?.[0]?.versions?.[0]?.version_id;
+  if (!versionId || typeof versionId !== 'string') throw new Error('Playground deployment provider preflight failed.');
+  const version = wranglerJson(['versions', 'view', versionId, '--env', 'production', '--json']);
+  return bindingsForVersion(version, versionId);
+}
+
+function rollbackStagingBindings(manifest) {
+  const stagingVersionId = String(manifest?.rollback?.stagingVersionId ?? '').trim();
+  if (!stagingVersionId) throw new Error('Playground deployment provider preflight failed.');
+  const version = wranglerJson(['versions', 'view', stagingVersionId, '--env', 'staging', '--json']);
+  return bindingsForVersion(version, stagingVersionId);
 }
 
 async function run() {
@@ -88,6 +106,7 @@ async function run() {
     config,
     manifest,
     productionBindings: currentProductionBindings(),
+    rollbackBindings: rollbackStagingBindings(manifest),
     expectedSha,
     expectedTree,
     expectedBranch,
