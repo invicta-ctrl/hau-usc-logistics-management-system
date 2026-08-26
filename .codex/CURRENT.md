@@ -1,24 +1,29 @@
 # Current Work Pointer — frontend-design-integration
 
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
-MILESTONE: R1_FI13_FINAL_CRAFT_EXACT_FRONTEND_FREEZE_CLOSED
-STATUS: FI13_CLOSED__SOL_ACCEPTED__CLOSURE_COMMIT_PENDING
-PHASE: FI13_EXACT_SOURCE_FROZEN__WRITER_LOCK_RELEASED
+MILESTONE: R1_FI14_ISOLATED_PLAYGROUND_DEPLOYMENT_ACCEPTANCE
+STATUS: FI14_AUTHORIZED__PREDEPLOY_REPAIR_AND_REFREEZE_IN_PROGRESS
+PHASE: FI14_EXACT_CANDIDATE_REPAIR__WRITER_LOCK_ACQUIRED__NO_DEPLOY_YET
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
-START_HEAD: 67504579aa062ae809c7fb44c629518042a77b3d
-CLOSURE_DOCUMENTATION_COMMIT: GIT_HEAD (FI-13 closure documentation commit after this record is committed)
-UPSTREAM: origin/frontend-design-integration @ 67504579aa062ae809c7fb44c629518042a77b3d (FI-13 source commit pending safe push)
+START_HEAD: e1c90fda32bc62566807ce4ebc8d747a034ea740
+UPSTREAM: origin/frontend-design-integration @ e1c90fda32bc62566807ce4ebc8d747a034ea740 (+0/-0 at FI-14 handshake)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY__FI13_CLOSURE_RECORDS_PENDING_COMMIT__PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
-ACTIVE_WRITER: NONE__FI13_RELEASED
-WRITER_LOCK: RELEASED__FI13
-HANDOFF_STATUS: FI13_CLOSED__SOL_ACCEPTED
+WORKTREE_STATE: DIRTY__FI14_PACKET_AND_LOCK_RECORDS_PENDING_COMMIT__PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
+ACTIVE_WRITER: /root/fi14_terra_writer__GPT-5.6_TERRA_MAX__SOLE_CANONICAL_WRITER
+WRITER_LOCK: ACQUIRED__FI14__frontend-design-integration
+HANDOFF_STATUS: FI14_ACTIVE__WRITER_OWNS_RELEASE_PIPELINE_PREP
 REQUIRED_MODEL: GPT-5.6 Terra / Max sole frontend writer; GPT-5.6 Sol remains read-only orchestration and final acceptance
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi13-final-craft-exact-frontend-freeze.md
-FI13_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi14-isolated-playground-deployment-acceptance.md
+FI14_PACKET_STATUS: ACCEPTED__OWNER_AUTHORIZED__IN_PROGRESS
+FI14_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 sections 16 and 20; TOKEN-OPT-001-A8; project policy; accepted FI-13 freeze; accepted isolated Playground governance; Sol FI-14 route decision.
+FI14_SCOPE: Smallest release-candidate workflow artifact-path repair, new FI-13 source/config freeze with unchanged frontend application artifact proof, exact temporary release ref, isolated workflow deployment/acceptance, and closure evidence only.
+FI14_INVARIANTS: No frontend application/runtime/backend/Worker/API/auth/authorization/session/schema/migration/D1/R2/data/provider/Figma/Make/Production/main mutation; `.ai-bridge/` excluded and untouched; no local-preview restart; no branch/identity spoofing; no private value disclosure.
+FI14_PREDEPLOY_STATE: Native release workflow is active and GitHub/Cloudflare authorization checks passed; the exact FI-13 application candidate is temporarily invalidated only because the workflow still referenced a retired shareable artifact path. The smallest tracked workflow correction and refreeze are authorized before any candidate ref or deployment.
+FI14_NEXT_ACTION: Repair the retired workflow artifact path and its directly coupled assertion, prove application artifact bytes unchanged, then re-run exact candidate/isolation/rollback preflight before release ref creation or workflow dispatch.
+FI13_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED__PRIOR_SOURCE_FREEZE_INVALIDATED_BY_AUTHORIZED_WORKFLOW_CONFIG_REPAIR
 FI13_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, section 15; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-12 records; current repository contracts; accepted live Make-v44 and Figma Design evidence.
 FI13_SCOPE: Final local candidate craft gate only: bounded Hallmark audit, Impeccable Operate-mode audit/polish, semantic/accessibility/responsive/contrast/keyboard/focus/motion/console/network checks, truthful real/synthetic labels, route-separation proof, and exact frontend candidate freeze. Prove a defect before a product change; use one related batch and one confirmation pass.
 FI13_INVARIANTS: Preserve accepted Make-v44 composition, brand language, product truth, module IA, capability and privacy boundaries, A3/A4 Preview Index isolation, backend/auth/Worker/data/provider/Figma/Make/Playground/Production/main invariants, and `.ai-bridge/` untouched.
@@ -92,10 +97,10 @@ DELEGATION_LEDGER:
 - writer=/root/fi08r_terra_writer | model=gpt-5.6-terra | reasoning=max | role=FI-08R sole canonical frontend writer | mode=execute | scope=two owner-reproduced Release Desk acceptance defects, behavioral regression coverage, generated artifacts, and continuity closeout | owned=.codex/CURRENT.md,.codex/CURRENT_TASK.md,.codex/CURRENT_HANDOFF.md,.codex/FI08R_RELEASE_DESK_ACCEPTANCE_REPAIR_RECEIPT.md,src/frontend/app/ReleaseDeskRoute.tsx,tests/unit/fi08-release-desk.test.js,tests/e2e/preview-index.spec.js,dist/index.html,HAU-USC_Logistics-Frontend-Shareable.html | excluded=backend/auth/permissions/schema/migration/provider/Figma/Make/Playground/Production/main/deployments/.ai-bridge/FI-09+ | status=COMPLETED__LOCK_RELEASED__SOL_ACCEPTED | evidence=focused unit 3/3; serial exact-4173 FI-08R Playwright 5/5; browser focus/outline/overflow/console review; build/dist artifact SHA; Sol/Hallmark/Impeccable final acceptance.
 
 FI07_RECEIPT: .codex/FI07_INTERNAL_LENDING_HUB_RECEIPT.md
-BLOCKER: NONE — FI-13 is closed, its exact frontend source is frozen, and its sole Terra writer lock is released.
+BLOCKER: NONE — the prior retired workflow artifact path is a proven, authorized FI-14 release-preparation repair; no external deployment has occurred.
 PREVIEW_TARGET: http://127.0.0.1:4173/
 PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART
-NEXT_EXACT_ACTION: Begin only owner-authorized FI-14 preflight with a fresh accepted FI-14 packet and writer lock; do not implement FI-14 or deploy.
+NEXT_EXACT_ACTION: Apply the smallest release-candidate artifact-path correction and its narrow assertion, then prove the new FI-13 source/config candidate keeps the application artifact byte-identical before any release ref or workflow dispatch.
 
 ## Active A4 preview inspection
 

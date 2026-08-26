@@ -1,29 +1,29 @@
-# Current Bounded Task — FI-13 Closed / FI-14 Preflight Boundary
+# Current Bounded Task — FI-14 Isolated Playground Deployment + Acceptance
 
-INTENT: SOFTWARE_MAINTENANCE + TESTING + FRONTEND_DESIGN_INTEGRATION
+INTENT: RELEASE_PREPARATION + TESTING + ISOLATED_PLAYGROUND_DEPLOYMENT
 MODE: EXECUTE
-OBJECTIVE: FI-13 is closed with its exact local frontend source frozen. Await the fresh accepted FI-14 preflight packet and writer lock; do not implement FI-14 or deploy.
-TARGET: .codex/FI13_FINAL_CRAFT_EXACT_FRONTEND_FREEZE_RECEIPT.md; .codex/specs/accepted/2026-08-26-fi13-final-craft-exact-frontend-freeze.md; current-chain closure records.
+OBJECTIVE: Repair the retired release-candidate shareable upload path, refreeze the exact FI-13 application candidate, then deploy and accept only that exact candidate through the existing isolated Playground workflow. Production remains untouched.
+TARGET: .codex/specs/accepted/2026-08-26-fi14-isolated-playground-deployment-acceptance.md; .github/workflows/release-candidate.yml; tests/unit/release-pipeline.test.js; FI-13 receipt; new FI-14 receipt and current-chain records after verified deployment.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi13-final-craft-exact-frontend-freeze.md
-START_HEAD: 67504579aa062ae809c7fb44c629518042a77b3d
-UPSTREAM_AT_HANDSHAKE: origin/frontend-design-integration @ 67504579aa062ae809c7fb44c629518042a77b3d (+0/-0)
-AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, section 15; accepted FI-13 packet; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-12 records; accepted live Make-v44/Figma Design evidence; current repository contracts.
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi14-isolated-playground-deployment-acceptance.md
+START_HEAD: e1c90fda32bc62566807ce4ebc8d747a034ea740
+UPSTREAM_AT_HANDSHAKE: origin/frontend-design-integration @ e1c90fda32bc62566807ce4ebc8d747a034ea740 (+0/-0)
+AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 sections 16 and 20; Sol FI-14 route decision; TOKEN-OPT-001-A8; project policy; accepted FI-13 freeze; accepted isolated Playground governance; current repository contracts.
 REQUIRED_MODEL: GPT-5.6 Terra / Max is the sole canonical frontend writer; Sol remains read-only planner, integrator, reviewer, and final acceptance authority.
-TASK_STATUS: FI13_CLOSED__SOL_ACCEPTED__EXACT_SOURCE_FROZEN
-ACTIVE_WRITER: NONE__FI13_RELEASED
-WRITER_LOCK: RELEASED__FI13
+TASK_STATUS: FI14_ACCEPTED__PREDEPLOY_RELEASE_PATH_REPAIR_AND_REFREEZE
+ACTIVE_WRITER: /root/fi14_terra_writer__GPT-5.6_TERRA_MAX
+WRITER_LOCK: ACQUIRED__FI14__frontend-design-integration
 RISK: HIGH
-SCOPE: FI-13 final local craft/freeze evidence only. The frozen source candidate is `7c2321f9cf1754d2781b57748cea5bf37be75d3f` / tree `d0362449654998dc238beaa58f973ea5af30d7d1`; see the FI-13 receipt for bounded repair and verification evidence.
-OUT_OF_SCOPE: Make or Figma write; visual-world replacement; module-IA flattening; backend/API/Worker/auth/authorization/capability/permission/session/schema/migration/D1/R2/provider/data mutation; Playground/Production/main/deployment; FI-14+; `.ai-bridge/`.
-INVARIANTS: Repository contracts remain functional authority and accepted live Make-v44 remains visual authority. Preserve existing brand language/product truth/module IA, A3/A4 isolation, visible 3px focus treatment, privacy, domain semantics, and zero protected/public Preview Index transport.
-VERIFICATION: FI-13 focused 48/48, build/dist artifact hash `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`, exact-4173 responsive matrix with harness timeout isolated/reverified, Hallmark/Impeccable no actionable finding, and closure continuation/handoff/diff checks; see receipt.
-STOP_CONDITIONS: Reached for FI-13. Do not start FI-14 without its accepted packet, fresh handshake, and writer lock; never deploy under this closure.
+SCOPE: Only the retired workflow artifact path and directly coupled deterministic assertion; the required new source/config freeze with explicit unchanged application artifact proof; exact temporary candidate branch/ref; the existing GitHub isolated Playground workflow; bounded live acceptance/evidence; required records/commits/pushes.
+OUT_OF_SCOPE: Frontend application behavior/visual redesign; Make/Figma; backend/API/Worker/auth/authorization/session/schema/migration/D1/R2/data/provider configuration; Production/main; resource creation/crossover; local preview restart; `.ai-bridge/`; FI-15+.
+INVARIANTS: The pre-repair FI-13 application artifact hash is `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`; no app artifact byte may change. Candidate ref must exactly equal its new refrozen source/config commit and satisfy the temporary-branch pattern. Playground remains isolated with provider/email disabled, no routes/triggers, no Production bindings, and no secret/private-value disclosure.
+VERIFICATION: Focused release-pipeline/governance checks; build; verify:dist; deterministic artifact hash; continuation/handoff/diff checks; GitHub candidate workflow exact-SHA validation and isolated deployment; bounded live readiness/version/route/auth/privacy/role/responsive/console/network evidence; upstream parity.
+STOP_CONDITIONS: Missing/ambiguous GitHub/Cloudflare authorization, private manifest/secret availability, branch identity, rollback/redeploy target, Worker/API/D1/R2/provider isolation, exact app artifact equivalence, or any Production crossover/private-value exposure; any required backend/data/migration/provider change; actual frontend defect beyond accepted scope.
 DELEGATION_LEDGER:
 
-- writer=/root/fi13_terra_writer | model=gpt-5.6-terra | reasoning=max | role=sole canonical FI-13 frontend writer | mode=execute | scope=bounded local craft audit, one proven responsive containment repair, exact candidate freeze, and closure | owned=FI-13 packet/current-chain/receipt,routeStyleScope,FI-12/FI-10 regression tests,deterministic artifacts | excluded=backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/provider/Figma/Make/Playground/Production/main/deployment/.ai-bridge/FI-14+ | status=COMPLETED__RELEASED__SOL_ACCEPTED | evidence=48/48; exact-4173 matrix plus isolated/tail rerun; artifact hash; Hallmark/Impeccable; Sol accept.
+- writer=/root/fi14_terra_writer | model=gpt-5.6-terra | reasoning=max | role=sole canonical FI-14 frontend/release-preparation writer | mode=execute | scope=smallest workflow artifact-path repair, refreeze, exact temporary candidate ref, isolated Playground deployment/acceptance/evidence | owned=FI-14 packet/current-chain/receipt,release-candidate workflow,direct workflow assertion,required deterministic artifacts | excluded=frontend application behavior/backend/Worker/auth/authorization/schema/migration/D1/R2/data/provider configuration/Figma/Make/Production/main/.ai-bridge/FI-15+ | status=ACTIVE__LOCK_ACQUIRED | evidence=handshake 0/0 with preserved .ai-bridge; GitHub workflow/secret presence and Cloudflare auth preflight recorded without private values.
 
 PREVIEW_TARGET: http://127.0.0.1:4173/
-PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART (Sol-provided post-FI12 HTTP 200 evidence)
-NEXT_EXACT_ACTION: Begin only owner-authorized FI-14 preflight with a fresh accepted FI-14 packet and writer lock; do not implement FI-14 or deploy.
+PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART
+NEXT_EXACT_ACTION: Apply the smallest release-candidate artifact-path correction and its narrow assertion, then prove the new FI-13 source/config candidate keeps the application artifact byte-identical before any release ref or workflow dispatch.
