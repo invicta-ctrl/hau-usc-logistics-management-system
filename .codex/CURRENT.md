@@ -2,27 +2,31 @@
 
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
 MILESTONE: R1_FI14_ISOLATED_PLAYGROUND_DEPLOYMENT_ACCEPTANCE
-STATUS: FI14_AUTHORIZED__CANDIDATE_GATE_REFROZEN__SOL_REVIEW_PENDING__NO_REF_UPDATE_OR_DISPATCH
-PHASE: FI14_EXACT_CANDIDATE_PREFLIGHT__CANDIDATE_GATE_REFROZEN__WRITER_LOCK_ACQUIRED__NO_REF_UPDATE_OR_DISPATCH
+STATUS: FI14_PAUSED__UNVERIFIED_FORMATTED_ARTIFACT_VERIFIER_REPAIR__NO_REF_UPDATE_OR_DISPATCH
+PHASE: FI14_PAUSED_AFTER_PRE_FORMAT_VERIFIED_ARTIFACT_VERIFIER_REPAIR__WRITER_LOCK_RELEASED
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
+SOURCE_BASE_HEAD: afed8ed857e43c81df33306a42db1d2ac71b4d76
 START_HEAD: e1c90fda32bc62566807ce4ebc8d747a034ea740
-UPSTREAM: origin/frontend-design-integration @ e1c90fda32bc62566807ce4ebc8d747a034ea740 (+0/-0 at FI-14 handshake)
+UPSTREAM: origin/frontend-design-integration @ afed8ed857e43c81df33306a42db1d2ac71b4d76 (+0/-0 before this pause checkpoint)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
-ACTIVE_WRITER: /root/fi14_terra_writer__GPT-5.6_TERRA_MAX__SOLE_CANONICAL_WRITER
-WRITER_LOCK: ACQUIRED__FI14__frontend-design-integration
-HANDOFF_STATUS: FI14_ACTIVE__CANDIDATE_GATE_REFROZEN__SOL_REVIEW_PENDING
+WORKTREE_STATE: DIRTY__PRESERVED_AIBRIDGE_PLUS_UNCOMMITTED_FI14_REPAIR__FORMATTED_TEXT_UNVERIFIED
+ACTIVE_WRITER: NONE
+WRITER_LOCK: RELEASED_FOR_PAUSE__FI14__frontend-design-integration
+HANDOFF_STATUS: FI14_PAUSED__OWNER_RESUME_REQUIRED
 REQUIRED_MODEL: GPT-5.6 Terra / Max sole frontend writer; GPT-5.6 Sol remains read-only orchestration and final acceptance
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi14-isolated-playground-deployment-acceptance.md
-FI14_PACKET_STATUS: ACCEPTED__OWNER_AUTHORIZED__IN_PROGRESS
+FI14_PACKET_STATUS: ACCEPTED__OWNER_AUTHORIZED__PAUSED
 FI14_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 sections 16 and 20; TOKEN-OPT-001-A8; project policy; accepted FI-13 freeze; accepted isolated Playground governance; Sol FI-14 route decision.
-FI14_SCOPE: Smallest release-candidate artifact-path repair, native private-manifest rollback-target guard, and A8/candidate-only release-check repair, each with direct deterministic coverage; new FI-13 source/config freezes with unchanged frontend application artifact proof; exact temporary release ref; isolated workflow deployment/acceptance; and closure evidence only.
+FI14_SCOPE: Paused after the smallest bounded Vite build-marker/deploy-artifact-verifier repair. No temporary-ref movement, workflow dispatch, Cloudflare/provider action, source verification, build, format, or deployment action is authorized during this checkpoint.
 FI14_INVARIANTS: No frontend application behavior/runtime or backend/API/auth/authorization/session/schema/migration mutation; no provider configuration/resource creation/crossover beyond deployment of the exact isolated Worker candidate; no D1/R2/data or Production/main mutation; `.ai-bridge/` excluded and untouched; no unapproved local-preview restart (the documented A3 stale-state recovery is separately recorded); no branch/identity spoofing; no private value disclosure.
-FI14_PREDEPLOY_STATE: The first exact temporary ref at the prior rollback-guard source and its failed pre-Cloudflare and pre-deployment workflow run are preserved as evidence; no manifest decode, Cloudflare operation, or deployment action occurred. Under the accepted section-20 decision, the active A8 validator and a candidate-only check now retain every normal release stage while excluding only the non-shipped historical prototype from lint. The new source/config candidate is `a377f079ce39f6c8b8e5e76f80f59b62e932d80e` / `4177693026d0b239dff6255d5a4cbaa52cf26d86`; its 155-file/1160-test candidate gate, build, dist verification, and Cloudflare dry-run passed and both deterministic application artifacts remain byte-identical. The canonical 4173 preview remains healthy after documented A3 recovery. The old temporary ref must not be updated and no workflow may be redispatched until Sol reviews this refreeze.
-FI14_NEXT_ACTION: Await Sol review of the new source/config and docs-only refreezes. Only after explicit authorization, re-run the exact candidate/isolation/rollback preflight for `a377f079ce39f6c8b8e5e76f80f59b62e932d80e`, update the existing temporary ref to that exact commit, and dispatch the existing isolated workflow only if every gate is green.
+FI14_PAUSE_EVIDENCE: The remote temporary ref `release/v0.8.3-frontend-design-integration` remains at `a377f079ce39f6c8b8e5e76f80f59b62e932d80e`. Failed run `32969390269` had package PASS and artifact-verifier FAIL before Cloudflare/pre-upload; Production remains unchanged.
+FI14_UNCOMMITTED_REPAIR: `vite.config.js`; `scripts/verify-deploy-artifact.mjs`; `tests/unit/release-pipeline.test.js`; new `tests/unit/verify-deploy-artifact.test.js`.
+FI14_PRE_FORMAT_VERIFICATION: The pre-format patch passed focused 10/10 and `check:release-candidate` 156 files/1165 tests; preview build plus `verify:dist` preserved the B1B1 application artifact hash; staging and production artifact verifiers passed; preview artifact rejection passed. This evidence applies only to the pre-format text.
+FI14_FORMATTING_INVALIDATOR: Prettier subsequently changed `vite.config.js`, `scripts/verify-deploy-artifact.mjs`, and `tests/unit/release-pipeline.test.js`; the current formatted repair is UNVERIFIED. `.ai-bridge/` remains preserved and untouched.
+FI14_NEXT_ACTION: On Earl's explicit resume, acquire one Terra writer, review the current four-file diff, run focused tests plus staging/production verifier, preview B1 proof, and `check:release-candidate` against the current formatted patch; freeze only if green. Do not move the temporary ref or dispatch before that re-verification and explicit authorization.
 FI13_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED__FI14_CANDIDATE_GATE_REFROZEN__APP_ARTIFACT_BYTE_IDENTICAL
 FI13_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, section 15; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-12 records; current repository contracts; accepted live Make-v44 and Figma Design evidence.
 FI13_SCOPE: Final local candidate craft gate only: bounded Hallmark audit, Impeccable Operate-mode audit/polish, semantic/accessibility/responsive/contrast/keyboard/focus/motion/console/network checks, truthful real/synthetic labels, route-separation proof, and exact frontend candidate freeze. Prove a defect before a product change; use one related batch and one confirmation pass.
@@ -97,10 +101,10 @@ DELEGATION_LEDGER:
 - writer=/root/fi08r_terra_writer | model=gpt-5.6-terra | reasoning=max | role=FI-08R sole canonical frontend writer | mode=execute | scope=two owner-reproduced Release Desk acceptance defects, behavioral regression coverage, generated artifacts, and continuity closeout | owned=.codex/CURRENT.md,.codex/CURRENT_TASK.md,.codex/CURRENT_HANDOFF.md,.codex/FI08R_RELEASE_DESK_ACCEPTANCE_REPAIR_RECEIPT.md,src/frontend/app/ReleaseDeskRoute.tsx,tests/unit/fi08-release-desk.test.js,tests/e2e/preview-index.spec.js,dist/index.html,HAU-USC_Logistics-Frontend-Shareable.html | excluded=backend/auth/permissions/schema/migration/provider/Figma/Make/Playground/Production/main/deployments/.ai-bridge/FI-09+ | status=COMPLETED__LOCK_RELEASED__SOL_ACCEPTED | evidence=focused unit 3/3; serial exact-4173 FI-08R Playwright 5/5; browser focus/outline/overflow/console review; build/dist artifact SHA; Sol/Hallmark/Impeccable final acceptance.
 
 FI07_RECEIPT: .codex/FI07_INTERNAL_LENDING_HUB_RECEIPT.md
-BLOCKER: NONE — the preserved prior candidate failure is a proven, authorized FI-14 A8/candidate-gate repair; no external deployment has occurred.
+BLOCKER: PAUSED_BY_OWNER — current formatted four-file artifact-verifier repair is unverified after post-test Prettier changes; no action is authorized until Earl explicitly resumes FI-14.
 PREVIEW_TARGET: http://127.0.0.1:4173/
 PREVIEW_STATUS: RUNNING__HEALTHY__A3_RECOVERED__RUNTIME_MANIFEST_PRIVATE
-NEXT_EXACT_ACTION: Await Sol review of exact source/config commit `a377f079ce39f6c8b8e5e76f80f59b62e932d80e` / tree `4177693026d0b239dff6255d5a4cbaa52cf26d86`. Only after explicit authorization re-run full FI-14 preflight, update the preserved temporary release ref to that exact commit, and dispatch the existing isolated workflow only if identity, authorization, isolation, and rollback gates are green.
+NEXT_EXACT_ACTION: On Earl's explicit resume, acquire one Terra writer, review the current four-file diff, run focused tests plus staging/production verifier, preview B1 proof, and `check:release-candidate` against the current formatted patch; freeze only if green. Do not move the temporary ref or dispatch before that re-verification and explicit authorization.
 
 ## Active A4 preview inspection
 

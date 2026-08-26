@@ -1,24 +1,28 @@
 # Current Environment Handoff — FI-14 Isolated Playground Deployment + Acceptance
 
-FROM: /root/fi13_terra_writer after Sol FI-13 acceptance
-TO: /root/fi14_terra_writer, sole authorized Terra writer for FI-14
+FROM: /root/fi14_terra_writer after owner-requested FI-14 safe pause
+TO: Earl-authorized future Terra writer after explicit FI-14 resume
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
+HEAD_BEFORE_PAUSE_CHECKPOINT: afed8ed857e43c81df33306a42db1d2ac71b4d76
 START_HEAD: e1c90fda32bc62566807ce4ebc8d747a034ea740
-UPSTREAM: origin/frontend-design-integration @ e1c90fda32bc62566807ce4ebc8d747a034ea740 (+0/-0 at FI-14 handshake)
+UPSTREAM: origin/frontend-design-integration @ afed8ed857e43c81df33306a42db1d2ac71b4d76 (+0/-0 before this pause checkpoint)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY__ONLY_PREEXISTING_UNTRACKED_AIBRIDGE_EXCLUDED_AND_PRESERVED
-ACTIVE_WRITER: /root/fi14_terra_writer__GPT-5.6_TERRA_MAX__SOLE_CANONICAL_WRITER
-WRITER_LOCK: ACQUIRED__FI14__frontend-design-integration
-HANDOFF_STATUS: FI14_ACTIVE__CANDIDATE_GATE_REFROZEN__SOL_REVIEW_PENDING
+WORKTREE_STATE: DIRTY__PRESERVED_AIBRIDGE_PLUS_UNCOMMITTED_FI14_REPAIR__FORMATTED_TEXT_UNVERIFIED
+ACTIVE_WRITER: NONE
+WRITER_LOCK: RELEASED_FOR_PAUSE__FI14__frontend-design-integration
+HANDOFF_STATUS: FI14_PAUSED__OWNER_RESUME_REQUIRED
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi14-isolated-playground-deployment-acceptance.md
-FI14_PACKET_STATUS: ACCEPTED__OWNER_AUTHORIZED__IN_PROGRESS
-FI14_SCOPE: Correct only the retired candidate-workflow shareable path/direct assertion, native private-manifest rollback-target guard/direct tests, and the A8/candidate-only release-check gate; refreeze the unchanged frontend application, update the exact temporary candidate ref only after review, deploy through the isolated workflow, and record bounded acceptance.
+FI14_PACKET_STATUS: ACCEPTED__OWNER_AUTHORIZED__PAUSED
+FI14_SCOPE: Durable pause checkpoint only. The uncommitted Vite build-marker/deploy-artifact-verifier repair remains preserved but unverified after formatting; no source/config freeze, temporary-ref update, workflow dispatch, deployment, or provider action is allowed during this pause.
 FI14_INVARIANTS: No application behavior/backend/Worker/API/auth/authorization/session/schema/migration/D1/R2/data/provider/Figma/Make/Production/main mutation beyond the exact isolated Worker deployment and its native pre-upload validation; no resource creation/crossover; `.ai-bridge/` remains excluded and untouched; no unapproved preview restart; no private value in evidence.
 FI14_HANDSHAKE: branch frontend-design-integration; start HEAD/upstream e1c90fda32bc62566807ce4ebc8d747a034ea740 +0/-0; `.ai-bridge/` preserved; initial 4173 preview state was safely cleared only after confirmed dead ownership, then canonical preview was restored through a runtime-only private manifest derived from a live staging binding and verified healthy/HMR; GitHub workflow/environment-secret presence and Cloudflare auth were read-only verified without private values.
-FI14_PREDEPLOY_FINDING: The accepted workflow's retired `HAU-USC_Logistics-Prototype-Shareable.html` path was corrected to the existing deterministic `HAU-USC_Logistics-Frontend-Shareable.html` path with its direct assertion. The native rollback guard now views the private-manifest staging rollback version and proves its D1/brand/evidence tuple and Production inequality before upload. The initial temporary candidate ref at the rollback-guard source and its failed pre-Cloudflare and pre-deployment workflow run remain preserved evidence. The A8 validator and a candidate-only release check now preserve every global release stage while excluding only non-shipped `prototypes/public-portals-r3/**` from lint. The new authorized configuration-only refreeze is source commit `a377f079ce39f6c8b8e5e76f80f59b62e932d80e` / tree `4177693026d0b239dff6255d5a4cbaa52cf26d86`; no ref update, manifest decode, Cloudflare operation, or deployment occurred.
+FI14_PAUSE_EVIDENCE: Remote temporary ref `release/v0.8.3-frontend-design-integration` remains at `a377f079ce39f6c8b8e5e76f80f59b62e932d80e`. Failed run `32969390269` had package PASS and artifact-verifier FAIL before Cloudflare/pre-upload; Production remains unchanged.
+FI14_UNCOMMITTED_REPAIR: `vite.config.js`; `scripts/verify-deploy-artifact.mjs`; `tests/unit/release-pipeline.test.js`; new `tests/unit/verify-deploy-artifact.test.js`.
+FI14_PRE_FORMAT_VERIFICATION: Focused 10/10; candidate 156 files/1165 tests; preview B1 identity; staging/production verifier PASS; preview artifact rejection PASS. This evidence applies only to the pre-format patch.
+FI14_FORMATTING_INVALIDATOR: Prettier changed `vite.config.js`, `scripts/verify-deploy-artifact.mjs`, and `tests/unit/release-pipeline.test.js` after the green pre-format checks; current formatted text is UNVERIFIED. `.ai-bridge/` remains preserved and untouched.
 FI13_PRIOR_EVIDENCE: 48/48 focused units; exact-4173 responsive matrix including focus, motion, console/network, labels, and route separation; one accumulated-load REQ-04 timeout isolated with an original-30s PASS and focused tail PASS; app artifact hash `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`; Hallmark/Impeccable no actionable finding; Sol accepted. The candidate-gate refreeze focused governance/release-pipeline coverage passed 19/19; the exact candidate check passed 155 files/1160 tests, build, dist verification, and Cloudflare dry-run; both application artifacts reproved the identical B1B1 hash. Browser/Hallmark/Impeccable evidence is reused only on that byte-identity basis.
 FI12_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED
 FI12_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 attachment; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-11 records; live Make-v44 visual evidence; repository functional contracts.
@@ -61,12 +65,12 @@ HANDSHAKE: FI-12 began at 81480a05c46b20f2979d5428b1ecd474dc05ff57, matching ori
 SOURCE_EVIDENCE: Exact canonical-4173 runtime proof demonstrated the shared-shell selector cascade. Live Make-v44 visual composition and repository contracts remained authoritative; no product or contract source was rewritten.
 SCOPE: FI-12 includes only containment of the material deployed route-style cascade in Administration, Release, and Supply plus focused regression/closure evidence. No mutation binding, backend/Worker change, provider, Figma, or deployment change is authorized.
 INVARIANTS: Each route/capability remains distinct and server-owned. A4 remains sanitized/local/zero-traffic. No raw/internal/provider/private data or fabricated operational truth may render.
-BLOCKER: NONE — FI-12 is complete and the writer lock is released.
+BLOCKER: PAUSED_BY_OWNER — current formatted four-file artifact-verifier repair is unverified after post-test Prettier changes; no action is authorized until Earl explicitly resumes FI-14.
 PREVIEW_TARGET: http://127.0.0.1:4173/
 PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART
 FI09_RECEIPT: .codex/FI09_SUPPLY_OPERATIONS_RECEIPT.md
 FI10_RECEIPT: .codex/FI10_ACCOUNTS_DIRECTORY_ACTIVITY_HISTORY_RECEIPT.md
 FI11_RECEIPT: .codex/FI11_GOVERNED_REFERENCE_SURFACES_RECEIPT.md
-NEXT_EXACT_ACTION: Await Sol review of exact source/config commit `a377f079ce39f6c8b8e5e76f80f59b62e932d80e` / tree `4177693026d0b239dff6255d5a4cbaa52cf26d86`. Only after explicit authorization re-run full FI-14 preflight, update the preserved temporary release ref to that exact commit, and dispatch the existing isolated workflow only if identity, authorization, isolation, and rollback gates are green.
-RESUME_COMMANDS: git status --short; git diff --check; npm.cmd run preview:frontend:status; do not restart the healthy preview.
-PROHIBITED_ACTIONS: Never touch .ai-bridge/; never alter frontend application behavior, backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/data/provider configuration/Figma/Make/Production/main; never create a candidate ref or dispatch the isolated workflow before exact identity/isolation/rollback preflight; never bind a Production resource or expose a private value.
+NEXT_EXACT_ACTION: On Earl's explicit resume, acquire one Terra writer, review the current four-file diff, run focused tests plus staging/production verifier, preview B1 proof, and `check:release-candidate` against the current formatted patch; freeze only if green. Do not move the temporary ref or dispatch before that re-verification and explicit authorization.
+RESUME_COMMANDS: After explicit resume only: git status --short; git diff --check; run the bounded re-verification named above; do not restart the healthy preview.
+PROHIBITED_ACTIONS: During pause, do not run source tests/build/format, move the temporary ref, dispatch the workflow, or touch Cloudflare/provider state. Never touch `.ai-bridge/`; never alter frontend application behavior, backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/data/provider configuration/Figma/Make/Production/main; never bind a Production resource or expose a private value.
