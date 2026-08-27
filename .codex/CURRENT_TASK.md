@@ -1,25 +1,25 @@
 # Current Task Routing Record
 
-INTENT: governance continuity
-MODE: HANDOFF
-OBJECTIVE: Maintain compact FI lane routing after the FI-FM-PARALLEL-A1 transition without starting an unaccepted slice.
-TARGET: .codex/lanes/FI/ and compact root routing records
+INTENT: software feature + testing + frontend design integration
+MODE: EXECUTE_CONTINUOUS_FI14_FI17
+OBJECTIVE: Complete FI-14 through FI-17 locally so FI-00 through FI-17 is integrated, accepted, and frozen at http://127.0.0.1:4173/.
+TARGET: frontend-design-integration local runtime, frontend source/adapters, tests, deterministic artifacts, and FI continuity records
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi13-final-craft-exact-frontend-freeze.md
-AUTHORITY: FI-FM-PARALLEL-A1 owner amendment; TOKEN-OPT-001-A8; project policy; FI-13 accepted freeze; FI-14 terminal migration-boundary receipt.
-REQUIRED_MODEL: GPT-5.6 Terra / Max for a later accepted local FI slice; GPT-5.6 Sol remains read-only orchestration and acceptance
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED__NO_ACCEPTED_LOCAL_FI_SLICE
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-27-fi14-fi17-local-integration-completion-owner-amendment.md
+AUTHORITY: Earl's 2026-08-27 FI-14 through FI-17 owner amendment; SOL-ADVISOR-GLOBAL-001; synchronized project policy; accepted FI-00 through FI-13 evidence; current repository contracts.
+REQUIRED_MODEL: GPT-5.6 Sol / High; declared solo route
+ACTIVE_WRITER: SOL_HIGH:PRIMARY_SOLO_FI14_FI17
+WRITER_LOCK: ACQUIRED__FI14_FI17_SINGLE_WRITER
 LEGACY_FI14_WRITER_LOCK: RELEASED__FI14_TERMINAL_MIGRATION_BOUNDARY
-FI_WRITER_LOCK: RELEASED__NO_ACCEPTED_LOCAL_FI_SLICE
-RISK: MEDIUM__GOVERNANCE_CONTINUITY
-SCOPE: Compact root routing, establish the local FI lane records, record the requested legacy classification map, and release the FI lock because no accepted local FI slice exists.
-OUT_OF_SCOPE: Any FI implementation, FI-14 reopen/retry, FI-15 execution, FI-18 invention, external FM lane establishment, workflow, runner, provider, Playground, Production, backend, schema, migration, data, Figma, product, or `.ai-bridge/`/`.local/` mutation.
-VERIFICATION: Targeted lane/governance tests when present; continuation and handoff verification; complete logical diff review; `git diff --check`; normal commit/push/parity.
-STOP_CONDITIONS: Missing accepted local FI packet, contradictory writer lock, unknown dirty state beyond preserved residue, external FM ownership ambiguity, or any requested runtime/provider action.
+FI_WRITER_LOCK: ACQUIRED__FI14_FI17_SINGLE_WRITER
+RISK: MEDIUM_HIGH__LOCAL_FRONTEND_INTEGRATION
+SCOPE: FI-14 local runtime/contracts, FI-15 local workflows, FI-16 whole-product local hardening, FI-17 production-mode local artifact and closure.
+OUT_OF_SCOPE: Playground/Production deployment, remote provider/D1/R2/Google writes, schema/migration work, FM or main writes, Figma/Make mutation, new product features, FI-18, and `.ai-bridge/`/`.local/` mutation.
+VERIFICATION: Focused tests and local browser evidence per slice; final five-width/accessibility/console matrix; production-mode build and artifact identity; continuation/handoff/governance checks; complete diff review; normal commit/push/parity.
+STOP_CONDITIONS: Wrong/divergent branch; unknown tracked product work; competing writer; required schema/provider/Production/FM mutation; protected invariant requiring invention or weakening; unresolved P0/P1 outside accepted local scope.
 FI_LANE_POINTER: .codex/lanes/FI/CURRENT.md
 FM_LANE_POINTER: EXTERNAL__NOT_OWNED_OR_ESTABLISHED_BY_THIS_TASK
 LEGACY_CLASSIFICATION_MAP: .codex/LEGACY_FI_CLASSIFICATION_MAP.md
 LATEST_LOCAL_FI_CHECKPOINT: FI-13 closed/frozen; receipt `.codex/FI13_FINAL_CRAFT_EXACT_FRONTEND_FREEZE_RECEIPT.md`; source commit `a377f079ce39f6c8b8e5e76f80f59b62e932d80e`; tree `4177693026d0b239dff6255d5a4cbaa52cf26d86`; application artifact SHA-256 `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`.
-NEXT_EXACT_ACTION: Await an accepted local FI slice; do not invent FI-18, reopen a closed FI slice, establish the external FM lane, or mutate a provider/environment.
+NEXT_EXACT_ACTION: Execute FI-14 local runtime and backend-contract completion on 127.0.0.1:4173; repair only reproduced accepted-scope defects.
