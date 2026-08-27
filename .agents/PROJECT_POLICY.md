@@ -14,6 +14,10 @@ Read the byte-identical universal root `AGENTS.md` first. This extension preserv
 
 The Git repository is the durable shared technical source of truth. Chat history, account memory, local summaries, project attachments, and local folders are supporting context only.
 
+## Sol Advisor inheritance
+
+`SOL-ADVISOR-GLOBAL-001` supersedes conflicting local routing defaults only. Preserve every HAU product, Figma, release, data, writer-lock, migration, privacy, and verification rule. Use Sol / High four-mode routing, Luna / Max only for bounded implementation, Terra / High for high-risk implementation, fresh Sol / High only for audit/full review, and fail-closed implementation-only Ox. An active accepted HAU no-subagent rule resolves to solo.
+
 ## Canonical continuity chain
 
 Every task starts from the smallest authoritative chain:
@@ -100,91 +104,26 @@ LINEAGE:
 
 Legacy `REQUIRED_MODEL: CODEX` metadata in older current records remains superseded and non-authoritative for model routing where this accepted amendment applies. A separately accepted task is required before normalizing historical current-chain records.
 
-## TOKEN-OPT precedence and HAU model roles
+## HAU routing inheritance and writer isolation
 
-TOKEN-OPT-001-A8 is the active account-wide routing authority. This extension keeps
-HAU's stricter frontend/backend separation, writer locks, data gates, and release
-safety. Capacity is not routine staffing: the Sol advisor selects the smallest useful
-bounded topology and may choose no workers or multiple direct workers.
+`SOL-ADVISOR-GLOBAL-001` is the active account-wide routing authority. This extension
+preserves HAU's frontend/backend contracts, writer locks, data gates, Figma roles, and
+release safety, but does not replace the global route with a project-wide model pool.
+Sol / High declares `solo|delegate|audit|full`; solo is default; Luna / Max is bounded
+implementation; Terra / High is higher-risk implementation; fresh Sol / High reviews
+only audit/full; and Ox is temporary implementation-only when its exact gate passes.
+An accepted HAU task may tighten this to solo or name an isolated writer, but may not
+infer a global Terra / Max or multi-scout exception from this extension.
 
-```text
-ORCHESTRATOR_MODEL: GPT-5.6 Sol / High
-ORCHESTRATOR_WRITES: FORBIDDEN
-
-SOL_SUBAGENTS: PROHIBITED
-MAX_LUNA_MAX_SUBAGENTS: 16
-MAX_TERRA_MAX_SUBAGENTS: 2
-MAX_OX_ALPHA_SUBAGENTS: 16
-MAX_TOTAL_DIRECT_SUBAGENTS: 16
-DELEGATION_DEPTH: 1
-SUBAGENT_SPAWNER: top-level Sol advisor only
-RECURSIVE_CHILD_SPAWNING: FORBIDDEN
-
-MAX_ACTIVE_WRITERS_ACCOUNT_WIDE: 2
-MAX_WRITERS_PER_REPOSITORY_OR_WORKTREE: 1
-AUTOMATIC_MODEL_FALLBACK: DISABLED
-DEEPSEEK_ACTIVE_ROUTING: DISABLED
-
-FRONTEND_BRANCH: frontend-design-integration
-FRONTEND_WRITER: exactly one GPT-5.6 Terra / Max when implementation is required
-FRONTEND_OX: READ_ONLY
-FRONTEND_LUNA: READ_ONLY
-
-BACKEND_PRIMARY_WRITER: Ox Alpha / High
-BACKEND_FALLBACK_OR_INTEGRATION_WRITER: GPT-5.6 Terra / Max
-BACKEND_LUNA: READ_ONLY
-
-ROUTINE_INDEPENDENT_REVIEW: false
-ROUTINE_FULL_SUITE_AFTER_SMALL_MODULE: false
-STOP_WHEN_GREEN: true
-```
-
-### Sol
-
-- Sol is the sole top-level read-only planner, router, integrator, reviewer, and final
-  acceptance authority.
-- Sol owns the delegation ledger and may select useful bounded direct workers under
-  TOKEN-OPT-001-A8: Luna Max and Ox Alpha each have an independent ceiling of sixteen,
-  Terra Max has an independent ceiling of two, and the total direct-worker ceiling is
-  sixteen. Sol subagents are prohibited; there is no mandatory zero-worker start.
-- Sol never edits repository files, creates patches, stages, commits, pushes, merges,
-  rebases, resets, cleans, deploys, migrates, mutates providers, or rotates recovery
-  pointers unless a separate accepted project policy explicitly changes that role.
-- No child may spawn. No agent may create a Sol child.
-
-### Ox Alpha
-
-- Ox is the preferred backend implementation writer when accepted scope authorizes
-  mutation and the provider/model route is eligible.
-- Ox may instead serve read-only scout, audit, or review work only while it does not hold
-  a writer lock.
-- Ox writes are forbidden on `frontend-design-integration`.
-- Ox does not spawn, fall back automatically, broaden scope, or share a writer lock.
-
-### Terra Max
-
-- Terra is the explicit Sol-routed fallback or integration-sensitive writer.
-- Terra is the only frontend writer on `frontend-design-integration`; implementation
-  uses exactly one Terra writer and one worktree lock.
-- A Terra fallback is a new Sol decision after Ox unavailability, material failure, or
-  integration-risk assessment. It is never automatic provider substitution.
-- Terra does not spawn, broaden scope, share a writer lock, or claim acceptance without
-  evidence.
-
-### Luna Max
-
-- Luna is read-only for scouting, audit, review, security/privacy, scope, architecture,
-  test-gap, and second-opinion work.
-- Luna never edits tracked state, writes a patch, takes a writer lock, stages, commits,
-  pushes, merges, deploys, migrates, mutates providers, or spawns agents.
-
-### Writer isolation and prohibited routing
-
+- No child may spawn. No agent may create an implementation Sol child; the only Sol
+  auxiliary is the fresh audit/full reviewer after parent verification.
 - At most two writers may coexist account-wide, only in different proven-isolated
   repositories or worktrees with separate locks, owned paths, and no race on a current
   pointer, migration, release file, generated artifact, provider resource, database
-  state, or incomplete dependency.
-- Every repository or worktree has at most one writer.
+  state, or incomplete dependency. Every repository or worktree has at most one writer.
+- `frontend-design-integration` remains lock-protected. A current accepted task must
+  name any implementation lane; this extension neither grants a writer nor changes its
+  existing lock, active accepted FI scope, pointer, or generated artifacts.
 - DeepSeek is forbidden as writer, scout, reviewer, and fallback. Credentials and
   historical proof may remain inactive and must not be exposed or deleted.
 - Production, provider, database, migration, Google, and external-data writes still
@@ -318,18 +257,18 @@ This mode excludes history rewrites, deletion of unknown work, executable auth/s
 
 1. Sol reads the exact target and direct authority.
 2. Sol defines the minimal diff, owned paths, and exclusions.
-3. Sol assigns one Terra Integration Writer. Luna review is added only when the bounded trigger below applies; Sol subagents are prohibited.
-4. Terra edits only required documents and directly coupled governance validation.
-5. Terra runs focused documentation checks.
-6. Sol reviews the complete diff once.
-7. Terra repairs only material defects from that review; do not start a repeated audit loop.
-8. Terra commits exactly once when accepted scope authorizes a commit.
-9. Terra pushes and merges only through the smallest permitted repository path when authorized.
+3. Sol declares `solo` or the smallest justified route and, when delegation is useful, assigns one implementation lane with exact owned paths.
+4. The selected implementation lane edits only required documents and directly coupled governance validation.
+5. The selected implementation lane runs focused documentation checks.
+6. Sol verifies the complete diff; a fresh review is used only when the declared route is `audit` or `full`.
+7. The selected implementation lane repairs only material defects from that review; do not start a repeated audit loop.
+8. The selected implementation lane commits exactly once when accepted scope authorizes a commit.
+9. The selected implementation lane pushes and merges only through the smallest permitted repository path when authorized.
 10. When the document is present, focused checks pass, the complete diff is reviewed, and the required Git action is complete, stop.
 
-### Limited Luna trigger
+### Fresh Sol reviewer trigger
 
-Use a bounded Luna review only for a material policy contradiction, security/privacy ambiguity, unresolved focused verification failure, Earl's explicit independent-audit request, or a genuinely large diff where one independent read materially reduces risk.
+Use a fresh Sol / High reviewer only when Sol declares `audit` or `full`; it is read-only and separate from the implementation lane. Quick Document Fix Mode does not create a standing reviewer default.
 
 ### Verification
 
