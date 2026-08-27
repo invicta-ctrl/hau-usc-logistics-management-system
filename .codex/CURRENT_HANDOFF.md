@@ -1,19 +1,18 @@
-# FI-00 through FI-12 Direct Playground Migration Handoff
+# Playground Recovery Handoff — After FM-R00
 
-HANDOFF_STATUS: COMPLETE
+HANDOFF_STATUS: READY_FOR_FM_R01
 WORKTREE_AND_BRANCH: D:/Documents/Codex/HAU-USC Logistics/worktrees/fi00-fi12-playground-candidate @ release/v0.8.3-fi12-playground
-HEAD: GIT_HEAD (documentation closeout)
+HEAD: GIT_HEAD
 UPSTREAM: origin/release/v0.8.3-fi12-playground
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED_ON_CLOSEOUT
-ACTIVE_AMENDMENT: .codex/specs/accepted/2026-08-27-fi00-fi12-playground-full-backend-population-amendment.md
-FINAL_RECEIPT: .codex/FI00_FI12_PLAYGROUND_MIGRATION_RECEIPT.md
+ACTIVE_WRITER: SOL_OWNER_SESSION
+WRITER_LOCK: HELD
+ROUTE: SOLO
+ACCEPTED_AMENDMENT: .codex/specs/accepted/2026-08-28-playground-audit-frontend-repair-data-reset-owner-amendment.md
+CHECKPOINT: .codex/FM_R00_PLAYGROUND_REPAIR_ADOPTION_CHECKPOINT.md
 
-LIVE_SOURCE: `50c5cab77b7fe251cf1a11c284fe791e6c2af127`; tree `5a985e623e8a234bf1d4cfac52ab5afb86fd8257`; staging artifact SHA-256 `a9d2d162a3085cf0e60fdc809943c41f7ed23c59be5f53b1587be31fe3d64e54`.
-PROVIDER_STATE: Exact replacement D1/R2 tuple bound and isolated; schema/data/R2 checks green; prior populated candidate and original pre-replacement tuple retained as rollback; email and schedules absent; private identities retained outside Git.
-DATA_STATE: Fresh remote export matched 89 sealed privacy-filtered baseline tables with zero mismatches; inventory `RECONCILED`; excluded private/auth rows zero; representative FI-00 through FI-12 data populated.
-ACCESS_STATE: `https://playground.hausc.org/` exposes a Playground-only `Enter Playground` action after `Staff sign in`; no credentials are required. Production retains ordinary authentication.
-ACCEPTANCE_STATE: Fresh no-cookie browser entry, temporary System Owner session, nine authenticated modules, responsive widths 320/390/768/1024/1440, and cleanup all passed. Known P0/P1/P2 blockers are zero.
-PRODUCTION_MUTATION: ZERO — Production Worker and bindings unchanged.
-REPOSITORY_GATE: PASS — 158 test files / 1,173 tests and all release-candidate gates passed; upstream parity to be confirmed after this documentation closeout commit.
-NEXT_ACTION: None. Stop before FI-13+, main promotion, or Production work.
+REPOSITORY_STATE: FM-R00 began from clean `816c0340cffa30a213556dd313734e8029292919`, tree `ea2a03b9c61e30e199bf869ff2d7e94ec61b7beb`, at upstream parity.
+LIVE_STATE: Historical Playground deployment `50c5cab77b7fe251cf1a11c284fe791e6c2af127` / tree `5a985e623e8a234bf1d4cfac52ab5afb86fd8257` remains current pending audit and repair.
+PROVIDER_STATE: Current isolated staging tuple, rollback, schema 32/0032, R2 evidence linkage, direct Worker health, and Access boundary verified. Five transient Playground sessions exist and must be invalidated by the later reset.
+PRODUCTION_STATE: Worker identity and binding tuple match the accepted prior receipt; FM-R00 Production mutation was zero.
+PROTECTED_RESIDUE: Active-checkout governance edits and FI-worktree `.ai-bridge/`/`.local/` remain untouched.
+NEXT_ACTION: FM-R01 read-only live audit. Do not implement until defects are reproduced and classified.
