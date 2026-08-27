@@ -1,17 +1,19 @@
 # Current Work Pointer — FI-00 through FI-12 Direct Playground Migration
 
 PROGRAM: HAU-USC Logistics FI-00 through FI-12 isolated Playground migration
-STATUS: DIRECT_MIGRATION_PREDEPLOY_REBUILD_REQUIRED
+STATUS: DIRECT_MIGRATION_LOCKED_PREDEPLOY
 PHASE: FM / FRONTEND MIGRATION — migration-only
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fi00-fi12-playground-candidate
 BRANCH: release/v0.8.3-fi12-playground
-HEAD: GIT_HEAD (dynamic documentation checkpoint; rebuild/re-hash this exact post-documentation HEAD before deploy)
+HEAD: GIT_HEAD (dynamic lock-only deployment checkpoint; rebuild/re-hash this exact post-lock HEAD before deploy)
 UPSTREAM: origin/release/v0.8.3-fi12-playground
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED
+ACTIVE_WRITER: TERRA_HIGH:/root/fi00_fi12_candidate_resume
+WRITER_LOCK: ACQUIRED
 LANE: FM / FRONTEND MIGRATION
-FM_WRITER_LOCK: RELEASED
-LOCK_EVENT: Acquired for this documentation checkpoint and released before commit.
+FM_WRITER_LOCK: HELD
+LOCK_EVENT: Canonical FM/provider lock acquired at clean 2401ad36d848aec70eb7a5304f3578066fcf2273; lock-only commit becomes deployment vehicle.
+LOCK_DEPENDENCIES: Accepted migration-only amendment; prior private preflight/rollback receipt; clean exact candidate; no concurrent writer.
+LOCK_OUTPUTS: Fresh private live-state manifest/config; exact build/artifact hashes; dry-run evidence; at most one deploy receipt.
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-27-fi00-fi12-playground-migration.md
 ACTIVE_AMENDMENT: .codex/specs/accepted/2026-08-27-fi00-fi12-playground-migration-only-amendment.md
 
@@ -28,4 +30,4 @@ SELECTED_SAFE_PATH: Direct use of existing `scripts/playground/create-private-co
 PREDEPLOY_REQUIREMENTS: Derive a fresh private live-state manifest from captured/current live version metadata; pass the existing dry-run preflight; rebuild staging and workflow-required shareable artifacts; re-hash the exact post-documentation HEAD and bind it to the private manifest before deploy.
 EXCLUSIONS: No new resources; baseline refresh/export/import; data or schema migration; Production action; FI-13+; cleanup/retirement; frontend integration/design/polish; workflow dispatch; or provider action in this checkpoint.
 EXTERNAL_MUTATIONS: Git documentation checkpoint only. No provider, deployment, workflow, Production, data, schema, secret, or resource mutation.
-NEXT_ACTION: Reconcile the exact post-documentation candidate SHA/tree, derive the new private live-state manifest, run the authorized local dry-run preflight and exact artifact rebuild/re-hash; stop before any deploy unless all gates pass.
+NEXT_ACTION: Commit/push this lock-only checkpoint; verify zero product/FI-13+ delta; then reconcile its exact SHA/tree, derive private live-state manifest, run authorized dry-run and exact artifact rebuild/re-hash, and deploy once only if all gates pass.
