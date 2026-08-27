@@ -17,5 +17,5 @@ SCOPE: FI-14 runtime/contracts, FI-15 workflows, FI-16 hardening, and FI-17 prod
 OUT_OF_SCOPE: FM, Playground, Production, provider, schema/migration, Google, main, Figma/Make, new product features, and FI-18.
 VERIFICATION: Focused tests/browser evidence per slice and final integrated local acceptance/build/artifact/handoff gates.
 STOP_CONDITIONS: Wrong/divergent branch, unknown tracked work, competing writer, protected-boundary crossover, or unresolved P0/P1 outside accepted local scope.
-LATEST_CHECKPOINT: FI-13 receipt `.codex/FI13_FINAL_CRAFT_EXACT_FRONTEND_FREEZE_RECEIPT.md`; source commit `a377f079ce39f6c8b8e5e76f80f59b62e932d80e`; tree `4177693026d0b239dff6255d5a4cbaa52cf26d86`; application artifact SHA-256 `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`.
-NEXT_EXACT_ACTION: Execute FI-14 local runtime and backend-contract completion on 127.0.0.1:4173; repair only reproduced accepted-scope defects.
+LATEST_CHECKPOINT: FI-14 closed as a verified local runtime/backend-contract no-op; receipt `.codex/FI14_LOCAL_RUNTIME_BACKEND_CONTRACT_COMPLETION_RECEIPT.md`; no product source repair required.
+NEXT_EXACT_ACTION: Execute FI-15 local end-to-end workflow integration on 127.0.0.1:4173; repair only reproduced accepted-scope defects.
