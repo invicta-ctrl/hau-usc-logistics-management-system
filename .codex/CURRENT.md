@@ -2,9 +2,9 @@
 
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
 MILESTONE: R1_FI14_ISOLATED_PLAYGROUND_DEPLOYMENT_ACCEPTANCE
-STATUS: FI14_BLOCKED__GITHUB_ACTIONS_EXTERNAL_QUEUE__RUN_32985611614_QUEUED
-PHASE: FI14_EXTERNAL_QUEUE_HANDOFF
-MODE: HANDOFF
+STATUS: FI14_RUNNER_RECOVERY__ACTIVE
+PHASE: FI14_RUNNER_RECOVERY_A1
+MODE: EXECUTE
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
 SOURCE_BASE_HEAD: afed8ed857e43c81df33306a42db1d2ac71b4d76
@@ -12,16 +12,16 @@ START_HEAD: e1c90fda32bc62566807ce4ebc8d747a034ea740
 UPSTREAM: origin/frontend-design-integration @ 6a8ed7e5d58a30784cef0f25b07973240dc4fa17 (+0/-0 before FI14 external-queue handoff checkpoint)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: DIRTY__PRESERVED_AIBRIDGE_ONLY
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED__FI14_EXTERNAL_QUEUE_HANDOFF__frontend-design-integration
-HANDOFF_STATUS: BLOCKED__FI14_GITHUB_ACTIONS_EXTERNAL_QUEUE__RUN_32985611614
+ACTIVE_WRITER: TERRA_HIGH:/root/fi14_runner_writer_2
+WRITER_LOCK: ACTIVE__FI14_RUNNER_RECOVERY_A1__frontend-design-integration
+HANDOFF_STATUS: ACTIVE__FI14_RUNNER_RECOVERY_A1
 REQUIRED_MODEL: GPT-5.6 Terra / Max sole frontend writer; GPT-5.6 Sol remains read-only orchestration and final acceptance
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi14-isolated-playground-deployment-acceptance.md
-FI14_PACKET_STATUS: ACCEPTED__OWNER_AUTHORIZED__BLOCKED_EXTERNAL_QUEUE_BEFORE_PROVIDER_ACTION
-FI14_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 sections 16 and 20; TOKEN-OPT-001-A8; project policy; accepted FI-13 freeze; accepted isolated Playground governance; Sol FI-14 route decision.
-FI14_SCOPE: The accepted remaining path is blocked at the external GitHub Actions queue before any workflow job or provider action. The temporary ref is exactly the frozen candidate and one identity-correct workflow dispatch exists; do not create, cancel, or redispatch runs. Provider pre-upload validation, deployment, isolated acceptance, closure receipt, Production/main, and FI-15 remain unperformed.
+FI14_PACKET_STATUS: ACCEPTED__OWNER_AMENDMENT_FI14_RUNNER_RECOVERY_A1__ACTIVE
+FI14_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 sections 16 and 20; accepted FI14-RUNNER-RECOVERY-A1-2026-08-27; canonical SOL-ADVISOR-GLOBAL-001; project policy; accepted FI-13 freeze; accepted isolated Playground governance; Sol FI-14 route decision.
+FI14_SCOPE: Execute only the FI14-RUNNER-RECOVERY-A1 first bounded checkpoint: narrow default-preserving runner override, candidate re-verification/refreeze, reconciliation/cancellation of only queued run 32985611614 after no-provider proof, official ephemeral repository-scoped runner, one replacement FI-14 dispatch, and FI-14 deployment/acceptance if green. Production/main and FI-15 remain excluded until explicit Sol follow-up.
 FI14_INVARIANTS: No frontend application behavior/runtime or backend/API/auth/authorization/session/schema/migration mutation; no provider configuration/resource creation/crossover beyond deployment of the exact isolated Worker candidate; no D1/R2/data or Production/main mutation; `.ai-bridge/` excluded and untouched; no unapproved local-preview restart (the documented A3 stale-state recovery is separately recorded); no branch/identity spoofing; no private value disclosure.
 FI14_PAUSE_EVIDENCE: Historical pre-mutation pause evidence: parent Sol's fresh raw post-freeze `git ls-remote` found temporary ref `release/v0.8.3-frontend-design-integration` at prior tip `a377f079ce39f6c8b8e5e76f80f59b62e932d80e`. Later `FI14_REF_UPDATE` and `FI14_WORKFLOW_DISPATCH` below record its normal fast-forward to exact candidate `6a8ed7e5d58a30784cef0f25b07973240dc4fa17` and the sole queued dispatch. Failed run `32969390269` had package PASS and artifact-verifier FAIL before Cloudflare/pre-upload; Production remained unchanged.
 FI14_VERIFIED_REPAIR: `vite.config.js`; `scripts/verify-deploy-artifact.mjs`; `tests/unit/release-pipeline.test.js`; new `tests/unit/verify-deploy-artifact.test.js`.
@@ -36,7 +36,8 @@ FI14_REF_UPDATE: 2026-08-26 normal non-force fast-forward `a377f079ce39f6c8b8e5e
 FI14_WORKFLOW_DISPATCH: Run `32985611614` dispatched exactly once through `release-candidate.yml` from `release/v0.8.3-frontend-design-integration` with exact candidate SHA `6a8ed7e5d58a30784cef0f25b07973240dc4fa17`; GitHub identity is workflow_dispatch / Candidate to Isolated Staging Playground / queued. No provider action is claimed.
 FI14_QUEUE_EVIDENCE: Run attempt 1 remained `queued` with `jobs=[]` and no conclusion for approximately 30 minutes; no pending deployment approval; repository Actions reported enabled; read-only repository/account Actions billing-capacity endpoints both returned HTTP 404 and therefore did not prove capacity. An unrelated queued run predates FI-14, supporting an external queue condition.
 FI14_PROVIDER_AND_PRODUCTION_STATE: No workflow job started, so `deploy-playground.mjs` never made authenticated provider reads or upload; no Worker/D1/R2/provider/data/migration action occurred; Production remains unchanged.
-FI14_NEXT_ACTION: Earl or an authorized GitHub administrator restores GitHub-hosted runner capacity, then resumes monitoring existing run 32985611614 only and reconciles its terminal state before any new dispatch; do not cancel or redispatch without explicit reconciliation.
+FI14_WRITER_TRANSFER: `/root/fi14_runner_writer` expired after an account usage limit; its lock is no longer active. Approved transfer recorded to sole canonical writer `TERRA_HIGH:/root/fi14_runner_writer_2`; no work is repeated and no second writer is active.
+FI14_NEXT_ACTION: Fresh raw handshake, validate the existing workflow override, then complete the bounded refreeze before the separately gated run reconciliation/cancellation, temporary runner registration, and one replacement dispatch.
 FI13_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED__FI14_CANDIDATE_GATE_REFROZEN__APP_ARTIFACT_BYTE_IDENTICAL
 FI13_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, section 15; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-12 records; current repository contracts; accepted live Make-v44 and Figma Design evidence.
 FI13_SCOPE: Final local candidate craft gate only: bounded Hallmark audit, Impeccable Operate-mode audit/polish, semantic/accessibility/responsive/contrast/keyboard/focus/motion/console/network checks, truthful real/synthetic labels, route-separation proof, and exact frontend candidate freeze. Prove a defect before a product change; use one related batch and one confirmation pass.

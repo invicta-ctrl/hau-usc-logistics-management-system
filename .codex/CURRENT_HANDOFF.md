@@ -1,8 +1,8 @@
 # Current Environment Handoff — FI-14 Isolated Playground Deployment + Acceptance
 
-FROM: /root/fi14_resume_writer after external GitHub Actions queue monitoring checkpoint
-TO: Earl or an authorized GitHub administrator for hosted-runner capacity restoration; then a newly authorized FI-14 writer to monitor existing run only
-MODE: HANDOFF
+FROM: /root/fi14_runner_writer (expired: account usage limit; no unrecorded recovery action claimed)
+TO: /root/fi14_runner_writer_2, sole canonical FI-14 release/recovery writer (approved lock transfer)
+MODE: EXECUTE
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
 HEAD_BEFORE_PAUSE_CHECKPOINT: afed8ed857e43c81df33306a42db1d2ac71b4d76
@@ -10,14 +10,14 @@ START_HEAD: e1c90fda32bc62566807ce4ebc8d747a034ea740
 UPSTREAM: origin/frontend-design-integration @ 6a8ed7e5d58a30784cef0f25b07973240dc4fa17 (+0/-0 at FI14 deployment-resume handshake)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: DIRTY__PRESERVED_AIBRIDGE_ONLY
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED__FI14_EXTERNAL_QUEUE_HANDOFF__frontend-design-integration
-HANDOFF_STATUS: BLOCKED__FI14_GITHUB_ACTIONS_EXTERNAL_QUEUE__RUN_32985611614
+ACTIVE_WRITER: TERRA_HIGH:/root/fi14_runner_writer_2
+WRITER_LOCK: ACTIVE__FI14_RUNNER_RECOVERY_A1__frontend-design-integration
+HANDOFF_STATUS: ACTIVE__FI14_RUNNER_RECOVERY_A1
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi14-isolated-playground-deployment-acceptance.md
-FI14_PACKET_STATUS: ACCEPTED__OWNER_AUTHORIZED__BLOCKED_EXTERNAL_QUEUE_BEFORE_PROVIDER_ACTION
-FI14_SCOPE: Stop at the external GitHub Actions queue before any job/provider action. Exact temporary ref and run `32985611614` are preserved; do not cancel or redispatch. Provider pre-upload validation, deployment, isolated acceptance, closure receipt, Production/main, and FI-15 remain unperformed.
+FI14_PACKET_STATUS: ACCEPTED__OWNER_AMENDMENT_FI14_RUNNER_RECOVERY_A1__ACTIVE
+FI14_SCOPE: First bounded FI14-RUNNER-RECOVERY-A1 checkpoint: candidate-workflow default-preserving runner override, full candidate re-verification/refreeze, current-run reconciliation and cancellation only if queued/jobs=[]/no provider action, official temporary ephemeral runner, one exact replacement dispatch, then FI-14 acceptance only if green. No FI-15 without explicit Sol follow-up.
 FI14_INVARIANTS: No application behavior/backend/Worker/API/auth/authorization/session/schema/migration/D1/R2/data/provider/Figma/Make/Production/main mutation beyond the exact isolated Worker deployment and its native pre-upload validation; no resource creation/crossover; `.ai-bridge/` remains excluded and untouched; no unapproved preview restart; no private value in evidence.
 FI14_HANDSHAKE: Historical pre-mutation 2026-08-26 handshake: branch/frontend-design-integration and origin/frontend-design-integration both `6a8ed7e5d58a30784cef0f25b07973240dc4fa17` (+0/-0), tree `1a6c072b4db6628ef0df58cb7a297776a7735e54`; status contained only untracked `.ai-bridge/` before this lock patch; parent Sol supplied raw remote-ref evidence. Fresh GitHub/Cloudflare/isolation/rollback/Production preflight was then required before any mutation; subsequent current ref/run state is recorded below.
 FI14_PAUSE_EVIDENCE: Historical pre-mutation pause evidence: parent Sol's fresh raw post-freeze proof found temporary ref `release/v0.8.3-frontend-design-integration` at prior tip `a377f079ce39f6c8b8e5e76f80f59b62e932d80e`. Later `FI14_REF_UPDATE` and `FI14_WORKFLOW_DISPATCH` below record its normal fast-forward to exact candidate `6a8ed7e5d58a30784cef0f25b07973240dc4fa17` and the sole queued dispatch. Failed run `32969390269` had package PASS and artifact-verifier FAIL before Cloudflare/pre-upload; Production remained unchanged.
@@ -33,8 +33,9 @@ FI14_REF_UPDATE: 2026-08-26 normal non-force fast-forward `a377f079ce39f6c8b8e5e
 FI14_WORKFLOW_DISPATCH: Run `32985611614` dispatched exactly once through `release-candidate.yml` from `release/v0.8.3-frontend-design-integration` with exact candidate SHA `6a8ed7e5d58a30784cef0f25b07973240dc4fa17`; GitHub identity is workflow_dispatch / Candidate to Isolated Staging Playground / queued. No provider action is claimed.
 FI14_QUEUE_EVIDENCE: Run attempt 1 remained `queued` with `jobs=[]` and no conclusion for approximately 30 minutes; no pending deployment approval; repository Actions reported enabled; read-only repository/account Actions billing-capacity endpoints both returned HTTP 404 and therefore did not prove capacity. An unrelated queued run predates FI-14, supporting an external queue condition.
 FI14_PROVIDER_AND_PRODUCTION_STATE: No workflow job started, so `deploy-playground.mjs` never made authenticated provider reads or upload; no Worker/D1/R2/provider/data/migration action occurred; Production remains unchanged.
-FI14_NEXT_ACTION: Earl or an authorized GitHub administrator restores GitHub-hosted runner capacity, then resumes monitoring existing run 32985611614 only and reconciles its terminal state before any new dispatch; do not cancel or redispatch without explicit reconciliation.
-DELEGATION_LEDGER_CURRENT: writer=/root/fi14_resume_writer | model=gpt-5.6-terra | reasoning=max | role=sole canonical FI-14 deployment/acceptance writer | mode=handoff | owned=current-chain records,FI14 receipt,required continuation/changelog only,existing temporary ref/workflow/isolated runtime | excluded=source/tests/workflow/config/backend/Worker/D1/R2/data/provider config/Figma/Make/Production/main/FI15+/.ai-bridge | status=BLOCKED__WRITER_LOCK_RELEASED.
+FI14_NEXT_ACTION: Identify receipt convention, then make and verify the narrow workflow override before any GitHub run cancellation or runner setup.
+DELEGATION_LEDGER_CURRENT: writer=/root/fi14_runner_writer | model=gpt-5.6-terra | reasoning=high | role=sole canonical FI-14 release/recovery writer | mode=execute | status=EXPIRED__ACCOUNT_USAGE_LIMIT__LOCK_TRANSFERRED | evidence=no external recovery action is claimed after the earlier documented partial edit.
+DELEGATION_LEDGER_CURRENT: writer=/root/fi14_runner_writer_2 | model=gpt-5.6-terra | reasoning=high | role=sole canonical FI-14 release/recovery writer | mode=execute | owned=.github/workflows/release-candidate.yml,.codex/CURRENT.md,.codex/CURRENT_TASK.md,.codex/CURRENT_HANDOFF.md,required FI14 receipt only after verified acceptance,one task-specific temporary runner directory | excluded=.ai-bridge,product/backend/schema/migration/auth/Figma/Production/main/FI15+ | status=ACTIVE__WRITER_LOCK_TRANSFERRED | evidence=canonical governance, project policy, accepted FI-14 packet, amendment, and existing partial diff rehydrated before transfer.
 FI13_PRIOR_EVIDENCE: 48/48 focused units; exact-4173 responsive matrix including focus, motion, console/network, labels, and route separation; one accumulated-load REQ-04 timeout isolated with an original-30s PASS and focused tail PASS; app artifact hash `B1B1F51E7C5DB3B96F7EB55A9CFE3C6E7F36B9D741807219BB6BEA2FB1B20556`; Hallmark/Impeccable no actionable finding; Sol accepted. The candidate-gate refreeze focused governance/release-pipeline coverage passed 19/19; the exact candidate check passed 155 files/1160 tests, build, dist verification, and Cloudflare dry-run; both application artifacts reproved the identical B1B1 hash. Browser/Hallmark/Impeccable evidence is reused only on that byte-identity basis.
 FI12_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED
 FI12_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 attachment; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-11 records; live Make-v44 visual evidence; repository functional contracts.

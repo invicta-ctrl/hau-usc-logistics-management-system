@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   package-release-candidate:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.HAU_ACTIONS_RUNNER || 'ubuntu-latest' }}
     environment: release-candidate
     outputs:
       candidate_sha: ${{ steps.identity.outputs.sha }}
@@ -69,7 +69,7 @@ jobs:
 
   deploy-playground:
     needs: package-release-candidate
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.HAU_ACTIONS_RUNNER || 'ubuntu-latest' }}
     environment: isolated-staging-playground
     steps:
       - uses: actions/checkout@v4
