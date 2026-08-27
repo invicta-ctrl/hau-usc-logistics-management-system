@@ -56,38 +56,28 @@ export function validateAgentInstructions(text) {
     ['HAU project extension id', /extension_id:\s*HAU-USC-LOGISTICS-PROJECT-POLICY-V1/i],
     ['universal root first', /Read the byte-identical universal root `AGENTS\.md` first/i],
     ['canonical continuity chain', /universal AGENTS\.md[\s\S]*?\.agents\/PROJECT_POLICY\.md[\s\S]*?\.codex\/CURRENT\.md/i],
-    ['TOKEN-OPT sole efficiency authority', /TOKEN-OPT-001 is the sole account-wide token\/context-efficiency authority/i],
-    ['Sol orchestrator', /ORCHESTRATOR_MODEL:\s*GPT-5\.6 Sol/i],
-    ['Sol writes forbidden', /ORCHESTRATOR_WRITES:\s*FORBIDDEN/i],
-    ['zero default children', /DEFAULT_CHILDREN:\s*0\b/i],
-    ['one active child maximum', /MAX_ACTIVE_CHILDREN:\s*1\b/i],
-    ['delegation depth one', /DELEGATION_DEPTH:\s*1\b/i],
-    ['ordinary reasoning High or lower', /ORDINARY_REASONING:\s*high or lower/i],
-    ['no routine independent review', /ROUTINE_INDEPENDENT_REVIEW:\s*false/i],
-    ['no routine full suite per module', /ROUTINE_FULL_SUITE_AFTER_SMALL_MODULE:\s*false/i],
-    ['stop when green', /STOP_WHEN_GREEN:\s*true/i],
-    ['one Terra integration writer', /CANONICAL_ACTIVE_WRITER:\s*one Terra Integration Writer/i],
-    ['Luna writes forbidden', /LUNA_WRITES:\s*FORBIDDEN/i],
+    ['active Sol Advisor authority', /SOL-ADVISOR-GLOBAL-001.*active account-wide routing authority/i],
+    ['Sol four-mode routing', /Sol\s*\/\s*High declares `?solo\|delegate\|audit\|full`?/i],
+    ['solo default', /solo is default/i],
+    ['Luna bounded implementation', /Luna\s*\/\s*Max\s+(?:is\s+)?(?:only\s+for\s+)?bounded implementation/i],
+    ['Terra higher-risk implementation', /Terra\s*\/\s*High is higher-risk implementation/i],
+    ['fresh Sol audit/full review only', /fresh Sol\s*\/\s*High\s+(?:reviews only|only for) audit\/full(?: review)?/i],
+    ['no child spawning', /No child may spawn/i],
+    ['no implementation Sol child', /No agent may create an implementation Sol child/i],
+    ['two isolated writers maximum', /At most two writers may coexist account-wide/i],
+    ['one writer per repository or worktree', /Every repository or worktree has at most one writer/i],
     ['writer lock', /ACTIVE_WRITER.*hard lock/i],
+    ['no silent model substitution', /No silent model substitution is permitted/i],
     ['permanent recovery policy', /## Permanent Git and recovery policy/i],
     ['mandatory release path', /## Mandatory release path after v0\.8\.0/i],
     ['environment isolation', /## Environment and data-isolation rules/i],
     ['protected domain invariants', /## Protected domain invariants/i],
     ['Quick Document Fix Mode', /## Quick Document Fix Mode/i],
     ['ten-step document workflow', hasTenStepWorkflow],
-    ['conditional Luna review', /Use a bounded Luna review only for/i],
     ['no repeated review loop', /do not start a repeated audit loop/i],
     ['synchronization preserves unrelated dirty work', /unrelated\s+dirty work elsewhere is not by itself a blocker/i],
   ];
-  const forbidden = [
-    ['routine Terra pool', /MAX_TERRA_SUBAGENTS:\s*16|sixteen Terra|up to 16 Terra/i],
-    ['routine Luna pool', /MAX_LUNA_SUBAGENTS:\s*16|sixteen Luna|up to 16 Luna/i],
-    ['routine concurrent Terra writers', /PARALLEL_TERRA:\s*isolated non-overlapping/i],
-  ];
-  return [
-    ...missingMarkers(text, required),
-    ...forbidden.filter(([, pattern]) => pattern.test(text)).map(([name]) => name),
-  ];
+  return missingMarkers(text, required);
 }
 
 export function parseRestrictedToml(text) {

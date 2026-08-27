@@ -81,18 +81,32 @@ describe('authoritative release pipeline', () => {
   });
 
   it('packages an exact checked candidate, deploys only to playground, and stops for Earl', async () => {
-    const workflow = await read('.github/workflows/release-candidate.yml');
+    const [workflow, playgroundDeploy, packageJson, viteConfig, artifactVerifier] = await Promise.all([
+      read('.github/workflows/release-candidate.yml'),
+      read('scripts/playground/deploy-playground.mjs'),
+      read('package.json').then(JSON.parse),
+      read('vite.config.js'),
+      read('scripts/verify-deploy-artifact.mjs'),
+    ]);
 
     expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).not.toMatch(/^\s+push:/mu);
     expect(workflow).toContain('environment: release-candidate');
     expect(workflow).toContain('ref: ${{ inputs.candidate_sha }}');
     expect(workflow).toContain('refs/remotes/origin/${EXPECTED_BRANCH}');
-    expect(workflow).toContain('npm run check');
+    expect(workflow).toContain('npm run check:release-candidate');
+    expect(packageJson.scripts['lint:release-candidate']).toBe(
+      'eslint . --ignore-pattern "prototypes/public-portals-r3/**"',
+    );
+    expect(packageJson.scripts['check:release-candidate']).toBe(
+      'npm run check:governance && npm run lint:release-candidate && npm run build && npm run test && npm run check:apps-script && npm run verify:dist && npm run check:cloudflare',
+    );
     expect(workflow).toContain('create-release-candidate-manifest.mjs');
     expect(workflow).toContain('.release/candidate.json');
     expect(workflow).toContain('release-candidate-${{ steps.identity.outputs.sha }}');
     expect(workflow).toContain('actions/upload-artifact@v4');
+    expect(workflow).toContain('HAU-USC_Logistics-Frontend-Shareable.html');
+    expect(workflow).not.toContain('HAU-USC_Logistics-Prototype-Shareable.html');
     expect(workflow).not.toContain('apps-script/');
     expect(workflow).toContain('environment: isolated-staging-playground');
     expect(workflow).toContain('deploy-playground.mjs');
@@ -100,10 +114,20 @@ describe('authoritative release pipeline', () => {
     expect(workflow).toContain('attempt <= 15');
     expect(workflow).toContain("headers: { 'cache-control': 'no-cache' }");
     expect(workflow).toContain('version?.candidateSha === expected');
+    expect(workflow).toContain("version?.database?.schemaVersion === '32'");
     expect(workflow).toContain('Stop for Earl manual testing');
     expect(workflow).toContain('WAIT FOR EARL. No production job exists in this workflow.');
     expect(workflow).not.toContain('deploy-environment.mjs production');
     expect(workflow).not.toContain('pull_request_target');
+    expect(playgroundDeploy).toContain('function rollbackStagingBindings(manifest)');
+    expect(playgroundDeploy).toContain(
+      "['versions', 'view', stagingVersionId, '--env', 'staging', '--json']",
+    );
+    expect(playgroundDeploy).toContain('rollbackBindings: rollbackStagingBindings(manifest)');
+    expect(viteConfig).toContain("const DEPLOY_ARTIFACT_MARKER_NAME = 'hau-deploy-target';");
+    expect(viteConfig).toContain('name: DEPLOY_ARTIFACT_MARKER_NAME');
+    expect(artifactVerifier).toContain('must contain exactly one canonical deploy target marker');
+    expect(artifactVerifier).not.toContain('const modeMatches =');
   });
 
   it('binds the candidate manifest to the release, commit, and generated artifacts', async () => {

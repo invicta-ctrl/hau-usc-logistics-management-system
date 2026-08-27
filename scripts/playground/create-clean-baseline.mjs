@@ -70,13 +70,13 @@ async function run() {
   const stagingRestore = `${outputDatabase}.staging-source.sqlite`;
   try {
     await restoreAndVerifyD1Export(productionExport, productionRestore, {
-      expectedSchema: '30',
-      expectedMigration: '0030_production_access_and_operations.sql',
+      expectedSchema: '32',
+      expectedMigration: '0032_staff_account_activity_history.sql',
       requireImmutableHistory: true,
     });
     await restoreAndVerifyD1Export(stagingExport, stagingRestore, {
-      expectedSchema: '30',
-      expectedMigration: '0030_production_access_and_operations.sql',
+      expectedSchema: '32',
+      expectedMigration: '0032_staff_account_activity_history.sql',
       requireImmutableHistory: true,
     });
     const capturedAt = new Date().toISOString();
@@ -84,8 +84,8 @@ async function run() {
       sourceProductionVersion: args['source-version'],
       sourceProductionSha: args['source-sha'],
       capturedAt,
-      schemaVersion: '30',
-      latestMigration: '0030_production_access_and_operations.sql',
+      schemaVersion: '32',
+      latestMigration: '0032_staff_account_activity_history.sql',
       d1BaselineParity: 'EXCEPTIONS',
       r2BaselineParity: 'EXCEPTIONS',
       parityExceptions: PARITY_EXCEPTIONS,
@@ -100,8 +100,8 @@ async function run() {
     await writeFile(outputSql, sql, { flag: 'wx' });
     const verificationRestore = `${outputDatabase}.verification.sqlite`;
     const verification = await restoreAndVerifyD1Export(outputSql, verificationRestore, {
-      expectedSchema: '30',
-      expectedMigration: '0030_production_access_and_operations.sql',
+      expectedSchema: '32',
+      expectedMigration: '0032_staff_account_activity_history.sql',
       requireImmutableHistory: true,
     });
     await rm(verificationRestore, { force: true });
@@ -125,7 +125,7 @@ async function run() {
     console.log('Playground clean D1 baseline: CREATED');
     console.log('Privacy classification: EXCEPTIONS (production credentials and private identity/evidence excluded).');
     console.log(`Synthetic staging tester accounts overlaid: ${result.syntheticAccountCount}`);
-    console.log('Integrity: PASS; foreign keys: PASS; schema: 30; latest migration: 0030.');
+  console.log('Integrity: PASS; foreign keys: PASS; schema: 32; latest migration: 0032_staff_account_activity_history.sql.');
     console.log('Private paths, resource identifiers, data values, and hashes were not printed.');
   } finally {
     await Promise.all([rm(productionRestore, { force: true }), rm(stagingRestore, { force: true })]);

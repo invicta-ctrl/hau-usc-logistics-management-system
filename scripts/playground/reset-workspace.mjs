@@ -127,7 +127,7 @@ async function run() {
   );
   const serialized = JSON.stringify(verification);
   if (
-    !serialized.includes('0030_production_access_and_operations.sql') ||
+    !serialized.includes('0032_staff_account_activity_history.sql') ||
     !serialized.includes('CLEAN') ||
     !serialized.includes('reset_probe_count')
   ) {
@@ -140,7 +140,7 @@ async function run() {
     productionMutation: 'NONE',
     preResetRecoveryBookmark: preResetBookmark,
     restoredCleanBookmark: cleanBookmark,
-    d1: { schemaVersion: '30', latestMigration: '0030_production_access_and_operations.sql', foreignKeys: 'PASS' },
+    d1: { schemaVersion: '32', latestMigration: '0032_staff_account_activity_history.sql', foreignKeys: 'PASS' },
     r2: resetResult,
   };
   await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx', mode: 0o600 });

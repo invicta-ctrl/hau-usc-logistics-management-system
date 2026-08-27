@@ -37,12 +37,22 @@ describe('Codex governance validators', () => {
     );
   });
 
-  it('requires the canonical Sol/Terra/Luna and Quick Document Fix policies', () => {
+  it('requires the current Sol Advisor routing, writer-lock, and Quick Document Fix policies', () => {
     const valid = [
       'extension_id: HAU-USC-LOGISTICS-PROJECT-POLICY-V1',
       'Read the byte-identical universal root `AGENTS.md` first',
       'universal AGENTS.md -> .agents/PROJECT_POLICY.md -> .codex/CURRENT.md',
-      'TOKEN-OPT-001 is the sole account-wide token/context-efficiency authority',
+      'SOL-ADVISOR-GLOBAL-001 is the active account-wide routing authority',
+      'Sol / High declares `solo|delegate|audit|full`; solo is default',
+      'Luna / Max is bounded implementation',
+      'Terra / High is higher-risk implementation',
+      'fresh Sol / High reviews only audit/full',
+      'No child may spawn',
+      'No agent may create an implementation Sol child',
+      'At most two writers may coexist account-wide',
+      'Every repository or worktree has at most one writer',
+      'ACTIVE_WRITER is a hard lock',
+      'No silent model substitution is permitted',
       'skill registry',
       '.codex/TASK_ROUTING.md',
       '.codex/CAVEMAN_WORKFLOW.md',
@@ -57,30 +67,11 @@ describe('Codex governance validators', () => {
       'Runtime, deploy, provider, database, migration, production-data, recovery, frontend, and release behavior',
       'Main-governance lineage is distinct from deployed Production runtime',
       'Legacy current/task REQUIRED_MODEL: CODEX remains superseded and non-authoritative and does not require a current-chain rewrite for this explicitly accepted bootstrap',
-      'ORCHESTRATOR_MODEL: GPT-5.6 Sol',
-      'ORCHESTRATOR_WRITES: FORBIDDEN',
-      'SOL_SUBAGENTS: FORBIDDEN',
-      'MAX_SOL_SUBAGENTS: 0',
-      'WRITER_MODEL: Terra MAX',
-      'DEFAULT_CHILDREN: 0',
-      'MAX_ACTIVE_CHILDREN: 1',
-      'CANONICAL_ACTIVE_WRITER: one Terra Integration Writer',
-      'READER_MODEL: Luna MAX',
-      'LUNA_WRITES: FORBIDDEN',
-      'ORDINARY_REASONING: high or lower',
-      'ROUTINE_INDEPENDENT_REVIEW: false',
-      'ROUTINE_FULL_SUITE_AFTER_SMALL_MODULE: false',
-      'STOP_WHEN_GREEN: true',
-      'DELEGATION_DEPTH: 1',
-      'SUBAGENT_SPAWNER: Sol only',
-      'MODEL_SUBSTITUTION: forbidden unless Earl explicitly amends the task',
-      'On main, legacy REQUIRED_MODEL: CODEX metadata is explicitly superseded and non-authoritative for model routing.',
       'Permanent Git branch and playground release policy',
       '## Permanent Git and recovery policy',
       '## Mandatory release path after v0.8.0',
       '## Environment and data-isolation rules',
       '## Protected domain invariants',
-      'ACTIVE_WRITER is a hard lock',
       'Isolated Staging Playground',
       '## Quick Document Fix Mode',
       '### Eligibility',
@@ -90,22 +81,18 @@ describe('Codex governance validators', () => {
       'deletion of unknown work',
       'executable security, authentication, or authorization changes',
       'broad architecture decisions',
-      'Default staffing is one Terra Integration Writer, zero Luna reviewers, and zero Sol children.',
       '### Fast workflow (10 steps)',
       '1. Sol reads the exact target and direct authority',
       '2. Sol defines the minimal diff',
-      '3. Sol assigns ONE Terra MAX writer',
-      '4. Terra edits only the required documents',
-      '5. Terra runs focused documentation-governance validation',
-      '6. Sol reviews the complete diff once',
-      '7. Terra repairs only material defects',
-      '8. Terra commits exactly once',
-      '9. Terra pushes and merges only through the smallest permitted repository path',
+      '3. Sol declares `solo` or the smallest justified route',
+      '4. The selected implementation lane edits only required documents',
+      '5. The selected implementation lane runs focused documentation checks',
+      '6. Sol verifies the complete diff',
+      '7. The selected implementation lane repairs only material defects',
+      '8. The selected implementation lane commits exactly once',
+      '9. The selected implementation lane pushes and merges only through the smallest permitted repository path',
       '10. When the requested document is present, focused validation passes, the complete diff has been reviewed, and the required push/merge is complete, STOP.',
-      'The default is zero Luna reviewers',
-      'Use a bounded Luna review only for a material policy contradiction',
-      'Earl explicitly requests an independent audit',
-      'genuinely large diff where one independent read materially reduces risk',
+      'Use a fresh Sol / High reviewer only when Sol declares `audit` or `full`',
       'Do not repeat audit loops',
       'do not start a repeated audit loop',
       'Run proportional documentation-only verification',
@@ -124,30 +111,24 @@ describe('Codex governance validators', () => {
       'unrelated dirty work elsewhere is not by itself a blocker',
     ].join('\n');
     expect(validateAgentInstructions(valid)).toEqual([]);
-    expect(
-      validateAgentInstructions(
-        valid.replace(
-          'TOKEN-OPT-001 is the sole account-wide token/context-efficiency authority',
-          'local efficiency policy',
-        ),
-      ),
-    ).toContain('TOKEN-OPT sole efficiency authority');
-    expect(validateAgentInstructions(valid.replace('DEFAULT_CHILDREN: 0', 'DEFAULT_CHILDREN: 1'))).toContain(
-      'zero default children',
-    );
-    expect(
-      validateAgentInstructions(valid.replace('MAX_ACTIVE_CHILDREN: 1', 'MAX_ACTIVE_CHILDREN: 2')),
-    ).toContain('one active child maximum');
-    expect(
-      validateAgentInstructions(
-        valid.replace('ROUTINE_INDEPENDENT_REVIEW: false', 'ROUTINE_INDEPENDENT_REVIEW: true'),
-      ),
-    ).toContain('no routine independent review');
+    for (const [source, replacement, missing] of [
+      ['SOL-ADVISOR-GLOBAL-001 is the active account-wide routing authority', 'local routing policy', 'active Sol Advisor authority'],
+      ['Sol / High declares `solo|delegate|audit|full`; solo is default', 'Sol routing is unspecified', 'Sol four-mode routing'],
+      ['solo is default', 'solo is conditional', 'solo default'],
+      ['Luna / Max is bounded implementation', 'Luna routing is unspecified', 'Luna bounded implementation'],
+      ['Terra / High is higher-risk implementation', 'Terra routing is unspecified', 'Terra higher-risk implementation'],
+      ['fresh Sol / High reviews only audit/full', 'fresh Sol review is unrestricted', 'fresh Sol audit/full review only'],
+      ['No child may spawn', 'Children may spawn', 'no child spawning'],
+      ['No agent may create an implementation Sol child', 'Sol child policy is unspecified', 'no implementation Sol child'],
+      ['At most two writers may coexist account-wide', 'Writer count is unrestricted', 'two isolated writers maximum'],
+      ['Every repository or worktree has at most one writer', 'Writer scope is unrestricted', 'one writer per repository or worktree'],
+      ['ACTIVE_WRITER is a hard lock', 'ACTIVE_WRITER is advisory', 'writer lock'],
+      ['No silent model substitution is permitted', 'Silent model substitution is permitted', 'no silent model substitution'],
+    ]) {
+      expect(validateAgentInstructions(valid.replace(source, replacement))).toContain(missing);
+    }
     expect(validateAgentInstructions(valid.replace('10. When', '11. When'))).toContain(
       'ten-step document workflow',
-    );
-    expect(validateAgentInstructions(`${valid}\nMAX_TERRA_SUBAGENTS: 16`)).toContain(
-      'routine Terra pool',
     );
   });
 

@@ -171,8 +171,8 @@ describe('permanent staging sandbox guards', () => {
       isolatedRestore: {
         integrityOk: true,
         foreignKeyViolations: 0,
-        operationalSchema: '30',
-        latestMigration: '0030_production_access_and_operations.sql',
+        operationalSchema: '32',
+        latestMigration: '0032_staff_account_activity_history.sql',
       },
       reconciliation: { summary: { disposition: 'RECONCILED' } },
       priorWorkerDeployment: { id: 'prior-deployment' },

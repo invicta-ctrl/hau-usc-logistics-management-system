@@ -48,6 +48,29 @@ describe('playground production-derived baseline privacy', () => {
     }
   });
 
+  it('fails closed for schema-31/32 provenance, fingerprint, and staff activity records', () => {
+    for (const table of [
+      'canonical_people',
+      'canonical_person_emails',
+      'account_staff_links',
+      'staff_assignments',
+      'staff_account_activity_history',
+      'staff_account_activity_audit_context',
+    ]) {
+      expect(
+        sanitizeProductionRow(table, {
+          id: 'INTERNAL-1',
+          normalized_email_fingerprint: 'internal-email-fingerprint',
+          source_provenance_envelope: '{"provider":"private"}',
+          assignment_fingerprint: 'internal-assignment-fingerprint',
+          account_access_id_snapshot: 'INTERNAL.ACCESS.ID',
+        }),
+      ).toBeNull();
+    }
+    expect(PARITY_EXCEPTIONS).toContain('CANONICAL_IDENTITY_PROVENANCE_AND_FINGERPRINTS_EXCLUDED');
+    expect(PARITY_EXCEPTIONS).toContain('STAFF_ACCOUNT_ACTIVITY_HISTORY_AND_AUDIT_CONTEXT_EXCLUDED');
+  });
+
   it('redacts borrower data while preserving workflow identity and state', () => {
     const result = sanitizeProductionRow('public_lending_submissions', {
       id: 'SUBMISSION-1',

@@ -106,7 +106,7 @@ async function run() {
   );
   const serialized = JSON.stringify(verification);
   if (
-    !serialized.includes('0030_production_access_and_operations.sql') ||
+    !serialized.includes('0032_staff_account_activity_history.sql') ||
     !serialized.includes('sourceProductionVersion') ||
     !serialized.includes('CLEAN')
   ) {

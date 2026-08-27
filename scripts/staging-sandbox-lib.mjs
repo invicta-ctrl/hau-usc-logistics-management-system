@@ -66,8 +66,8 @@ const SHA256 = /^[0-9a-f]{64}$/u;
 const PACKAGE_VERSION =
   /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u;
 const PLACEHOLDER = /(?:REPLACE|TBD|TODO|UNKNOWN|00000000-0000-0000-0000-000000000000)/iu;
-export const RELEASE_SCHEMA_VERSION = '30';
-export const RELEASE_MIGRATION = '0030_production_access_and_operations.sql';
+export const RELEASE_SCHEMA_VERSION = '32';
+export const RELEASE_MIGRATION = '0032_staff_account_activity_history.sql';
 const ALLOWED_STAGING_CONFIG_KEYS = Object.freeze([
   'assets',
   'compatibility_date',

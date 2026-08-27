@@ -147,8 +147,8 @@ async function main() {
   }
   runWrangler(stagingConfigPath, ['d1', 'export', 'DB', '--remote', '--output', exportPath]);
   const isolatedRestore = await restoreAndVerifyD1Export(exportPath, restorePath, {
-    expectedSchema: '30',
-    expectedMigration: '0030_production_access_and_operations.sql',
+    expectedSchema: '32',
+    expectedMigration: '0032_staff_account_activity_history.sql',
     requireImmutableHistory: true,
   });
   const restored = new DatabaseSync(restorePath, { readOnly: true });

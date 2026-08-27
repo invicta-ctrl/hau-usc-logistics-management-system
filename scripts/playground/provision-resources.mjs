@@ -193,12 +193,12 @@ async function run() {
   );
   const verificationRows = d1Rows(d1Verification);
   const serialized = JSON.stringify(verificationRows);
-  if (!serialized.includes('0030_production_access_and_operations.sql') || !serialized.includes('30')) {
+  if (!serialized.includes('0032_staff_account_activity_history.sql') || !serialized.includes('32')) {
     throw new Error('New playground D1 failed schema or migration verification.');
   }
   manifest.d1.imported = true;
-  manifest.d1.schemaVersion = '30';
-  manifest.d1.latestMigration = '0030_production_access_and_operations.sql';
+  manifest.d1.schemaVersion = '32';
+  manifest.d1.latestMigration = '0032_staff_account_activity_history.sql';
   manifest.d1.foreignKeyCommandCompleted = true;
   manifest.d1.baselineSqlSha256 = sha256(await readFile(baselineSql));
   await save();
@@ -288,7 +288,7 @@ async function run() {
   };
   await save();
   console.log('Playground provider resources: CREATED AND VERIFIED');
-  console.log('D1: isolated import complete; schema 30; migration 0030; foreign-key command complete.');
+  console.log('D1: isolated import complete; schema 32; migration 0032_staff_account_activity_history.sql; foreign-key command complete.');
   console.log('R2 brand: production source copied one way to sealed baseline and isolated working bucket.');
   console.log('R2 evidence: production private objects excluded; clean working bucket is empty.');
   console.log('Temporary copy Worker: REMOVED. Production mutation: NONE.');

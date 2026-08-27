@@ -15,7 +15,7 @@ last_reviewed: 2026-08-25
 This is Earl's general operating policy for AI agents and agent-assisted tools.
 
 ```text
-GOVERNANCE_REVISION: TOKEN-OPT-001-A8
+GOVERNANCE_REVISION: SOL-ADVISOR-GLOBAL-001
 ```
 
 The only editable general-policy authority is:
@@ -118,11 +118,19 @@ but it is dormant selection reference only. Billable Codex execution is governed
 [`automation/codex-model-routing/manual-codex-execution-gate.json`](automation/codex-model-routing/manual-codex-execution-gate.json)
 and the local usage guard; routing metadata never authorizes model execution.
 
-## Billable Codex execution boundary
+## Billable Codex execution safety boundary
 
-`TOKEN-OPT-001-A8` is the active account-wide execution boundary. It supersedes only
-A7's incorrect Sol-subagent, mandatory-zero-start, and undifferentiated child-cap
-clauses while preserving A7's safety boundary.
+## SOL-ADVISOR-GLOBAL-001 routing contract
+
+`SOL-ADVISOR-GLOBAL-001` is the active account-wide software-orchestration contract. It supersedes conflicting routing clauses below while preserving every non-routing safety boundary. Installed upstream Sol Advisor 0.6.0 governs eligible work: Sol / High declares `solo`, `delegate`, `audit`, or `full` before task tools; solo is default; one auxiliary is normal; full is the explicit broad/high-risk exception. Native lanes are Luna / Max for bounded specified implementation, Terra / High for judgment-heavy or wide-blast-radius implementation, and fresh read-only Sol / High review for audit/full with `ship|fix-first|rethink`.
+
+Ox Alpha is only a temporary implementation overlay. It is enabled only for exact callable `openrouter/stealth/ox-alpha` / High with verified zero input/output pricing, unambiguous billing, health, capabilities, and data suitability. Otherwise `OX_OVERLAY_DISABLED` applies and the non-dispatching selector may return the suitable native lane in the same owner-started interactive Sol task. This is not provider automatic fallback, silent substitution, background continuation, recursive spawning, or retry. DeepSeek is disabled; earlier routing experiments are not defaults. Execution remains locked/manual-only, with two isolated writers maximum account-wide and one per repository/worktree.
+
+A8 is retained only as historical safety-boundary provenance, including the
+`TOKEN-OPT-001-A8` compatibility contract for the locked manual-execution guard. It no longer supplies
+active routing, reviewer, model-effort, or staffing defaults. Its legacy numeric
+guard ceilings are safety ceilings only; they never override the Sol Advisor
+one-auxiliary default or authorize a route.
 
 ```text
 BILLABLE CODEX EXECUTION: LOCKED BY DEFAULT
@@ -153,19 +161,22 @@ APP-SERVER INFRASTRUCTURE: ALLOWED
   never self-authorization.
 - Direct deliberate interaction Earl starts inside Codex Desktop is Earl manually
   starting that specific Sol task. Sol is the parent and may never be selected as its
-  own subagent. It follows the default @sol advisor task-delegation guidelines and may
-  use zero or multiple useful bounded direct workers at depth one. Luna Max and Ox Alpha
-  each have a ceiling of sixteen; Terra Max has a ceiling of two; total direct workers
-  remain bounded by the native session ceiling of sixteen. Children may not spawn.
+  own implementation child. It follows the active Sol Advisor contract: `solo` is the
+  default and a declared `delegate`, `audit`, or `full` route uses at most one
+  auxiliary at a time. A fresh Sol / High reviewer is the narrowly permitted
+  audit/full review lane, not an implementation child. Children may not spawn.
 - Two writers may run only across proven-isolated repositories or worktrees with
   separate locks and no shared pointer, migration, release file, generated artifact,
   provider resource, database state, or incomplete dependency. Otherwise use one writer.
-- Fallback is an explicit Sol routing decision. Automatic provider fallback, silent
-  model substitution, background continuation, and uncontrolled retry remain disabled.
-- Active routing is Sol High; Ox Alpha is preferred for backend implementation and may
-  be read-only when not writing; Terra Max is the explicit fallback or
-  integration-sensitive writer; Luna Max is read-only; DeepSeek is disabled from all
-  active and fallback routes.
+- Automatic provider fallback, silent model substitution, background continuation, and
+  uncontrolled retry remain disabled. Before dispatch, an unavailable or ineligible Ox
+  overlay resolves to the native lane selected by the already-declared Sol route; that
+  pre-dispatch selection is neither provider fallback nor a retry.
+- Active routing is Sol / High; Luna / Max handles bounded implementation; Terra / High
+  handles judgment-heavy, high-risk, context-heavy, or wide-blast-radius implementation;
+  and fresh read-only Sol / High reviews only audit/full work. Ox is implementation-only
+  when its fail-closed eligibility gate passes. DeepSeek and earlier experiments are not
+  active routes.
 - The deterministic route compiler is a selector and validator only. It never
   dispatches Codex. A missing, expired, consumed, mismatched, non-manual, recursive,
   or broad approval remains a hard stop for permit-gated execution.
@@ -278,7 +289,7 @@ Never silently reset, clean, discard, overwrite, delete, force-push, rewrite his
 - Work on one focused task, milestone, or vertical slice at a time.
 - Prefer small, modular, reviewable changes.
 - Maintain one canonical writer unless the accepted project policy explicitly authorizes isolated non-overlapping writers.
-- Apply the A8 execution boundary: zero unattended or background Codex runs without Earl's exact authorization; Sol subagents prohibited; useful bounded direct Luna Max, Terra Max, and Ox Alpha workers selected under normal @sol advisor guidelines with ceilings 16, 2, and 16 respectively and sixteen total direct workers; depth one; no recursive spawning; no automatic fallback; at most two isolated writers account-wide and one writer per repository or worktree.
+- Apply the SOL-ADVISOR-GLOBAL-001 routing contract and preserved locked execution safety boundary: no unattended or background Codex runs without Earl's exact authorization; depth one; no recursive spawning; no provider automatic fallback; at most two isolated writers account-wide and one writer per repository or worktree. The legacy guard's numeric capacity fields are safety ceilings, not default staffing or model-role authority.
 - Give every delegated task an objective, scope, exclusions, owned paths, deliverable, verification, and stop condition.
 - Review all delegated or skill-generated evidence before relying on it.
 - Independent review and broad test suites are risk-triggered, not routine ceremony.
@@ -441,7 +452,7 @@ Stop the affected operation when:
 - a secret or unnecessary private value is detected;
 - a migration, deployment, destructive operation, or external write lacks exact authority;
 - rollback cannot be demonstrated;
-- billable Codex work is unattended or background without Earl's exact authorization, originates independently from ChatGPT Web, Astral Bridge, automation, scheduling, fallback, retry, or continuation, or exceeds the active owner-started Sol session's A8 depth, model-specific worker, writer, or lock limits;
+- billable Codex work is unattended or background without Earl's exact authorization, originates independently from ChatGPT Web, Astral Bridge, automation, scheduling, fallback, retry, or continuation, violates the declared Sol Advisor route, depth, reviewer, writer, or lock limits, or treats legacy A8 guard ceilings as route authority;
 - verification fails;
 - the accepted work unit is complete.
 

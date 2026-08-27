@@ -5,6 +5,8 @@ export const PARITY_EXCEPTIONS = Object.freeze([
   'PRODUCTION_CREDENTIALS_EXCLUDED',
   'PRODUCTION_SESSIONS_AND_TOKENS_EXCLUDED',
   'PROTECTED_IDENTITY_ROSTER_EXCLUDED',
+  'CANONICAL_IDENTITY_PROVENANCE_AND_FINGERPRINTS_EXCLUDED',
+  'STAFF_ACCOUNT_ACTIVITY_HISTORY_AND_AUDIT_CONTEXT_EXCLUDED',
   'PERSONAL_AND_CONTACT_FIELDS_PSEUDONYMIZED',
   'PRIVATE_EVIDENCE_OBJECTS_EXCLUDED',
   'PRIVATE_EVIDENCE_METADATA_REDACTED',
@@ -29,6 +31,16 @@ const EXCLUDED_TABLE_ROWS = new Set([
   'reporting_outbox',
   'sessions',
   'source_access_users',
+  // Schema 31/32 identity provenance and immutable activity rows can contain
+  // internal identifiers, fingerprints, or provider-origin envelopes. They
+  // cannot be safely transformed without weakening their source contract, so
+  // the Playground baseline fails closed by omitting them entirely.
+  'canonical_people',
+  'canonical_person_emails',
+  'account_staff_links',
+  'staff_assignments',
+  'staff_account_activity_history',
+  'staff_account_activity_audit_context',
 ]);
 
 const JSON_REDACTION_KEYS = /(?:email|phone|mobile|contact|credential|password|secret|token|session|envelope|borrower|requester|recipient|student|evidence|object.?key|file.?name|address|notes?|reason|description|profile|payload)/iu;

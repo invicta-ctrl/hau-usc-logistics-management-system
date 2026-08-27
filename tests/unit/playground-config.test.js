@@ -11,6 +11,12 @@ const manifest = {
     ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON: '[{"id":"TEST","domains":["example.test"]}]',
   },
   d1: { databaseId: 'playground-d1-id' },
+  rollback: {
+    stagingVersionId: 'staging-version-id',
+    stagingD1Id: 'playground-d1-id',
+    stagingBrandBucket: 'playground-working-brand',
+    stagingEvidenceBucket: 'playground-working-evidence',
+  },
   resources: {
     names: {
       d1Working: 'playground-d1',
@@ -55,6 +61,12 @@ function validate(candidate = config()) {
       brandBucket: 'production-brand',
       evidenceBucket: 'production-evidence',
     },
+    rollbackBindings: {
+      versionId: 'staging-version-id',
+      d1Id: 'playground-d1-id',
+      brandBucket: 'playground-working-brand',
+      evidenceBucket: 'playground-working-evidence',
+    },
     expectedSha: sha,
     expectedTree: tree,
     expectedBranch: 'release/v0.8.1-playground',
@@ -83,6 +95,40 @@ describe('playground deployment configuration guards', () => {
     );
   });
 
+  it('denies a missing or Production-crossover rollback binding tuple', () => {
+    const result = validatePlaygroundConfig({
+      config: config(),
+      manifest,
+      productionBindings: {
+        d1Id: 'production-d1-id',
+        brandBucket: 'production-brand',
+        evidenceBucket: 'production-evidence',
+      },
+      rollbackBindings: {
+        versionId: 'different-staging-version',
+        d1Id: 'production-d1-id',
+        brandBucket: 'production-brand',
+        evidenceBucket: 'production-evidence',
+      },
+      expectedSha: sha,
+      expectedTree: tree,
+      expectedBranch: 'release/v0.8.1-playground',
+      expectedArtifactHash: artifact,
+    });
+    expect(result.valid).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        'Rollback staging version must match private playground manifest',
+        'Rollback staging D1 must match private playground manifest',
+        'Rollback staging brand R2 must match private playground manifest',
+        'Rollback staging evidence R2 must match private playground manifest',
+        'Rollback staging D1 cannot equal production D1',
+        'Rollback staging brand R2 cannot equal production R2',
+        'Rollback staging evidence R2 cannot equal production R2',
+      ]),
+    );
+  });
+
   it('denies baseline write bindings, scheduled jobs, provider sends, and a permanent staging branch', () => {
     const candidate = config();
     candidate.r2_buckets[0].bucket_name = 'playground-baseline-brand';
@@ -92,6 +138,12 @@ describe('playground deployment configuration guards', () => {
       config: candidate,
       manifest,
       productionBindings: {},
+      rollbackBindings: {
+        versionId: 'staging-version-id',
+        d1Id: 'playground-d1-id',
+        brandBucket: 'playground-working-brand',
+        evidenceBucket: 'playground-working-evidence',
+      },
       expectedSha: sha,
       expectedTree: tree,
       expectedBranch: 'staging',
