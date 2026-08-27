@@ -1,19 +1,20 @@
 # Current Work Pointer — FI-00 through FI-12 Direct Playground Migration
 
 PROGRAM: HAU-USC Logistics FI-00 through FI-12 isolated Playground migration
-STATUS: DIRECT_MIGRATION_LOCKED_PREDEPLOY
+STATUS: FI00_FI12_PLAYGROUND_DEPLOYED
 PHASE: FM / FRONTEND MIGRATION — migration-only
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fi00-fi12-playground-candidate
 BRANCH: release/v0.8.3-fi12-playground
-HEAD: GIT_HEAD (dynamic lock-only deployment checkpoint; rebuild/re-hash this exact post-lock HEAD before deploy)
+HEAD: GIT_HEAD (dynamic documentation receipt; deployed source is recorded separately)
 UPSTREAM: origin/release/v0.8.3-fi12-playground
-ACTIVE_WRITER: TERRA_HIGH:/root/fi00_fi12_candidate_resume
-WRITER_LOCK: ACQUIRED
+ACTIVE_WRITER: NONE
+WRITER_LOCK: RELEASED
 LANE: FM / FRONTEND MIGRATION
-FM_WRITER_LOCK: HELD
-LOCK_EVENT: Canonical FM/provider lock acquired at clean 2401ad36d848aec70eb7a5304f3578066fcf2273; lock-only commit becomes deployment vehicle.
-LOCK_DEPENDENCIES: Accepted migration-only amendment; prior private preflight/rollback receipt; clean exact candidate; no concurrent writer.
-LOCK_OUTPUTS: Fresh private live-state manifest/config; exact build/artifact hashes; dry-run evidence; at most one deploy receipt.
+FM_WRITER_LOCK: RELEASED
+LOCK_EVENT: Canonical FM/provider lock released after one certain Playground upload and corrected read-only verification.
+DEPLOYED_SOURCE_SHA: 8992e670861f136ce803ef03b68aa4687dcda8fc
+DEPLOYMENT_RECEIPT: Private/redacted local evidence; upload count 1; retries 0; deployed version identity retained privately.
+VERIFIER_NOTE: Private verifier initially selected oldest deployment-history row and treated provenance annotation `triggered_by` as a schedule; corrected read-only extraction selected max created_on and exact schedule fields. Repository deployment code unchanged.
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-27-fi00-fi12-playground-migration.md
 ACTIVE_AMENDMENT: .codex/specs/accepted/2026-08-27-fi00-fi12-playground-migration-only-amendment.md
 
@@ -24,10 +25,10 @@ FROZEN_SHAREABLE_ARTIFACT_SHA256: d72c215e61cf5768f04a7776cb684e1c55c0d2c23a691f
 FROZEN_SCHEMA_AND_MIGRATION: schema 32; 0032_staff_account_activity_history.sql
 FROZEN_SCOPE: FI-00 through FI-12 only; no product/frontend source delta or FI-13+ behavior relative to accepted baseline.
 
-MINIMUM_TARGET_GATES: PASS — authenticated intended account; live isolated Playground D1 schema 32 and migration 0032; isolated D1/brand-R2/evidence-R2 tuple; provider/email isolated; no scheduled trigger recorded; no Production route crossover; current live staging rollback/redeploy target privately sealed; candidate/local artifact freeze verified.
-GITHUB_ACTIONS_DISPATCH: BLOCKED — one different-ref queued run older than 120 minutes with jobs=[]; its exact-ref guard would fail before package and no provider-capable step started. Evidence is private. No dispatch or cancellation occurred.
-SELECTED_SAFE_PATH: Direct use of existing `scripts/playground/create-private-config.mjs` and `scripts/playground/deploy-playground.mjs` against the current live isolated resources, authorized by the migration-only amendment to avoid an indefinite Actions hold.
-PREDEPLOY_REQUIREMENTS: Derive a fresh private live-state manifest from captured/current live version metadata; pass the existing dry-run preflight; rebuild staging and workflow-required shareable artifacts; re-hash the exact post-documentation HEAD and bind it to the private manifest before deploy.
-EXCLUSIONS: No new resources; baseline refresh/export/import; data or schema migration; Production action; FI-13+; cleanup/retirement; frontend integration/design/polish; workflow dispatch; or provider action in this checkpoint.
-EXTERNAL_MUTATIONS: Git documentation checkpoint only. No provider, deployment, workflow, Production, data, schema, secret, or resource mutation.
-NEXT_ACTION: Commit/push this lock-only checkpoint; verify zero product/FI-13+ delta; then reconcile its exact SHA/tree, derive private live-state manifest, run authorized dry-run and exact artifact rebuild/re-hash, and deploy once only if all gates pass.
+MINIMUM_TARGET_GATES: PASS — exact locked candidate/tree/artifact; authenticated identity; staging environment/playground label; live isolated D1/R2 tuple; schema 32/migration 0032; email disabled; no scheduled trigger or Production route crossover; sealed rollback remains valid; current Production unchanged.
+DEPLOYMENT_OUTCOME: FI00_FI12_PLAYGROUND_DEPLOYED=TRUE; PLAYGROUND_AVAILABLE_FOR_TESTING=TRUE; PRODUCTION_UNTOUCHED=TRUE; MIGRATION_PERCENTAGE=100; MIGRATION_JOB_STATUS=COMPLETE.
+GITHUB_ACTIONS_DISPATCH: Not used. Previous different-ref queued run remained deployment-incapable; no dispatch or cancellation occurred.
+EXCLUSIONS: No new resources; baseline refresh/export/import; data/schema migration; Production deployment/action; FI-13+; cleanup/retirement; frontend integration/design/polish; workflow dispatch; browser/auth smoke; or data mutation.
+EXTERNAL_MUTATIONS: Exactly one isolated Playground Worker upload. Production deployment, traffic, resource, data, schema, secret, and workflow mutation: ZERO.
+ROLLBACK: READY — sealed pre-deploy staging version and D1/brand-R2/evidence-R2 tuple remain present, matched, and isolated; exact identifiers are private.
+NEXT_ACTION: Under a new explicit lock and authority, perform only the amendment’s minimum read-only browser/auth/operator smoke; do not mutate data or expand FI scope.
