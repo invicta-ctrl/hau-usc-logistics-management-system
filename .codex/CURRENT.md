@@ -11,7 +11,7 @@ ACTIVE_WRITER: SOL_OWNER_SESSION
 WRITER_LOCK: HELD
 ROUTE: SOLO
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-28-playground-audit-frontend-repair-data-reset-owner-amendment.md
-CURRENT_CHECKPOINT: .codex/FM_R02_R07_FRONTEND_REPAIR_CHECKPOINT.md
+CURRENT_CHECKPOINT: .codex/FM_R04_PRE_RESET_CHECKPOINT.md
 PRIOR_FINAL_RECEIPT: .codex/FI00_FI12_PLAYGROUND_MIGRATION_RECEIPT.md
 
 FM_R00: PASS — amendment accepted; clean candidate baseline; governance synchronized; provider identity, isolated D1/R2 bindings, rollback, schema 32/0032, safe counts, direct health, custom-domain Access boundary, and Production non-mutation verified.
@@ -26,4 +26,4 @@ FINAL_FRONTEND_SOURCE_TREE: 3c68dddab37daeb2b4253256641acce989443466
 PRODUCTION_MUTATION: ZERO
 
 ACTIVE_SLICE: FM-R04
-NEXT_ACTION: Freeze and reconcile the clean Playground reset baseline and rollback inputs before any D1/R2/session reset mutation.
+NEXT_ACTION: Publish the tested reset tooling, verify upstream parity, then copy only the two privacy-filtered Playground evidence placeholders into the sealed isolated baseline and freeze the reset inputs.

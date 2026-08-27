@@ -20,29 +20,36 @@ async function authorized(request, expected) {
   return bytesEqual(new Uint8Array(left), new Uint8Array(right));
 }
 
-async function listAll(bucket) {
+async function listAll(bucket, accept = () => true) {
   const objects = [];
   let cursor;
   do {
     const page = await bucket.list({ ...(cursor ? { cursor } : {}), limit: 1000 });
-    objects.push(...page.objects);
+    objects.push(...page.objects.filter((object) => accept(object.key)));
     cursor = page.truncated ? page.cursor : undefined;
   } while (cursor);
   return objects.sort((left, right) => left.key.localeCompare(right.key));
 }
 
-async function manifest(bucket) {
-  const entries = (await listAll(bucket)).map(({ key, size, etag }) => ({ key, size, etag }));
-  const hash = await crypto.subtle.digest('SHA-256', encoder.encode(JSON.stringify(entries)));
+async function manifest(bucket, accept) {
+  const entries = (await listAll(bucket, accept)).map(({ key, size, etag }) => ({ key, size, etag }));
+  const [hash, keyHash] = await Promise.all([
+    crypto.subtle.digest('SHA-256', encoder.encode(JSON.stringify(entries))),
+    crypto.subtle.digest('SHA-256', encoder.encode(JSON.stringify(entries.map(({ key }) => key)))),
+  ]);
   return {
     count: entries.length,
     bytes: entries.reduce((total, entry) => total + Number(entry.size ?? 0), 0),
     hash: [...new Uint8Array(hash)].map((value) => value.toString(16).padStart(2, '0')).join(''),
+    keyHash: [...new Uint8Array(keyHash)].map((value) => value.toString(16).padStart(2, '0')).join(''),
   };
 }
 
-async function resetBrand(baseline, working) {
-  const [baselineObjects, workingObjects] = await Promise.all([listAll(baseline), listAll(working)]);
+async function resetBucket(baseline, working, accept) {
+  const [baselineObjects, workingObjects] = await Promise.all([
+    listAll(baseline, accept),
+    listAll(working, accept),
+  ]);
   const baselineByKey = new Map(baselineObjects.map((object) => [object.key, object]));
   const workingByKey = new Map(workingObjects.map((object) => [object.key, object]));
   let deleted = 0;
@@ -80,12 +87,6 @@ async function resetBrand(baseline, working) {
   return { deleted, restored };
 }
 
-async function clearWorkingEvidence(bucket) {
-  const objects = await listAll(bucket);
-  for (const object of objects) await bucket.delete(object.key);
-  return objects.length;
-}
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -95,24 +96,34 @@ export default {
     if (!(await authorized(request, env.RESET_TOKEN))) {
       return new Response('Forbidden', { status: 403 });
     }
+    const redactedEvidence = (key) => key.startsWith('playground-redacted/');
     const before = {
       brand: await manifest(env.WORKING_BRAND),
-      evidence: await manifest(env.WORKING_EVIDENCE),
+      evidence: await manifest(env.WORKING_EVIDENCE, redactedEvidence),
     };
-    const [brand, evidenceDeleted] = await Promise.all([
-      resetBrand(env.BASELINE_BRAND, env.WORKING_BRAND),
-      clearWorkingEvidence(env.WORKING_EVIDENCE),
+    const [brand, evidence] = await Promise.all([
+      resetBucket(env.BASELINE_BRAND, env.WORKING_BRAND),
+      resetBucket(env.BASELINE_EVIDENCE, env.WORKING_EVIDENCE, redactedEvidence),
     ]);
-    const [baseline, working, evidence] = await Promise.all([
+    const [baselineBrand, workingBrand, baselineEvidence, workingEvidence] = await Promise.all([
       manifest(env.BASELINE_BRAND),
       manifest(env.WORKING_BRAND),
-      manifest(env.WORKING_EVIDENCE),
+      manifest(env.BASELINE_EVIDENCE, redactedEvidence),
+      manifest(env.WORKING_EVIDENCE, redactedEvidence),
     ]);
     const ok =
-      baseline.count === working.count &&
-      baseline.bytes === working.bytes &&
-      baseline.hash === working.hash &&
-      evidence.count === 0;
-    return Response.json({ ok, before, baseline, working, evidence, brand, evidenceDeleted });
+      baselineBrand.count === workingBrand.count &&
+      baselineBrand.bytes === workingBrand.bytes &&
+      baselineBrand.hash === workingBrand.hash &&
+      baselineEvidence.count === workingEvidence.count &&
+      baselineEvidence.bytes === workingEvidence.bytes &&
+      baselineEvidence.hash === workingEvidence.hash;
+    return Response.json({
+      ok,
+      before,
+      baseline: { brand: baselineBrand, evidence: baselineEvidence },
+      working: { brand: workingBrand, evidence: workingEvidence },
+      changes: { brand, evidence },
+    });
   },
 };

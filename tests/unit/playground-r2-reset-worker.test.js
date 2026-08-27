@@ -21,7 +21,7 @@ function bucket(entries = []) {
 }
 
 describe('fixed-binding playground R2 reset', () => {
-  it('removes extras, restores changed brand objects, and clears working evidence', async () => {
+  it('restores working brand and evidence to their sealed baselines', async () => {
     const baseline = bucket([
       ['brand/a.png', 'a'],
       ['brand/b.png', 'b'],
@@ -30,7 +30,14 @@ describe('fixed-binding playground R2 reset', () => {
       ['brand/b.png', 'changed'],
       ['brand/extra.png', 'extra'],
     ]);
-    const evidence = bucket([['test/private.txt', 'test-only']]);
+    const baselineEvidence = bucket([
+      ['control/d1-clean-baseline.sql', 'sealed-control-artifact'],
+      ['playground-redacted/evidence.json', 'approved-redacted-evidence'],
+    ]);
+    const evidence = bucket([
+      ['playground-redacted/evidence.json', 'changed'],
+      ['playground-redacted/test-only.json', 'test-only'],
+    ]);
     const response = await worker.fetch(
       new Request('https://reset.example.test/reset', {
         method: 'POST',
@@ -41,6 +48,7 @@ describe('fixed-binding playground R2 reset', () => {
         RESET_TOKEN: 'reset-secret',
         BASELINE_BRAND: baseline,
         WORKING_BRAND: working,
+        BASELINE_EVIDENCE: baselineEvidence,
         WORKING_EVIDENCE: evidence,
       },
     );
@@ -48,18 +56,26 @@ describe('fixed-binding playground R2 reset', () => {
     expect(response.status).toBe(200);
     expect((await response.json()).ok).toBe(true);
     expect([...working.objects.keys()].sort()).toEqual(['brand/a.png', 'brand/b.png']);
-    expect(evidence.objects.size).toBe(0);
+    expect([...evidence.objects]).toEqual([
+      ['playground-redacted/evidence.json', 'approved-redacted-evidence'],
+    ]);
+    expect(evidence.objects.has('control/d1-clean-baseline.sql')).toBe(false);
     expect(baseline.put).not.toHaveBeenCalled();
+    expect(baselineEvidence.put).not.toHaveBeenCalled();
   });
 
   it('rejects an unauthenticated reset without listing or deleting objects', async () => {
     const baseline = bucket([['brand/a.png', 'a']]);
     const working = bucket([['brand/a.png', 'dirty']]);
-    const evidence = bucket([['test/private.txt', 'test-only']]);
+    const evidence = bucket([['playground-redacted/test-only.json', 'test-only']]);
+    const baselineEvidence = bucket([
+      ['playground-redacted/evidence.json', 'approved-redacted-evidence'],
+    ]);
     const response = await worker.fetch(new Request('https://reset.example.test/reset', { method: 'POST' }), {
       RESET_TOKEN: 'reset-secret',
       BASELINE_BRAND: baseline,
       WORKING_BRAND: working,
+      BASELINE_EVIDENCE: baselineEvidence,
       WORKING_EVIDENCE: evidence,
     });
 

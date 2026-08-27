@@ -246,19 +246,21 @@ async function run() {
         .all();
       for (const row of rows) {
         const placeholder = createEvidencePlaceholder(row.private_storage_reference);
-        wrangler(
-          [
-            'r2',
-            'object',
-            'put',
-            `${names.r2WorkingEvidence}/${placeholder.key}`,
-            '--remote',
-            '--pipe',
-            '--content-type',
-            'application/json',
-          ],
-          { input: placeholder.body },
-        );
+        for (const bucket of [names.r2BaselineEvidence, names.r2WorkingEvidence]) {
+          wrangler(
+            [
+              'r2',
+              'object',
+              'put',
+              `${bucket}/${placeholder.key}`,
+              '--remote',
+              '--pipe',
+              '--content-type',
+              'application/json',
+            ],
+            { input: placeholder.body },
+          );
+        }
         evidencePlaceholders += 1;
       }
     } finally {
@@ -325,6 +327,7 @@ async function run() {
   manifest.completedAt = new Date().toISOString();
   manifest.r2.evidence = {
     productionPrivateObjectsCopied: 0,
+    baselineApplicationObjects: evidencePlaceholders,
     workingApplicationObjects: evidencePlaceholders,
     baselineControlObjects: 2,
     parity: 'EXCEPTIONS',
