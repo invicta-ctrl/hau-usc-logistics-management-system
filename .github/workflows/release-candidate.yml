@@ -104,6 +104,7 @@ jobs:
           CANDIDATE_BRANCH: ${{ inputs.candidate_branch }}
         run: node scripts/playground/deploy-playground.mjs "${{ runner.temp }}/wrangler.playground.private.jsonc" "${{ runner.temp }}/playground-resource-manifest.json"
       - name: Automated playground acceptance
+        shell: bash
         env:
           CONFIG_PATH: ${{ runner.temp }}/wrangler.playground.private.jsonc
           EXPECTED_SHA: ${{ needs.package-release-candidate.outputs.candidate_sha }}
