@@ -2,8 +2,8 @@
 
 PROGRAM: HAU-USC Logistics Frontend Integration lane
 LANE: FI
-STATUS: FI15__ACTIVE
-PHASE: FI15__LOCAL_END_TO_END_WORKFLOWS
+STATUS: FI16__ACTIVE
+PHASE: FI16__LOCAL_CONVERGENCE_AND_ACCEPTANCE
 MODE: EXECUTE_CONTINUOUS_FI14_FI17
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
@@ -16,6 +16,6 @@ ROOT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/lanes/FI/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/lanes/FI/CURRENT_HANDOFF.md
 LATEST_ACCEPTED_SPEC: .codex/specs/accepted/2026-08-27-fi14-fi17-local-integration-completion-owner-amendment.md
-LATEST_CHECKPOINT: FI-14 local runtime/backend-contract scope closed as a verified no-op; receipt `.codex/FI14_LOCAL_RUNTIME_BACKEND_CONTRACT_COMPLETION_RECEIPT.md`; no product source repair required.
+LATEST_CHECKPOINT: FI-15 local end-to-end workflow integration closed after a bounded Playwright navigation-harness repair; receipt `.codex/FI15_LOCAL_END_TO_END_WORKFLOW_INTEGRATION_RECEIPT.md`.
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Execute FI-15 local end-to-end workflow integration, then advance continuously through FI-17 when each slice is green.
+NEXT_EXACT_ACTION: Execute FI-16 whole-product local convergence and complete frontend acceptance, then advance to FI-17 when green.

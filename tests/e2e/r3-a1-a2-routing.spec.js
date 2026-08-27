@@ -353,7 +353,7 @@ const INELIGIBLE = {
 const HERO_HEADING = 'Every request. Every handoff. On record.';
 
 async function openPublicLending(page) {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: /^Browse public lending/u }).click();
   await expect(page.getByRole('heading', { name: 'Lending Center', exact: true })).toBeVisible();
 }
@@ -385,7 +385,7 @@ async function workspaceSurface(page, testInfo) {
 }
 
 async function openInternalRequestHub(page, testInfo, { waitForQueue = true } = {}) {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await (
@@ -462,7 +462,7 @@ test('REQ-01 starting a logistics request while signed out reaches Staff Sign In
   await installPublicFeed(page);
   await installSignedOutSession(page);
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page
     .getByRole('button', { name: /^Start a logistics request/u })
     .first()
@@ -480,7 +480,7 @@ test('REQ-02 external intent survives auth and REQ-03 an eligible non-DOL accoun
   await installRequesterPortal(page);
   await installLogin(page, NON_DOL_REQUESTER);
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page
     .getByRole('button', { name: /^Start a logistics request/u })
     .first()
@@ -504,7 +504,7 @@ test('REQ-04 DOL staff entering through external intent stay in requester mode a
   await installRequesterPortal(page);
   await installLogin(page, DOL_STAFF);
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page
     .getByRole('button', { name: /^Start a logistics request/u })
     .first()
@@ -524,7 +524,7 @@ test('REQ-05 an ineligible identity cannot reach the External Request Center and
   await installSignedOutSession(page);
   await installLogin(page, INELIGIBLE);
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page
     .getByRole('button', { name: /^Start a logistics request/u })
     .first()
@@ -577,7 +577,7 @@ test('REQ-06 submission goes to the authenticated portal contract and carries no
     return route.fulfill({ status: 410, contentType: 'application/json', body: '{"code":"GONE"}' });
   });
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page
     .getByRole('button', { name: /^Start a logistics request/u })
     .first()
@@ -630,7 +630,7 @@ test('AUTH-01 generic staff sign-in sends a DOL account to its capability-approp
   await installLogin(page, DOL_STAFF);
   await installInventoryBootstrap(page);
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
 
@@ -1150,7 +1150,7 @@ test('FI-05 Inventory uses the authenticated bootstrap, restores inspector focus
   await installLogin(page, DOL_STAFF);
   await installInventoryBootstrap(page);
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Inventory' }).click();
@@ -1182,7 +1182,7 @@ test('FI-05 Inventory fails closed to the access-limited state when the bootstra
     body: { code: 'FORBIDDEN', message: 'Access denied.' },
   });
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Inventory' }).click();
@@ -1205,7 +1205,7 @@ test('FI-05 Inventory reports a genuinely empty authorized bootstrap without imp
     },
   });
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Inventory' }).click();
@@ -1221,7 +1221,7 @@ test('FI-05 Inventory retains the last authoritative projection and labels it st
   await installLogin(page, DOL_STAFF);
   await installInventoryBootstrap(page);
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Inventory' }).click();
@@ -1245,7 +1245,7 @@ test('AUTH-01 generic zero-capability sign-in remains denied even though Profile
   await installPublicFeed(page);
   await installLogin(page, INELIGIBLE);
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'student.account');
 
@@ -1263,7 +1263,7 @@ test('FI-04 profile uses loading, read-only contract data, and retryable truthfu
   await installLogin(page, DOL_STAFF);
   await installProfile(page, { delay: 200 });
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await page.getByRole('button', { name: /go to profile/u }).click();
@@ -1301,7 +1301,7 @@ test('FI-04 profile surfaces a failed profile response and retries only after th
     );
   });
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await page.getByRole('button', { name: /go to profile/u }).click();
@@ -1322,7 +1322,7 @@ test('FI-04 Home preserves the DOL session while Sign out is the only shell acti
     return route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
   });
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Home', exact: true }).click();
@@ -1352,7 +1352,7 @@ test('FI-04 mobile workspace drawer traps focus and restores its opener', async 
   await installPublicFeed(page);
   await installLogin(page, DOL_STAFF);
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
 
@@ -1379,7 +1379,7 @@ test('AUTH-02 generic staff sign-in sends an eligible non-DOL account to the Ext
   await installRequesterPortal(page);
   await installLogin(page, NON_DOL_REQUESTER);
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'usc.officer');
 
@@ -1392,7 +1392,7 @@ test('AUTH-03 and AUTH-04 the activation and password-reset paths are reachable 
   page,
 }) => {
   await installPublicFeed(page);
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
 
   await expect(page.getByRole('button', { name: 'No password yet? Activate account' })).toBeVisible();
@@ -1425,7 +1425,7 @@ test('AUTH-05 the verification step enforces 8 digits and never enumerates accou
     }),
   );
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await page.getByRole('button', { name: 'Forgot password?' }).click();
   await page.getByLabel('Registered identifier or email').fill('someone@example.test');
@@ -1490,7 +1490,7 @@ test('HOME-03 and AUTH-06 Home preserves the session — Home is not sign-out', 
     return route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
   });
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'usc.officer');
   await expect(page.getByRole('heading', { name: 'External Request Center', level: 1 })).toBeVisible();
@@ -1515,7 +1515,7 @@ test('CTX-02 every public surface states the staff gate before the user commits'
 }, testInfo) => {
   await installPublicFeed(page);
   await installSignedOutSession(page);
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
 
   await expect(page.getByText('USC staff sign-in required').first()).toBeVisible();
   const hubTile = page.getByRole('button', { name: /^Start a request/u }).first();
