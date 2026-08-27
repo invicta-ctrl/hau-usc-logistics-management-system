@@ -1,16 +1,16 @@
-# Current Task — FM-R01 Live Playground Audit
+# Current Task — FM-R02 through FM-R07 Frontend and Module Repair
 
 STATUS: IN_PROGRESS
-INTENT: audit
+INTENT: bug fix and integration
 MODE: execute
 TARGET: `https://playground.hausc.org/`
 ACTIVE_WRITER: SOL_OWNER_SESSION
 WRITER_LOCK: HELD
 ROUTE: SOLO
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-28-playground-audit-frontend-repair-data-reset-owner-amendment.md
-OBJECTIVE: Reproduce and classify the reported blank root, placeholder Overview, stuck Request flow, unavailable Lending flow, fixture-labeled supply routes, and broken Events/Admin routes before code changes.
-IN_SCOPE: Cloudflare Access boundary; signed-out UI; Playground entry; authenticated route rendering; console/network/API evidence; responsive checks; privacy-safe screenshots; defect matrix.
-OUT_OF_SCOPE: code changes, reset, deployment, Production writes, provider/email writes, FI-18, Figma changes, unknown-work cleanup.
-VERIFICATION: exact URLs, route-by-route visible state, relevant console/network failures, authenticated API behavior, and private evidence receipts.
+OBJECTIVE: Repair the confirmed adapter and permission crashes, replace Overview and normal-runtime design fixtures, and connect all named modules to real isolated backend contracts.
+IN_SCOPE: focused regressions; canonical Request/Lending response projection; Events/Admin capability projection; Overview; Release; Restocking; Procurement; Events; Administration; truthful loading/empty/error/success states.
+OUT_OF_SCOPE: reset execution, deployment, Production writes, provider/email writes, FI-18, Figma changes, unknown-work cleanup.
+VERIFICATION: focused unit/e2e tests, deterministic build, local route matrix, absence of normal-runtime fixture labels and mock-service dependencies.
 STOP_CONDITIONS: changed provider identity or bindings, lost rollback, Production overlap/mutation, privacy leakage, unavailable authorized session, or an unexpected dirty candidate worktree.
-NEXT_ACTION: Open the custom domain through the current authenticated Access session and perform the read-only audit.
+NEXT_ACTION: Implement the smallest regression-backed repairs from `.codex/FM_R01_LIVE_PLAYGROUND_AUDIT_CHECKPOINT.md`.
