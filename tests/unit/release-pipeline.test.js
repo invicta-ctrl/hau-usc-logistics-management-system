@@ -110,6 +110,10 @@ describe('authoritative release pipeline', () => {
     expect(workflow).not.toContain('apps-script/');
     expect(workflow).toContain('environment: isolated-staging-playground');
     expect(workflow).toContain('deploy-playground.mjs');
+    expect(workflow).toContain('create-private-config.mjs "${{ runner.temp }}/playground-resource-manifest.json" "${{ runner.temp }}/wrangler.playground.private.jsonc"');
+    expect(workflow).toContain('deploy-playground.mjs "${{ runner.temp }}/wrangler.playground.private.jsonc" "${{ runner.temp }}/playground-resource-manifest.json"');
+    const nonBashSteps = workflow.split('      - name: Build private candidate config')[1].split('      - name: Automated playground acceptance')[0];
+    expect(nonBashSteps).not.toContain('$RUNNER_TEMP');
     expect(workflow).toContain('CLOUDFLARE_API_TOKEN');
     expect(workflow).toContain('attempt <= 15');
     expect(workflow).toContain("headers: { 'cache-control': 'no-cache' }");

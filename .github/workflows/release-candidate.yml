@@ -96,13 +96,13 @@ jobs:
       - name: Build private candidate config
         env:
           CANDIDATE_BRANCH: ${{ inputs.candidate_branch }}
-        run: node scripts/playground/create-private-config.mjs "$RUNNER_TEMP/playground-resource-manifest.json" "$RUNNER_TEMP/wrangler.playground.private.jsonc"
+        run: node scripts/playground/create-private-config.mjs "${{ runner.temp }}/playground-resource-manifest.json" "${{ runner.temp }}/wrangler.playground.private.jsonc"
       - name: Deploy exact candidate to isolated playground
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CANDIDATE_BRANCH: ${{ inputs.candidate_branch }}
-        run: node scripts/playground/deploy-playground.mjs "$RUNNER_TEMP/wrangler.playground.private.jsonc" "$RUNNER_TEMP/playground-resource-manifest.json"
+        run: node scripts/playground/deploy-playground.mjs "${{ runner.temp }}/wrangler.playground.private.jsonc" "${{ runner.temp }}/playground-resource-manifest.json"
       - name: Automated playground acceptance
         env:
           CONFIG_PATH: ${{ runner.temp }}/wrangler.playground.private.jsonc
