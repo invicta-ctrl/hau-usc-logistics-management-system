@@ -13,7 +13,8 @@ on:
         type: string
 
 concurrency:
-  group: isolated-staging-playground
+  # Default hosted runs retain their historical group; a configured temporary runner uses one distinct recovery group.
+  group: ${{ vars.HAU_ACTIONS_RUNNER && 'isolated-staging-playground-runner-recovery' || 'isolated-staging-playground' }}
   cancel-in-progress: false
 
 permissions:
