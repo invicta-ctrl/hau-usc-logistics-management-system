@@ -1,4 +1,4 @@
-# Current Task — FI-00 through FI-12 Playground Migration-Only
+# Current Task — FI-00 through FI-12 Direct Playground Migration Path
 
 INTENT: migration
 MODE: execute
@@ -6,10 +6,11 @@ LANE: FM / FRONTEND MIGRATION
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
 FM_WRITER_LOCK: RELEASED
-OBJECTIVE: Deploy the already accepted FI-00 through FI-12 frontend only to the existing isolated Playground, verify minimum acceptance, record a receipt, and stop.
-AUTHORITATIVE_SOURCES: Candidate AGENTS.md; project policy; current chain; accepted FI-00 through FI-12 packet; provider-phase amendment; migration-only amendment.
-IN_SCOPE: Exact candidate reconciliation, minimum isolation/rollback predeploy gates, build/artifact validation, one isolated Playground deployment, minimum smoke, and a durable migration receipt.
-OUT_OF_SCOPE: Production; FI-13+; frontend integration/design/polish; baseline refresh/export/import; provisioning/new resources; schema/data mutation; unrelated backend/auth/API work; merge/promotion; and automatic next-FI work.
-PREFLIGHT_STATUS: Partial read-only evidence is preserved privately. The staging D1 schema/migration command failure is unresolved and must be diagnosed/corrected before a semantically identical read-only retry. Production mutation remains ZERO.
-NEXT_ACTION: Diagnose and correct the read-only staging D1 schema/migration command, then complete only the remaining minimum predeploy gates.
-STOP_CONDITIONS: Stop on candidate identity, target-isolation, binding, schema/migration, rollback, privacy, authorization, or reconciliation mismatch; stop after the migration receipt.
+OBJECTIVE: Prepare the exact post-documentation FI-00 through FI-12 candidate for one authorized direct deployment to the existing isolated Playground, then verify minimum acceptance and stop.
+AUTHORITATIVE_SOURCES: Candidate AGENTS.md; project policy; this current chain; accepted FI-00 through FI-12 packet; migration-only amendment; private preflight and rollback evidence.
+CURRENT_FREEZE_REFERENCE: Pre-documentation candidate 88f4cd238ad1d6392e49e4aa16471583fb20fafd with the recorded tree/artifact hashes in CURRENT.md. This documentation commit supersedes it as the next exact candidate and requires rebuild/re-hash before deploy.
+MINIMUM_GATES_COMPLETE: Live D1 schema 32/migration 0032; current isolated D1/R2/email tuple; no schedule/Production-route crossover; and sealed current-live rollback/redeploy target.
+GITHUB_DISPATCH_STATUS: Blocked by one stale-signature queued different-ref run with jobs=[] and failed exact-ref guard; no provider-capable step started. No cancellation or dispatch is authorized in this lane.
+IN_SCOPE NEXT: Fresh private live-state manifest; existing `create-private-config.mjs`; dry-run preflight; exact staging/shareable build and hashes; then only the migration-only direct deploy path if every gate passes.
+OUT_OF_SCOPE: New resources; baseline refresh/export/import; data/schema migration; Production; FI-13+; cleanup; product/frontend changes; workflow dispatch; and any provider action in this documentation checkpoint.
+STOP_CONDITIONS: Stop on candidate, manifest, binding, rollback, privacy, authorization, dry-run, artifact, or reconciliation mismatch; stop after the migration receipt.

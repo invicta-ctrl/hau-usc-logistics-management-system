@@ -1,27 +1,31 @@
-# Current Work Pointer — FI-00 through FI-12 Playground Migration
+# Current Work Pointer — FI-00 through FI-12 Direct Playground Migration
 
 PROGRAM: HAU-USC Logistics FI-00 through FI-12 isolated Playground migration
-STATUS: MIGRATION_ONLY_AUTHORIZED__MINIMUM_PREDEPLOY_GATES_PENDING
-PHASE: FM / FRONTEND MIGRATION
+STATUS: DIRECT_MIGRATION_PREDEPLOY_REBUILD_REQUIRED
+PHASE: FM / FRONTEND MIGRATION — migration-only
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fi00-fi12-playground-candidate
 BRANCH: release/v0.8.3-fi12-playground
-HEAD: GIT_HEAD (dynamic documentation checkpoint)
+HEAD: GIT_HEAD (dynamic documentation checkpoint; rebuild/re-hash this exact post-documentation HEAD before deploy)
 UPSTREAM: origin/release/v0.8.3-fi12-playground
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
 LANE: FM / FRONTEND MIGRATION
 FM_WRITER_LOCK: RELEASED
+LOCK_EVENT: Acquired for this documentation checkpoint and released before commit.
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-27-fi00-fi12-playground-migration.md
-ACCEPTED_AMENDMENTS:
-- .codex/specs/accepted/2026-08-27-fi00-fi12-playground-provider-phase-amendment.md
-- .codex/specs/accepted/2026-08-27-fi00-fi12-playground-migration-only-amendment.md
+ACTIVE_AMENDMENT: .codex/specs/accepted/2026-08-27-fi00-fi12-playground-migration-only-amendment.md
 
-SCOPE: Deploy only the accepted FI-00 through FI-12 frontend to the existing isolated Playground Worker/runtime, verify minimum Playground acceptance, record a receipt, and stop.
-EXCLUSIONS: Production; FI-13 and later; frontend integration/design/polish; baseline refresh/export/import; resource provisioning/new resources; schema migration; data mutation; and unrelated provider or product work.
-PREFLIGHT_EVIDENCE: Partial read-only provider preflight evidence remains private. PASS: authentication, GitHub identity, candidate parity, deployment/version capture, staging-vs-Production binding isolation, D1/R2 inventory, and secret-name capture. UNRESOLVED: schema-32/0032, trigger/route/access posture, safe live-app state, and rollback binding/version verification.
-DIAGNOSTIC: The attempted staging read-only D1 schema/migration command failed before verification; raw output is private and must be diagnosed/corrected before retry. No provider mutation occurred.
-EXTERNAL_MUTATIONS: ZERO. No Production, Playground, D1, R2, data, resource, export, deployment, reset, workflow, or migration mutation occurred.
-NEXT_ACTION: Diagnose and correct the read-only staging D1 schema/migration command, then complete only the remaining minimum predeploy gates.
-IMPLEMENTATION_COMMIT: 98c53dd32ae339616243576dc346c9fa0fb2d70e
-PREFLIGHT_RECEIPT_COMMIT: 768a367bff919eb188d1b61f08d0cd2680815a93
-RECEIPT_COMMIT: GIT_HEAD (dynamic; no self-SHA assertion).
+FROZEN_PRE_DOCUMENTATION_CANDIDATE: 88f4cd238ad1d6392e49e4aa16471583fb20fafd
+FROZEN_PRE_DOCUMENTATION_TREE: 47b9941e28a046d3aa3c98dbf3ff262796fbaa1c
+FROZEN_STAGING_ARTIFACT_SHA256: 23ef0be59aab1b740610c8f105e837be08fe27168444bd4302f3206f46521b02
+FROZEN_SHAREABLE_ARTIFACT_SHA256: d72c215e61cf5768f04a7776cb684e1c55c0d2c23a691f783b3b4c68a7249965
+FROZEN_SCHEMA_AND_MIGRATION: schema 32; 0032_staff_account_activity_history.sql
+FROZEN_SCOPE: FI-00 through FI-12 only; no product/frontend source delta or FI-13+ behavior relative to accepted baseline.
+
+MINIMUM_TARGET_GATES: PASS — authenticated intended account; live isolated Playground D1 schema 32 and migration 0032; isolated D1/brand-R2/evidence-R2 tuple; provider/email isolated; no scheduled trigger recorded; no Production route crossover; current live staging rollback/redeploy target privately sealed; candidate/local artifact freeze verified.
+GITHUB_ACTIONS_DISPATCH: BLOCKED — one different-ref queued run older than 120 minutes with jobs=[]; its exact-ref guard would fail before package and no provider-capable step started. Evidence is private. No dispatch or cancellation occurred.
+SELECTED_SAFE_PATH: Direct use of existing `scripts/playground/create-private-config.mjs` and `scripts/playground/deploy-playground.mjs` against the current live isolated resources, authorized by the migration-only amendment to avoid an indefinite Actions hold.
+PREDEPLOY_REQUIREMENTS: Derive a fresh private live-state manifest from captured/current live version metadata; pass the existing dry-run preflight; rebuild staging and workflow-required shareable artifacts; re-hash the exact post-documentation HEAD and bind it to the private manifest before deploy.
+EXCLUSIONS: No new resources; baseline refresh/export/import; data or schema migration; Production action; FI-13+; cleanup/retirement; frontend integration/design/polish; workflow dispatch; or provider action in this checkpoint.
+EXTERNAL_MUTATIONS: Git documentation checkpoint only. No provider, deployment, workflow, Production, data, schema, secret, or resource mutation.
+NEXT_ACTION: Reconcile the exact post-documentation candidate SHA/tree, derive the new private live-state manifest, run the authorized local dry-run preflight and exact artifact rebuild/re-hash; stop before any deploy unless all gates pass.
