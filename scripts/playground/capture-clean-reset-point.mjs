@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { readFile, realpath, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { newestDeploymentsFirst } from './deployment-history.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const wranglerBin = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
@@ -42,7 +43,7 @@ function validWorkersDevHostname(value) {
 
 function preservedPlaygroundHostname() {
   const deployments = wrangler(['deployments', 'list', '--env', 'staging', '--json'], { json: true });
-  for (const deployment of deployments) {
+  for (const deployment of newestDeploymentsFirst(deployments)) {
     for (const version of deployment.versions ?? []) {
       const detail = wrangler(['versions', 'view', version.version_id, '--env', 'staging', '--json'], {
         json: true,
@@ -62,7 +63,7 @@ function preservedPlaygroundHostname() {
 
 function preservedIdentityClasses() {
   const deployments = wrangler(['deployments', 'list', '--env', 'staging', '--json'], { json: true });
-  for (const deployment of deployments) {
+  for (const deployment of newestDeploymentsFirst(deployments)) {
     for (const version of deployment.versions ?? []) {
       const detail = wrangler(['versions', 'view', version.version_id, '--env', 'staging', '--json'], {
         json: true,

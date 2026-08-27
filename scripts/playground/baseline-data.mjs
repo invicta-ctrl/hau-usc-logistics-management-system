@@ -20,7 +20,6 @@ const EXCLUDED_TABLE_ROWS = new Set([
   'auth_rate_limit_events',
   'auth_rate_limits',
   'email_verification_challenges',
-  'idempotency_keys',
   'identity_correction_requests',
   'identity_roster_entries',
   'identity_roster_rollback_snapshots',
@@ -193,6 +192,10 @@ export function sanitizeProductionRow(table, sourceRow) {
   if (table === 'access_policy_changes') {
     row.reason = redactText('reason', row);
   }
+  if (table === 'idempotency_keys') {
+    row.request_fingerprint = sha(`playground-request:${row.request_fingerprint}`);
+    row.result_json = redactJson(row.result_json);
+  }
   if (table === 'account_application_history') {
     row.before_json = redactJson(row.before_json);
     row.after_json = redactJson(row.after_json);
@@ -242,6 +245,25 @@ export function isSyntheticStagingAccount(row) {
     label.includes('synthetic') ||
     label.includes('staging')
   );
+}
+
+const SYNTHETIC_OVERLAY_ACCOUNT_KEYS = Object.freeze({
+  accounts: 'id',
+  account_committees: 'account_id',
+  account_access_profiles: 'account_id',
+});
+
+export function shouldOmitProductionRowForSyntheticOverlay(table, row, syntheticAccountIds) {
+  const accountKey = SYNTHETIC_OVERLAY_ACCOUNT_KEYS[table];
+  return Boolean(accountKey && syntheticAccountIds?.has(row?.[accountKey]));
+}
+
+export function derivedCatalogAlias(itemName) {
+  const displayAlias = String(itemName ?? '').normalize('NFKC').trim().replace(/\s+/gu, ' ');
+  if (!displayAlias || displayAlias.length > 120) {
+    throw new Error('Inventory item name cannot produce a safe Playground alias.');
+  }
+  return { normalizedAlias: displayAlias.toLocaleLowerCase('en-US'), displayAlias };
 }
 
 function quoteIdentifier(value) {
@@ -328,11 +350,14 @@ function installDerivedSchema(source, target) {
   }
 }
 
-function copySanitizedProduction(source, target) {
+function copySanitizedProduction(source, target, syntheticAccountIds) {
   const counts = {};
   for (const { name: table } of tableDefinitions(source)) {
     const { columns, rows } = orderedRows(source, table);
-    const sanitized = rows.map((row) => sanitizeProductionRow(table, row)).filter(Boolean);
+    const sanitized = rows
+      .filter((row) => !shouldOmitProductionRowForSyntheticOverlay(table, row, syntheticAccountIds))
+      .map((row) => sanitizeProductionRow(table, row))
+      .filter(Boolean);
     insertRows(target, table, columns, sanitized);
     counts[table] = { source: rows.length, baseline: sanitized.length };
   }
@@ -343,9 +368,21 @@ function syntheticStagingAccounts(staging) {
   return staging.prepare('SELECT * FROM accounts ORDER BY id').all().filter(isSyntheticStagingAccount);
 }
 
-function overlaySyntheticStagingAccounts(staging, target) {
-  const accounts = syntheticStagingAccounts(staging);
+function assertSyntheticAccountIdentitiesAvailable(target, accounts) {
+  for (const account of accounts) {
+    for (const field of ['access_id_normalized', 'username_normalized', 'profile_email']) {
+      if (account[field] == null || account[field] === '') continue;
+      const collision = target
+        .prepare(`SELECT id FROM accounts WHERE ${quoteIdentifier(field)} = ? AND id <> ? LIMIT 1`)
+        .get(account[field], account.id);
+      if (collision) throw new Error('Synthetic staging account identity collides with a different production account.');
+    }
+  }
+}
+
+function overlaySyntheticStagingAccounts(staging, target, accounts) {
   if (!accounts.length) throw new Error('No explicitly synthetic staging accounts were available for overlay.');
+  assertSyntheticAccountIdentitiesAvailable(target, accounts);
   const accountIds = new Set(accounts.map((row) => row.id));
   const tables = ['accounts', 'account_committees', 'account_access_profiles'];
   for (const table of tables) {
@@ -355,6 +392,20 @@ function overlaySyntheticStagingAccounts(staging, target) {
     insertRows(target, table, columns, selected);
   }
   return accounts.length;
+}
+
+function ensureCatalogAliases(target) {
+  const existing = Number(target.prepare('SELECT COUNT(*) AS count FROM item_aliases').get()?.count ?? 0);
+  if (existing > 0) return 0;
+  const insert = target.prepare(
+    'INSERT INTO item_aliases (item_id, normalized_alias, display_alias) VALUES (?, ?, ?)',
+  );
+  const items = target.prepare('SELECT id, name FROM inventory_items ORDER BY id').all();
+  for (const item of items) {
+    const alias = derivedCatalogAlias(item.name);
+    insert.run(item.id, alias.normalizedAlias, alias.displayAlias);
+  }
+  return items.length;
 }
 
 export function createSanitizedBaseline({
@@ -372,8 +423,14 @@ export function createSanitizedBaseline({
     target.exec('BEGIN IMMEDIATE');
     transactionOpen = true;
     installSchema(production, target);
-    const tableCounts = copySanitizedProduction(production, target);
-    const syntheticAccountCount = overlaySyntheticStagingAccounts(staging, target);
+    const stagingAccounts = syntheticStagingAccounts(staging);
+    const syntheticAccountIds = new Set(stagingAccounts.map((row) => row.id));
+    const tableCounts = copySanitizedProduction(production, target, syntheticAccountIds);
+    const syntheticAccountCount = overlaySyntheticStagingAccounts(staging, target, stagingAccounts);
+    const generatedInventoryAliasCount = ensureCatalogAliases(target);
+    if (tableCounts.item_aliases) {
+      tableCounts.item_aliases.baseline += generatedInventoryAliasCount;
+    }
     const capturedAt = baselineMetadata.capturedAt;
     const metadata = target.prepare(
       `INSERT INTO app_metadata (key, value, updated_at) VALUES (?, ?, ?)
@@ -394,7 +451,13 @@ export function createSanitizedBaseline({
     if (integrity.toLowerCase() !== 'ok' || foreignKeys.length) {
       throw new Error('Sanitized baseline failed local integrity or foreign-key verification.');
     }
-    return { tableCounts, syntheticAccountCount, integrityOk: true, foreignKeyViolations: 0 };
+    return {
+      tableCounts,
+      syntheticAccountCount,
+      generatedInventoryAliasCount,
+      integrityOk: true,
+      foreignKeyViolations: 0,
+    };
   } finally {
     if (transactionOpen) target.exec('ROLLBACK');
     target.close();

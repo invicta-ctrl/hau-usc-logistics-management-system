@@ -4,6 +4,7 @@ import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseJsonConfig } from '../cloudflare-environment-preflight.mjs';
+import { latestDeploymentVersionId } from './deployment-history.mjs';
 import { validatePlaygroundConfig } from './playground-config.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
@@ -54,7 +55,7 @@ function bindingsForVersion(version, versionId) {
 
 function currentProductionBindings() {
   const deployments = wranglerJson(['deployments', 'list', '--env', 'production', '--json']);
-  const versionId = deployments?.[0]?.versions?.[0]?.version_id;
+  const versionId = latestDeploymentVersionId(deployments);
   if (!versionId || typeof versionId !== 'string') throw new Error('Playground deployment provider preflight failed.');
   const version = wranglerJson(['versions', 'view', versionId, '--env', 'production', '--json']);
   return bindingsForVersion(version, versionId);

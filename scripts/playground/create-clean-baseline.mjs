@@ -115,6 +115,7 @@ async function run() {
       d1BaselineParity: 'EXCEPTIONS',
       parityExceptions: PARITY_EXCEPTIONS,
       syntheticStagingAccountCount: result.syntheticAccountCount,
+      generatedInventoryAliasCount: result.generatedInventoryAliasCount,
       tableCounts: result.tableCounts,
       integrityOk: verification.integrityOk,
       foreignKeyViolations: verification.foreignKeyViolations,
@@ -125,6 +126,7 @@ async function run() {
     console.log('Playground clean D1 baseline: CREATED');
     console.log('Privacy classification: EXCEPTIONS (production credentials and private identity/evidence excluded).');
     console.log(`Synthetic staging tester accounts overlaid: ${result.syntheticAccountCount}`);
+    console.log(`Safe inventory aliases generated: ${result.generatedInventoryAliasCount}`);
   console.log('Integrity: PASS; foreign keys: PASS; schema: 32; latest migration: 0032_staff_account_activity_history.sql.');
     console.log('Private paths, resource identifiers, data values, and hashes were not printed.');
   } finally {

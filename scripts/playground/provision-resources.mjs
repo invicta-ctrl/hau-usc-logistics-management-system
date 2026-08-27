@@ -1,12 +1,16 @@
 import { randomBytes, createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { mkdir, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises';
+import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { latestDeploymentVersionId } from './deployment-history.mjs';
+import { createEvidencePlaceholder } from './evidence-placeholders.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const wranglerBin = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
-const resourceSuffix = '20260809-c4ebcee-v2';
+const DEFAULT_RESOURCE_SUFFIX = '20260809-c4ebcee-v2';
+const RESOURCE_SUFFIX = /^\d{8}-[0-9a-f]{7}-v\d+$/u;
 
 function inside(parent, candidate) {
   const relative = path.relative(path.resolve(parent), path.resolve(candidate));
@@ -54,7 +58,7 @@ function wrangler(args, { input, json = false } = {}) {
 
 function currentVersion(environment) {
   const deployments = wrangler(['deployments', 'list', '--env', environment, '--json'], { json: true });
-  const versionId = deployments?.[0]?.versions?.[0]?.version_id;
+  const versionId = latestDeploymentVersionId(deployments);
   if (!versionId) throw new Error(`Current ${environment} Worker version was not found.`);
   return wrangler(['versions', 'view', versionId, '--env', environment, '--json'], { json: true });
 }
@@ -92,9 +96,17 @@ function bucketExists(inventory, bucketName) {
 }
 
 async function run() {
-  const [baselineSqlArg, baselineReportArg, manifestArg] = process.argv.slice(2);
+  const [baselineSqlArg, baselineReportArg, manifestArg, ...options] = process.argv.slice(2);
+  const suffixIndex = options.indexOf('--resource-suffix');
+  const databaseIndex = options.indexOf('--baseline-db');
+  const resourceSuffix = suffixIndex >= 0 ? options[suffixIndex + 1] : DEFAULT_RESOURCE_SUFFIX;
+  if (!RESOURCE_SUFFIX.test(resourceSuffix ?? '')) throw new Error('Invalid playground resource suffix.');
   const baselineSql = await privateExistingFile(baselineSqlArg, 'baseline SQL');
   const baselineReport = await privateExistingFile(baselineReportArg, 'baseline report');
+  const baselineDatabase =
+    databaseIndex >= 0
+      ? await privateExistingFile(options[databaseIndex + 1], 'baseline database')
+      : '';
   const baselineReportData = JSON.parse(await readFile(baselineReport, 'utf8'));
   const manifestPath = await privateNewFile(manifestArg, 'resource manifest');
   await mkdir(path.dirname(manifestPath), { recursive: true });
@@ -146,7 +158,7 @@ async function run() {
   }
   if (!databaseId) throw new Error('New playground D1 was not present in the provider inventory.');
   manifest.d1.databaseId = databaseId;
-  manifest.d1.created = true;
+  manifest.d1.created = databaseCreatedNow;
   await save();
   let baselinePresent = false;
   if (!databaseCreatedNow) {
@@ -225,6 +237,37 @@ async function run() {
   manifest.r2.controlObjectsUploaded = 2;
   await save();
 
+  let evidencePlaceholders = 0;
+  if (baselineDatabase) {
+    const database = new DatabaseSync(baselineDatabase, { readOnly: true });
+    try {
+      const rows = database
+        .prepare('SELECT private_storage_reference FROM evidence_metadata ORDER BY id')
+        .all();
+      for (const row of rows) {
+        const placeholder = createEvidencePlaceholder(row.private_storage_reference);
+        wrangler(
+          [
+            'r2',
+            'object',
+            'put',
+            `${names.r2WorkingEvidence}/${placeholder.key}`,
+            '--remote',
+            '--pipe',
+            '--content-type',
+            'application/json',
+          ],
+          { input: placeholder.body },
+        );
+        evidencePlaceholders += 1;
+      }
+    } finally {
+      database.close();
+    }
+  }
+  manifest.r2.evidencePlaceholdersUploaded = evidencePlaceholders;
+  await save();
+
   const copyConfigPath = path.join(path.dirname(manifestPath), 'r2-copy-worker.private.jsonc');
   const copyToken = randomBytes(32).toString('base64url');
   const copyConfig = {
@@ -282,7 +325,7 @@ async function run() {
   manifest.completedAt = new Date().toISOString();
   manifest.r2.evidence = {
     productionPrivateObjectsCopied: 0,
-    workingApplicationObjects: 0,
+    workingApplicationObjects: evidencePlaceholders,
     baselineControlObjects: 2,
     parity: 'EXCEPTIONS',
   };
@@ -290,7 +333,7 @@ async function run() {
   console.log('Playground provider resources: CREATED AND VERIFIED');
   console.log('D1: isolated import complete; schema 32; migration 0032_staff_account_activity_history.sql; foreign-key command complete.');
   console.log('R2 brand: production source copied one way to sealed baseline and isolated working bucket.');
-  console.log('R2 evidence: production private objects excluded; clean working bucket is empty.');
+  console.log(`R2 evidence: production private objects excluded; safe linked placeholders uploaded: ${evidencePlaceholders}.`);
   console.log('Temporary copy Worker: REMOVED. Production mutation: NONE.');
   console.log('Private resource names, identifiers, object keys, hashes, and token were not printed.');
 }

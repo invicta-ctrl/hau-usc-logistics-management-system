@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  derivedCatalogAlias,
   isSyntheticStagingAccount,
   PARITY_EXCEPTIONS,
   sanitizeProductionRow,
+  shouldOmitProductionRowForSyntheticOverlay,
 } from '../../scripts/playground/baseline-data.mjs';
 
 describe('playground production-derived baseline privacy', () => {
@@ -91,6 +93,33 @@ describe('playground production-derived baseline privacy', () => {
     expect(result.email).toMatch(/@example\.test$/u);
   });
 
+  it('retains sanitized replay proof needed for returned-lending reconciliation', () => {
+    const result = sanitizeProductionRow('idempotency_keys', {
+      scope: 'confirmReturn',
+      idempotency_key: 'RETURN-1',
+      actor_account_id: 'ACCOUNT-1',
+      request_fingerprint: 'private-request-body',
+      result_json: JSON.stringify({
+        returnedQuantity: 1,
+        lostQuantity: 0,
+        damagedBeyondUseQuantity: 0,
+        borrowerEmail: 'private@institution.edu',
+      }),
+      created_at: '2026-08-01T00:00:00.000Z',
+    });
+
+    expect(result.scope).toBe('confirmReturn');
+    expect(result.idempotency_key).toBe('RETURN-1');
+    expect(result.request_fingerprint).not.toBe('private-request-body');
+    expect(JSON.parse(result.result_json)).toMatchObject({
+      returnedQuantity: 1,
+      lostQuantity: 0,
+      damagedBeyondUseQuantity: 0,
+      borrowerEmail: '[redacted]',
+    });
+    expect(JSON.stringify(result)).not.toContain('private@institution.edu');
+  });
+
   it('only recognizes clearly synthetic staging accounts for credential overlay', () => {
     expect(
       isSyntheticStagingAccount({
@@ -105,5 +134,45 @@ describe('playground production-derived baseline privacy', () => {
       }),
     ).toBe(false);
     expect(PARITY_EXCEPTIONS).toContain('PRODUCTION_CREDENTIALS_EXCLUDED');
+  });
+
+  it('replaces matching production account rows with the synthetic staging overlay', () => {
+    const syntheticAccountIds = new Set(['ACCOUNT-1']);
+
+    expect(
+      shouldOmitProductionRowForSyntheticOverlay(
+        'accounts',
+        { id: 'ACCOUNT-1' },
+        syntheticAccountIds,
+      ),
+    ).toBe(true);
+    expect(
+      shouldOmitProductionRowForSyntheticOverlay(
+        'account_committees',
+        { account_id: 'ACCOUNT-1' },
+        syntheticAccountIds,
+      ),
+    ).toBe(true);
+    expect(
+      shouldOmitProductionRowForSyntheticOverlay(
+        'account_access_profiles',
+        { account_id: 'ACCOUNT-1' },
+        syntheticAccountIds,
+      ),
+    ).toBe(true);
+    expect(
+      shouldOmitProductionRowForSyntheticOverlay(
+        'requests',
+        { account_id: 'ACCOUNT-1' },
+        syntheticAccountIds,
+      ),
+    ).toBe(false);
+  });
+
+  it('derives a normalized safe alias from each inventory item name', () => {
+    expect(derivedCatalogAlias('  HDMI   Cable  ')).toEqual({
+      normalizedAlias: 'hdmi cable',
+      displayAlias: 'HDMI Cable',
+    });
   });
 });
