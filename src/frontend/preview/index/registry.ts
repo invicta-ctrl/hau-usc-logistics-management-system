@@ -1,6 +1,7 @@
 import type {
   AccessRequirement,
   BackendStatus,
+  CompletenessClassification,
   ImplementationStatus,
   PreviewMode,
   RouteGroup,
@@ -17,6 +18,7 @@ export type PreviewRouteEntry = {
   readonly backendStatus: BackendStatus;
   readonly access: AccessRequirement;
   readonly previewMode: PreviewMode;
+  readonly completeness: CompletenessClassification;
 };
 
 const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
@@ -30,6 +32,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'REAL_BACKEND',
     access: 'PUBLIC',
     previewMode: 'REAL_MODULE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'external-request',
@@ -42,6 +45,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'tracking',
@@ -53,6 +57,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'REAL_BACKEND',
     access: 'PUBLIC',
     previewMode: 'REAL_MODULE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'borrow',
@@ -64,6 +69,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'REAL_BACKEND',
     access: 'PUBLIC',
     previewMode: 'REAL_MODULE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'staff-signin',
@@ -75,6 +81,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'REAL_BACKEND',
     access: 'PUBLIC',
     previewMode: 'REAL_MODULE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'overview',
@@ -82,11 +89,12 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Operations overview',
     group: 'STAFF',
     description:
-      'Authenticated operations overview with preserved visual components and no active backend calls.',
-    implementationStatus: 'SURFACE_PREVIEW',
-    backendStatus: 'VISUAL_ONLY',
+      'Authenticated operations overview. The real route preserves the server-derived session boundary; local inspection uses a deterministic sanitized session and makes no protected request.',
+    implementationStatus: 'ACCEPTED',
+    backendStatus: 'PARTIAL',
     access: 'AUTHENTICATED',
-    previewMode: 'SURFACE_PREVIEW',
+    previewMode: 'REAL_MODULE',
+    completeness: 'COMPLETE_REAL',
   }),
   Object.freeze({
     id: 'inventory',
@@ -99,6 +107,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'request-center',
@@ -111,6 +120,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'lending',
@@ -123,6 +133,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'release',
@@ -135,6 +146,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'VISUAL_ONLY',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
+    completeness: 'VISUAL_PREVIEW_COMPLETE',
   }),
   Object.freeze({
     id: 'restocking',
@@ -147,6 +159,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'VISUAL_ONLY',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
+    completeness: 'VISUAL_PREVIEW_COMPLETE',
   }),
   Object.freeze({
     id: 'procurement',
@@ -159,6 +172,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'VISUAL_ONLY',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
+    completeness: 'VISUAL_PREVIEW_COMPLETE',
   }),
   Object.freeze({
     id: 'events',
@@ -171,6 +185,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'administration',
@@ -183,6 +198,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'profile',
@@ -195,6 +211,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
 ]);
 

@@ -12,6 +12,7 @@ import { InternalLendingHub } from './lending/InternalLendingHub';
 import ReleaseDeskRoute from './ReleaseDeskRoute';
 import SupplyRoutes from './SupplyRoutes';
 import AdministrationRoute from './AdministrationRoute';
+import { OverviewRoute } from './overview/OverviewRoute';
 import { Footer } from './public/Footer';
 import { PublicNavbar } from './public/PublicNavbar';
 import { ExternalRequestCenter } from './request/ExternalRequestCenter';
@@ -71,7 +72,9 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
         dark={dark}
         onToggle={toggleTheme}
       >
-        {route === 'profile' ? (
+        {route === 'overview' ? (
+          <OverviewRoute session={session} dark={dark} />
+        ) : route === 'profile' ? (
           <ProfileRoute dark={dark} onToggle={toggleTheme} />
         ) : route === 'inventory' ? (
           <InventoryRoute dark={dark} navigate={navigate} />

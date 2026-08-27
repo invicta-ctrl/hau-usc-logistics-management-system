@@ -1,70 +1,122 @@
-import React, { useEffect, useRef } from "react";
-import { heroPoster } from "./heroPoster";
+import { useEffect, useReducer, useRef, useState } from 'react';
+import { heroPoster } from './heroPoster';
 
-/**
- * The Landing hero's full-bleed environment.
- *
- * The video is the primary visual identity layer: it fills the hero and runs
- * behind the glass top bar. Decorative and aria-hidden throughout — remove this
- * component and the hero still reads.
- *
- * Poster-first by construction. The poster is the FINAL revealed frame, not the
- * first: the clip opens near-black, so a first-frame poster would make the hero
- * render dark and then light up, which inverts the whole point. The video is
- * attached afterwards, only when the client can afford it, and every gate below
- * falls back to the poster rather than to an empty box.
- *
- * It plays ONCE and holds. Nothing here loops, which is what keeps WCAG 2.2.2
- * out of scope and why the Landing carries no pause control.
- */
-export default function HeroMotion({ videoSrc }: { videoSrc?: string }) {
+export type HeroPlaybackState = Readonly<{
+  playing: boolean;
+  pausedByUser: boolean;
+  playbackBlocked: boolean;
+}>;
+
+export type HeroPlaybackEvent = 'PLAYING' | 'PAUSED' | 'REQUEST_PAUSE' | 'REQUEST_PLAY' | 'PLAY_REJECTED';
+
+export const HERO_PLAYBACK_INITIAL: HeroPlaybackState = Object.freeze({
+  playing: false,
+  pausedByUser: false,
+  playbackBlocked: false,
+});
+
+/** Keeps the control claim tied to actual media events, never just user intent. */
+export function heroPlaybackReducer(state: HeroPlaybackState, event: HeroPlaybackEvent): HeroPlaybackState {
+  switch (event) {
+    case 'PLAYING':
+      return { playing: true, pausedByUser: false, playbackBlocked: false };
+    case 'PAUSED':
+      return { ...state, playing: false };
+    case 'REQUEST_PAUSE':
+      return { ...state, playing: false, pausedByUser: true };
+    case 'REQUEST_PLAY':
+      return { ...state, playing: false, pausedByUser: false };
+    case 'PLAY_REJECTED':
+      return { ...state, playing: false, playbackBlocked: true };
+  }
+}
+
+export function heroMotionControlLabel(state: HeroPlaybackState): string {
+  if (state.playing) return 'Pause hero motion';
+  if (state.playbackBlocked) return 'Retry hero motion';
+  if (state.pausedByUser) return 'Resume hero motion';
+  return 'Play hero motion';
+}
+
+/** Poster-first decorative hero media with an accessible looping-motion control. */
+export default function HeroMotion({ videoSrc }: { videoSrc: string }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [motionAllowed, setMotionAllowed] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [playback, dispatchPlayback] = useReducer(heroPlaybackReducer, HERO_PLAYBACK_INITIAL);
 
   useEffect(() => {
-    const v = videoRef.current;
-    if (!v || !videoSrc) return;
-
-    const mq = window.matchMedia;
-    const reduce = mq?.("(prefers-reduced-motion: reduce)").matches;
-    const narrow = mq?.("(max-width: 767px)").matches;
-    const conn =
-      (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } }).connection ?? {};
-    const saveData = conn.saveData === true;
-    const slow = /(^|-)2g$/.test(conn.effectiveType ?? "");
-    if (reduce || narrow || saveData || slow) return;
-
-    let cancelled = false;
-    const attach = () => {
-      if (cancelled) return;
-      // A missing derivative must never surface as a broken page.
-      v.addEventListener("error", () => v.removeAttribute("src"), { once: true });
-      v.addEventListener("playing", () => v.classList.add("is-ready"), { once: true });
-      v.loop = false; // a reveal, not a loop — it holds its final frame
-      v.src = videoSrc;
-      v.play()?.catch(() => {
-        /* autoplay refused: the poster layer stands on its own */
-      });
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    videoRef.current?.setAttribute('fetchpriority', 'high');
+    const sync = () => {
+      setMotionAllowed(!query.matches);
+      if (query.matches) {
+        videoRef.current?.pause();
+        dispatchPlayback('PAUSED');
+      }
     };
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
 
-    const idle = (fn: () => void) =>
-      "requestIdleCallback" in window
-        ? (window as unknown as { requestIdleCallback: (f: () => void, o?: object) => void }).requestIdleCallback(fn, {
-            timeout: 2500,
-          })
-        : window.setTimeout(fn, 1200);
-    idle(attach);
-    return () => {
-      cancelled = true;
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !motionAllowed || playback.pausedByUser || playback.playbackBlocked || failed) {
+      return;
+    }
+    const updateVisibility = () => {
+      if (document.hidden) {
+        video.pause();
+      } else {
+        void video.play().catch(() => dispatchPlayback('PLAY_REJECTED'));
+      }
     };
-  }, [videoSrc]);
+    document.addEventListener('visibilitychange', updateVisibility);
+    void video.play().catch(() => dispatchPlayback('PLAY_REJECTED'));
+    return () => document.removeEventListener('visibilitychange', updateVisibility);
+  }, [failed, motionAllowed, playback.pausedByUser, playback.playbackBlocked]);
+
+  const toggleMotion = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (playback.playing) {
+      dispatchPlayback('REQUEST_PAUSE');
+      video.pause();
+    } else {
+      dispatchPlayback('REQUEST_PLAY');
+      void video.play().catch(() => dispatchPlayback('PLAY_REJECTED'));
+    }
+  };
 
   return (
     <>
       <div className="atrium__g0" aria-hidden="true">
         <div className="atrium__poster" style={{ backgroundImage: `url(${heroPoster})` }} />
-        {videoSrc ? <video className="atrium__video" ref={videoRef} muted playsInline preload="none" /> : null}
+        <video
+          className={`atrium__video${playback.playing && !failed ? ' is-ready' : ''}`}
+          ref={videoRef}
+          autoPlay={motionAllowed && !playback.pausedByUser && !playback.playbackBlocked}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster={heroPoster}
+          src={motionAllowed && !failed ? videoSrc : undefined}
+          onPlaying={() => dispatchPlayback('PLAYING')}
+          onPause={() => dispatchPlayback('PAUSED')}
+          onError={() => {
+            setFailed(true);
+            dispatchPlayback('PLAY_REJECTED');
+          }}
+        />
       </div>
       <div className="atrium__scrim" aria-hidden="true" />
+      {motionAllowed && !failed ? (
+        <button type="button" className="atrium__motion-toggle" onClick={toggleMotion}>
+          {heroMotionControlLabel(playback)}
+        </button>
+      ) : null}
     </>
   );
 }

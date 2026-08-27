@@ -6,13 +6,9 @@
    read through a scrim that is weighted to the LEFT only — where the copy sits.
    The right and centre stay open so the cultural animation is actually visible.
 
-   Everything here is decorative and aria-hidden: remove the whole layer and the
-   hero still reads.
-
-   NOTHING LOOPS. The video plays once and holds its final frame. That is what
-   keeps WCAG 2.2.2 out of scope — it governs auto-starting motion that runs
-   past five seconds, not motion that ends — so the Landing owes no pause
-   control and does not carry one. prefers-reduced-motion drops to the poster.
+   The visual layer is decorative and aria-hidden: remove it and the hero still
+   reads. The owner-authorized loop has a visible pause/resume control, and
+   prefers-reduced-motion keeps the static poster.
    ========================================================================= */
 
 .atrium__g0 {
@@ -40,13 +36,46 @@
   background-position: 62% 50%;
 }
 
-.atrium__poster { opacity: 1; }
+.atrium__poster {
+  opacity: 1;
+}
 
 .atrium__video {
   opacity: 0;
   transition: opacity 1200ms var(--ease-out);
 }
-.atrium__video.is-ready { opacity: 1; }
+.atrium__video.is-ready {
+  opacity: 1;
+}
+
+.atrium__motion-toggle {
+  position: absolute;
+  z-index: 3;
+  inset-inline-end: clamp(1rem, 4vw, 3.5rem);
+  inset-block-end: clamp(1rem, 3vw, 2rem);
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--gold-mid);
+  border-radius: 0.625rem;
+  color: var(--atrium-ink);
+  background: var(--atrium-g2);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.2;
+  transition:
+    background-color var(--dur-state) var(--ease-out),
+    border-color var(--dur-state) var(--ease-out);
+}
+
+.atrium__motion-toggle:hover {
+  background: var(--atrium-g3);
+  border-color: var(--gold-vivid);
+}
+.atrium__motion-toggle:focus-visible {
+  outline: 2px solid var(--gold-vivid);
+  outline-offset: 3px;
+}
 
 /* ---- Readability scrim -------------------------------------------------
    Two restrained layers, not one uniform dark block:
@@ -65,29 +94,36 @@
   z-index: 1;
   pointer-events: none;
   background:
-    linear-gradient(90deg,
+    linear-gradient(
+      90deg,
       rgba(28, 4, 6, 0.9) 0%,
       rgba(28, 4, 6, 0.78) 22%,
       rgba(28, 4, 6, 0.5) 42%,
       rgba(28, 4, 6, 0.18) 56%,
-      rgba(28, 4, 6, 0) 68%),
-    linear-gradient(180deg,
+      rgba(28, 4, 6, 0) 68%
+    ),
+    linear-gradient(
+      180deg,
       rgba(24, 3, 5, 0.88) 0%,
       rgba(24, 3, 5, 0.62) 9%,
       rgba(28, 4, 6, 0.16) 22%,
       rgba(28, 4, 6, 0) 46%,
-      rgba(28, 4, 6, 0.28) 100%);
+      rgba(28, 4, 6, 0.28) 100%
+    );
 }
 
 /* The hero content sits above both media and scrim. */
-.digital-atrium > .atrium__stage { position: relative; z-index: 2; }
+.digital-atrium > .atrium__stage {
+  position: relative;
+  z-index: 2;
+}
 
 /* ---- Glass top bar -----------------------------------------------------
    A floating institutional rail, not a solid slab. The video stays visible
    through it: frost carries the legibility, opacity does not. When the plate
    underneath gets busy the fix is more blur, never more fill. */
 .public-nav--glass {
-  background: rgba(28, 4, 6, 0.3);
+  background: color-mix(in oklch, var(--oxblood-deep) 30%, transparent);
   -webkit-backdrop-filter: blur(18px) saturate(135%);
   backdrop-filter: blur(18px) saturate(135%);
   border-bottom: 1px solid rgba(242, 209, 92, 0.16);
@@ -101,7 +137,9 @@
   border: 1px solid rgba(242, 209, 92, 0.22);
   -webkit-backdrop-filter: blur(10px) saturate(120%);
   backdrop-filter: blur(10px) saturate(120%);
-  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out);
+  transition:
+    background-color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out);
 }
 .nav-glass:hover {
   background: rgba(255, 253, 248, 0.12);
@@ -116,7 +154,9 @@
   -webkit-backdrop-filter: blur(12px) saturate(125%);
   backdrop-filter: blur(12px) saturate(125%);
   color: #fffdf8;
-  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out);
+  transition:
+    background-color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out);
 }
 .hero-action--glass:hover {
   background: rgba(255, 253, 248, 0.15);
@@ -124,21 +164,27 @@
 }
 
 @media (max-width: 767px) {
-  /* Phones get the poster only — no forced stream — and a crop that keeps the
-     weave rather than the empty upper field. */
-  .atrium__video { display: none; }
-  .atrium__poster { background-position: 58% 42%; }
+  .atrium__motion-toggle {
+    inset-inline-end: 1rem;
+    inset-block-end: 1rem;
+  }
+  .atrium__poster {
+    background-position: 58% 42%;
+  }
   /* Narrower frame, so the wash has to reach further across to hold the copy. */
   .atrium__scrim {
-    background:
-      linear-gradient(180deg,
-        rgba(28, 4, 6, 0.72) 0%,
-        rgba(28, 4, 6, 0.58) 40%,
-        rgba(28, 4, 6, 0.42) 70%,
-        rgba(28, 4, 6, 0.6) 100%);
+    background: linear-gradient(
+      180deg,
+      rgba(28, 4, 6, 0.72) 0%,
+      rgba(28, 4, 6, 0.58) 40%,
+      rgba(28, 4, 6, 0.42) 70%,
+      rgba(28, 4, 6, 0.6) 100%
+    );
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .atrium__video { display: none; }
+  .atrium__video {
+    display: none;
+  }
 }

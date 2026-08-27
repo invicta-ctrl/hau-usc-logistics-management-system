@@ -42,7 +42,9 @@ describe('FI-09 Supply operations frontend integration', () => {
     // core Make parity assertion.
     expect(supplyCssFrom(runtime)).toBe(cssFrom(makeV44)?.trim());
     expect(cssFrom(runtime)).toContain('.event-stack{display:grid;gap:16px;margin-top:16px}');
-    expect(cssFrom(runtime)).toContain('@media(max-width:768px){.event-cards{display:grid;gap:10px;padding:12px}');
+    expect(cssFrom(runtime)).toContain(
+      '@media(max-width:768px){.event-cards{display:grid;gap:10px;padding:12px}',
+    );
     expect(runtime).toContain('Restocking and receiving');
     expect(runtime).toContain('REQUEST');
     expect(runtime).toContain('CANVASS');
@@ -89,6 +91,7 @@ describe('FI-09 Supply operations frontend integration', () => {
       backendStatus: 'VISUAL_ONLY',
       access: 'AUTHENTICATED',
       previewMode: 'REAL_MODULE',
+      completeness: 'VISUAL_PREVIEW_COMPLETE',
     });
     expect(listPreviewRoutes().find((entry) => entry.route === 'procurement')).toEqual({
       id: 'procurement',
@@ -101,6 +104,7 @@ describe('FI-09 Supply operations frontend integration', () => {
       backendStatus: 'VISUAL_ONLY',
       access: 'AUTHENTICATED',
       previewMode: 'REAL_MODULE',
+      completeness: 'VISUAL_PREVIEW_COMPLETE',
     });
   });
 });

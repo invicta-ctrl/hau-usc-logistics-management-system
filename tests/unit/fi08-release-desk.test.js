@@ -46,6 +46,7 @@ describe('FI-08 Release Desk frontend integration', () => {
       backendStatus: 'VISUAL_ONLY',
       access: 'AUTHENTICATED',
       previewMode: 'REAL_MODULE',
+      completeness: 'VISUAL_PREVIEW_COMPLETE',
     });
   });
 });
