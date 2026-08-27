@@ -116,6 +116,16 @@ describe('authoritative release pipeline', () => {
     expect(nonBashSteps).not.toContain('$RUNNER_TEMP');
     const automatedAcceptance = workflow.split('      - name: Automated playground acceptance')[1].split('      - name: Stop for Earl manual testing')[0];
     expect(automatedAcceptance).toContain('shell: bash');
+    expect(automatedAcceptance).toContain("const expectedSchema = String(config.vars.PRODUCTION_SCHEMA_VERSION ?? '');");
+    expect(automatedAcceptance).toContain('observedSchema === expectedSchema');
+    expect(automatedAcceptance).not.toContain("schemaVersion === '30'");
+    expect(automatedAcceptance).toContain('readinessStatus: readinessResponse.status');
+    expect(automatedAcceptance).toContain('versionStatus: versionResponse.status');
+    expect(automatedAcceptance).toContain('readiness: readiness?.ready === true');
+    expect(automatedAcceptance).toContain('environment: version?.environment ?? null');
+    expect(automatedAcceptance).toContain('candidateSha: version?.candidateSha ?? null');
+    expect(automatedAcceptance).toContain('observedSchema,');
+    expect(automatedAcceptance).toContain('expectedSchema,');
     expect(workflow).toContain('CLOUDFLARE_API_TOKEN');
     expect(workflow).toContain('attempt <= 15');
     expect(workflow).toContain("headers: { 'cache-control': 'no-cache' }");

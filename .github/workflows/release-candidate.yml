@@ -114,6 +114,7 @@ jobs:
           const config = JSON.parse(await readFile(process.env.CONFIG_PATH, 'utf8'));
           const origin = `https://${config.vars.RECOVERY_HOSTNAME}`;
           const expected = process.env.EXPECTED_SHA;
+          const expectedSchema = String(config.vars.PRODUCTION_SCHEMA_VERSION ?? '');
           for (let attempt = 1; attempt <= 15; attempt += 1) {
             const nonce = `${expected}-${attempt}-${Date.now()}`;
             const [readinessResponse, versionResponse] = await Promise.all([
@@ -126,15 +127,27 @@ jobs:
             ]);
             const readiness = await readinessResponse.json().catch(() => null);
             const version = await versionResponse.json().catch(() => null);
+            const observedSchema = String(version?.database?.schemaVersion ?? '');
             if (
               readinessResponse.ok &&
               readiness?.ready === true &&
               versionResponse.ok &&
               version?.environment === 'STAGING' &&
               version?.candidateSha === expected &&
-              version?.database?.schemaVersion === '30'
+              observedSchema === expectedSchema
             ) {
               process.exit(0);
+            }
+            if (attempt === 15) {
+              console.error(JSON.stringify({
+                readinessStatus: readinessResponse.status,
+                versionStatus: versionResponse.status,
+                readiness: readiness?.ready === true,
+                environment: version?.environment ?? null,
+                candidateSha: version?.candidateSha ?? null,
+                observedSchema,
+                expectedSchema,
+              }));
             }
             if (attempt < 15) await new Promise((resolve) => setTimeout(resolve, 2_000));
           }
