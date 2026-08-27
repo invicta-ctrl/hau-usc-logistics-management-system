@@ -1129,7 +1129,7 @@ test('FI-06 preview inspection records only a local action and never contacts re
     }
   });
 
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await page.locator('[data-preview-route="request-center"] [data-action="open-preview"]').click();
   await expect(
     page.locator('[data-preview-inspection="true"][data-preview-route="request-center"]'),

@@ -1,6 +1,6 @@
 # FI Lane Current Handoff
 
-FROM: FI15_LOCAL_END_TO_END_WORKFLOW_INTEGRATION
+FROM: FI16_LOCAL_CONVERGENCE_COMPLETE_FRONTEND_ACCEPTANCE
 TO: SOL_HIGH:PRIMARY_SOLO_FI14_FI17
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
@@ -13,10 +13,10 @@ ROOT_POINTER: .codex/CURRENT.md
 CURRENT_POINTER: .codex/lanes/FI/CURRENT.md
 CURRENT_TASK: .codex/lanes/FI/CURRENT_TASK.md
 LATEST_ACCEPTED_SPEC: .codex/specs/accepted/2026-08-27-fi14-fi17-local-integration-completion-owner-amendment.md
-COMPLETED: FI-15 local end-to-end workflow integration closed after a bounded Playwright root-navigation harness repair; no application source change required.
-VALIDATION: Full routing workflow at 4173 / 1440px passed 35 tests with 1 mobile-only skip; all 11 public cutover tests passed; exact-4173 lending inspection passed; isolated 4174 lending workflows passed 6 tests with 1 exact-origin-only skip.
+COMPLETED: FI-16 local convergence and complete frontend acceptance closed after bounded Playwright navigation-readiness repairs; no application source change required.
+VALIDATION: The complete 365-selection five-width matrix plus the full invalidated FI-11 rerun accepted 327 executable checks with 38 intentional skips and zero unresolved failures; isolated 4174 FI-07 workflows passed 6 tests with 1 exact-origin-only skip; focused lint and 26/26 frontend unit tests passed.
 EXTERNAL_ACTIONS: Git fetch/push only; no deployment/provider/data/Figma/FM action.
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Execute FI-16 whole-product local convergence and complete frontend acceptance at 320, 390, 768, 1024, and 1440 CSS px.
-RESUME_COMMANDS: Re-handshake Git; read the accepted packet and FI-15 receipt; verify 4173 supervisor health; continue FI-16.
+NEXT_EXACT_ACTION: Execute FI-17 production-mode local build, deterministic artifact verification, local production-output inspection, final FI freeze, and handoff.
+RESUME_COMMANDS: Re-handshake Git; read the accepted packet and FI-16 receipt; verify 4173 supervisor health; continue FI-17.
 PROHIBITED_ACTIONS: No FM, Playground, Production, provider, schema/migration, Google, main, Figma/Make, FI-18, or `.ai-bridge/`/`.local/` mutation.

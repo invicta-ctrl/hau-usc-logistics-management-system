@@ -124,7 +124,7 @@ test('FVR-001 landing renders the governed Current feed responsively without ove
   await page.route('**/media/advertisements/**', (route) =>
     route.fulfill({ status: 200, contentType: 'image/png', body: onePixel }),
   );
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
 
   await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'What the council is doing now' })).toBeVisible();
@@ -136,7 +136,7 @@ test('FVR-001 landing renders the governed Current feed responsively without ove
 
 test('FVR-001 Current preserves intentional empty and request-error states', async ({ page }) => {
   await installPublicFeed(page, 'empty');
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(
     page
       .getByRole('article')
@@ -147,7 +147,7 @@ test('FVR-001 Current preserves intentional empty and request-error states', asy
 
   await page.unroute('**/api/public/advertisements');
   await installPublicFeed(page, 'error');
-  await page.reload();
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(
     page
       .getByRole('article')
@@ -191,7 +191,7 @@ test('FVR-001 confirms sign-in mounts the shell without exposing future authenti
     return route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
   });
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await page.getByLabel('Identifier').fill('confirmed.staff');
   await page.getByLabel('Password', { exact: true }).fill('service-verified-password');
@@ -244,7 +244,7 @@ test('FVR-001 completes the server-owned starter activation lifecycle', async ({
     });
   });
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await page.getByLabel('Identifier').fill('starter.staff');
   await page.getByLabel('Password', { exact: true }).fill('temporary-password');
@@ -276,13 +276,13 @@ test('FVR-001 completes the server-owned starter activation lifecycle', async ({
 
 test('FVR-001 retains the Make landing motion and honors reduced motion', async ({ page }) => {
   await installPublicFeed(page, 'empty');
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect
     .poll(() => page.locator('.atrium__copy').evaluate((node) => getComputedStyle(node).animationName))
     .toBe('atrium-enter');
 
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.reload();
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await expect
     .poll(() => page.locator('.atrium__copy').evaluate((node) => getComputedStyle(node).animationDuration))
     .toBe('0s');
@@ -292,7 +292,7 @@ test('FVR-001 preserves keyboard focus, theme behavior, and 200 percent reflow',
   page,
 }, testInfo) => {
   await installPublicFeed(page, 'empty');
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
 
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Skip to main content' })).toBeFocused();
@@ -351,7 +351,7 @@ test('FVR-001 public lending submits only through the real adapter and shows the
       }),
     });
   });
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Browse equipment' }).click();
   await page.getByLabel('Search').fill('chair');
   await page.getByRole('button', { name: 'Request item' }).click();
@@ -407,7 +407,7 @@ test('FVR-001 public tracking projects only server-confirmed state', async ({ pa
     }),
   );
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Browse equipment' }).click();
   await page
     .getByRole('navigation', { name: 'Public lending navigation' })
@@ -489,7 +489,7 @@ test('FVR-001 account application preserves 8-digit verification and private sta
     });
   });
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await page.getByRole('button', { name: 'Apply for staff access' }).click();
   await page.getByLabel('Approved email address').fill('applicant@example.edu.ph');
@@ -530,7 +530,7 @@ test('FVR-001 Current falls back to media-error when the image request fails', a
       body: '',
     }),
   );
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(
     page
       .getByRole('article')
@@ -542,7 +542,7 @@ test('FVR-001 Current falls back to media-error when the image request fails', a
 
 test('FVR-001 renders the poster-only hero with no autoplay video element', async ({ page }) => {
   await installPublicFeed(page, 'empty');
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.atrium__poster')).toHaveCount(1);
   await expect(page.locator('.atrium__video')).toHaveCount(0);
 });

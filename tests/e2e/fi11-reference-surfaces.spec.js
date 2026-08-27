@@ -56,7 +56,7 @@ test('FI-11 exposes truthful sanitized Event and Administration inspection surfa
     }
   });
 
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('[data-preview-index]')).toBeVisible();
   await expect(
     page.locator('[data-preview-route="events"] [data-preview-entry-meta="status"] dd'),

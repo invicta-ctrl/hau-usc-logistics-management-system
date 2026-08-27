@@ -35,11 +35,11 @@ function installEmptyFeed(page) {
 
 test('allows the exact direct route and shows the launcher when playground is true', async ({ page }) => {
   await installVersion(page, true);
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('[data-preview-index]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Preview Module Index' })).toBeVisible();
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('[data-preview-index-launcher]')).toBeVisible();
 });
 
@@ -67,7 +67,7 @@ test('fails closed on every spoofed version signal regardless of hash, query, or
   for (const scenario of scenarios) {
     await page.unroute(VERSION);
     await installDeniedVersion(page, scenario.payload);
-    await page.goto('/?preview=1#/__preview/index');
+    await page.goto('/?preview=1#/__preview/index', { waitUntil: 'domcontentloaded' });
     await expect(
       page.getByRole('heading', { name: 'Every request. Every handoff. On record.' }),
     ).toBeVisible();
@@ -87,7 +87,7 @@ test('fails closed when the version endpoint errors', async ({ page }) => {
       body: '{"message":"Unavailable"}',
     }),
   );
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
   await expect(page.locator('[data-preview-index]')).toHaveCount(0);
   await expect(page.locator('[data-preview-index-launcher]')).toHaveCount(0);
@@ -98,7 +98,7 @@ test('fails closed when the version endpoint errors', async ({ page }) => {
 test('renders exactly 15 registry entries, groups, and drives search and all filters', async ({ page }) => {
   await installVersion(page, true);
   await installEmptyFeed(page);
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('[data-preview-index]')).toBeVisible();
 
   await expect(page.locator('[data-preview-route]')).toHaveCount(15);
@@ -183,7 +183,7 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
 test('opens a public real route from the index', async ({ page }) => {
   await installVersion(page, true);
   await installEmptyFeed(page);
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await page.locator('[data-preview-route="landing"] [data-action="open"]').click();
   await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
   await expect(page.locator('[data-preview-index]')).toHaveCount(0);
@@ -199,7 +199,7 @@ test('routes protected Test Real Access through the unchanged real session check
       body: JSON.stringify({ code: 'SESSION_REQUIRED', message: 'Sign in to continue.' }),
     }),
   );
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await page.locator('[data-preview-route="inventory"] [data-action="test-real-access"]').click();
   await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible();
   await expect(page.locator('[data-preview-index]')).toHaveCount(0);
@@ -221,7 +221,7 @@ test('INDEX-GATE fails closed outside the exact local 4173 inspection origin', a
     }
   });
 
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await page.locator('[data-preview-route="inventory"] [data-action="open-preview"]').click();
   await expect(page.locator('[data-preview-index]')).toBeVisible();
   await expect(page.locator('[data-preview-inspection="true"]')).toHaveCount(0);
@@ -246,7 +246,7 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or prot
     }
   });
 
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await page.locator('[data-preview-search]').fill('inventory');
   await page.locator('[data-preview-route="inventory"] [data-action="open-preview"]').click();
   await expect(
@@ -299,7 +299,7 @@ test('FI-08R keeps focused-task preview and both dialog focus lifecycles inside 
     }
   });
 
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await page.locator('[data-preview-route="release"] [data-action="open-preview"]').click();
   await expect(
     page.locator('[data-preview-inspection="true"][data-preview-route="release"]'),
@@ -391,7 +391,7 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
     }
   });
 
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await page.locator('[data-preview-route="restocking"] [data-action="open-preview"]').click();
   await expect(
     page.locator('[data-preview-inspection="true"][data-preview-route="restocking"]'),
@@ -538,7 +538,7 @@ test('FI-10 renders the bounded Administration inspection safely at every accept
   });
 
   await page.setViewportSize({ width: 320, height: 1000 });
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   for (const width of [320, 390, 768, 1024, 1440]) {
     if (width !== 320) {
       await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
@@ -614,7 +614,7 @@ test('FI-10 renders the bounded Administration inspection safely at every accept
 test('reaches the real staff sign-in page through Test Real Login Flow', async ({ page }) => {
   await installVersion(page, true);
   await installEmptyFeed(page);
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await page.locator('[data-action="test-login"]').click();
   await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
   await expect(page.locator('[data-preview-index]')).toHaveCount(0);
@@ -633,7 +633,7 @@ test('shows a labeled, sanitized, read-only surface preview with no additional A
     }
   });
 
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('[data-preview-index]')).toBeVisible();
   requests.length = 0;
 
@@ -654,11 +654,11 @@ test('focuses the heading on entry and restores launcher focus only on Back', as
   await installVersion(page, true);
   await installEmptyFeed(page);
 
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('[data-preview-index]')).toBeVisible();
   await expect(page.locator('[data-preview-index] h1')).toBeFocused();
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   const launcher = page.locator('[data-preview-index-launcher]');
   await expect(launcher).toBeVisible();
   await launcher.click();
@@ -675,7 +675,7 @@ test('does not focus the reappearing launcher after Open or Test Real Login', as
   await installVersion(page, true);
   await installEmptyFeed(page);
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.locator('[data-preview-index-launcher]').click();
   await expect(page.locator('[data-preview-index]')).toBeVisible();
   await page.locator('[data-preview-route="landing"] [data-action="open"]').click();
@@ -696,7 +696,7 @@ test('honors reduced motion on the preview index surface', async ({ page }) => {
   await installVersion(page, true);
   await installEmptyFeed(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('[data-preview-index]')).toBeVisible();
 
   const duration = await page
@@ -709,7 +709,7 @@ test('honors reduced motion on the preview index surface', async ({ page }) => {
 test('keeps skip link on the Index and focuses the heading without changing the hash', async ({ page }) => {
   await installVersion(page, true);
   await installEmptyFeed(page);
-  await page.goto('/#/__preview/index');
+  await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('[data-preview-index]')).toBeVisible();
 
   const skipLink = page.getByRole('link', { name: 'Skip to main content' });

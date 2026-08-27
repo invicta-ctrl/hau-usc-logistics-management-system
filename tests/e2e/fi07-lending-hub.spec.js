@@ -222,7 +222,7 @@ function usesMobileShell(testInfo) {
 }
 
 async function openLendingHub(page, testInfo) {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await page.getByLabel('Identifier').fill('fi07.dol');
   await page.getByLabel('Password', { exact: true }).fill('service-verified-password');
