@@ -11,8 +11,8 @@ UPSTREAM: origin/frontend-design-integration @ 6a8ed7e5d58a30784cef0f25b07973240
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: DIRTY__PRESERVED_AIBRIDGE_AND_LOCAL_TOOL_RESIDUE
 ACTIVE_WRITER: TERRA_HIGH:/root/fi14_runner_writer_3
-WRITER_LOCK: ACTIVE__FI14_RUNNER_RECOVERY_A1__frontend-design-integration
-HANDOFF_STATUS: ACTIVE__FI14_RUNNER_RECOVERY_A1
+WRITER_LOCK: RELEASED__FI14_TERMINAL_MIGRATION_BOUNDARY
+HANDOFF_STATUS: TERMINAL__BLOCKED__OWNER_AUTHORITY_REQUIRED
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi14-isolated-playground-deployment-acceptance.md
@@ -92,8 +92,11 @@ PREVIEW_STATUS: RUNNING__HEALTHY__REUSED__NO_RESTART
 FI09_RECEIPT: .codex/FI09_SUPPLY_OPERATIONS_RECEIPT.md
 FI10_RECEIPT: .codex/FI10_ACCOUNTS_DIRECTORY_ACTIVITY_HISTORY_RECEIPT.md
 FI11_RECEIPT: .codex/FI11_GOVERNED_REFERENCE_SURFACES_RECEIPT.md
-NEXT_EXACT_ACTION: Commit/push/refreeze the acceptance-contract repair, reconcile terminal/no-active deployment-capable state, then dispatch exactly one Root Sol-authorized replacement with checksum-verified Git-Bash-PATH ephemeral package and deploy runners.
-RESUME_COMMANDS: Reconcile the terminal run and exact new release ref before the sole authorized replacement; use only fresh checksum-verified ephemeral runners with Git Bash prepended to their process PATH. Do not restart the healthy preview.
-PROHIBITED_ACTIONS: Do not move the temporary ref except normal non-force refreeze, cancel phantom run `32985611614`, or dispatch more than the one Root Sol-authorized replacement after terminal reconciliation. Do not manually touch Cloudflare/provider state outside the accepted workflow. Never touch `.ai-bridge/` or `.local/`; never alter frontend application behavior, backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/data/provider configuration/Figma/Make/Production/main; never bind a Production resource or expose a private value.
+TERMINAL_RUN_33057106787: Package `98466527716` success; deploy `98469267227` passed Worker/rebuild/manifest/config/deploy, then acceptance observed HTTP 200/readiness true/STAGING/exact candidate with live isolated D1 schema 32 versus sealed expected schema 30. Production untouched.
+LEGACY_FI14_CLASSIFICATION: FRONTEND_MIGRATION
+LEGACY_FI14_ALIAS: FM-01 / LEGACY-FI14
+NEXT_EXACT_ACTION: Stop legacy FI-14 before lane restructuring; await owner migration-reconciliation authority.
+RESUME_COMMANDS: Stop legacy FI-14. Do not start a runner, dispatch/retry a workflow, or alter the candidate/ref. Await explicit owner authority for provider-manifest/schema reconciliation outside FI-14. Do not restart the healthy preview.
+PROHIBITED_ACTIONS: Do not move the temporary candidate ref, cancel phantom run `32985611614`, start a runner, or dispatch/retry any replacement. Do not manually touch Cloudflare/provider state outside accepted owner authority. Never touch `.ai-bridge/`, `.local/`, or separate FI-00-FI-12 worktree/resources; never alter frontend application behavior, backend/Worker/auth/authorization/permissions/schema/migration/D1/R2/data/provider configuration/Figma/Make/Production/main; never bind a Production resource or expose a private value.
 
 FI14_RECOVERY_LATEST: Run `33054298566` is terminal failure after package success and exact isolated Playground deploy success. Automated acceptance executed in Git Bash and exhausted its 15 attempts without converging; manual-test skipped. Root Sol proved the stale literal schema contract and authorized expected-schema derivation from private config plus final-attempt redacted diagnostics. Focused test and full release-candidate gate pass; next is one authorized replacement after refreeze.

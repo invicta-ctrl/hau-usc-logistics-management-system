@@ -2,8 +2,8 @@
 
 PROGRAM: HAU-USC Logistics FI-04 → FI-17 R1
 MILESTONE: R1_FI14_ISOLATED_PLAYGROUND_DEPLOYMENT_ACCEPTANCE
-STATUS: FI14_RUNNER_RECOVERY__ACTIVE
-PHASE: FI14_RUNNER_RECOVERY_A1
+STATUS: FI14_TERMINAL__BLOCKED__MIGRATION_RECONCILIATION_OWNER_AUTHORITY_REQUIRED
+PHASE: FI14_TERMINAL_RECONCILIATION
 MODE: EXECUTE
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
@@ -13,8 +13,8 @@ UPSTREAM: origin/frontend-design-integration @ 6a8ed7e5d58a30784cef0f25b07973240
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: DIRTY__PRESERVED_AIBRIDGE_AND_LOCAL_TOOL_RESIDUE
 ACTIVE_WRITER: TERRA_HIGH:/root/fi14_runner_writer_3
-WRITER_LOCK: ACTIVE__FI14_RUNNER_RECOVERY_A1__frontend-design-integration
-HANDOFF_STATUS: ACTIVE__FI14_RUNNER_RECOVERY_A1
+WRITER_LOCK: RELEASED__FI14_TERMINAL_MIGRATION_BOUNDARY
+HANDOFF_STATUS: TERMINAL__BLOCKED__OWNER_AUTHORITY_REQUIRED
 REQUIRED_MODEL: GPT-5.6 Terra / Max sole frontend writer; GPT-5.6 Sol remains read-only orchestration and final acceptance
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
@@ -49,7 +49,11 @@ FI14_PORTABILITY_REPAIR_B: Root Sol explicitly authorized the smallest proven re
 FI14_RUN_33054298566: TERMINAL__FAILURE. Package job `98457135640` passed all steps. Deploy job `98460391853` passed rebuild, manifest materialization, private config, and exact isolated Playground deploy. Automated acceptance ran in Git Bash for all 15 bounded attempts and did not converge; manual-test was skipped. No Production action is claimed.
 FI14_RUNTIME_DIAGNOSIS: This is not a shell, runner, candidate, config-build, preflight, or deploy failure. The accepted script logs no response fields and ephemeral cleanup removed its private config, so response-level classification cannot be safely derived without a new redacted diagnostic. Do not redispatch absent Root Sol direction.
 FI14_ACCEPTANCE_CONTRACT_REPAIR_C: Root Sol proved the stale literal schema contract: runtime schema now derives from `config.vars.PRODUCTION_SCHEMA_VERSION`, matching the private manifest baseline. Final-attempt diagnostics contain only readiness/version HTTP statuses, readiness boolean, environment, candidate SHA, observed schema, and expected schema; no hostname or provider/config identifier is logged.
-NEXT_EXACT_ACTION: Commit/push/refreeze the acceptance-contract repair, reconcile terminal/no-active deployment-capable state, then dispatch exactly one Root Sol-authorized replacement with checksum-verified Git-Bash-PATH ephemeral package and deploy runners.
+FI14_TERMINAL_RECONCILIATION: Run `33057106787` package `98466527716` succeeded; deploy `98469267227` passed Worker/rebuild/manifest/config/deploy, but acceptance observed readiness/version HTTP 200, readiness true, STAGING, exact candidate, live schema 32, sealed expected schema 30. Production untouched.
+LEGACY_FI14_CLASSIFICATION: FRONTEND_MIGRATION
+LEGACY_FI14_ALIAS: FM-01 / LEGACY-FI14
+FI14_BOUNDARY: Provider-manifest/schema reconciliation is outside FI-14 and requires owner authority; do not touch separate FI-00–FI-12 worktree/resources.
+NEXT_EXACT_ACTION: Stop legacy FI-14 before lane restructuring; await owner migration-reconciliation authority.
 FI13_PACKET_STATUS: ACCEPTED__IMPLEMENTED__SOL_ACCEPTED__CLOSED__FI14_CANDIDATE_GATE_REFROZEN__APP_ARTIFACT_BYTE_IDENTICAL
 FI13_AUTHORITY: Earl FI09-FI17-SOL-COGNEE-2026-08-26 owner attachment, section 15; TOKEN-OPT-001-A8; project policy; accepted FI-04 through FI-12 records; current repository contracts; accepted live Make-v44 and Figma Design evidence.
 FI13_SCOPE: Final local candidate craft gate only: bounded Hallmark audit, Impeccable Operate-mode audit/polish, semantic/accessibility/responsive/contrast/keyboard/focus/motion/console/network checks, truthful real/synthetic labels, route-separation proof, and exact frontend candidate freeze. Prove a defect before a product change; use one related batch and one confirmation pass.
