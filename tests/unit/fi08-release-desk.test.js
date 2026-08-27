@@ -7,13 +7,11 @@ const root = resolve(import.meta.dirname, '../..');
 const readSource = (relativePath) => readFileSync(resolve(root, relativePath), 'utf8');
 
 describe('FI-08 Release Desk frontend integration', () => {
-  it('uses the Make-v44-parity Release Desk module only inside the authenticated workspace', () => {
+  it('uses the authenticated Worker/D1 route in normal runtime and keeps the Make-v44 fixture out of it', () => {
     const renderer = readSource('src/frontend/app/AppRouteRenderer.tsx');
 
-    expect(renderer).toContain("import ReleaseDeskRoute from './ReleaseDeskRoute';");
-    expect(renderer).toMatch(
-      /session && isAuthRoute\(route\)[\s\S]*route === 'release' \? \([\s\S]*<ReleaseDeskRoute dark=\{dark\} navigate=\{navigate\} \/>/,
-    );
+    expect(renderer).not.toContain("import ReleaseDeskRoute from './ReleaseDeskRoute';");
+    expect(renderer).toContain('<OperationalModuleRoute module="release" />');
   });
 
   it('makes the exact local A4 inspection path render the deterministic real module without a backend call', () => {

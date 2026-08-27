@@ -11,6 +11,7 @@ import {
   requestReviewSignature,
   reviewClientRequestId,
 } from '../../src/frontend/app/request/InternalRequestHub.tsx';
+import { projectSession } from '../../src/frontend/app/useAppController.ts';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -64,7 +65,7 @@ function internalRequestBootstrapPayload() {
     contractVersion: 2,
     module: 'request',
     requestOnly: false,
-    scopeRevision: { token: 'request-r7', updatedAt: '2026-08-24T00:00:00.000Z' },
+    scopeRevision: { token: 7, updatedAt: '2026-08-24T00:00:00.000Z' },
     pagination: { page: 2, pageSize: 25, total: 51, hasMore: true },
     data: {
       requests: [
@@ -118,8 +119,8 @@ function internalRequestBootstrapPayload() {
           id: 'EVENT-1',
           seriesId: 'SERIES-1',
           name: 'Assembly session',
-          startAt: '2026-08-30T09:00:00.000Z',
-          endAt: '2026-08-30T12:00:00.000Z',
+          startAt: null,
+          endAt: null,
           eventDayId: 'DAY-1',
           activityType: 'Assembly',
           timeStatus: 'SCHEDULED',
@@ -242,6 +243,38 @@ describe('Figma frontend backend adapter', () => {
     );
   });
 
+  it('keeps exact server permissions separate from projected route capabilities', () => {
+    const session = projectSession({
+      accountId: 'PLAYGROUND-OWNER',
+      displayName: 'Playground Owner',
+      roleId: 'SYSTEM_OWNER',
+      capabilities: ['view.internal', 'view.inventory', 'event.manage', 'access.admin'],
+    });
+
+    expect(session.capabilities).toContain('events');
+    expect(session.capabilities).toContain('administration');
+    expect(session.serverCapabilities).toEqual([
+      'view.internal',
+      'view.inventory',
+      'event.manage',
+      'access.admin',
+    ]);
+  });
+
+  it('keeps Events and Administration unavailable to an underprivileged session', () => {
+    const session = projectSession({
+      accountId: 'PLAYGROUND-LIMITED',
+      displayName: 'Limited Operator',
+      roleId: 'STAFF',
+      capabilities: ['view.internal', 'view.inventory'],
+    });
+
+    expect(session.capabilities).not.toContain('events');
+    expect(session.capabilities).not.toContain('administration');
+    expect(session.serverCapabilities).not.toContain('event.manage');
+    expect(session.serverCapabilities).not.toContain('access.admin');
+  });
+
   it('strictly projects the read-only same-origin profile contract', async () => {
     const fetchMock = vi.fn().mockResolvedValue(response(profilePayload()));
     vi.stubGlobal('fetch', fetchMock);
@@ -350,10 +383,10 @@ describe('Figma frontend backend adapter', () => {
       requests: [{ id: 'REQ-1', ownerCommitteeId: 'COM-1', requesterName: 'Requester A' }],
       requestLines: [{ id: 'LINE-1', workflowRevision: 1, releasedQuantity: 0, receivedQuantity: 0 }],
       eventSeries: [{ id: 'SERIES-1' }],
-      events: [{ id: 'EVENT-1', venue: 'Auditorium' }],
+      events: [{ id: 'EVENT-1', venue: 'Auditorium', startAt: '', endAt: '' }],
       inventoryItems: [{ id: 'ITM-1', name: 'Folding chair' }],
       pagination: { page: 2, pageSize: 25, total: 51, hasMore: true },
-      scopeRevision: { token: 'request-r7', updatedAt: '2026-08-24T00:00:00.000Z' },
+      scopeRevision: { token: '7', updatedAt: '2026-08-24T00:00:00.000Z' },
     });
     await expect(backend.requestBootstrap()).rejects.toMatchObject({
       code: 'INCOMPLETE_RESPONSE',
@@ -366,6 +399,47 @@ describe('Figma frontend backend adapter', () => {
     expect(buildRequestBootstrapPath({ page: -2, pageSize: 0, query: '  chairs  ', filter: ' ALL ' })).toBe(
       '/api/bootstrap/request?page=1&pageSize=25&query=chairs&filter=ALL',
     );
+  });
+
+  it('projects bounded operational modules and refuses missing real-backend collections', async () => {
+    const valid = {
+      ok: true,
+      contract: 'bootstrap-module',
+      contractVersion: 2,
+      module: 'restocking',
+      requestOnly: false,
+      scopeRevision: { scope: 'restocking', token: 12, updatedAt: '2026-08-28T00:00:00.000Z' },
+      pagination: { page: 1, pageSize: 25, total: 1, hasMore: false },
+      data: {
+        inventoryItems: [{ id: 'ITM-1', name: 'Microphone' }],
+        restockRequests: [{ id: 'RST-1', status: 'OPEN' }],
+        restockRecords: [],
+        canvassReferences: [],
+      },
+    };
+    const missingCollection = structuredClone(valid);
+    delete missingCollection.data.restockRequests;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(response(valid))
+      .mockResolvedValueOnce(response(missingCollection));
+    vi.stubGlobal('fetch', fetchMock);
+    const backend = new FrontendBackend();
+
+    await expect(backend.operationalModuleBootstrap('restocking')).resolves.toMatchObject({
+      module: 'restocking',
+      data: { restockRequests: [{ id: 'RST-1', status: 'OPEN' }] },
+      pagination: { page: 1, pageSize: 25, total: 1, hasMore: false },
+      scopeRevision: { token: '12', updatedAt: '2026-08-28T00:00:00.000Z' },
+    });
+    await expect(backend.operationalModuleBootstrap('restocking')).rejects.toMatchObject({
+      code: 'INCOMPLETE_RESPONSE',
+      status: 502,
+    });
+    expect(fetchMock.mock.calls[0]).toEqual([
+      '/api/bootstrap/restocking?page=1&pageSize=25',
+      expect.objectContaining({ method: 'GET', credentials: 'include' }),
+    ]);
   });
 
   it('keeps FI-06 route presentation, idempotency signatures, and request.review gating deterministic', () => {

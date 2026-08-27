@@ -13,13 +13,15 @@ const supplyCssFrom = (source) => {
 };
 
 describe('FI-09 Supply operations frontend integration', () => {
-  it('uses the existing SupplyRoutes module only after the normal authenticated route gate', () => {
+  it('uses Worker/D1 routes for normal supply operations and reserves SupplyRoutes for Events', () => {
     const renderer = readSource('src/frontend/app/AppRouteRenderer.tsx');
 
     expect(renderer).toContain("import SupplyRoutes from './SupplyRoutes';");
-    expect(renderer).toMatch(
-      /session && isAuthRoute\(route\)[\s\S]*route === 'restocking' \? \([\s\S]*<SupplyRoutes dark=\{dark\} mode="restocking" navigate=\{navigate\} \/>[\s\S]*route === 'procurement' \? \([\s\S]*<SupplyRoutes dark=\{dark\} mode="procurement" navigate=\{navigate\} \/>/,
-    );
+    expect(renderer).toContain('<OperationalModuleRoute module="restocking" />');
+    expect(renderer).toContain('<OperationalModuleRoute module="procurement" />');
+    expect(renderer).toContain('mode="events"');
+    expect(renderer).not.toContain('mode="restocking"');
+    expect(renderer).not.toContain('mode="procurement"');
   });
 
   it('uses the same no-fetch real module in the trusted A4 inspection modes', () => {

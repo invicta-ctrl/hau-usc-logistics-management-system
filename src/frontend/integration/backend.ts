@@ -144,6 +144,15 @@ export type FrontendInventoryBootstrap = {
   scopeRevision: { token: string; updatedAt: string } | null;
 };
 
+export type FrontendOperationalModuleName = 'overview' | 'release' | 'restocking' | 'procurement';
+
+export type FrontendOperationalModuleBootstrap = {
+  module: FrontendOperationalModuleName;
+  data: Record<string, Json[]>;
+  pagination: { page: number; pageSize: number; total: number; hasMore: boolean };
+  scopeRevision: { token: string; updatedAt: string };
+};
+
 export type FrontendRequestLine = {
   id: string;
   requestId: string;
@@ -655,8 +664,13 @@ function requiredRecords(value: unknown, field: string): Json[] {
 function projectScopeRevision(value: unknown, field: string) {
   if (value === null) return null;
   const revision = requiredRecord(value, field);
+  const rawToken = revision.token;
+  const token =
+    typeof rawToken === 'number' && Number.isFinite(rawToken)
+      ? String(rawToken)
+      : requiredString(rawToken, `${field}.token`);
   return {
-    token: requiredString(revision.token, `${field}.token`),
+    token,
     updatedAt: requiredString(revision.updatedAt, `${field}.updatedAt`),
   };
 }
@@ -687,6 +701,32 @@ export function buildLendingBootstrapPath({ page, pageSize }: LendingBootstrapOp
   });
   return `/api/bootstrap/lending?${params.toString()}`;
 }
+
+const OPERATIONAL_MODULE_COLLECTIONS: Record<FrontendOperationalModuleName, string[]> = {
+  overview: [
+    'eventSeries',
+    'eventDays',
+    'events',
+    'requests',
+    'requestLines',
+    'inventoryItems',
+    'lendingTickets',
+    'restockRequests',
+    'deliverables',
+  ],
+  release: [
+    'eventSeries',
+    'events',
+    'inventoryItems',
+    'requests',
+    'requestLines',
+    'lendingTickets',
+    'releaseConfirmations',
+    'releaseCorrections',
+  ],
+  restocking: ['inventoryItems', 'restockRequests', 'restockRecords', 'canvassReferences'],
+  procurement: ['eventSeries', 'events', 'requests', 'requestLines', 'deliverables', 'canvassReferences'],
+};
 
 function lendingMutationReceipt(payload: Json, field: string): FrontendLendingMutationReceipt {
   const ticketId = asString(payload.ticketId) || asString(payload.id);
@@ -1141,6 +1181,51 @@ export class FrontendBackend {
   }
 
   /**
+   * Project the existing authenticated operational module contract without
+   * inventing rows or mutation support. Each route receives only the bounded
+   * collections emitted for its canonical module.
+   */
+  async operationalModuleBootstrap(
+    module: FrontendOperationalModuleName,
+    signal?: AbortSignal,
+  ): Promise<FrontendOperationalModuleBootstrap> {
+    const payload = await this.request(`/api/bootstrap/${module}?page=1&pageSize=25`, {
+      method: 'GET',
+      signal,
+    });
+    if (
+      payload.ok !== true ||
+      asString(payload.contract) !== 'bootstrap-module' ||
+      asString(payload.module) !== module ||
+      requiredNumber(payload.contractVersion, `${module} bootstrap contractVersion`) !== 2 ||
+      payload.requestOnly !== false
+    ) {
+      incomplete(`The response did not match the authenticated ${module} bootstrap v2 contract.`);
+    }
+    const rawData = requiredRecord(payload.data, `${module} bootstrap data`);
+    const data = Object.fromEntries(
+      OPERATIONAL_MODULE_COLLECTIONS[module].map((collection) => [
+        collection,
+        requiredRecords(rawData[collection], `${module}.${collection}`),
+      ]),
+    );
+    const pagination = requiredRecord(payload.pagination, `${module} pagination`);
+    const scopeRevision = projectScopeRevision(payload.scopeRevision, `${module} scopeRevision`);
+    if (!scopeRevision) incomplete(`The response did not include ${module} scopeRevision.`);
+    return {
+      module,
+      data,
+      pagination: {
+        page: requiredPositiveInteger(pagination.page, `${module} pagination.page`),
+        pageSize: requiredPositiveInteger(pagination.pageSize, `${module} pagination.pageSize`, 100),
+        total: requiredNonNegativeInteger(pagination.total, `${module} pagination.total`),
+        hasMore: requiredBoolean(pagination.hasMore, `${module} pagination.hasMore`),
+      },
+      scopeRevision,
+    };
+  }
+
+  /**
    * FI-06: project only the existing authenticated Request bootstrap v2. The
    * Worker controls scope, pagination, lifecycle values, and catalog truth; this
    * adapter fails closed rather than filling in a partial review queue locally.
@@ -1215,8 +1300,8 @@ export class FrontendBackend {
       id: requiredString(row.id, 'events.id'),
       seriesId: requiredString(row.seriesId, 'events.seriesId'),
       name: requiredString(row.name, 'events.name'),
-      startAt: requiredString(row.startAt, 'events.startAt'),
-      endAt: requiredString(row.endAt, 'events.endAt'),
+      startAt: requiredText(row.startAt, 'events.startAt'),
+      endAt: requiredText(row.endAt, 'events.endAt'),
       eventDayId: asString(row.eventDayId),
       activityType: asString(row.activityType),
       timeStatus: asString(row.timeStatus),

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   isIsolatedPlaygroundHealth,
   parsePlaygroundOrigin,
@@ -45,5 +46,20 @@ describe('Figma frontend isolated-playground proxy guard', () => {
         ),
       ),
     ).rejects.toThrow('isolated playground');
+  });
+
+  it('keeps normal authenticated routes off fixture-backed release and supply implementations', () => {
+    const renderer = readFileSync(new URL('../../src/frontend/app/AppRouteRenderer.tsx', import.meta.url), 'utf8');
+    const overview = readFileSync(new URL('../../src/frontend/app/overview/OverviewRoute.tsx', import.meta.url), 'utf8');
+
+    expect(renderer).not.toContain("import ReleaseDeskRoute from './ReleaseDeskRoute'");
+    expect(renderer).toContain('<OperationalModuleRoute module="release" />');
+    expect(renderer).toContain('<OperationalModuleRoute module="restocking" />');
+    expect(renderer).toContain('<OperationalModuleRoute module="procurement" />');
+    expect(renderer).toContain('mode="events"');
+    expect(renderer).not.toContain('mode="restocking"');
+    expect(renderer).not.toContain('mode="procurement"');
+    expect(overview).not.toContain('overviewFixtures');
+    expect(overview).toContain('module="overview"');
   });
 });

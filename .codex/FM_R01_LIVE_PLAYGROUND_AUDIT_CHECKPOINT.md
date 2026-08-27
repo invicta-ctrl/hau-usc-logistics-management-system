@@ -72,4 +72,3 @@ PRODUCTION_MUTATION: ZERO
 3. Project raw server permission capabilities into the typed session or expose explicit permission booleans; never dereference an absent `session.user`.
 4. Replace Overview and fixture route runtime paths with real API-backed routes derived from accepted FI-17 structure and existing server contracts.
 5. Re-run the route matrix before reset or deployment.
-

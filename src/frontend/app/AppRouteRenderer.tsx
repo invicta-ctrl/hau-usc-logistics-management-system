@@ -4,13 +4,14 @@ import type { PublicSubRoute } from './appTypes';
 import type { AppController } from './useAppController';
 import { StaffSignInPage } from './auth/StaffSignInPage';
 import { AuthPlaceholderRoute } from './auth/AuthPlaceholderRoute';
+import { OverviewRoute } from './overview/OverviewRoute';
 import { LandingPage } from './landing/LandingPage';
 import { ProfileRoute } from './profile/ProfileRoute';
 import { InventoryRoute } from './inventory/InventoryRoute';
 import { InternalRequestHub } from './request/InternalRequestHub';
 import { InternalLendingHub } from './lending/InternalLendingHub';
-import ReleaseDeskRoute from './ReleaseDeskRoute';
 import SupplyRoutes from './SupplyRoutes';
+import { OperationalModuleRoute } from './operations/OperationalModuleRoute';
 import AdministrationRoute from './AdministrationRoute';
 import { Footer } from './public/Footer';
 import { PublicNavbar } from './public/PublicNavbar';
@@ -75,6 +76,8 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
       >
         {route === 'profile' ? (
           <ProfileRoute dark={dark} onToggle={toggleTheme} />
+        ) : route === 'overview' ? (
+          <OverviewRoute session={session} />
         ) : route === 'inventory' ? (
           <InventoryRoute dark={dark} navigate={navigate} />
         ) : route === 'request-center' ? (
@@ -89,24 +92,24 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
             canUploadLendingEvidence={session.canUploadLendingEvidence}
           />
         ) : route === 'release' ? (
-          <ReleaseDeskRoute dark={dark} navigate={navigate} />
+          <OperationalModuleRoute module="release" />
         ) : route === 'restocking' ? (
-          <SupplyRoutes dark={dark} mode="restocking" navigate={navigate} />
+          <OperationalModuleRoute module="restocking" />
         ) : route === 'procurement' ? (
-          <SupplyRoutes dark={dark} mode="procurement" navigate={navigate} />
+          <OperationalModuleRoute module="procurement" />
         ) : route === 'events' ? (
           <SupplyRoutes
             dark={dark}
             mode="events"
             navigate={navigate}
-            eventAllowed={session.user.capabilities.includes('event.manage')}
+            eventAllowed={session.serverCapabilities.includes('event.manage')}
           />
         ) : route === 'administration' ? (
           <AdministrationRoute
             dark={dark}
             navigate={navigate}
-            accessAllowed={session.user.capabilities.includes('access.admin')}
-            capabilities={session.user.capabilities}
+            accessAllowed={session.serverCapabilities.includes('access.admin')}
+            capabilities={session.serverCapabilities}
           />
         ) : (
           <AuthPlaceholderRoute route={route} />

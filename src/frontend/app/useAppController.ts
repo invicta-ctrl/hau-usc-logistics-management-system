@@ -21,13 +21,14 @@ function initials(value: string) {
   return (parts.length > 1 ? `${parts[0][0]}${parts.at(-1)?.[0] ?? ''}` : value.slice(0, 2)).toUpperCase();
 }
 
-function projectSession(user: FrontendUser): Session {
+export function projectSession(user: FrontendUser): Session {
   return {
     authenticated: true,
     displayName: user.displayName,
     role: user.roleId,
     initials: initials(user.displayName),
     capabilities: AUTH_ROUTES.filter((route) => isRouteAuthorized(user, route)),
+    serverCapabilities: [...user.capabilities],
     requesterEligible: isEligibleRequester(user),
     internalOperator: isInternalOperator(user),
     canReviewRequests: canReviewInternalRequests(user),

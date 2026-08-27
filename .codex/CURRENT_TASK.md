@@ -1,16 +1,16 @@
-# Current Task — FM-R02 through FM-R07 Frontend and Module Repair
+# Current Task — FM-R04 Playground Baseline Freeze
 
 STATUS: IN_PROGRESS
-INTENT: bug fix and integration
+INTENT: migration preflight
 MODE: execute
 TARGET: `https://playground.hausc.org/`
 ACTIVE_WRITER: SOL_OWNER_SESSION
 WRITER_LOCK: HELD
 ROUTE: SOLO
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-28-playground-audit-frontend-repair-data-reset-owner-amendment.md
-OBJECTIVE: Repair the confirmed adapter and permission crashes, replace Overview and normal-runtime design fixtures, and connect all named modules to real isolated backend contracts.
-IN_SCOPE: focused regressions; canonical Request/Lending response projection; Events/Admin capability projection; Overview; Release; Restocking; Procurement; Events; Administration; truthful loading/empty/error/success states.
-OUT_OF_SCOPE: reset execution, deployment, Production writes, provider/email writes, FI-18, Figma changes, unknown-work cleanup.
-VERIFICATION: focused unit/e2e tests, deterministic build, local route matrix, absence of normal-runtime fixture labels and mock-service dependencies.
+OBJECTIVE: Freeze the exact privacy-filtered Playground baseline, reset generation inputs, rollback point, D1/R2 identities, and pre-reset session state before the authorized reset lifecycle.
+IN_SCOPE: read-only provider reconciliation; sealed clean baseline validation; manifest and rollback validation; D1 schema/count/foreign-key snapshot; R2 approved-object inventory; transient-session count; private evidence outside Git.
+OUT_OF_SCOPE: reset mutation until the freeze passes, deployment, Production writes, provider/email writes, Figma changes, unknown-work cleanup.
+VERIFICATION: current provider identity and isolated bindings; schema 32/0032; strict baseline validator; safe table counts; D1 foreign keys; approved R2 inventory; rollback readability; Production tuple unchanged.
 STOP_CONDITIONS: changed provider identity or bindings, lost rollback, Production overlap/mutation, privacy leakage, unavailable authorized session, or an unexpected dirty candidate worktree.
-NEXT_ACTION: Implement the smallest regression-backed repairs from `.codex/FM_R01_LIVE_PLAYGROUND_AUDIT_CHECKPOINT.md`.
+NEXT_ACTION: Reconcile the sealed clean reset point against current isolated D1/R2 state and create the private FM-R04 freeze receipt.

@@ -54,6 +54,8 @@ export type Session = {
   initials: string;
   /** Internal (context C) routes this account may open, derived from server capabilities. */
   capabilities: AuthRoute[];
+  /** Exact server-projected permission capabilities used for route presentation gates. */
+  serverCapabilities: string[];
   /** Server-derived `request.create`. Gate for the External Request Center. */
   requesterEligible: boolean;
   /** Server-derived `view.internal`. Marks a DOL/internal operator. */

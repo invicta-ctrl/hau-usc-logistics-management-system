@@ -33,7 +33,7 @@ function lendingBootstrapPayload() {
     contractVersion: 2,
     module: 'lending',
     requestOnly: false,
-    scopeRevision: { scope: 'lending', token: 'lending-r7', updatedAt: '2026-08-24T00:00:00.000Z' },
+    scopeRevision: { scope: 'lending', token: 7, updatedAt: '2026-08-24T00:00:00.000Z' },
     pagination: { page: 2, pageSize: 25, total: 51, hasMore: true },
     data: {
       lendingTickets: [
@@ -146,7 +146,7 @@ describe('FI-07 internal lending frontend contract', () => {
     expect(projected).toMatchObject({
       lendingTickets: [{ id: 'LEND-1', requestedItemId: 'ITM-1', borrowerName: '', assetOptions: [] }],
       pagination: { page: 2, pageSize: 25, total: 51, hasMore: true },
-      scopeRevision: { token: 'lending-r7', updatedAt: '2026-08-24T00:00:00.000Z' },
+      scopeRevision: { token: '7', updatedAt: '2026-08-24T00:00:00.000Z' },
     });
     expect(projected.inventoryItems[0].lendableAvailable).toBeUndefined();
     expect(Object.hasOwn(projected.inventoryItems[0], 'lendableAvailable')).toBe(false);
