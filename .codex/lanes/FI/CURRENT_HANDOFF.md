@@ -14,7 +14,7 @@ CURRENT_POINTER: .codex/lanes/FI/CURRENT.md
 CURRENT_TASK: .codex/lanes/FI/CURRENT_TASK.md
 LATEST_ACCEPTED_SPEC: .codex/specs/accepted/2026-08-26-fi13-final-craft-exact-frontend-freeze.md
 COMPLETED: FI-FM-PARALLEL-A1 established the FI lane routing records and released the FI lock at the no-accepted-slice checkpoint.
-VALIDATION: Focused handoff verifier unit test passed 5/5; root continuation and handoff validators passed; `git diff --check` passed before commit. Commit/push/parity remains the final checkpoint.
+VALIDATION: Focused handoff verifier unit test passed 5/5; root continuation and handoff validators passed; `git diff --check` passed; transition checkpoint commit/push and 0/0 parity passed.
 EXTERNAL_ACTIONS: None.
 BLOCKER: No accepted local FI slice exists after FI-13.
 NEXT_EXACT_ACTION: Await an accepted local FI slice; do not invent FI-18 or reopen a closed FI slice.

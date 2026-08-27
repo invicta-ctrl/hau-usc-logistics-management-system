@@ -19,7 +19,7 @@ FI_LANE_POINTER: .codex/lanes/FI/CURRENT.md
 FM_LANE_POINTER: EXTERNAL__NOT_OWNED_OR_ESTABLISHED_BY_THIS_TASK
 LEGACY_CLASSIFICATION_MAP: .codex/LEGACY_FI_CLASSIFICATION_MAP.md
 COMPLETED: FI-FM-PARALLEL-A1 compact continuity transition: root records route to the local FI lane, the external FM lane remains unowned/unestablished here, and no accepted local FI slice was created or implied.
-VALIDATION: Focused handoff verifier unit test passed 5/5; `npm.cmd run check:continuation` and `npm.cmd run handoff:verify` passed; `git diff --check` passed before commit. Commit/push/parity remains the final checkpoint.
+VALIDATION: Focused handoff verifier unit test passed 5/5; `npm.cmd run check:continuation` and `npm.cmd run handoff:verify` passed; `git diff --check` passed; transition checkpoint commit/push and 0/0 parity passed.
 EXTERNAL_ACTIONS: None. No workflow, runner, deployment, provider, Playground, Production, migration, data, Figma, or external FM resource action occurred.
 BLOCKER: No accepted local FI slice exists after FI-13. FI-14 remains FM-01 terminally blocked by provider-manifest/schema reconciliation outside this task; FI-15 remains a future whole-product acceptance lane and is not started.
 NEXT_EXACT_ACTION: Await an accepted local FI slice; do not invent FI-18, reopen a closed FI slice, establish the external FM lane, or mutate a provider/environment.
