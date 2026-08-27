@@ -1,19 +1,19 @@
 # Current Work Pointer — FI-00 through FI-12 Direct Playground Migration
 
 PROGRAM: HAU-USC Logistics FI-00 through FI-12 isolated Playground migration
-STATUS: FI00_FI12_BROWSER_ACCEPTANCE_BLOCKED
+STATUS: FI00_FI12_LOCAL_PLAYWRIGHT_SMOKE_IN_PROGRESS
 PHASE: FM / FRONTEND MIGRATION — final acceptance
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fi00-fi12-playground-candidate
 BRANCH: release/v0.8.3-fi12-playground
 HEAD: GIT_HEAD (dynamic smoke-lock documentation checkpoint; deployed source remains fixed below)
 UPSTREAM: origin/release/v0.8.3-fi12-playground
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED
+ACTIVE_WRITER: TERRA_HIGH:/root/fi00_fi12_candidate_resume
+WRITER_LOCK: ACQUIRED
 LANE: FM / FRONTEND MIGRATION
-FM_WRITER_LOCK: RELEASED
-LOCK_EVENT: Canonical FM smoke/receipt lock released after browser-surface availability failure; no acceptance probe was executed.
+FM_WRITER_LOCK: HELD
+LOCK_EVENT: Canonical FM smoke/receipt lock acquired for a fresh local non-persistent Playwright public-smoke attempt.
 LOCK_DEPENDENCIES: Accepted migration-only amendment; deployed source 8992e670861f136ce803ef03b68aa4687dcda8fc; private deployment receipt; no concurrent writer.
-LOCK_OUTPUTS: Private sanitized browser-availability receipt; no login/session/data/provider mutation.
+LOCK_OUTPUTS: Private sanitized local public-smoke receipt; no login/session/data/provider mutation.
 DEPLOYED_SOURCE_SHA: 8992e670861f136ce803ef03b68aa4687dcda8fc
 DEPLOYMENT_RECEIPT: Private/redacted local evidence; upload count 1; retries 0; deployed version identity retained privately.
 VERIFIER_NOTE: Private deployment verifier history-order correction is closed; no repository deployment-code change.
@@ -33,6 +33,6 @@ GITHUB_ACTIONS_DISPATCH: Not used. Previous different-ref queued run remained de
 EXCLUSIONS: No new resources; baseline refresh/export/import; data/schema migration; Production deployment/action; FI-13+; cleanup/retirement; frontend integration/design/polish; workflow dispatch; login/session creation or inspection; data mutation; or source/product change.
 EXTERNAL_MUTATIONS: No mutation is authorized in this smoke checkpoint. Existing deployment is fixed: one isolated Playground Worker upload; Production deployment, traffic, resource, data, schema, secret, and workflow mutation: ZERO.
 ROLLBACK: READY — sealed pre-deploy staging version and D1/brand-R2/evidence-R2 tuple remain present, matched, and isolated; exact identifiers are private.
-SMOKE_RECEIPT: PARTIAL — Chrome connected but its target navigation was locally blocked; in-app Browser unavailable after its documented bootstrap check; Edge unavailable; no existing target tab/session was available. Public version/readiness, denial, route, responsive, console, and network checks: NOT_RUN_BROWSER_TRANSPORT_UNAVAILABLE. AUTHENTICATED_READ_BLOCKED_NO_EXISTING_SESSION.
-HANDOFF_STATUS: BLOCKED_OWNER_INTERACTION
-NEXT_ACTION: Owner must make one usable browser surface available for the sealed isolated Playground URL without login (or expose an already-authenticated target tab); then perform the remaining no-mutation public smoke and, only if an existing session is visibly present, a source-reviewed read-only authenticated check.
+SMOKE_RECEIPT: PARTIAL — prior interactive browser surfaces were unavailable. Existing-session authenticated read remains blocked pending a separately pre-existing authenticated surface.
+HANDOFF_STATUS: FM_LOCAL_PLAYWRIGHT_SMOKE_LOCK_HELD
+NEXT_ACTION: Run only the fresh non-persistent local Playwright public/readiness/version/denial/routes/responsive/console-network smoke; do not login or inspect session/storage state.
