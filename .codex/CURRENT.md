@@ -1,35 +1,39 @@
 # Current Routing Pointer
 
-PROGRAM: HAU-USC Logistics FI-00 through FI-17 local frontend integration
-MILESTONE: FI17_FINAL_LOCAL_FRONTEND_COMPLETION_AND_FREEZE
-STATUS: FI00_FI17_COMPLETE_LOCAL
-PHASE: FI17__COMPLETE_LOCAL_FREEZE
-MODE: COMPLETE__LOCAL
+PROGRAM: HAU-USC Logistics post-FI17 local frontend completeness recovery
+MILESTONE: POST_FI17_COMPLETENESS_RECOVERY
+STATUS: COMPLETE__LOCAL_READY_FOR_OWNER_REVIEW_AND_MIGRATION_PLANNING
+PHASE: POST_FI17__RECOVERY_CLOSED__NO_NEW_FI_SLICE
+MODE: EXECUTE__LOCAL_ONLY
 BRANCH: frontend-design-integration
-HEAD: GIT_HEAD
-UPSTREAM: origin/frontend-design-integration @ GIT_HEAD
+HEAD: 3da03dcc78caafe144afbe02fc09197979bce0a3
+HEAD_INTERPRETATION: SOURCE_CHECKPOINT__CLOSURE_RECORDS_UNCOMMITTED
+RECOVERY_START_HEAD: 21d87d5c612a87c53b20d5f1e8121eae65173176
+RECOVERY_START_TREE: e64f330eb8bfdb622293dd5bae8a1153011308f4
+SOURCE_CHECKPOINT_AFTER_REVIEW: 3da03dcc78caafe144afbe02fc09197979bce0a3
+SOURCE_TREE_AFTER_REVIEW: 4d9c6f40625fd738530e22347597ead1ce787017
+CLOSURE_COMMIT_AFTER_REVIEW: GIT_HEAD_AFTER_FINALIZATION
+UPSTREAM: origin/frontend-design-integration @ GIT_HEAD_AFTER_FINALIZATION
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
-WORKTREE_STATE: DIRTY__PRESERVED_AIBRIDGE_AND_LOCAL_TOOL_RESIDUE
+WORKTREE_STATE: DIRTY__CLOSURE_RECORDS_UNCOMMITTED__PRESERVED_AIBRIDGE_AND_LOCAL_RESIDUE
 ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED__FI00_FI17_COMPLETE
+WRITER_LOCK: RELEASED__POST_FI17_FRONTEND_COMPLETENESS_RECOVERY
 LEGACY_FI14_WRITER_LOCK: RELEASED__FI14_TERMINAL_MIGRATION_BOUNDARY
-FI_WRITER_LOCK: RELEASED__FI00_FI17_COMPLETE
-HANDOFF_STATUS: READY_FOR_HANDOFF
-REQUIRED_MODEL: NONE__LOCAL_FI_PROGRAM_COMPLETE
+FI_WRITER_LOCK: RELEASED__POST_FI17_FRONTEND_COMPLETENESS_RECOVERY
+HANDOFF_STATUS: COMPLETE__LOCAL_READY_FOR_OWNER_REVIEW_AND_MIGRATION_PLANNING
+REQUIRED_MODEL: NONE__RECOVERY_COMPLETE
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-27-fi14-fi17-local-integration-completion-owner-amendment.md
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-28-post-fi17-frontend-completeness-recovery-owner-amendment.md
 FI_LANE_POINTER: .codex/lanes/FI/CURRENT.md
 FM_LANE_POINTER: EXTERNAL__NOT_OWNED_OR_ESTABLISHED_BY_THIS_TASK
 LEGACY_CLASSIFICATION_MAP: .codex/LEGACY_FI_CLASSIFICATION_MAP.md
-FINAL_FRONTEND_SOURCE_COMMIT: d5ae172b8e012a1ad61d60da6fb54510d1677762
-FINAL_FRONTEND_SOURCE_TREE: 3c68dddab37daeb2b4253256641acce989443466
-FI_NEXT_SLICE: NONE
-FINAL_STOP: FI17_COMPLETE_LOCAL_FREEZE
+FI_NEXT_SLICE: POST_FI17_RECOVERY__NOT_A_NEW_FI_SLICE
+FINAL_STOP: OWNER_REVIEW_AND_LATER_MIGRATION_PLANNING_ONLY
 BLOCKER: NONE
-LATEST_CHECKPOINT: FI-17 local production-mode build, deterministic artifact freeze, production-output browser acceptance, and FI-00 through FI-17 closure are complete; receipt `.codex/FI17_FINAL_LOCAL_FRONTEND_COMPLETION_FREEZE_RECEIPT.md`.
-NEXT_EXACT_ACTION: Earl may plan the next frontend migration under a later owner amendment; do not deploy, migrate, or create FI-18 from this task.
+LATEST_CHECKPOINT: `.codex/POST_FI17_FRONTEND_COMPLETENESS_RECOVERY_RECEIPT.md` records corrected start identity, accessible hero control, 150/150 4173 sweep, and served-production 390/1440 evidence; all writer locks released.
+NEXT_EXACT_ACTION: OWNER_REVIEW_ONLY__then separately authorize migration planning. No FI-18.
 
 ## Routing boundary
 
-The local FI program is complete and its writer lock is released. Historical LEGACY-FI14 / FM-01 remains preserved migration evidence only. FM remains external and read-only from this worktree; its current migration target is FI-00 through FI-12.
+The FI-17 receipt remains preserved historical evidence; its former completeness contradiction is closed by `FI-COMPLETE-RECOVERY-01` and its canonical recovery receipt. Historical LEGACY-FI14 / FM-01 remains preserved migration evidence only. FM remains external and read-only from this worktree.
