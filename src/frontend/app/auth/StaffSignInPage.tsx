@@ -12,6 +12,8 @@ import { AccountAccessPanel } from "./AccountAccessPanel";
 
 export function StaffSignInPage({
   onSignIn,
+  onPlaygroundSignIn,
+  playground,
   onBack,
   dark,
   onToggle,
@@ -27,6 +29,8 @@ export function StaffSignInPage({
   activationExpiresAt,
 }: {
   onSignIn: (identifier: string, password: string) => Promise<void>;
+  onPlaygroundSignIn: () => Promise<void>;
+  playground: boolean;
   onBack: () => void;
   dark: boolean;
   onToggle: () => void;
@@ -194,6 +198,31 @@ export function StaffSignInPage({
             >
               <strong>{status.title}</strong>
               <span>{status.detail}</span>
+            </div>
+          )}
+
+          {playground && authState !== "authorized" && authState !== "activation-required" && (
+            <div
+              className="flex flex-col gap-3 rounded-[12px] p-4"
+              style={{ background: dark ? "rgba(232,185,60,.12)" : "rgba(97,11,15,.06)", border: `1px solid ${c.border}` }}
+            >
+              <div className="flex flex-col gap-1">
+                <strong style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 13, color: c.text }}>
+                  Isolated Playground
+                </strong>
+                <span style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 12, lineHeight: "18px", color: c.muted }}>
+                  No credentials are required. Start a temporary staging-only System Owner test session.
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void onPlaygroundSignIn()}
+                className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c] disabled:cursor-wait disabled:opacity-60"
+                style={{ background: "#e8b93c", color: "#40070a", minHeight: 48, border: "1px solid #d1b478", fontFamily: "'IBM Plex Sans', system-ui, sans-serif" }}
+              >
+                {busy ? "Opening Playground…" : "Enter Playground"}
+              </button>
             </div>
           )}
 

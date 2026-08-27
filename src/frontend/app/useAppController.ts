@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AUTH_ROUTES, isAuthRoute } from './appRoutes';
 import type { AuthGateState, AuthRoute, EntryIntent, Route, Session } from './appTypes';
 import { resolvePostAuthDestination, resolveStaffHome, type DenialReason } from './entryIntent';
@@ -45,6 +45,22 @@ export function useAppController() {
   const [authState, setAuthState] = useState<AuthGateState>('signed-out');
   const [authError, setAuthError] = useState<string | null>(null);
   const [activationExpiresAt, setActivationExpiresAt] = useState('');
+  const [playground, setPlayground] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void frontendBackend
+      .version()
+      .then((version) => {
+        if (active) setPlayground(version.playground);
+      })
+      .catch(() => {
+        if (active) setPlayground(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   /* R3-A1-A2 entry intent. `entryIntent` is what the user explicitly opened;
    * `intendedRoute` is the specific internal route behind an
@@ -255,6 +271,27 @@ export function useAppController() {
     [applyDecision, entryIntent, intendedRoute],
   );
 
+  const handlePlaygroundSignIn = useCallback(async () => {
+    setAuthError(null);
+    setDenialReason(null);
+    setAuthState('loading');
+    try {
+      const authenticated = await frontendBackend.playgroundSession();
+      const next = projectSession(authenticated.user);
+      setSession(next);
+      setActivationExpiresAt('');
+      applyDecision(next, entryIntent, intendedRoute);
+    } catch (error) {
+      setSession(null);
+      setAuthError(
+        error instanceof FrontendApiError
+          ? error.message
+          : 'The Playground session service is temporarily unavailable.',
+      );
+      setAuthState('service-error');
+    }
+  }, [applyDecision, entryIntent, intendedRoute]);
+
   const handleSignOut = useCallback(async () => {
     try {
       await frontendBackend.logout();
@@ -279,6 +316,7 @@ export function useAppController() {
     session,
     authState,
     authError,
+    playground,
     entryIntent,
     intendedRoute,
     denialReason,
@@ -289,6 +327,7 @@ export function useAppController() {
     openLogisticsHub,
     goHome,
     handleSignIn,
+    handlePlaygroundSignIn,
     handleActivate,
     handleSignOut,
     activationExpiresAt,

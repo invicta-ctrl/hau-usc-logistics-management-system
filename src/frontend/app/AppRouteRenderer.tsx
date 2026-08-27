@@ -25,6 +25,7 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
     session,
     authState,
     authError,
+    playground,
     entryIntent,
     intendedRoute,
     denialReason,
@@ -34,6 +35,7 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
     openLogisticsHub,
     goHome,
     handleSignIn,
+    handlePlaygroundSignIn,
     handleActivate,
     handleSignOut,
     activationExpiresAt,
@@ -117,6 +119,8 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
     return (
       <StaffSignInPage
         onSignIn={handleSignIn}
+        onPlaygroundSignIn={handlePlaygroundSignIn}
+        playground={playground}
         onBack={goHome}
         dark={dark}
         onToggle={toggleTheme}

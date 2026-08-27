@@ -208,6 +208,40 @@ describe('Figma frontend backend adapter', () => {
     ]);
   });
 
+  it('opens a credential-free Playground session through the staging-only endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      response({
+        state: 'AUTHENTICATED',
+        csrfToken: 'playground-csrf-token',
+        user: {
+          accountId: 'PLAYGROUND-OWNER',
+          displayName: 'Playground Owner',
+          authorization: {
+            active: true,
+            mappingStatus: 'MAPPED',
+            roleId: 'SYSTEM_OWNER',
+            capabilities: ['system.admin', 'view.internal'],
+          },
+        },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const backend = new FrontendBackend();
+
+    await expect(backend.playgroundSession()).resolves.toMatchObject({
+      csrfToken: 'playground-csrf-token',
+      user: { roleId: 'SYSTEM_OWNER', capabilities: ['system.admin', 'view.internal'] },
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/playground/session',
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include',
+        body: '{}',
+      }),
+    );
+  });
+
   it('strictly projects the read-only same-origin profile contract', async () => {
     const fetchMock = vi.fn().mockResolvedValue(response(profilePayload()));
     vi.stubGlobal('fetch', fetchMock);

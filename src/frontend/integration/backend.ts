@@ -847,6 +847,12 @@ export class FrontendBackend {
     }
   }
 
+  async playgroundSession(): Promise<FrontendSession> {
+    const session = this.sessionFrom(await this.request('/api/playground/session', { body: {} }));
+    if (!session) incomplete('The Playground session service returned an incomplete authenticated session.');
+    return session;
+  }
+
   async profile(signal?: AbortSignal): Promise<FrontendProfile> {
     const payload = await this.request('/api/me/profile', { method: 'GET', signal });
     return projectProfile(payload.profile);
