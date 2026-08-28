@@ -926,7 +926,7 @@ function ManagedEventsRoute({
       <style>{scopeRouteCss(".sup", css, [".event-stack", ".event-cards"])}</style>
       {inspection ? (
         <section className="sandbox" data-fi11-events-inspection="true">
-          <b>Sanitized local inspection</b>
+            <b>Sanitized Preview inspection</b>
           <span>Synthetic preview · no session, backend, or protected data</span>
         </section>
       ) : null}

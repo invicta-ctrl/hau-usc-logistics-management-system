@@ -15,6 +15,7 @@ import {
   isInternalOperator,
   isRouteAuthorized,
 } from '../integration/routeAccess';
+import { appRouteFromHash, appRouteHash } from './routeHash';
 
 function initials(value: string) {
   const parts = value.split(/\s+/u).filter(Boolean);
@@ -148,7 +149,12 @@ export function useAppController() {
   }, [requireAuth]);
 
   const navigate = useCallback(
-    (next: Route) => {
+    (next: Route, hashAlreadyCurrent = false) => {
+      const targetHash = appRouteHash(next);
+      if (!hashAlreadyCurrent && window.location.hash !== targetHash) {
+        window.location.hash = targetHash;
+        return;
+      }
       if (next === 'external-request') {
         requireExternalRequest();
         return;
@@ -173,6 +179,16 @@ export function useAppController() {
     [moveTo, requireAuth, requireExternalRequest, session],
   );
 
+  useEffect(() => {
+    const syncRouteFromHash = () => {
+      const next = appRouteFromHash(window.location.hash);
+      if (next) navigate(next, true);
+    };
+    syncRouteFromHash();
+    window.addEventListener('hashchange', syncRouteFromHash);
+    return () => window.removeEventListener('hashchange', syncRouteFromHash);
+  }, [navigate]);
+
   /**
    * R3-A1-A2: Home is Home, not logout.
    *
@@ -182,6 +198,7 @@ export function useAppController() {
    * action that destroys a session.
    */
   const goHome = useCallback(() => {
+    if (window.location.hash) window.location.hash = '';
     setEntryIntent('GENERIC_STAFF_SIGN_IN');
     setIntendedRoute(null);
     setDenialReason(null);

@@ -3,7 +3,7 @@ import type { PreviewFilter } from './vocabulary';
 
 export type PreviewInspectionState =
   | Readonly<{ mode: 'OFF' }>
-  | Readonly<{ mode: 'LOCAL_INDEX_INSPECTION'; route: AuthRoute | 'external-request' }>;
+  | Readonly<{ mode: 'INDEX_INSPECTION'; route: AuthRoute | 'external-request' }>;
 
 export type PreviewIndexBrowseState = Readonly<{
   query: string;
@@ -31,25 +31,28 @@ export function isProtectedPreviewRoute(route: Route): route is AuthRoute | 'ext
   );
 }
 
-export function localPreviewInspectionAllowed({
+export function previewInspectionAllowed({
   indexAllowed,
   indexOpen,
   explicitIndexAction,
+  directInspectionRoute = false,
   dev = import.meta.env.DEV,
   location = typeof window === 'undefined' ? undefined : window.location,
 }: {
   indexAllowed: boolean;
   indexOpen: boolean;
   explicitIndexAction: boolean;
+  directInspectionRoute?: boolean;
   dev?: boolean;
-  location?: Pick<Location, 'hostname' | 'port'>;
+  location?: Pick<Location, 'hostname' | 'port' | 'protocol'>;
 }): boolean {
+  const exactLocalInspection =
+    dev && location?.hostname === '127.0.0.1' && location.port === '4173';
+  const exactDeployedPlayground =
+    !dev && location?.protocol === 'https:' && location.hostname === 'playground.hausc.org';
   return Boolean(
-    dev &&
-    location?.hostname === '127.0.0.1' &&
-    location.port === '4173' &&
     indexAllowed &&
-    indexOpen &&
-    explicitIndexAction,
+    (exactLocalInspection || exactDeployedPlayground) &&
+    (directInspectionRoute || (indexOpen && explicitIndexAction)),
   );
 }

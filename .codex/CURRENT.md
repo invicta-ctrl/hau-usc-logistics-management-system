@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P03_LIVE_BLANK_ROOT_AUDIT_COMPLETE;P04_PREVIEW_INDEX_NAVIGATION_NEXT
+PHASE: P04_PREVIEW_INDEX_NAVIGATION_REPAIRED_LOCALLY;P05_FI_FRONTEND_RECONCILIATION_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -35,6 +35,8 @@ P01_STATUS: COMPLETE_FOR_BASE_SELECTION_AND_PRESERVATION
 P02_STATUS: BRANCH_AND_ISOLATED_WORKTREE_ESTABLISHED
 P03_STATUS: PASS_LIVE_DIAGNOSIS_AND_LOCAL_FAIL_OPEN_REPAIR;DEPLOYMENT_NOT_PERFORMED
 P03_AUDIT: .codex/PLAYGROUND_MASTER_P03_BLANK_ROOT_AUDIT.md
+P04_STATUS: PASS_LOCAL_CANDIDATE;LIVE_DEPLOYMENT_PENDING
+P04_AUDIT: .codex/PLAYGROUND_MASTER_P04_NAVIGATION_AUDIT.md
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Execute P04: audit every Preview Index workspace entry, direct route, browser Back/Forward transition, Index return, and post-reset route contract; repair navigation and add the exhaustive Playwright regression without changing Playground business data.
+NEXT_EXACT_ACTION: Execute P05: compare the selected Playground tree with the accepted FI frontend lineage, classify every relevant difference, adopt only newer accepted frontend behavior, preserve Playground operational integrations, rebuild generated artifacts, and stop on any unresolved accepted-route conflict.
 HANDOFF_STATUS: ACTIVE

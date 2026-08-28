@@ -24,6 +24,13 @@
 - Added a privacy-safe staging/Production binding-isolation audit and aligned reconciliation-branch validation with the accepted temporary-branch policy.
 - Rebuilt the staging package and verified byte-identical hero reconstruction. No deployment, reset, migration, D1/R2/provider/business-data, Production/main, Google, or Figma mutation occurred.
 
+### Playground Master P04 navigation repair
+
+- Reproduced the deployed Preview Index no-op and replaced memory-only route selection with canonical real-route and protected-inspection hashes.
+- Added direct-load, reload, Back/Forward, and Index-return synchronization while keeping inspection gated to the exact local supervisor or canonical HTTPS Playground after trusted version validation; off-origin and Production contexts remain denied.
+- Added an exhaustive Playwright matrix for all 15 Preview Index entries at mobile and desktop widths, with a visible page landmark/heading and zero mutation requests.
+- Rebuilt the staging package and verified byte-identical hero reconstruction. The P04 candidate remains undeployed; no Playground data, provider, Production/main, Google, or Figma mutation occurred.
+
 ### FI-13 through FI-17 immediate Playground migration
 
 - Migrated the accepted FI frontend completion plus post-FI17 Overview and hero-motion recovery into the FM branch while preserving real Worker/API, auth, D1/R2, reset, privacy, and operational behavior.

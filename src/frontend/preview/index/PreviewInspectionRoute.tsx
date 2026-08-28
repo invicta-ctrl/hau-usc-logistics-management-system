@@ -42,7 +42,7 @@ export function PreviewInspectionRoute({
           aria-label="Preview inspection"
         >
           <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '0.35px' }}>
-            PREVIEW INSPECTION · Local fixture only. No backend authorization has been granted.
+            PREVIEW INSPECTION · Sanitized fixture only. No backend authorization has been granted.
           </p>
           <button type="button" className="preview-action" onClick={onBackToIndex}>
             Back to Preview Index

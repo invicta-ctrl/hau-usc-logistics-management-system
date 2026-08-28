@@ -39,7 +39,7 @@ describe('FI-08 Release Desk frontend integration', () => {
       label: 'Release Desk',
       group: 'STAFF',
       description:
-        'Capability-gated Release Desk visual module. Local inspection uses deterministic synthetic states and action simulation with no protected request or mutation.',
+      'Capability-gated Release Desk visual module. Preview inspection uses deterministic synthetic states and action simulation with no protected request or mutation.',
       implementationStatus: 'ACCEPTED',
       backendStatus: 'VISUAL_ONLY',
       access: 'AUTHENTICATED',

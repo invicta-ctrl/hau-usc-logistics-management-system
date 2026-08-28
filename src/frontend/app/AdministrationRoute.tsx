@@ -406,7 +406,7 @@ export default function AdministrationRoute({
       <State
         k="Sanitized preview"
         h="No administration records are shown in this preview state"
-        p="Local inspection has no protected roster or activity data."
+              p="Preview inspection has no protected roster or activity data."
       >
         <button className="primary" onClick={retry}>
           Restore preview fixture
@@ -436,7 +436,7 @@ export default function AdministrationRoute({
       <style>{scopeRouteCss(".adm", css)}</style>
       {inspection ? (
         <section className="sandbox" data-fi10-inspection="true">
-          <b>Sanitized local inspection</b>
+              <b>Sanitized Preview inspection</b>
           <span>Synthetic preview · no session, backend, or protected data</span>
           <label>
             Preview state
@@ -849,7 +849,7 @@ function Fi11Panel({
       <State
         k="Sanitized preview"
         h={`No ${tab.toLowerCase()} records are shown in this preview state`}
-        p="Local inspection has no protected or live technical data."
+        p="Preview inspection has no protected or live technical data."
       >
         <button className="primary" type="button" onClick={onRetry}>Restore preview fixture</button>
       </State>

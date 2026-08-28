@@ -9,7 +9,7 @@ export default function App() {
   const controller = useAppController();
   const preview = usePreviewIndex();
 
-  if (preview.inspection.mode === 'LOCAL_INDEX_INSPECTION') {
+  if (preview.inspection.mode === 'INDEX_INSPECTION') {
     return (
       <PreviewInspectionRoute
         route={preview.inspection.route}

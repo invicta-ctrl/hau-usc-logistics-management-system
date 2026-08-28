@@ -89,7 +89,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Operations overview',
     group: 'STAFF',
     description:
-      'Authenticated operations overview. The real route preserves the server-derived session boundary; local inspection uses a deterministic sanitized session and makes no protected request.',
+      'Authenticated operations overview. The real route preserves the server-derived session boundary; Preview inspection uses a deterministic sanitized session.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'PARTIAL',
     access: 'AUTHENTICATED',
@@ -102,7 +102,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Inventory',
     group: 'STAFF',
     description:
-      'Authenticated Inventory surface projected through the existing read-only module bootstrap. Local inspection uses a deterministic fixture with no protected request.',
+      'Authenticated Inventory surface projected through the existing read-only module bootstrap. Preview inspection uses a deterministic fixture with no protected request.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -115,7 +115,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Internal Request Hub',
     group: 'STAFF',
     description:
-      'DOL-only Internal Request Hub projected through the existing read-only bootstrap; local inspection uses a no-network fixture.',
+      'DOL-only Internal Request Hub projected through the existing read-only bootstrap; Preview inspection uses a no-network fixture.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -128,7 +128,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Internal Lending Hub',
     group: 'STAFF',
     description:
-      'DOL-only lending queue projected from the strict lending bootstrap; local inspection uses a deterministic no-network fixture and action simulation.',
+      'DOL-only lending queue projected from the strict lending bootstrap; Preview inspection uses a deterministic no-network fixture and action simulation.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -141,7 +141,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Release Desk',
     group: 'STAFF',
     description:
-      'Capability-gated Release Desk visual module. Local inspection uses deterministic synthetic states and action simulation with no protected request or mutation.',
+      'Capability-gated Release Desk visual module. Preview inspection uses deterministic synthetic states and action simulation with no protected request or mutation.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'VISUAL_ONLY',
     access: 'AUTHENTICATED',
@@ -154,7 +154,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Restocking',
     group: 'STAFF',
     description:
-      'Authenticated Restocking and receiving real module. Local inspection is deterministic synthetic presentation with no protected request or mutation.',
+      'Authenticated Restocking and receiving real module. Preview inspection is deterministic synthetic presentation with no protected request or mutation.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'VISUAL_ONLY',
     access: 'AUTHENTICATED',
@@ -167,7 +167,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Procurement',
     group: 'STAFF',
     description:
-      'Authenticated Procurement lifecycle real module. Local inspection is deterministic synthetic presentation with no protected request or mutation.',
+      'Authenticated Procurement lifecycle real module. Preview inspection is deterministic synthetic presentation with no protected request or mutation.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'VISUAL_ONLY',
     access: 'AUTHENTICATED',
@@ -180,7 +180,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Events',
     group: 'STAFF',
     description:
-      'Authenticated event.manage read-only projection. Local inspection uses a deterministic sanitized fixture with no protected request or mutation.',
+      'Authenticated event.manage read-only projection. Preview inspection uses a deterministic sanitized fixture with no protected request or mutation.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -193,7 +193,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Administration',
     group: 'ADMINISTRATION',
     description:
-      'Authenticated FI-10 Accounts, Directory, and Activity module plus independently gated FI-11 Reference, Link, Brand, and System read-only panels. Local inspection is a sanitized deterministic presentation with no protected request or mutation.',
+      'Authenticated FI-10 Accounts, Directory, and Activity module plus independently gated FI-11 Reference, Link, Brand, and System read-only panels. Preview inspection is a sanitized deterministic presentation with no protected request or mutation.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -206,7 +206,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Account profile',
     group: 'ADMINISTRATION',
     description:
-      'Authenticated read-only profile surface. Local inspection uses an explicit deterministic presentation fixture.',
+      'Authenticated read-only profile surface. Preview inspection uses an explicit deterministic presentation fixture.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',

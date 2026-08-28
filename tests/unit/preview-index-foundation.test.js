@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { AUTH_ROUTES } from '../../src/frontend/app/appRoutes';
-import { isPreviewIndexHash, PREVIEW_INDEX_HASH } from '../../src/frontend/preview/index/routeHash';
+import { APP_ROUTES, AUTH_ROUTES } from '../../src/frontend/app/appRoutes';
+import { appRouteFromHash, appRouteHash } from '../../src/frontend/app/routeHash';
+import {
+  isPreviewIndexHash,
+  PREVIEW_INDEX_HASH,
+  previewInspectionHash,
+  previewInspectionRouteFromHash,
+} from '../../src/frontend/preview/index/routeHash';
 import { projectPreviewIndexGate } from '../../src/frontend/preview/index/trustedGate';
-import { localPreviewInspectionAllowed } from '../../src/frontend/preview/index/inspection';
+import { previewInspectionAllowed } from '../../src/frontend/preview/index/inspection';
 import {
   ACCESS_REQUIREMENT,
   ACCESS_REQUIREMENT_LABELS,
@@ -53,6 +59,26 @@ describe('preview index trusted gate and registry foundations', () => {
     }
   });
 
+  it('round-trips every application and protected inspection route through exact canonical hashes', () => {
+    for (const route of APP_ROUTES) {
+      expect(appRouteFromHash(appRouteHash(route))).toBe(route);
+    }
+    expect(appRouteFromHash('#/route/not-a-route')).toBeNull();
+    expect(appRouteFromHash('#/__preview/index')).toBeNull();
+
+    for (const route of ['external-request', ...AUTH_ROUTES]) {
+      expect(previewInspectionRouteFromHash(previewInspectionHash(route))).toBe(route);
+    }
+    for (const invalid of [
+      '#/__preview/inspect/',
+      '#/__preview/inspect/landing',
+      '#/__preview/inspect/inventory/',
+      '#/__preview/inspect/inventory?x=1',
+    ]) {
+      expect(previewInspectionRouteFromHash(invalid)).toBeNull();
+    }
+  });
+
   it('projects the trusted gate strictly from playground === true', () => {
     expect(projectPreviewIndexGate({ playground: true })).toEqual({
       validatedPlayground: true,
@@ -64,25 +90,35 @@ describe('preview index trusted gate and registry foundations', () => {
     });
   });
 
-  it('allows local inspection only for an explicit Index action in DEV on exact loopback 4173', () => {
+  it('allows inspection only on the exact local supervisor or canonical deployed Playground', () => {
     const common = { indexAllowed: true, indexOpen: true, explicitIndexAction: true, dev: true };
     expect(
-      localPreviewInspectionAllowed({
+      previewInspectionAllowed({
         ...common,
-        location: { hostname: '127.0.0.1', port: '4173' },
+        location: { hostname: '127.0.0.1', port: '4173', protocol: 'http:' },
+      }),
+    ).toBe(true);
+    expect(
+      previewInspectionAllowed({
+        ...common,
+        dev: false,
+        indexOpen: false,
+        explicitIndexAction: false,
+        directInspectionRoute: true,
+        location: { hostname: 'playground.hausc.org', port: '', protocol: 'https:' },
       }),
     ).toBe(true);
 
     for (const patch of [
-      { dev: false },
       { indexAllowed: false },
       { indexOpen: false },
       { explicitIndexAction: false },
-      { location: { hostname: 'localhost', port: '4173' } },
-      { location: { hostname: '127.0.0.1', port: '4174' } },
-      { location: { hostname: 'preview.hausc.org', port: '' } },
+      { location: { hostname: 'localhost', port: '4173', protocol: 'http:' } },
+      { location: { hostname: '127.0.0.1', port: '4174', protocol: 'http:' } },
+      { dev: false, location: { hostname: 'preview.hausc.org', port: '', protocol: 'https:' } },
+      { dev: false, location: { hostname: 'playground.hausc.org', port: '', protocol: 'http:' } },
     ]) {
-      expect(localPreviewInspectionAllowed({ ...common, ...patch })).toBe(false);
+      expect(previewInspectionAllowed({ ...common, ...patch })).toBe(false);
     }
   });
 

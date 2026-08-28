@@ -281,6 +281,79 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or prot
   expect(protectedRequests).toEqual([]);
 });
 
+test('P04 opens every Preview Index entry with canonical direct, Back, Forward, Index-return, and reload state', async ({
+  page,
+}) => {
+  test.skip(!exactInspectionPort, 'Run explicitly against the accepted 4173 supervisor.');
+  test.setTimeout(180_000);
+  await installVersion(page, true);
+  await installEmptyFeed(page);
+
+  const entries = [
+    { route: 'landing', action: 'open', hash: '' },
+    { route: 'tracking', action: 'open', hash: '#/route/tracking' },
+    { route: 'borrow', action: 'open', hash: '#/route/borrow' },
+    { route: 'staff-signin', action: 'open', hash: '#/route/staff-signin' },
+    { route: 'external-request', action: 'open-preview', hash: '#/__preview/inspect/external-request' },
+    { route: 'overview', action: 'open-preview', hash: '#/__preview/inspect/overview' },
+    { route: 'inventory', action: 'open-preview', hash: '#/__preview/inspect/inventory' },
+    { route: 'request-center', action: 'open-preview', hash: '#/__preview/inspect/request-center' },
+    { route: 'lending', action: 'open-preview', hash: '#/__preview/inspect/lending' },
+    { route: 'release', action: 'open-preview', hash: '#/__preview/inspect/release' },
+    { route: 'restocking', action: 'open-preview', hash: '#/__preview/inspect/restocking' },
+    { route: 'procurement', action: 'open-preview', hash: '#/__preview/inspect/procurement' },
+    { route: 'events', action: 'open-preview', hash: '#/__preview/inspect/events' },
+    { route: 'administration', action: 'open-preview', hash: '#/__preview/inspect/administration' },
+    { route: 'profile', action: 'open-preview', hash: '#/__preview/inspect/profile' },
+  ];
+  const mutationRequests = [];
+  page.on('request', (request) => {
+    const method = request.method();
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+      mutationRequests.push({ method, pathname: new URL(request.url()).pathname });
+    }
+  });
+
+  const expectWorkspace = async (entry) => {
+    await expect(page).toHaveURL((url) => url.hash === entry.hash);
+    const main = page.getByRole('main').first();
+    await expect(main).toBeVisible();
+    await expect(main.getByRole('heading').first()).toBeVisible();
+    if (entry.action === 'open-preview') {
+      await expect(
+        page.locator(`[data-preview-inspection="true"][data-preview-route="${entry.route}"]`),
+      ).toBeVisible();
+    }
+  };
+
+  for (const entry of entries) {
+    await page.goto('/#/__preview/index');
+    const row = page.locator(`[data-preview-route="${entry.route}"]`);
+    await expect(row).toBeVisible();
+    await row.locator(`[data-action="${entry.action}"]`).click();
+    await expectWorkspace(entry);
+
+    await page.goBack();
+    await expect(page.locator('[data-preview-index]')).toBeVisible();
+    await expect(page).toHaveURL((url) => url.hash === '#/__preview/index');
+
+    await page.goForward();
+    await expectWorkspace(entry);
+
+    await page.goto(`/${entry.hash}`);
+    await expectWorkspace(entry);
+    await page.reload();
+    await expectWorkspace(entry);
+
+    if (entry.action === 'open-preview') {
+      await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+      await expect(page.locator('[data-preview-index]')).toBeVisible();
+    }
+  }
+
+  expect(mutationRequests).toEqual([]);
+});
+
 test('FI-08R keeps focused-task preview and both dialog focus lifecycles inside the Release Desk', async ({
   page,
 }) => {
@@ -551,7 +624,7 @@ test('FI-10 renders the bounded Administration inspection safely at every accept
       '[data-preview-inspection="true"][data-preview-route="administration"] [data-fi10-administration="true"]',
     );
     await expect(administration).toBeVisible();
-    await expect(administration.getByText('Sanitized local inspection', { exact: true })).toBeVisible();
+    await expect(administration.getByText('Sanitized Preview inspection', { exact: true })).toBeVisible();
     await expect(
       administration.getByText('Synthetic preview · no session, backend, or protected data', { exact: true }),
     ).toBeVisible();

@@ -88,7 +88,7 @@ describe('FI-09 Supply operations frontend integration', () => {
       label: 'Restocking',
       group: 'STAFF',
       description:
-        'Authenticated Restocking and receiving real module. Local inspection is deterministic synthetic presentation with no protected request or mutation.',
+        'Authenticated Restocking and receiving real module. Preview inspection is deterministic synthetic presentation with no protected request or mutation.',
       implementationStatus: 'ACCEPTED',
       backendStatus: 'VISUAL_ONLY',
       access: 'AUTHENTICATED',
@@ -101,7 +101,7 @@ describe('FI-09 Supply operations frontend integration', () => {
       label: 'Procurement',
       group: 'STAFF',
       description:
-        'Authenticated Procurement lifecycle real module. Local inspection is deterministic synthetic presentation with no protected request or mutation.',
+        'Authenticated Procurement lifecycle real module. Preview inspection is deterministic synthetic presentation with no protected request or mutation.',
       implementationStatus: 'ACCEPTED',
       backendStatus: 'VISUAL_ONLY',
       access: 'AUTHENTICATED',

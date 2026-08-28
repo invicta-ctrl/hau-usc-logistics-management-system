@@ -2,13 +2,18 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Route } from '../../app/appTypes';
 import {
   isProtectedPreviewRoute,
-  localPreviewInspectionAllowed,
+  previewInspectionAllowed,
   PREVIEW_INSPECTION_OFF,
   type PreviewIndexBrowseState,
   type PreviewInspectionState,
 } from './inspection';
 import { frontendBackend } from '../../integration/backend';
-import { isPreviewIndexHash, PREVIEW_INDEX_HASH } from './routeHash';
+import {
+  isPreviewIndexHash,
+  PREVIEW_INDEX_HASH,
+  previewInspectionHash,
+  previewInspectionRouteFromHash,
+} from './routeHash';
 import { projectPreviewIndexGate } from './trustedGate';
 
 export function usePreviewIndex() {
@@ -40,10 +45,28 @@ export function usePreviewIndex() {
   }, []);
 
   useEffect(() => {
-    const onHashChange = () => setIndexOpen(isPreviewIndexHash(window.location.hash));
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
+    const syncPreviewRoute = () => {
+      const route = previewInspectionRouteFromHash(window.location.hash);
+      if (
+        route &&
+        previewInspectionAllowed({
+          indexAllowed: allowed,
+          indexOpen: false,
+          explicitIndexAction: false,
+          directInspectionRoute: true,
+        })
+      ) {
+        setInspection({ mode: 'INDEX_INSPECTION', route });
+        setIndexOpen(false);
+        return;
+      }
+      setInspection(PREVIEW_INSPECTION_OFF);
+      setIndexOpen(isPreviewIndexHash(window.location.hash));
+    };
+    syncPreviewRoute();
+    window.addEventListener('hashchange', syncPreviewRoute);
+    return () => window.removeEventListener('hashchange', syncPreviewRoute);
+  }, [allowed]);
 
   const openIndex = useCallback((fromLauncher: boolean) => {
     returnFocusRequestedRef.current = fromLauncher;
@@ -69,7 +92,7 @@ export function usePreviewIndex() {
     (route: Route) => {
       if (
         !isProtectedPreviewRoute(route) ||
-        !localPreviewInspectionAllowed({
+        !previewInspectionAllowed({
           indexAllowed: allowed,
           indexOpen,
           explicitIndexAction: true,
@@ -77,7 +100,13 @@ export function usePreviewIndex() {
       ) {
         return false;
       }
-      setInspection({ mode: 'LOCAL_INDEX_INSPECTION', route });
+      const targetHash = previewInspectionHash(route);
+      if (window.location.hash !== targetHash) {
+        window.location.hash = targetHash;
+      } else {
+        setInspection({ mode: 'INDEX_INSPECTION', route });
+        setIndexOpen(false);
+      }
       return true;
     },
     [allowed, indexOpen],

@@ -635,7 +635,7 @@ function RequestInspector({
               className="mt-3 inline-block rounded-md px-2 py-1 font-mono text-[9px] uppercase tracking-[0.8px]"
               style={{ color: '#7d5518', background: '#fbeed2', border: '1px solid #dcbe8a' }}
             >
-              Local inspection fixture · no service action
+                Preview inspection fixture · no service action
             </p>
           )}
         </div>

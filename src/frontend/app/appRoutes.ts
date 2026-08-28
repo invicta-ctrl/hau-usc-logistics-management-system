@@ -13,6 +13,15 @@ export const AUTH_ROUTES: AuthRoute[] = [
   'profile',
 ];
 
+export const APP_ROUTES: Route[] = [
+  'landing',
+  'tracking',
+  'borrow',
+  'staff-signin',
+  'external-request',
+  ...AUTH_ROUTES,
+];
+
 /* R3-A1-A2 vocabulary. The public-facing name "Request Center" now belongs
  * exclusively to the authenticated External Request Center (context B). The
  * internal DOL surface is the **Request Hub** (context C). FE-R3-012 tracked
@@ -43,4 +52,8 @@ export const AUTH_PLACEHOLDER_LABELS: Partial<Record<AuthRoute, string>> = {
 
 export function isAuthRoute(route: Route): route is AuthRoute {
   return AUTH_ROUTES.includes(route as AuthRoute);
+}
+
+export function isAppRoute(value: unknown): value is Route {
+  return typeof value === 'string' && APP_ROUTES.includes(value as Route);
 }

@@ -130,7 +130,7 @@ const PREVIEW_QUEUE: FrontendLendingBootstrap = {
           newStatus: 'FOR_REVIEW',
           changedAt: '2026-08-24T09:00:00.000Z',
           changedBy: 'Preview fixture',
-          reason: 'Local inspection seed',
+    reason: 'Preview inspection seed',
           metadata: {},
         },
       ],
@@ -1309,7 +1309,7 @@ export function InternalLendingHub({
         </div>
         <aside className="min-w-0 rounded-lg border border-[var(--border-paper)] bg-[var(--paper-mid)] px-4 py-3 text-xs sm:min-w-64">
           <strong className="block">
-            {inspection ? 'Local inspection fixture' : 'Authenticated lending projection'}
+                {inspection ? 'Preview inspection fixture' : 'Authenticated lending projection'}
           </strong>
           <span className="mt-1 block leading-5 text-[var(--ink-mid)]">
             {inspection

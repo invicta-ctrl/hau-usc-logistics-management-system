@@ -220,7 +220,6 @@ export function PreviewIndexPage({
   const openRoute = (entry: PreviewRouteEntry) => {
     onBrowseStateChange({ query, filter, scrollTop: window.scrollY });
     onCancelLauncherRestore();
-    onClose();
     navigate(entry.route);
   };
 

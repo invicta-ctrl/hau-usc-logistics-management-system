@@ -52,7 +52,7 @@ export const PREVIEW_PROFILE: FrontendProfile = Object.freeze({
     capabilities: ['PREVIEW_PRESENTATION_ONLY'],
     workspaceIds: ['LOCAL-4173'],
     defaultWorkspaceId: 'LOCAL-4173',
-    scopeMode: 'Local inspection presentation',
+  scopeMode: 'Preview inspection presentation',
   },
   revision: 'preview-fixture-v1',
   credentialVersion: 0,
@@ -63,7 +63,7 @@ export const PREVIEW_PROFILE: FrontendProfile = Object.freeze({
 /** Same frontend shape as the real requester portal, with local fixture values only. */
 export const PREVIEW_REQUESTER_PORTAL: RequesterPortal = Object.freeze({
   profile: { displayName: 'Preview Requester', departmentId: 'USC-PREVIEW' },
-  eventSeries: [{ id: 'preview-series', code: 'PREVIEW', name: 'Local inspection' }],
+  eventSeries: [{ id: 'preview-series', code: 'PREVIEW', name: 'Preview inspection' }],
   events: [
     {
       id: 'preview-event',
@@ -87,7 +87,7 @@ export const PREVIEW_REQUESTER_PORTAL: RequesterPortal = Object.freeze({
       event: 'Preview event',
       subEvent: '',
       department: 'USC-PREVIEW',
-      purpose: 'Deterministic local inspection fixture',
+    purpose: 'Deterministic Preview inspection fixture',
       status: 'FOR_REVIEW',
       createdAt: 'Preview fixture',
       updatedAt: 'Preview fixture',

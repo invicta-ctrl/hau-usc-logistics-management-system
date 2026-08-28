@@ -28,18 +28,18 @@ PRIOR_LATEST_MIGRATION: 0032_staff_account_activity_history.sql
 PRIOR_LIVE_STATE: DIRTY;RESET_GENERATION=3;ACTIVE_SESSIONS=1;TRANSIENT_TOTAL=1
 PRIOR_PRODUCTION_MUTATION: ZERO
 
-COMPLETED: Fresh governance/Git handshake; known main governance dirt reconciled without mutation; all worktrees inventoried; related local/remote branches and divergence counted; release/v0.8.3 FI00–FI17 Playground lineage selected as base; isolated reconciliation worktree created; full master prompt persisted; two-branch policy and deterministic validators updated; P01 manifest written. P03 proved the live deployed candidate, APIs, assets, root mount, responsive DOM, and isolated staging bindings healthy; confirmed and locally repaired the fail-closed CSS reveal mechanism; and recorded the exact audit in `.codex/PLAYGROUND_MASTER_P03_BLANK_ROOT_AUDIT.md`.
+COMPLETED: Fresh governance/Git handshake; P00–P02 authority/base/worktree established; P03 live root diagnosis and local fail-open repair completed. P04 reproduced the deployed no-op Preview action and locally added canonical real-route and protected-inspection hashes, strict deployed Playground gating, history synchronization, direct loads, truthful Preview wording, and the exhaustive 15-entry navigation regression. Exact audits are `.codex/PLAYGROUND_MASTER_P03_BLANK_ROOT_AUDIT.md` and `.codex/PLAYGROUND_MASTER_P04_NAVIGATION_AUDIT.md`.
 
-VALIDATION: Prompt fidelity differs from the attachment only by the accepted status field. P00/P01 focused Vitest passed 3 files/13 tests. P03 focused Vitest passed 5 files/16 tests; live 390/1440 root checks had mounted DOM and zero fatal console errors; live binding isolation reported zero Production crossover; post-repair staging build and hero reconstruction passed with index SHA-256 `B4D9AC7725E7AF20D8E6CAAD777A4872397AED989A8E08B5166E11831FD5DB23`.
+VALIDATION: P03 focused Vitest passed 5 files/16 tests. P04 focused Vitest passed 4 files/32 tests; exhaustive 15-entry Playwright passed at 390 and 1440; existing navigation/authorization tests passed 3/3; off-origin gate passed. Post-P04 staging build and hero reconstruction passed with index SHA-256 `C5A52F7BF1519E8058E99A8C99DC68CAFB8E93A330D39CA8D7725F34CC9003A4`.
 
 PRESERVED: main working state; backend and v0.8.4 worktrees; frontend-design-integration `.ai-bridge/` and `.local/`; all recovery/design/release refs; prior Playground D1/R2/runtime state; canonical root AGENTS.md.
 
-EXTERNAL_ACTIONS: Read-only `git fetch origin`, read-only live Playground/browser/binding inspection, and the exact P00/P01 checkpoint push to `origin/reconcile/playground-master` only. No deployment, provider, database, migration, reset, business-data, Google, Production, or Figma write.
+EXTERNAL_ACTIONS: Read-only Git/live Playground/browser/binding inspection, branch checkpoint pushes, and a controlled local 4173 test server that was stopped after verification. No deployment, provider, database, migration, reset, business-data, Google, Production, or Figma write.
 
-DO_NOT_REPEAT: Do not recreate the reconciliation branch/worktree. Do not broad-merge frontend/design branches. Do not repeat P03 live diagnosis while source/artifact/runtime identity remains unchanged. Do not reset the prior generation-3 DIRTY Playground merely for a clean appearance. Verify live identity before consequential Playground action.
+DO_NOT_REPEAT: Do not recreate the reconciliation branch/worktree. Do not broad-merge frontend/design branches. Do not repeat P03/P04 live diagnosis while source/artifact/runtime identity remains unchanged. Do not reset the prior generation-3 DIRTY Playground merely for a clean appearance. Verify live identity before consequential Playground action.
 
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Execute P04: audit every Preview Index workspace entry, direct route, browser Back/Forward transition, Index return, and post-reset route contract; repair navigation and add the exhaustive Playwright regression without changing Playground business data.
+NEXT_EXACT_ACTION: Execute P05: compare the selected Playground tree with the accepted FI frontend lineage, classify every relevant difference, adopt only newer accepted frontend behavior, preserve Playground operational integrations, rebuild generated artifacts, and stop on any unresolved accepted-route conflict.
 RESUME_COMMANDS: Read the accepted master prompt, current chain, and reconciliation manifest; run exact Git handshake; reverify live Playground identity before any external mutation.
 PROHIBITED_ACTIONS: Production/main deployment or mutation; branch deletion; history rewrite; unknown residue mutation; Figma write; unbacked reset/migration; unverified R2 deletion.
 HANDOFF_STATUS: ACTIVE
