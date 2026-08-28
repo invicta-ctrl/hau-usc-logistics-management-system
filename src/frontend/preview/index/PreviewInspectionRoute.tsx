@@ -2,6 +2,7 @@ import type { AuthRoute, Route } from '../../app/appTypes';
 import { AuthPlaceholderRoute } from '../../app/auth/AuthPlaceholderRoute';
 import { ProfileRoute } from '../../app/profile/ProfileRoute';
 import { InventoryRoute } from '../../app/inventory/InventoryRoute';
+import { OverviewRoute } from '../../app/overview/OverviewRoute';
 import { InternalRequestHub } from '../../app/request/InternalRequestHub';
 import { InternalLendingHub } from '../../app/lending/InternalLendingHub';
 import ReleaseDeskRoute from '../../app/ReleaseDeskRoute';
@@ -73,7 +74,16 @@ export function PreviewInspectionRoute({
       inspection
       onBackToPreview={onBackToIndex}
     >
-      {authRoute === 'profile' ? (
+      {authRoute === 'overview' ? (
+        /* POST-FI17. OverviewRoute was built, styled, and then referenced by
+           nothing, so the hub's own default landing route fell through to
+           AuthPlaceholderRoute and told operators it "has not yet been built".
+           Mounted here in the local inspection lane only — the registry already
+           classifies overview as SURFACE_PREVIEW / VISUAL_ONLY and the surface
+           labels its own fixtures — so no production-bound route begins showing
+           fixture data as a side effect of a design pass. */
+        <OverviewRoute operator={LOCAL_PREVIEW_OPERATOR.displayName} dark={dark} />
+      ) : authRoute === 'profile' ? (
         <ProfileRoute dark={dark} onToggle={onToggleTheme} previewProfile={PREVIEW_PROFILE} />
       ) : authRoute === 'inventory' ? (
         <InventoryRoute dark={dark} navigate={onOpenRoute} inspection />
