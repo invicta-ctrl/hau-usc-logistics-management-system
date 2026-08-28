@@ -1869,6 +1869,73 @@ provider and migration writes all 0. Nothing was merged.
    specifying both. Needs an owner reading, not a design decision.
 ```
 
+## RECOVERY_03_FOLLOW_UP — THE MISSING PREVIEW BUTTON ON 4174
+
+The owner asked where 4173's preview button was on 4174, and to implement it.
+They were right that it was missing, and the reason was my error.
+
+```text
+WHAT I GOT WRONG
+  Every Preview Index check in this pass stubbed /api/version to
+  {ok:true, playground:true}. On the real 4174 there is no backend at all:
+  /api/version falls through to the SPA, version() rejects, and the launcher
+  never rendered. I verified a runtime the owner never sees and reported
+  "16/16 checks pass" on it. The Index was not merely gated on 4174 — it was
+  entirely absent, and I had not noticed.
+
+WHAT THE ABSENCE ACTUALLY WAS
+  Not a bug. tests/e2e/preview-index.spec.js states three fail-closed
+  guarantees in as many words: the gate must ignore spoofed storage, must
+  reject every malformed `playground` value, and must FAIL CLOSED WHEN THE
+  VERSION ENDPOINT ERRORS. A backend-less dev server is that last case
+  exactly. The missing button was the security contract working.
+
+FIRST ATTEMPT, REJECTED BY THE TESTS
+  I first admitted any loopback dev origin outright. Unit tests passed; the
+  e2e suite then failed all three guarantees above. That attempt was wrong and
+  was discarded — it would have dismantled an accepted fail-closed contract to
+  satisfy a one-line request.
+
+WHAT SHIPPED INSTEAD — AN EXPLICIT OPT-IN
+  VITE_HAU_LOCAL_DESIGN_PREVIEW=1 npx vite --port 4174 --strictPort --host 127.0.0.1
+
+  Unset — every test run, every CI run, every ordinary `npm run dev` — the gate
+  behaves exactly as before. Set, and only on exact loopback 127.0.0.1 at 4173
+  or 4174, the Index appears and protected modules mount.
+
+  It is ANDed with `dev` everywhere, so it is dead in every build: the compiled
+  bundle shows the flag folded to `dev:o=!1` and the string
+  VITE_HAU_LOCAL_DESIGN_PREVIEW does not appear in dist at all.
+
+  It deliberately does NOT serve a local /api/version claiming playground:true.
+  That attestation comes from the Playground Worker behind assertPlayground(env)
+  and means "you are talking to the isolated Playground". Faking it would state
+  something false about the backend and weaken the control that keeps preview
+  tooling off Production. The opt-in asserts only where the code is running.
+
+VERIFICATION
+  real 4174, no stubbing   launcher present · index opens · 15 routes listed
+                           15/15 routes mount with their own distinct h1
+  fail-closed, no opt-in   9/9 — launcher and index absent with no backend;
+                           storage spoof ignored; closed on playground false,
+                           missing, "true", 1, and a 503; hostname "localhost"
+                           not admitted even at 4174
+  accepted e2e spec        13 passed, 4 skipped, 0 failed against a default
+                           server — including all three fail-closed guarantees
+  unit                     156 files · 1166 passed · 1 skipped · 0 failed
+  production denial        0 of 10 markers; opt-in string absent from dist
+  ports                    4173 never bound at any point
+
+OPERATIONAL NOTE
+  The e2e suite runs on 4174 and asserts default behaviour, so it must not run
+  against an opted-in server. Stop the design preview, run the suite, restart
+  the preview with the flag.
+
+CORRECTED RESIDUAL
+  This supersedes residual 5 of the section above. The eleven protected routes
+  now mount on 4174 under the opt-in; without it they stay closed, by contract.
+```
+
 ## HANDOFF_STATUS
 
 ```text

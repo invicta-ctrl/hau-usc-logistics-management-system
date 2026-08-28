@@ -3,6 +3,7 @@ import type { Route } from '../../app/appTypes';
 import {
   isProtectedPreviewRoute,
   localPreviewInspectionAllowed,
+  previewIndexAvailable,
   PREVIEW_INSPECTION_OFF,
   type PreviewIndexBrowseState,
   type PreviewInspectionState,
@@ -22,16 +23,25 @@ export function usePreviewIndex() {
   });
   const returnFocusRequestedRef = useRef(false);
 
+  /* The server is still asked first and its answer still decides on any real
+   * deployment. What changed is the failure branch: a local dev server has no
+   * /api/version to give, and treating that as a denial is what hid the Index
+   * from the isolated design preview on 4174. previewIndexAvailable falls back
+   * to the local-dev-origin fact rather than to a fabricated attestation. */
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
     frontendBackend
       .version(controller.signal)
       .then((version) => {
-        if (active) setAllowed(projectPreviewIndexGate(version).indexAllowed);
+        if (active) {
+          setAllowed(
+            previewIndexAvailable({ playgroundAttested: projectPreviewIndexGate(version).indexAllowed }),
+          );
+        }
       })
       .catch(() => {
-        if (active) setAllowed(false);
+        if (active) setAllowed(previewIndexAvailable({ playgroundAttested: false }));
       });
     return () => {
       active = false;

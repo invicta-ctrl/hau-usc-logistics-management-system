@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { AUTH_ROUTES } from '../../src/frontend/app/appRoutes';
 import { isPreviewIndexHash, PREVIEW_INDEX_HASH } from '../../src/frontend/preview/index/routeHash';
 import { projectPreviewIndexGate } from '../../src/frontend/preview/index/trustedGate';
-import { localPreviewInspectionAllowed } from '../../src/frontend/preview/index/inspection';
+import {
+  localPreviewInspectionAllowed,
+  previewIndexAvailable,
+} from '../../src/frontend/preview/index/inspection';
 import {
   ACCESS_REQUIREMENT,
   ACCESS_REQUIREMENT_LABELS,
@@ -63,6 +66,9 @@ describe('preview index trusted gate and registry foundations', () => {
     });
   });
 
+  /* RECOVERY-03. 4174 is the isolated local design preview. It is admitted only
+   * behind an explicit opt-in, never by default, so every fail-closed guarantee
+   * below — and the three e2e ones — hold unchanged when the flag is unset. */
   it('allows local inspection only for an explicit Index action in DEV on exact loopback 4173', () => {
     const common = { indexAllowed: true, indexOpen: true, explicitIndexAction: true, dev: true };
     expect(
@@ -82,6 +88,72 @@ describe('preview index trusted gate and registry foundations', () => {
       { location: { hostname: 'preview.hausc.org', port: '' } },
     ]) {
       expect(localPreviewInspectionAllowed({ ...common, ...patch })).toBe(false);
+    }
+  });
+
+  it('admits the 4174 design preview for inspection only under the explicit opt-in, and never in a build', () => {
+    const common = { indexAllowed: true, indexOpen: true, explicitIndexAction: true };
+    const at4174 = { location: { hostname: '127.0.0.1', port: '4174' } };
+
+    expect(localPreviewInspectionAllowed({ ...common, ...at4174, dev: true, localDesignPreview: true })).toBe(true);
+
+    // Opt-in off, and opt-in on but not a dev build: both closed.
+    expect(localPreviewInspectionAllowed({ ...common, ...at4174, dev: true, localDesignPreview: false })).toBe(false);
+    expect(localPreviewInspectionAllowed({ ...common, ...at4174, dev: false, localDesignPreview: true })).toBe(false);
+
+    // The opt-in widens nothing else: not the host, not other ports.
+    for (const patch of [
+      { location: { hostname: 'localhost', port: '4174' } },
+      { location: { hostname: '0.0.0.0', port: '4174' } },
+      { location: { hostname: '127.0.0.1', port: '4175' } },
+      { location: { hostname: '127.0.0.1', port: '' } },
+      { location: { hostname: 'preview.hausc.org', port: '' } },
+    ]) {
+      expect(
+        localPreviewInspectionAllowed({ ...common, dev: true, localDesignPreview: true, ...patch }),
+      ).toBe(false);
+    }
+  });
+
+  /* The Index's own visibility. A playground attestation admits it as it always
+   * did; everything else still fails closed unless the opt-in is deliberately
+   * set on a loopback dev server. */
+  it('shows the Preview Index on an attesting playground, or under the opt-in on a loopback dev origin', () => {
+    expect(previewIndexAvailable({
+      playgroundAttested: true,
+      dev: false,
+      localDesignPreview: false,
+      location: { hostname: 'playground.hausc.org', port: '' },
+    })).toBe(true);
+
+    for (const port of ['4173', '4174']) {
+      expect(previewIndexAvailable({
+        playgroundAttested: false,
+        dev: true,
+        localDesignPreview: true,
+        location: { hostname: '127.0.0.1', port },
+      })).toBe(true);
+    }
+
+    // Without the opt-in a backend-less dev server stays closed — this is the
+    // "fails closed when the version endpoint errors" guarantee.
+    for (const port of ['4173', '4174']) {
+      expect(previewIndexAvailable({
+        playgroundAttested: false,
+        dev: true,
+        localDesignPreview: false,
+        location: { hostname: '127.0.0.1', port },
+      })).toBe(false);
+    }
+
+    for (const patch of [
+      { dev: false, location: { hostname: '127.0.0.1', port: '4174' } },
+      { dev: true, location: { hostname: '127.0.0.1', port: '4175' } },
+      { dev: true, location: { hostname: 'localhost', port: '4174' } },
+      { dev: true, location: { hostname: 'preview.hausc.org', port: '' } },
+      { dev: false, location: { hostname: 'hau-usc-logistics.pages.dev', port: '' } },
+    ]) {
+      expect(previewIndexAvailable({ playgroundAttested: false, localDesignPreview: true, ...patch })).toBe(false);
     }
   });
 

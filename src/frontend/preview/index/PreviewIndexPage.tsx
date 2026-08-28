@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Route } from '../../app/appTypes';
 import { listPreviewRoutes } from './registry';
 import type { PreviewRouteEntry } from './registry';
-import { LOCAL_INSPECTION_ORIGIN, type PreviewIndexBrowseState } from './inspection';
+import { localInspectionOrigins, type PreviewIndexBrowseState } from './inspection';
 import { filterPreviewRoutes, groupPreviewRoutes, searchPreviewRoutes } from './selectors';
 import {
   ACCESS_REQUIREMENT_LABELS,
@@ -100,9 +100,9 @@ function PreviewEntryRow({
         ) : null}
         {declined ? (
           <p className="preview-entry-declined" role="status" data-preview-declined={entry.route}>
-            Local inspection is admitted on {LOCAL_INSPECTION_ORIGIN} only. This origin is not it, so
-            the protected module was not mounted. <em>Surface Preview</em> and <em>Test Real Access</em>{' '}
-            still work here.
+            Local inspection is admitted on {localInspectionOrigins().join(' and ')} only. This origin
+            is not one of them, so the protected module was not mounted. <em>Surface Preview</em> and{' '}
+            <em>Test Real Access</em> still work here.
           </p>
         ) : null}
       </div>
