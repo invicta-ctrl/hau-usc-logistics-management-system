@@ -124,6 +124,7 @@ const previewBrandSlots: FrontendBrandAssetSlot[] = [
 const previewSystemStatus: FrontendSystemStatus = {
   technicalResponse: "RESPONSE_RECEIVED",
   readiness: "NOT_REPORTED_READY",
+  playground: null,
 };
 
 function humanize(value: string) {
@@ -187,6 +188,9 @@ export default function AdministrationRoute({
   const [brandState, setBrandState] = useState<Fi10LoadState>(inspection ? "ready" : "loading");
   const [systemStatus, setSystemStatus] = useState<FrontendSystemStatus | null>(null);
   const [systemState, setSystemState] = useState<Fi10LoadState>(inspection ? "ready" : "loading");
+  const [resetConfirmation, setResetConfirmation] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetNotice, setResetNotice] = useState("");
   const [fi11ReloadKey, setFi11ReloadKey] = useState(0);
   const hasCapability = (capability: string) => inspection || capabilities.includes(capability);
 
@@ -372,6 +376,30 @@ export default function AdministrationRoute({
     setFi11ReloadKey((value) => value + 1);
   }
 
+  async function requestPlaygroundReset() {
+    if (inspection || resetBusy || resetConfirmation !== "RESET PLAYGROUND") return;
+    setResetBusy(true);
+    setResetNotice("");
+    try {
+      const receipt = await frontendBackend.requestPlaygroundReset(resetConfirmation);
+      setResetConfirmation("");
+      setResetNotice(
+        receipt.state === "RESETTING"
+          ? "Reset request accepted. This session will be invalidated when the reset completes."
+          : `Reset request accepted with state ${humanize(receipt.state)}.`,
+      );
+      setFi11ReloadKey((value) => value + 1);
+    } catch (error) {
+      setResetNotice(
+        error instanceof FrontendApiError && error.status === 409
+          ? "A Playground reset or baseline refresh is already in progress."
+          : "The reset request was not accepted. No reset was started from this screen.",
+      );
+    } finally {
+      setResetBusy(false);
+    }
+  }
+
   let content: React.ReactNode;
   const isFi10Tab = fi10Tabs.includes(tab as Fi10Tab);
   if (!isFi10Tab) {
@@ -386,6 +414,11 @@ export default function AdministrationRoute({
         brandState={brandState}
         systemStatus={systemStatus}
         systemState={systemState}
+        resetConfirmation={resetConfirmation}
+        resetBusy={resetBusy}
+        resetNotice={resetNotice}
+        onResetConfirmationChange={setResetConfirmation}
+        onRequestReset={requestPlaygroundReset}
         onRetry={retryFi11}
       />
     );
@@ -810,6 +843,11 @@ function Fi11Panel({
   brandState,
   systemStatus,
   systemState,
+  resetConfirmation,
+  resetBusy,
+  resetNotice,
+  onResetConfirmationChange,
+  onRequestReset,
   onRetry,
 }: {
   tab: Fi11Tab;
@@ -821,6 +859,11 @@ function Fi11Panel({
   brandState: Fi10LoadState;
   systemStatus: FrontendSystemStatus | null;
   systemState: Fi10LoadState;
+  resetConfirmation: string;
+  resetBusy: boolean;
+  resetNotice: string;
+  onResetConfirmationChange: (value: string) => void;
+  onRequestReset: () => void;
   onRetry: () => void;
 }) {
   const fixtureState: Fi10LoadState | 'empty' =
@@ -1004,11 +1047,60 @@ function Fi11Panel({
       ) : (
         <p className="note">No current technical response is available to present.</p>
       )}
-      <section className="gate">
-        <b>REDACTED · READ-ONLY</b>
-        <p>Release, schema, migration, dependency, provider, correlation, and internal diagnostic fields are not shown here.</p>
-        <button type="button" disabled>System actions unavailable</button>
-      </section>
+      {systemStatus?.playground ? (
+        <section className="gate" data-playground-reset-center="true">
+          <b>ISOLATED STAGING PLAYGROUND · SYSTEM OWNER</b>
+          <h3>Playground controls</h3>
+          <dl>
+            <div><dt>Baseline</dt><dd>{systemStatus.playground.baselineId} · v{systemStatus.playground.baselineVersion}</dd></div>
+            <div><dt>Reset generation</dt><dd>{systemStatus.playground.generation}</dd></div>
+            <div><dt>Working state</dt><dd>{humanize(systemStatus.playground.workingState)}</dd></div>
+            <div><dt>Last reset</dt><dd>{systemStatus.playground.lastReset ? `${humanize(systemStatus.playground.lastReset.status)} · ${dateLabel(systemStatus.playground.lastReset.completedAt)}` : "No reset receipt reported"}</dd></div>
+          </dl>
+          <p>
+            Resetting invalidates every current Playground session, removes transient D1 work,
+            reconciles governed R2 working objects to the sealed baseline, and requires a new Enter Playground session.
+          </p>
+          {systemStatus.playground.lastReset?.consequences.length ? (
+            <ul>
+              {systemStatus.playground.lastReset.consequences.map((consequence) => <li key={consequence}>{consequence}</li>)}
+            </ul>
+          ) : null}
+          <label htmlFor="playground-reset-confirmation">
+            Type <b>RESET PLAYGROUND</b> to confirm
+          </label>
+          <input
+            id="playground-reset-confirmation"
+            value={resetConfirmation}
+            onChange={(event) => onResetConfirmationChange(event.target.value)}
+            autoComplete="off"
+            spellCheck={false}
+            disabled={resetBusy || !systemStatus.playground.resetAvailable}
+          />
+          <button
+            className="primary"
+            type="button"
+            onClick={onRequestReset}
+            disabled={
+              resetBusy ||
+              !systemStatus.playground.resetAvailable ||
+              resetConfirmation !== systemStatus.playground.confirmationPhrase
+            }
+          >
+            {resetBusy ? "Requesting reset…" : "Reset Entire Playground"}
+          </button>
+          {systemStatus.playground.pendingOperation ? (
+            <p role="status">Reset progress: {humanize(systemStatus.playground.pendingOperation.state)}</p>
+          ) : null}
+          {resetNotice ? <p className="live" role="status" aria-live="polite">{resetNotice}</p> : null}
+        </section>
+      ) : (
+        <section className="gate">
+          <b>REDACTED · READ-ONLY</b>
+          <p>Playground reset controls are unavailable outside the isolated staging Playground. Release, schema, migration, dependency, provider, correlation, and internal diagnostic fields are not shown here.</p>
+          <button type="button" disabled>System actions unavailable</button>
+        </section>
+      )}
     </section>
   );
 }

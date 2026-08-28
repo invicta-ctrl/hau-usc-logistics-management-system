@@ -21,6 +21,22 @@ function environment(state = { state: 'CLEAN', activeTestSession: false }) {
   const rows = new Map([
     ['playground.clean_baseline', { value: JSON.stringify(baseline), updated_at: baseline.capturedAt }],
     ['playground.working_state', { value: JSON.stringify(state), updated_at: baseline.capturedAt }],
+    ['playground.baseline_id', { value: 'PLAYGROUND-CLEAN-V2', updated_at: baseline.capturedAt }],
+    ['playground.baseline_version', { value: '2', updated_at: baseline.capturedAt }],
+    ['playground.reset_generation', { value: '6', updated_at: baseline.capturedAt }],
+    [
+      'playground.last_reset_receipt',
+      {
+        value: JSON.stringify({
+          status: 'PASS',
+          generation: 6,
+          completedAt: '2026-08-28T06:00:00.000Z',
+          oldSessionsInvalidated: 1,
+          consequences: ['Previous Playground sessions were invalidated.'],
+        }),
+        updated_at: baseline.capturedAt,
+      },
+    ],
   ]);
   const run = vi.fn().mockResolvedValue({ success: true });
   const prepare = vi.fn((sql) => ({
@@ -89,6 +105,15 @@ describe('isolated playground runtime guard and status', () => {
       workingState: 'CLEAN',
       d1BaselineParity: 'EXCEPTIONS',
       r2BaselineParity: 'PASS',
+      resetCenter: {
+        baselineId: 'PLAYGROUND-CLEAN-V2',
+        baselineVersion: '2',
+        generation: 6,
+        workingState: 'CLEAN',
+        resetAvailable: true,
+        confirmationPhrase: 'RESET PLAYGROUND',
+        lastReset: { status: 'PASS', generation: 6, oldSessionsInvalidated: 1 },
+      },
     });
     expect(status.candidate.commit).toHaveLength(12);
     expect(status.production.identity).toHaveLength(12);
@@ -123,5 +148,32 @@ describe('isolated playground runtime guard and status', () => {
     ).resolves.toMatchObject({ accepted: true, state: 'RESETTING' });
     expect(env.DB.batch).toHaveBeenCalledTimes(1);
     expect(playgroundRuntimeIssues(env)).toEqual([]);
+  });
+
+  it('rejects a second operation while the reset lock state is active', async () => {
+    const service = createPlaygroundService(
+      environment({ state: 'RESETTING', activeTestSession: false, resetGeneration: 7 }),
+    );
+    await expect(
+      service.requestOperation({
+        kind: 'RESET',
+        confirmation: 'RESET PLAYGROUND',
+        actorAccountId: 'OWNER',
+      }),
+    ).rejects.toMatchObject({ code: 'PLAYGROUND_OPERATION_IN_PROGRESS', status: 409 });
+  });
+
+  it.each([
+    ['GET', '/api/playground/status'],
+    ['POST', '/api/playground/operation'],
+  ])('does not expose %s %s in production', async (method, pathname) => {
+    const response = await worker.fetch(new Request(`https://logistics.hausc.org${pathname}`, { method }), {
+      ENVIRONMENT: 'PRODUCTION',
+      RECOVERY_HOSTNAME: 'recovery.workers.dev',
+    });
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: 'PLAYGROUND_ENVIRONMENT_REFUSED' },
+    });
   });
 });

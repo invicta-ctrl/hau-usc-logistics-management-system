@@ -342,7 +342,21 @@ async function run() {
       state: 'CLEAN',
       activeTestSession: false,
       resetGeneration: generation,
+      lastReset: completedAt,
       updatedAt: completedAt,
+    });
+    const oldSessionsInvalidated = nonNegativeInteger(before.sessions, 'before_session');
+    const lastResetReceipt = JSON.stringify({
+      status: 'PASS',
+      generation,
+      completedAt,
+      oldSessionsInvalidated,
+      consequences: [
+        'Previous Playground sessions were invalidated.',
+        'Transient D1 data was restored to the sealed clean baseline.',
+        'Governed R2 working objects were reconciled to the clean baseline.',
+        'A new Playground session is required.',
+      ],
     });
     wrangler([
       'd1',
@@ -358,6 +372,15 @@ async function run() {
       { json: true },
     );
     const resetVerification = validateResetVerification(d1Rows(verification)[0], resetResult, generation);
+    phase = 'FINAL_RECEIPT';
+    wrangler([
+      'd1',
+      'execute',
+      databaseId,
+      '--remote',
+      '--command',
+      `INSERT INTO app_metadata (key, value, updated_at) VALUES ('playground.last_reset_receipt', ${sqlText(lastResetReceipt)}, ${sqlText(completedAt)}) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at; DELETE FROM app_metadata WHERE key='playground.pending_operation';`,
+    ]);
     const report = {
       schemaVersion: 2,
       completedAt,
@@ -374,7 +397,7 @@ async function run() {
       },
       restoredCleanBookmark: cleanBookmark,
       generation: { before: generation - 1, after: generation },
-      oldSessionsInvalidated: nonNegativeInteger(before.sessions, 'before_session'),
+      oldSessionsInvalidated,
       d1: {
         schemaVersion: '32',
         latestMigration: '0032_staff_account_activity_history.sql',

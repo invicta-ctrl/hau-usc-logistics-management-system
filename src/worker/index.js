@@ -522,7 +522,11 @@ async function version(env, requestId) {
 
 async function handleApi(request, env, requestId, executionContext) {
   const url = new URL(request.url);
-  if (url.pathname === '/api/playground/session' && request.method === 'POST' && !isPlaygroundRuntime(env)) {
+  const guardedPlaygroundRequest =
+    (url.pathname === '/api/playground/session' && request.method === 'POST') ||
+    (url.pathname === '/api/playground/status' && request.method === 'GET') ||
+    (url.pathname === '/api/playground/operation' && request.method === 'POST');
+  if (guardedPlaygroundRequest && !isPlaygroundRuntime(env)) {
     return json(
       {
         error: { code: 'PLAYGROUND_ENVIRONMENT_REFUSED', message: 'The requested resource was not found.' },
@@ -592,14 +596,31 @@ async function handleApi(request, env, requestId, executionContext) {
       );
     }
     if (url.pathname === '/api/playground/status' && request.method === 'GET') {
-      const authorized = await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN);
+      if (!isPlaygroundRuntime(env)) {
+        throw new ApiError(
+          'PLAYGROUND_ENVIRONMENT_REFUSED',
+          'The playground environment guard refused this action.',
+          {
+            status: 404,
+          },
+        );
+      }
+      await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN);
       return json({
         ...(await createPlaygroundService(env).status()),
         correlationId: requestId,
-        actor: { accountId: authorized.account.id },
       });
     }
     if (url.pathname === '/api/playground/operation' && request.method === 'POST') {
+      if (!isPlaygroundRuntime(env)) {
+        throw new ApiError(
+          'PLAYGROUND_ENVIRONMENT_REFUSED',
+          'The playground environment guard refused this action.',
+          {
+            status: 404,
+          },
+        );
+      }
       const authorized = await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: true });
       return json({
         ...(await createPlaygroundService(env).requestOperation({

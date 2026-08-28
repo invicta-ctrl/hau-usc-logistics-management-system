@@ -12,6 +12,12 @@ export const PLAYGROUND_STATES = Object.freeze([
 ]);
 
 const SHORT_IDENTITY = /^[0-9a-f]{7,64}$/iu;
+const RESET_CONSEQUENCES = Object.freeze([
+  'Previous Playground sessions were invalidated.',
+  'Transient D1 data was restored to the sealed clean baseline.',
+  'Governed R2 working objects were reconciled to the clean baseline.',
+  'A new Playground session is required.',
+]);
 
 function enabled(value) {
   return value === true || String(value ?? '').toLowerCase() === 'true';
@@ -60,6 +66,11 @@ function short(value) {
   return String(value ?? 'UNKNOWN').slice(0, 12);
 }
 
+function nonNegativeInteger(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number >= 0 ? number : 0;
+}
+
 async function metadata(db, key) {
   return db.prepare('SELECT value, updated_at FROM app_metadata WHERE key = ?').bind(key).first();
 }
@@ -67,10 +78,14 @@ async function metadata(db, key) {
 function assertPlayground(env) {
   const issues = playgroundRuntimeIssues(env);
   if (issues.length) {
-    throw new ApiError('PLAYGROUND_ENVIRONMENT_REFUSED', 'The playground environment guard refused this action.', {
-      status: 404,
-      details: { issueCount: issues.length },
-    });
+    throw new ApiError(
+      'PLAYGROUND_ENVIRONMENT_REFUSED',
+      'The playground environment guard refused this action.',
+      {
+        status: 404,
+        details: { issueCount: issues.length },
+      },
+    );
   }
 }
 
@@ -90,12 +105,25 @@ export function createPlaygroundService(env) {
   assertPlayground(env);
   return Object.freeze({
     async status() {
-      const [baselineRow, stateRow, schema, migration] = await Promise.all([
+      const [
+        baselineRow,
+        stateRow,
+        baselineIdRow,
+        baselineVersionRow,
+        generationRow,
+        receiptRow,
+        pendingRow,
+        schema,
+        migration,
+      ] = await Promise.all([
         metadata(env.DB, 'playground.clean_baseline'),
         metadata(env.DB, 'playground.working_state'),
-        env.DB
-          .prepare("SELECT value FROM app_metadata WHERE key = 'operational_schema_version'")
-          .first(),
+        metadata(env.DB, 'playground.baseline_id'),
+        metadata(env.DB, 'playground.baseline_version'),
+        metadata(env.DB, 'playground.reset_generation'),
+        metadata(env.DB, 'playground.last_reset_receipt'),
+        metadata(env.DB, 'playground.pending_operation'),
+        env.DB.prepare("SELECT value FROM app_metadata WHERE key = 'operational_schema_version'").first(),
         env.DB.prepare('SELECT name FROM d1_migrations ORDER BY id DESC LIMIT 1').first(),
       ]);
       const baseline = parseMetadata(baselineRow, {});
@@ -104,6 +132,10 @@ export function createPlaygroundService(env) {
         activeTestSession: false,
         updatedAt: stateRow?.updated_at ?? '',
       });
+      const receipt = parseMetadata(receiptRow, {});
+      const pending = parseMetadata(pendingRow, {});
+      const workingState = PLAYGROUND_STATES.includes(String(working.state)) ? working.state : 'ERROR';
+      const generation = nonNegativeInteger(generationRow?.value ?? working.resetGeneration);
       return {
         playground: true,
         label: 'Isolated Staging Playground',
@@ -134,10 +166,37 @@ export function createPlaygroundService(env) {
         parityExceptions: Array.isArray(baseline.parityExceptions)
           ? baseline.parityExceptions.map(String)
           : [],
-        workingState: PLAYGROUND_STATES.includes(String(working.state)) ? working.state : 'ERROR',
+        workingState,
         activeTestSession: Boolean(working.activeTestSession),
         lastReset: working.lastReset ?? '',
         updatedAt: working.updatedAt ?? stateRow?.updated_at ?? '',
+        resetCenter: {
+          baselineId: String(baselineIdRow?.value ?? 'UNKNOWN'),
+          baselineVersion: String(baselineVersionRow?.value ?? 'UNKNOWN'),
+          generation,
+          workingState,
+          activeTestSession: Boolean(working.activeTestSession),
+          resetAvailable: !['RESETTING', 'REFRESHING_BASELINE'].includes(workingState) && !pending.kind,
+          confirmationPhrase: 'RESET PLAYGROUND',
+          pendingOperation:
+            pending.kind && pending.state
+              ? {
+                  kind: String(pending.kind),
+                  state: String(pending.state),
+                  requestedAt: String(pending.requestedAt ?? ''),
+                }
+              : null,
+          lastReset:
+            receipt.status && Number.isInteger(Number(receipt.generation))
+              ? {
+                  status: String(receipt.status),
+                  generation: Number(receipt.generation),
+                  completedAt: String(receipt.completedAt ?? ''),
+                  oldSessionsInvalidated: nonNegativeInteger(receipt.oldSessionsInvalidated),
+                  consequences: [...RESET_CONSEQUENCES],
+                }
+              : null,
+        },
         moduleSwitcher: {
           enabled: true,
           modules: [
@@ -164,12 +223,30 @@ export function createPlaygroundService(env) {
             ? 'REFRESH BASELINE FROM PRODUCTION'
             : '';
       if (!expected || confirmation !== expected) {
-        throw new ApiError('PLAYGROUND_CONFIRMATION_REQUIRED', `Type ${expected || 'the required phrase'} exactly.`, {
-          status: 400,
-        });
+        throw new ApiError(
+          'PLAYGROUND_CONFIRMATION_REQUIRED',
+          `Type ${expected || 'the required phrase'} exactly.`,
+          {
+            status: 400,
+          },
+        );
       }
-      const stateRow = await metadata(env.DB, 'playground.working_state');
+      const [stateRow, pendingRow] = await Promise.all([
+        metadata(env.DB, 'playground.working_state'),
+        metadata(env.DB, 'playground.pending_operation'),
+      ]);
       const current = parseMetadata(stateRow, { state: 'ERROR', activeTestSession: false });
+      const pending = parseMetadata(pendingRow, {});
+      if (
+        ['RESETTING', 'REFRESHING_BASELINE'].includes(current.state) ||
+        ['RESET', 'REFRESH_BASELINE'].includes(pending.kind)
+      ) {
+        throw new ApiError(
+          'PLAYGROUND_OPERATION_IN_PROGRESS',
+          'A Playground reset or baseline refresh is already in progress.',
+          { status: 409 },
+        );
+      }
       if (
         normalizedKind === 'REFRESH_BASELINE' &&
         (current.activeTestSession || ['ACTIVE', 'DIRTY'].includes(current.state)) &&

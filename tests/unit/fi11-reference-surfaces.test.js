@@ -139,6 +139,32 @@ describe('FI-11 governed frontend projections', () => {
       )
       .mockResolvedValueOnce(
         response({
+          playground: true,
+          actor: { accountId: 'PLAYGROUND-ACTOR-DO-NOT-RENDER' },
+          resetCenter: {
+            baselineId: 'PLAYGROUND-CLEAN-V2',
+            baselineVersion: '2',
+            generation: 6,
+            workingState: 'CLEAN',
+            activeTestSession: false,
+            resetAvailable: true,
+            confirmationPhrase: 'RESET PLAYGROUND',
+            pendingOperation: null,
+            lastReset: {
+              status: 'PASS',
+              generation: 6,
+              completedAt: '2026-08-28T06:00:00.000Z',
+              oldSessionsInvalidated: 1,
+              consequences: ['Previous Playground sessions were invalidated.'],
+              operationReference: 'PLAYGROUND-OPERATION-DO-NOT-RENDER',
+            },
+          },
+          candidate: { commit: 'CANDIDATE-DO-NOT-RENDER' },
+          correlationId: 'PLAYGROUND-CORRELATION-DO-NOT-RENDER',
+        }),
+      )
+      .mockResolvedValueOnce(
+        response({
           ok: true,
           ready: true,
           correlationId: 'READINESS-CORRELATION-DO-NOT-RENDER',
@@ -190,7 +216,27 @@ describe('FI-11 governed frontend projections', () => {
         },
       ],
     });
-    expect(system).toEqual({ technicalResponse: 'RESPONSE_RECEIVED', readiness: 'REPORTED_READY' });
+    expect(system).toEqual({
+      technicalResponse: 'RESPONSE_RECEIVED',
+      readiness: 'REPORTED_READY',
+      playground: {
+        baselineId: 'PLAYGROUND-CLEAN-V2',
+        baselineVersion: '2',
+        generation: 6,
+        workingState: 'CLEAN',
+        activeTestSession: false,
+        resetAvailable: true,
+        confirmationPhrase: 'RESET PLAYGROUND',
+        pendingOperation: null,
+        lastReset: {
+          status: 'PASS',
+          generation: 6,
+          completedAt: '2026-08-28T06:00:00.000Z',
+          oldSessionsInvalidated: 1,
+          consequences: ['Previous Playground sessions were invalidated.'],
+        },
+      },
+    });
 
     const rendered = JSON.stringify({ links, brandSlots, events, system });
     for (const forbidden of [
@@ -203,6 +249,10 @@ describe('FI-11 governed frontend projections', () => {
       'PRIVATE-SCHEMA',
       'PRIVATE-DEPENDENCY',
       'PRIVATE-CHECK',
+      'PLAYGROUND-ACTOR',
+      'PLAYGROUND-OPERATION',
+      'PLAYGROUND-CORRELATION',
+      'CANDIDATE-DO-NOT-RENDER',
     ]) {
       expect(rendered).not.toContain(forbidden);
     }
@@ -212,6 +262,7 @@ describe('FI-11 governed frontend projections', () => {
       '/api/owner/brand-assets/list',
       '/api/getEventManagement',
       '/api/health',
+      '/api/playground/status',
       '/api/readiness',
     ]);
     for (const call of fetchMock.mock.calls.slice(1, 4)) {
@@ -232,12 +283,48 @@ describe('FI-11 governed frontend projections', () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(response({ ok: true, correlationId: 'HEALTH-CORRELATION-DO-NOT-RENDER' }))
+      .mockResolvedValueOnce(response({ error: { code: 'PLAYGROUND_ENVIRONMENT_REFUSED' } }, 404))
       .mockResolvedValueOnce(response({ ok: false, ready: false }, 503));
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(new FrontendBackend().systemStatus()).resolves.toEqual({
       technicalResponse: 'RESPONSE_RECEIVED',
       readiness: 'NOT_REPORTED_READY',
+      playground: null,
     });
+  });
+
+  it('submits only the exact reset command with the authenticated CSRF token', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(response(sessionPayload))
+      .mockResolvedValueOnce(
+        response({
+          accepted: true,
+          state: 'RESETTING',
+          operationReference: 'PLAYGROUND-OPERATION-DO-NOT-RENDER',
+          correlationId: 'PLAYGROUND-CORRELATION-DO-NOT-RENDER',
+        }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const backend = new FrontendBackend();
+    await backend.session();
+    await expect(backend.requestPlaygroundReset('RESET PLAYGROUND')).resolves.toEqual({
+      accepted: true,
+      state: 'RESETTING',
+    });
+    expect(fetchMock.mock.calls[1]).toEqual([
+      '/api/playground/operation',
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include',
+        headers: expect.objectContaining({
+          'content-type': 'application/json',
+          'x-csrf-token': 'csrf-fi11',
+        }),
+        body: JSON.stringify({ kind: 'RESET', confirmation: 'RESET PLAYGROUND' }),
+      }),
+    ]);
   });
 });

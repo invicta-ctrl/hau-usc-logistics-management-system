@@ -118,6 +118,30 @@ export type FrontendEventManagement = {
 export type FrontendSystemStatus = {
   technicalResponse: 'RESPONSE_RECEIVED';
   readiness: 'REPORTED_READY' | 'NOT_REPORTED_READY';
+  playground: FrontendPlaygroundResetStatus | null;
+};
+
+export type FrontendPlaygroundResetStatus = {
+  baselineId: string;
+  baselineVersion: string;
+  generation: number;
+  workingState: string;
+  activeTestSession: boolean;
+  resetAvailable: boolean;
+  confirmationPhrase: 'RESET PLAYGROUND';
+  pendingOperation: { kind: string; state: string; requestedAt: string } | null;
+  lastReset: {
+    status: string;
+    generation: number;
+    completedAt: string;
+    oldSessionsInvalidated: number;
+    consequences: string[];
+  } | null;
+};
+
+export type FrontendPlaygroundOperationReceipt = {
+  accepted: true;
+  state: string;
 };
 
 export type FrontendInventoryItem = {
@@ -1146,19 +1170,78 @@ export class FrontendBackend {
    */
   async systemStatus(signal?: AbortSignal): Promise<FrontendSystemStatus> {
     await this.request('/api/health', { method: 'GET', signal });
+    let playground: FrontendPlaygroundResetStatus | null = null;
+    try {
+      const payload = await this.request('/api/playground/status', { method: 'GET', signal });
+      const reset = requiredRecord(payload.resetCenter, 'resetCenter');
+      const pending = reset.pendingOperation
+        ? requiredRecord(reset.pendingOperation, 'resetCenter.pendingOperation')
+        : null;
+      const receipt = reset.lastReset ? requiredRecord(reset.lastReset, 'resetCenter.lastReset') : null;
+      playground = {
+        baselineId: requiredString(reset.baselineId, 'resetCenter.baselineId'),
+        baselineVersion: requiredString(reset.baselineVersion, 'resetCenter.baselineVersion'),
+        generation: requiredNonNegativeInteger(reset.generation, 'resetCenter.generation'),
+        workingState: requiredString(reset.workingState, 'resetCenter.workingState'),
+        activeTestSession: requiredBoolean(reset.activeTestSession, 'resetCenter.activeTestSession'),
+        resetAvailable: requiredBoolean(reset.resetAvailable, 'resetCenter.resetAvailable'),
+        confirmationPhrase: requiredString(
+          reset.confirmationPhrase,
+          'resetCenter.confirmationPhrase',
+        ) as 'RESET PLAYGROUND',
+        pendingOperation: pending
+          ? {
+              kind: requiredString(pending.kind, 'resetCenter.pendingOperation.kind'),
+              state: requiredString(pending.state, 'resetCenter.pendingOperation.state'),
+              requestedAt: requiredString(pending.requestedAt, 'resetCenter.pendingOperation.requestedAt'),
+            }
+          : null,
+        lastReset: receipt
+          ? {
+              status: requiredString(receipt.status, 'resetCenter.lastReset.status'),
+              generation: requiredNonNegativeInteger(receipt.generation, 'resetCenter.lastReset.generation'),
+              completedAt: requiredString(receipt.completedAt, 'resetCenter.lastReset.completedAt'),
+              oldSessionsInvalidated: requiredNonNegativeInteger(
+                receipt.oldSessionsInvalidated,
+                'resetCenter.lastReset.oldSessionsInvalidated',
+              ),
+              consequences: requiredStrings(receipt.consequences, 'resetCenter.lastReset.consequences'),
+            }
+          : null,
+      };
+      if (playground.confirmationPhrase !== 'RESET PLAYGROUND') {
+        incomplete('The Playground reset confirmation contract was invalid.');
+      }
+    } catch (error) {
+      if (!(error instanceof FrontendApiError && error.status === 404)) throw error;
+    }
     try {
       const readiness = await this.request('/api/readiness', { method: 'GET', signal });
       return {
         technicalResponse: 'RESPONSE_RECEIVED',
         readiness:
           readiness.ok === true && readiness.ready === true ? 'REPORTED_READY' : 'NOT_REPORTED_READY',
+        playground,
       };
     } catch (error) {
       if (error instanceof FrontendApiError && error.status === 503) {
-        return { technicalResponse: 'RESPONSE_RECEIVED', readiness: 'NOT_REPORTED_READY' };
+        return { technicalResponse: 'RESPONSE_RECEIVED', readiness: 'NOT_REPORTED_READY', playground };
       }
       throw error;
     }
+  }
+
+  async requestPlaygroundReset(
+    confirmation: string,
+    signal?: AbortSignal,
+  ): Promise<FrontendPlaygroundOperationReceipt> {
+    const payload = await this.request('/api/playground/operation', {
+      body: { kind: 'RESET', confirmation },
+      csrf: true,
+      signal,
+    });
+    if (payload.accepted !== true) incomplete('The Playground reset request was not accepted.');
+    return { accepted: true, state: requiredString(payload.state, 'state') };
   }
 
   /**
