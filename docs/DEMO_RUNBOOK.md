@@ -1,5 +1,18 @@
 # Guided demo runbook
 
+## Live Isolated Playground
+
+The deployed Playground is available at `https://playground.hausc.org/` behind the configured Cloudflare Access boundary. No application credentials are required for the staging demo:
+
+1. Open the Playground with a fresh browser session.
+2. Select `Staff sign in`.
+3. Select `Enter Playground` to issue a temporary staging-only System Owner session.
+4. Demonstrate Overview, Inventory, Internal Request Hub, Internal Lending Hub, Release, Restocking, Procurement, Events, Administration, and Profile.
+5. Use public lending and tracking only from the public surface; a public logistics request truthfully requires staff sign-in.
+6. Sign out or perform the private operator cleanup after the demo. Never retain or share the session cookie or CSRF token.
+
+For reset, use only `scripts/playground/reset-workspace.mjs` with the current private resource manifest and a new private report path. Reconcile the current reset generation first, do not repeat an ambiguous or already-completed reset, verify the old session is rejected, and finish with zero sessions/transient rows plus sealed D1/R2 parity. Production, Google, email/provider sends, and baseline refresh remain outside this demo workflow.
+
 ## Outcome
 
 `hau-usc-logistics-guided-demo.html` is the primary offline presentation

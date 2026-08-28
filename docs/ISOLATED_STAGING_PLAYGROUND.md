@@ -37,9 +37,11 @@ The private console shows safe short candidate, production, baseline, schema, D1
 2. The server proves the runtime is `STAGING + PLAYGROUND_MODE + ISOLATED_STAGING_PLAYGROUND` and records a fixed-target operator request.
 3. The operator runs `scripts/playground/reset-workspace.mjs` with the private resource manifest and a new private report path.
 4. The tool proves the manifest D1 matches the authenticated provider inventory, captures a reversible pre-reset bookmark, restores the sealed playground bookmark, reconciles working brand R2 from sealed brand baseline, and clears playground-only working evidence.
-5. Schema, migration, foreign keys, reset-probe absence, R2 count/content identity, metadata, and empty working evidence are reverified.
+5. Schema, migration, foreign keys, reset-probe absence, R2 count/content identity, metadata, zero transient rows, and approved redacted-evidence linkage are reverified.
 
 The browser never supplies a database ID or bucket name. The reset Worker has no production binding and is removed immediately after reconciliation.
+
+After reset, prove the prior temporary session is rejected before entering a new demo session. Run critical route smoke, remove the temporary session, and return the working-state marker to `CLEAN` only after D1/R2 parity, generation, foreign keys, evidence linkage, and zero transient rows pass. POST-shaped read endpoints may conservatively mark a Playground session dirty; this marker reconciliation is not a second reset and must never be used to conceal changed D1/R2 data.
 
 ## Refresh Baseline From Production
 

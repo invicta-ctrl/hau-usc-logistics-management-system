@@ -10,6 +10,12 @@
 
 ## Unreleased
 
+### Isolated Playground recovery and reset closeout
+
+- Deployed the repaired FI frontend only to the Isolated Staging Playground with working Overview, Inventory, Request, Lending, Release, Restocking, Procurement, Events, Administration, Profile, and public entry surfaces backed by real staging APIs.
+- Removed the external Google Fonts import that the deployed same-origin CSP blocked and added regression coverage; the corrected deterministic artifact passed the complete release gate and five-width browser matrix.
+- Proved privacy-filtered D1/R2 baseline restoration through reset generation three, old-session invalidation, new demo entry, zero final sessions/transient rows, rollback availability, and unchanged Production.
+
 ### FI-07 Internal Lending Hub frontend integration
 
 - Accepted the DOL-only Internal Lending Hub as a strict, capability-gated
