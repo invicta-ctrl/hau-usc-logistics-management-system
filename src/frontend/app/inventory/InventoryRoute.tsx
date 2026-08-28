@@ -64,7 +64,15 @@ export function InventoryRoute({
 
   useEffect(() => {
     function check() {
-      setIsMobile(window.innerWidth < 768);
+      /* POST-FI17. Was < 768, so the seven-column table switched in at exactly
+       * the width where it stops fitting: at 768 it lays out at 738px inside a
+       * 702px scroller, and the 36px that overflow are the LENDING column —
+       * "Below threshold", "Out of stock" — the one signal the table exists to
+       * be scanned for. Pushing a status pill off-screen behind a horizontal
+       * scrollbar is worse than the card layout, which was built for exactly
+       * this case and states every field explicitly. The table measures 882px
+       * inside 882px at 1024, so that is where it belongs. */
+      setIsMobile(window.innerWidth < 1024);
     }
     check();
     window.addEventListener('resize', check);

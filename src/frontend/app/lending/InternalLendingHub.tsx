@@ -1289,13 +1289,18 @@ export function InternalLendingHub({
 
   return (
     <main
-      className="max-w-full space-y-4 overflow-x-hidden text-[var(--ink-deep)]"
+      /* POST-FI17. This route carried no page gutter at all: every child ran
+         flush from the sidebar edge to the window edge, which is why the
+         fixture card looked like it was escaping the layout and why the h1 sat
+         outdented from the panels beneath it. Matched to the gutter the other
+         operational routes already use (Inventory: px-4 md:px-8). */
+      className="max-w-full space-y-4 overflow-x-hidden px-4 py-6 text-[var(--ink-deep)] md:px-8"
       data-fi07-lending-hub
       data-fi07-mode={inspection ? 'preview' : 'authenticated'}
       data-theme={dark ? 'dark' : 'light'}
     >
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-        <div>
+        <div className="min-w-0">
           <p className="m-0 font-mono text-[11px] font-semibold uppercase tracking-[.08em] text-[var(--ink-mid)]">
             Internal Lending Hub · DOL
           </p>
@@ -1307,7 +1312,7 @@ export function InternalLendingHub({
             action.
           </p>
         </div>
-        <aside className="min-w-0 rounded-lg border border-[var(--border-paper)] bg-[var(--paper-mid)] px-4 py-3 text-xs sm:min-w-64">
+        <aside className="min-w-0 rounded-lg border border-[var(--border-paper)] bg-[var(--paper-mid)] px-4 py-3 text-xs sm:w-64 sm:shrink-0">
           <strong className="block">
             {inspection ? 'Local inspection fixture' : 'Authenticated lending projection'}
           </strong>
@@ -1434,7 +1439,7 @@ export function InternalLendingHub({
               Search and status filters apply only to this loaded authoritative page. No global lending-ticket
               total is shown because the current bootstrap total is not ticket-owned.
             </p>
-            <div className="mt-4 grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(10rem,.42fr)_auto]">
+            <div className="mt-4 grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(12.5rem,.5fr)_auto]">
               <label className="grid gap-1 text-xs font-semibold text-[var(--ink-mid)]">
                 <span>Search loaded tickets</span>
                 <span className="flex min-h-11 items-center gap-2 rounded-lg border border-[var(--border-paper)] bg-[var(--paper-light)] px-3">
