@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P23_FRONTEND_PERFORMANCE_IMPROVEMENTS_COMPLETE;P24_D1_QUERY_INDEX_AUDIT_NEXT
+PHASE: P24_D1_QUERY_INDEX_AUDIT_COMPLETE;P25_THEME_PERFORMANCE_ACCESSIBILITY_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -86,6 +86,9 @@ P22_EVIDENCE: .codex/evidence/P22_PLAYGROUND_PERFORMANCE_BASELINE.json
 P23_STATUS: PASS_MEASURED_LOCAL_IMPLEMENTATION;LIVE_PLAYGROUND_DEPLOYMENT_PENDING_P29
 P23_AUDIT: .codex/PLAYGROUND_MASTER_P23_FRONTEND_PERFORMANCE_IMPROVEMENTS.md
 P23_EVIDENCE: .codex/evidence/P23_PLAYGROUND_PERFORMANCE_AFTER.json
+P24_STATUS: PASS_BOUNDED_PLAN_AUDIT;NO_INDEX_OR_MIGRATION_JUSTIFIED
+P24_AUDIT: .codex/PLAYGROUND_MASTER_P24_D1_QUERY_INDEX_AUDIT.md
+P24_EVIDENCE: .codex/evidence/P24_D1_QUERY_PLAN_AUDIT.json
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P24 D1 query/index audit. Measure the named high-traffic queries, inspect plans and row-read evidence where available, and add no index unless evidence proves the smallest additive Playground-only migration is valuable.
+NEXT_EXACT_ACTION: Begin P25 Theme performance/accessibility. Verify instant theme switching without reload or heavy row-level effects, then cover six families across Light/Dark/System with the accepted semantic, responsive, contrast, focus, dialog, and glass-fallback checks.
 HANDOFF_STATUS: ACTIVE

@@ -1,0 +1,965 @@
+{
+  "schemaVersion": 1,
+  "phase": "P24",
+  "measurementClass": "local-schema-32-query-plan-audit",
+  "measuredAt": "2026-08-28T21:10:08.860Z",
+  "migrations": {
+    "count": 32,
+    "latest": "0032_staff_account_activity_history.sql"
+  },
+  "rowsReadAvailable": false,
+  "rowsReadLimitation": "Authenticated remote D1 inventory failed before query execution; this receipt contains deterministic local schema/query-plan evidence only.",
+  "indexes": [
+    {
+      "name": "idx_access_id_history_account_time",
+      "tableName": "access_id_history",
+      "sql": "CREATE INDEX idx_access_id_history_account_time\nON access_id_history(account_id, changed_at DESC)"
+    },
+    {
+      "name": "idx_access_policy_changes_account_time",
+      "tableName": "access_policy_changes",
+      "sql": "CREATE INDEX idx_access_policy_changes_account_time\n  ON access_policy_changes(account_id, changed_at DESC)"
+    },
+    {
+      "name": "idx_account_application_history_application_time",
+      "tableName": "account_application_history",
+      "sql": "CREATE INDEX idx_account_application_history_application_time\n  ON account_application_history(application_id, created_at DESC, id)"
+    },
+    {
+      "name": "idx_account_applications_email_state",
+      "tableName": "account_applications",
+      "sql": "CREATE INDEX idx_account_applications_email_state\n  ON account_applications(email_fingerprint, state, updated_at DESC)"
+    },
+    {
+      "name": "idx_account_applications_state_updated",
+      "tableName": "account_applications",
+      "sql": "CREATE INDEX idx_account_applications_state_updated\n  ON account_applications(state, updated_at DESC, id)"
+    },
+    {
+      "name": "idx_account_applications_username_state",
+      "tableName": "account_applications",
+      "sql": "CREATE INDEX idx_account_applications_username_state\n  ON account_applications(requested_username_normalized, state, updated_at DESC)"
+    },
+    {
+      "name": "idx_account_staff_links_person_time",
+      "tableName": "account_staff_links",
+      "sql": "CREATE INDEX idx_account_staff_links_person_time\n  ON account_staff_links(person_id, created_at DESC, id)"
+    },
+    {
+      "name": "uq_account_staff_links_active_account",
+      "tableName": "account_staff_links",
+      "sql": "CREATE UNIQUE INDEX uq_account_staff_links_active_account\n  ON account_staff_links(account_id)\n  WHERE state = 'ACTIVE'"
+    },
+    {
+      "name": "idx_accounts_requester_department_status",
+      "tableName": "accounts",
+      "sql": "CREATE INDEX idx_accounts_requester_department_status\nON accounts(department_id, status, updated_at)"
+    },
+    {
+      "name": "idx_accounts_status_role",
+      "tableName": "accounts",
+      "sql": "CREATE INDEX idx_accounts_status_role ON accounts(status, role_id)"
+    },
+    {
+      "name": "uq_accounts_access_id_collision",
+      "tableName": "accounts",
+      "sql": "CREATE UNIQUE INDEX uq_accounts_access_id_collision\nON accounts (\n  UPPER(REPLACE(REPLACE(REPLACE(access_id_normalized, '.', ''), '-', ''), '_', ''))\n)"
+    },
+    {
+      "name": "uq_accounts_active_verified_email_fingerprint",
+      "tableName": "accounts",
+      "sql": "CREATE UNIQUE INDEX uq_accounts_active_verified_email_fingerprint\n  ON accounts(verified_email_fingerprint)\n  WHERE verified_email_fingerprint IS NOT NULL\n    AND trim(verified_email_fingerprint) <> ''\n    AND profile_email_verified_at IS NOT NULL\n    AND status IN ('STARTER', 'ACTIVE')"
+    },
+    {
+      "name": "uq_accounts_institution_id",
+      "tableName": "accounts",
+      "sql": "CREATE UNIQUE INDEX uq_accounts_institution_id\nON accounts(institution_id)\nWHERE institution_id <> ''"
+    },
+    {
+      "name": "uq_accounts_requester_department",
+      "tableName": "accounts",
+      "sql": "CREATE UNIQUE INDEX uq_accounts_requester_department\nON accounts(department_id)\nWHERE department_id IS NOT NULL"
+    },
+    {
+      "name": "uq_accounts_username_normalized",
+      "tableName": "accounts",
+      "sql": "CREATE UNIQUE INDEX uq_accounts_username_normalized\n  ON accounts(username_normalized)\n  WHERE username_normalized IS NOT NULL AND trim(username_normalized) <> ''"
+    },
+    {
+      "name": "uq_accounts_verified_profile_email",
+      "tableName": "accounts",
+      "sql": "CREATE UNIQUE INDEX uq_accounts_verified_profile_email\nON accounts(lower(profile_email))\nWHERE profile_email_verified_at IS NOT NULL"
+    },
+    {
+      "name": "idx_audit_entity",
+      "tableName": "audit_log",
+      "sql": "CREATE INDEX idx_audit_entity ON audit_log(entity_type, entity_id, created_at)"
+    },
+    {
+      "name": "idx_auth_rate_limit_events_key_time",
+      "tableName": "auth_rate_limit_events",
+      "sql": "CREATE INDEX idx_auth_rate_limit_events_key_time\nON auth_rate_limit_events(limiter_key, attempted_at)"
+    },
+    {
+      "name": "idx_auth_rate_limits_key_time",
+      "tableName": "auth_rate_limits",
+      "sql": "CREATE INDEX idx_auth_rate_limits_key_time ON auth_rate_limits(limiter_key, attempted_at)"
+    },
+    {
+      "name": "idx_brand_asset_history_slot",
+      "tableName": "brand_asset_history",
+      "sql": "CREATE INDEX idx_brand_asset_history_slot\n  ON brand_asset_history(slot_id, occurred_at DESC)"
+    },
+    {
+      "name": "idx_brand_asset_one_published_version",
+      "tableName": "brand_asset_versions",
+      "sql": "CREATE UNIQUE INDEX idx_brand_asset_one_published_version\n  ON brand_asset_versions(slot_id)\n  WHERE status = 'PUBLISHED'"
+    },
+    {
+      "name": "idx_brand_asset_versions_slot",
+      "tableName": "brand_asset_versions",
+      "sql": "CREATE INDEX idx_brand_asset_versions_slot\n  ON brand_asset_versions(slot_id, version_number DESC)"
+    },
+    {
+      "name": "idx_canvass_request_line",
+      "tableName": "canvass_references",
+      "sql": "CREATE INDEX idx_canvass_request_line ON canvass_references(linked_request_line_id, status)"
+    },
+    {
+      "name": "idx_deliverables_request_status",
+      "tableName": "deliverables",
+      "sql": "CREATE INDEX idx_deliverables_request_status ON deliverables(request_id, status, updated_at)"
+    },
+    {
+      "name": "idx_email_verification_challenges_expiry",
+      "tableName": "email_verification_challenges",
+      "sql": "CREATE INDEX idx_email_verification_challenges_expiry\n  ON email_verification_challenges(status, expires_at)"
+    },
+    {
+      "name": "idx_email_verification_challenges_fingerprint_status",
+      "tableName": "email_verification_challenges",
+      "sql": "CREATE INDEX idx_email_verification_challenges_fingerprint_status\n  ON email_verification_challenges(email_fingerprint, status, expires_at DESC)"
+    },
+    {
+      "name": "idx_event_activity_history_entity",
+      "tableName": "event_activity_history",
+      "sql": "CREATE INDEX idx_event_activity_history_entity\n  ON event_activity_history(entity_type, entity_id, occurred_at DESC)"
+    },
+    {
+      "name": "idx_event_days_series_date",
+      "tableName": "event_days",
+      "sql": "CREATE INDEX idx_event_days_series_date ON event_days(event_series_id, event_date, active)"
+    },
+    {
+      "name": "idx_event_operational_links_hierarchy",
+      "tableName": "event_operational_links",
+      "sql": "CREATE INDEX idx_event_operational_links_hierarchy\n  ON event_operational_links(event_series_id, event_day_id, event_id, link_type)"
+    },
+    {
+      "name": "idx_event_series_code_unique",
+      "tableName": "event_series",
+      "sql": "CREATE UNIQUE INDEX idx_event_series_code_unique\n  ON event_series(code)\n  WHERE trim(code) <> ''"
+    },
+    {
+      "name": "idx_events_day_time",
+      "tableName": "events",
+      "sql": "CREATE INDEX idx_events_day_time ON events(event_day_id, starts_at, name)"
+    },
+    {
+      "name": "idx_events_series_code_unique",
+      "tableName": "events",
+      "sql": "CREATE UNIQUE INDEX idx_events_series_code_unique\n  ON events(event_series_id, code)\n  WHERE trim(code) <> ''"
+    },
+    {
+      "name": "idx_events_series_status",
+      "tableName": "events",
+      "sql": "CREATE INDEX idx_events_series_status ON events(event_series_id, status)"
+    },
+    {
+      "name": "idx_evidence_backup_jobs_due",
+      "tableName": "evidence_backup_jobs",
+      "sql": "CREATE INDEX idx_evidence_backup_jobs_due\nON evidence_backup_jobs(status, next_attempt_at, updated_at)"
+    },
+    {
+      "name": "idx_evidence_backup_jobs_reconcile",
+      "tableName": "evidence_backup_jobs",
+      "sql": "CREATE INDEX idx_evidence_backup_jobs_reconcile\nON evidence_backup_jobs(last_reconciled_at)"
+    },
+    {
+      "name": "idx_evidence_restore_history_evidence",
+      "tableName": "evidence_restore_history",
+      "sql": "CREATE INDEX idx_evidence_restore_history_evidence\nON evidence_restore_history(evidence_id, restored_at)"
+    },
+    {
+      "name": "idx_identity_correction_requests_state_time",
+      "tableName": "identity_correction_requests",
+      "sql": "CREATE INDEX idx_identity_correction_requests_state_time\n  ON identity_correction_requests(state, updated_at DESC, id)"
+    },
+    {
+      "name": "idx_identity_roster_entries_active",
+      "tableName": "identity_roster_entries",
+      "sql": "CREATE INDEX idx_identity_roster_entries_active\n  ON identity_roster_entries(active, updated_at DESC)"
+    },
+    {
+      "name": "idx_identity_roster_sync_runs_created",
+      "tableName": "identity_roster_sync_runs",
+      "sql": "CREATE INDEX idx_identity_roster_sync_runs_created\n  ON identity_roster_sync_runs(created_at DESC)"
+    },
+    {
+      "name": "idx_import_rows_batch_tab",
+      "tableName": "imported_source_rows",
+      "sql": "CREATE INDEX idx_import_rows_batch_tab ON imported_source_rows(import_batch_id, source_tab, import_status)"
+    },
+    {
+      "name": "idx_asset_instances_item_status",
+      "tableName": "inventory_asset_instances",
+      "sql": "CREATE INDEX idx_asset_instances_item_status\n  ON inventory_asset_instances(item_id, lifecycle_status, expected_return_at)"
+    },
+    {
+      "name": "idx_asset_maintenance_asset_time",
+      "tableName": "inventory_asset_maintenance",
+      "sql": "CREATE INDEX idx_asset_maintenance_asset_time\n  ON inventory_asset_maintenance(asset_id, occurred_at)"
+    },
+    {
+      "name": "idx_asset_movements_asset_time",
+      "tableName": "inventory_asset_movements",
+      "sql": "CREATE INDEX idx_asset_movements_asset_time\n  ON inventory_asset_movements(asset_id, occurred_at)"
+    },
+    {
+      "name": "idx_inventory_classification_history_item",
+      "tableName": "inventory_classification_history",
+      "sql": "CREATE INDEX idx_inventory_classification_history_item\n  ON inventory_classification_history(item_id, occurred_at DESC)"
+    },
+    {
+      "name": "idx_inventory_classification_queue",
+      "tableName": "inventory_items",
+      "sql": "CREATE INDEX idx_inventory_classification_queue\n  ON inventory_items(classification_status, inventory_kind, name)"
+    },
+    {
+      "name": "idx_ledger_item_created",
+      "tableName": "inventory_ledger",
+      "sql": "CREATE INDEX idx_ledger_item_created ON inventory_ledger(item_id, created_at)"
+    },
+    {
+      "name": "idx_ledger_related",
+      "tableName": "inventory_ledger",
+      "sql": "CREATE INDEX idx_ledger_related ON inventory_ledger(related_entity_type, related_entity_id)"
+    },
+    {
+      "name": "idx_alias_lookup",
+      "tableName": "item_aliases",
+      "sql": "CREATE INDEX idx_alias_lookup ON item_aliases(normalized_alias)"
+    },
+    {
+      "name": "idx_lending_ticket_assets_active_asset",
+      "tableName": "lending_ticket_assets",
+      "sql": "CREATE UNIQUE INDEX idx_lending_ticket_assets_active_asset\n  ON lending_ticket_assets(asset_id)\n  WHERE returned_at IS NULL"
+    },
+    {
+      "name": "idx_lending_ticket_assets_ticket",
+      "tableName": "lending_ticket_assets",
+      "sql": "CREATE INDEX idx_lending_ticket_assets_ticket\n  ON lending_ticket_assets(lending_ticket_id, assigned_at)"
+    },
+    {
+      "name": "idx_lending_committee_status",
+      "tableName": "lending_tickets",
+      "sql": "CREATE INDEX idx_lending_committee_status\n  ON lending_tickets(owner_committee_id, status, updated_at)"
+    },
+    {
+      "name": "idx_lending_item_status",
+      "tableName": "lending_tickets",
+      "sql": "CREATE INDEX idx_lending_item_status ON lending_tickets(item_id, status, updated_at)"
+    },
+    {
+      "name": "idx_lending_requested_window",
+      "tableName": "lending_tickets",
+      "sql": "CREATE INDEX idx_lending_requested_window\n  ON lending_tickets(item_id, requested_start_at, requested_end_at, status)"
+    },
+    {
+      "name": "idx_lending_tickets_review_queue",
+      "tableName": "lending_tickets",
+      "sql": "CREATE INDEX idx_lending_tickets_review_queue\nON lending_tickets(owner_committee_id, status, updated_at)"
+    },
+    {
+      "name": "idx_person_emails_person_time",
+      "tableName": "person_emails",
+      "sql": "CREATE INDEX idx_person_emails_person_time\n  ON person_emails(person_id, created_at DESC, id)"
+    },
+    {
+      "name": "uq_person_emails_active_primary",
+      "tableName": "person_emails",
+      "sql": "CREATE UNIQUE INDEX uq_person_emails_active_primary\n  ON person_emails(person_id)\n  WHERE is_primary = 1 AND state = 'ACTIVE'"
+    },
+    {
+      "name": "uq_person_emails_verified_active_fingerprint",
+      "tableName": "person_emails",
+      "sql": "CREATE UNIQUE INDEX uq_person_emails_verified_active_fingerprint\n  ON person_emails(normalized_email_fingerprint)\n  WHERE state = 'ACTIVE' AND verification_state = 'VERIFIED'"
+    },
+    {
+      "name": "idx_public_advertisements_rotation",
+      "tableName": "public_advertisements",
+      "sql": "CREATE INDEX idx_public_advertisements_rotation\nON public_advertisements(status, display_order, publish_at, expire_at)"
+    },
+    {
+      "name": "idx_public_lending_rate_limit_key_time",
+      "tableName": "public_lending_rate_limit_events",
+      "sql": "CREATE INDEX idx_public_lending_rate_limit_key_time\nON public_lending_rate_limit_events(limiter_key, attempted_at)"
+    },
+    {
+      "name": "idx_public_lending_submission_created",
+      "tableName": "public_lending_submissions",
+      "sql": "CREATE INDEX idx_public_lending_submission_created\nON public_lending_submissions(created_at, id)"
+    },
+    {
+      "name": "idx_public_request_rate_limit_key_time",
+      "tableName": "public_request_rate_limit_events",
+      "sql": "CREATE INDEX idx_public_request_rate_limit_key_time\nON public_request_rate_limit_events(limiter_key, attempted_at)"
+    },
+    {
+      "name": "idx_receiving_entity",
+      "tableName": "receiving_records",
+      "sql": "CREATE INDEX idx_receiving_entity ON receiving_records(entity_type, entity_id, received_at)"
+    },
+    {
+      "name": "idx_reference_link_versions_link_time",
+      "tableName": "reference_link_versions",
+      "sql": "CREATE INDEX idx_reference_link_versions_link_time\n  ON reference_link_versions(link_id, created_at DESC, id)"
+    },
+    {
+      "name": "idx_reference_links_status_audience_label",
+      "tableName": "reference_links",
+      "sql": "CREATE INDEX idx_reference_links_status_audience_label\n  ON reference_links(status, audience, label, id)"
+    },
+    {
+      "name": "idx_release_confirmations_group",
+      "tableName": "release_confirmations",
+      "sql": "CREATE INDEX idx_release_confirmations_group\nON release_confirmations(release_group_id, released_at)"
+    },
+    {
+      "name": "idx_release_corrections_confirmation",
+      "tableName": "release_corrections",
+      "sql": "CREATE INDEX idx_release_corrections_confirmation\nON release_corrections(release_confirmation_id, corrected_at)"
+    },
+    {
+      "name": "idx_release_corrections_group",
+      "tableName": "release_corrections",
+      "sql": "CREATE INDEX idx_release_corrections_group\nON release_corrections(release_group_id, corrected_at)"
+    },
+    {
+      "name": "idx_outbox_status_time",
+      "tableName": "reporting_outbox",
+      "sql": "CREATE INDEX idx_outbox_status_time ON reporting_outbox(delivery_status, occurred_at)"
+    },
+    {
+      "name": "idx_request_lines_item_status",
+      "tableName": "request_lines",
+      "sql": "CREATE INDEX idx_request_lines_item_status ON request_lines(item_id, status)"
+    },
+    {
+      "name": "idx_request_lines_request_status",
+      "tableName": "request_lines",
+      "sql": "CREATE INDEX idx_request_lines_request_status ON request_lines(request_id, status)"
+    },
+    {
+      "name": "idx_requests_committee_status",
+      "tableName": "requests",
+      "sql": "CREATE INDEX idx_requests_committee_status\n  ON requests(owner_committee_id, status, updated_at)"
+    },
+    {
+      "name": "idx_requests_department_event_status",
+      "tableName": "requests",
+      "sql": "CREATE INDEX idx_requests_department_event_status\nON requests(requester_department_id, event_series_id, event_id, status, updated_at)"
+    },
+    {
+      "name": "idx_requests_event_hierarchy",
+      "tableName": "requests",
+      "sql": "CREATE INDEX idx_requests_event_hierarchy\n  ON requests(event_series_id, event_day_id, event_id, status, updated_at)"
+    },
+    {
+      "name": "idx_requests_event_status",
+      "tableName": "requests",
+      "sql": "CREATE INDEX idx_requests_event_status ON requests(event_id, status, updated_at)"
+    },
+    {
+      "name": "idx_requests_requester_status",
+      "tableName": "requests",
+      "sql": "CREATE INDEX idx_requests_requester_status ON requests(requester_account_id, status, updated_at)"
+    },
+    {
+      "name": "idx_reservation_consumptions_reservation",
+      "tableName": "reservation_consumptions",
+      "sql": "CREATE INDEX idx_reservation_consumptions_reservation\nON reservation_consumptions(reservation_id, consumed_at)"
+    },
+    {
+      "name": "idx_reservation_window",
+      "tableName": "reservations",
+      "sql": "CREATE INDEX idx_reservation_window\n  ON reservations(item_id, reserved_from, reserved_until, status)"
+    },
+    {
+      "name": "idx_reservations_item_status",
+      "tableName": "reservations",
+      "sql": "CREATE INDEX idx_reservations_item_status ON reservations(item_id, status)"
+    },
+    {
+      "name": "idx_restock_committee_status",
+      "tableName": "restock_requests",
+      "sql": "CREATE INDEX idx_restock_committee_status\n  ON restock_requests(assigned_committee_id, status, updated_at)"
+    },
+    {
+      "name": "idx_restock_item_status",
+      "tableName": "restock_requests",
+      "sql": "CREATE INDEX idx_restock_item_status ON restock_requests(item_id, status, updated_at)"
+    },
+    {
+      "name": "idx_sessions_account_expires",
+      "tableName": "sessions",
+      "sql": "CREATE INDEX idx_sessions_account_expires ON sessions(account_id, expires_at)"
+    },
+    {
+      "name": "staff_account_activity_history_account_order",
+      "tableName": "staff_account_activity_history",
+      "sql": "CREATE UNIQUE INDEX staff_account_activity_history_account_order\n  ON staff_account_activity_history (account_id, occurred_at DESC, event_id DESC)"
+    },
+    {
+      "name": "staff_account_activity_history_person_order",
+      "tableName": "staff_account_activity_history",
+      "sql": "CREATE UNIQUE INDEX staff_account_activity_history_person_order\n  ON staff_account_activity_history (person_id, occurred_at DESC, event_id DESC)"
+    },
+    {
+      "name": "idx_staff_assignments_person_time",
+      "tableName": "staff_assignments",
+      "sql": "CREATE INDEX idx_staff_assignments_person_time\n  ON staff_assignments(person_id, created_at DESC, id)"
+    },
+    {
+      "name": "idx_status_entity",
+      "tableName": "status_history",
+      "sql": "CREATE INDEX idx_status_entity ON status_history(entity_type, entity_id, changed_at)"
+    },
+    {
+      "name": "idx_username_history_account_time",
+      "tableName": "username_history",
+      "sql": "CREATE INDEX idx_username_history_account_time\n  ON username_history(account_id, changed_at DESC, id)"
+    }
+  ],
+  "plans": [
+    {
+      "id": "inventory-catalog",
+      "surface": "Inventory",
+      "flags": {
+        "fullScan": false,
+        "tempSort": true,
+        "tempGroup": false,
+        "indexes": [
+          "sqlite_autoindex_inventory_items_1",
+          "idx_ledger_item_created",
+          "idx_reservations_item_status",
+          "idx_reservation_consumptions_reservation"
+        ]
+      },
+      "steps": [
+        {
+          "id": 6,
+          "parent": 0,
+          "detail": "SCAN item USING INDEX sqlite_autoindex_inventory_items_1"
+        },
+        {
+          "id": 11,
+          "parent": 0,
+          "detail": "SEARCH item USING COVERING INDEX sqlite_autoindex_inventory_items_1 (id=?)"
+        },
+        {
+          "id": 15,
+          "parent": 0,
+          "detail": "SEARCH item USING COVERING INDEX sqlite_autoindex_inventory_items_1 (id=?)"
+        },
+        {
+          "id": 23,
+          "parent": 0,
+          "detail": "CORRELATED SCALAR SUBQUERY 4"
+        },
+        {
+          "id": 29,
+          "parent": 23,
+          "detail": "SEARCH ledger USING INDEX idx_ledger_item_created (item_id=?)"
+        },
+        {
+          "id": 49,
+          "parent": 0,
+          "detail": "CORRELATED SCALAR SUBQUERY 5"
+        },
+        {
+          "id": 55,
+          "parent": 49,
+          "detail": "SEARCH reservation USING INDEX idx_reservations_item_status (item_id=? AND status=?)"
+        },
+        {
+          "id": 64,
+          "parent": 49,
+          "detail": "CORRELATED SCALAR SUBQUERY 6"
+        },
+        {
+          "id": 70,
+          "parent": 64,
+          "detail": "SEARCH consumption USING INDEX idx_reservation_consumptions_reservation (reservation_id=?)"
+        },
+        {
+          "id": 101,
+          "parent": 0,
+          "detail": "CORRELATED SCALAR SUBQUERY 7"
+        },
+        {
+          "id": 107,
+          "parent": 101,
+          "detail": "SEARCH ledger USING INDEX idx_ledger_item_created (item_id=?)"
+        },
+        {
+          "id": 126,
+          "parent": 0,
+          "detail": "CORRELATED SCALAR SUBQUERY 8"
+        },
+        {
+          "id": 132,
+          "parent": 126,
+          "detail": "SEARCH reservation USING INDEX idx_reservations_item_status (item_id=? AND status=?)"
+        },
+        {
+          "id": 141,
+          "parent": 126,
+          "detail": "CORRELATED SCALAR SUBQUERY 9"
+        },
+        {
+          "id": 147,
+          "parent": 141,
+          "detail": "SEARCH consumption USING INDEX idx_reservation_consumptions_reservation (reservation_id=?)"
+        },
+        {
+          "id": 183,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": "inventory-classification-history",
+      "surface": "Inventory",
+      "flags": {
+        "fullScan": false,
+        "tempSort": true,
+        "tempGroup": false,
+        "indexes": [
+          "idx_inventory_classification_history_item",
+          "sqlite_autoindex_inventory_items_1"
+        ]
+      },
+      "steps": [
+        {
+          "id": 7,
+          "parent": 0,
+          "detail": "SCAN history USING INDEX idx_inventory_classification_history_item"
+        },
+        {
+          "id": 10,
+          "parent": 0,
+          "detail": "SEARCH item USING INDEX sqlite_autoindex_inventory_items_1 (id=?)"
+        },
+        {
+          "id": 28,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": "inventory-ledger-recent",
+      "surface": "Inventory",
+      "flags": {
+        "fullScan": true,
+        "tempSort": true,
+        "tempGroup": false,
+        "indexes": []
+      },
+      "steps": [
+        {
+          "id": 4,
+          "parent": 0,
+          "detail": "SCAN inventory_ledger"
+        },
+        {
+          "id": 17,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": "request-review-queue",
+      "surface": "Request queue",
+      "flags": {
+        "fullScan": true,
+        "tempSort": true,
+        "tempGroup": false,
+        "indexes": []
+      },
+      "steps": [
+        {
+          "id": 7,
+          "parent": 0,
+          "detail": "SCAN request"
+        },
+        {
+          "id": 28,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": "request-lines-for-page",
+      "surface": "Request queue",
+      "flags": {
+        "fullScan": false,
+        "tempSort": false,
+        "tempGroup": false,
+        "indexes": [
+          "idx_request_lines_request_status"
+        ]
+      },
+      "steps": [
+        {
+          "id": 5,
+          "parent": 0,
+          "detail": "SEARCH line USING INDEX idx_request_lines_request_status (request_id=?)"
+        },
+        {
+          "id": 44,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR LAST 2 TERMS OF ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": "lending-review-queue",
+      "surface": "Lending queue",
+      "flags": {
+        "fullScan": true,
+        "tempSort": true,
+        "tempGroup": false,
+        "indexes": []
+      },
+      "steps": [
+        {
+          "id": 7,
+          "parent": 0,
+          "detail": "SCAN ticket"
+        },
+        {
+          "id": 21,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": "release-confirmation-queue",
+      "surface": "Release queue",
+      "flags": {
+        "fullScan": true,
+        "tempSort": true,
+        "tempGroup": false,
+        "indexes": []
+      },
+      "steps": [
+        {
+          "id": 7,
+          "parent": 0,
+          "detail": "SCAN confirmation"
+        },
+        {
+          "id": 21,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": "restock-work-queue",
+      "surface": "Restocking/receiving",
+      "flags": {
+        "fullScan": true,
+        "tempSort": true,
+        "tempGroup": false,
+        "indexes": []
+      },
+      "steps": [
+        {
+          "id": 7,
+          "parent": 0,
+          "detail": "SCAN restock"
+        },
+        {
+          "id": 20,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": "restock-receipts",
+      "surface": "Restocking/receiving",
+      "flags": {
+        "fullScan": true,
+        "tempSort": true,
+        "tempGroup": false,
+        "indexes": [
+          "sqlite_autoindex_restock_requests_1"
+        ]
+      },
+      "steps": [
+        {
+          "id": 8,
+          "parent": 0,
+          "detail": "SCAN receipt"
+        },
+        {
+          "id": 10,
+          "parent": 0,
+          "detail": "SEARCH restock USING COVERING INDEX sqlite_autoindex_restock_requests_1 (id=?)"
+        },
+        {
+          "id": 25,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": "procurement-deliverables",
+      "surface": "Procurement",
+      "flags": {
+        "fullScan": false,
+        "tempSort": true,
+        "tempGroup": false,
+        "indexes": [
+          "idx_deliverables_request_status",
+          "sqlite_autoindex_requests_1"
+        ]
+      },
+      "steps": [
+        {
+          "id": 9,
+          "parent": 0,
+          "detail": "SCAN deliverable USING INDEX idx_deliverables_request_status"
+        },
+        {
+          "id": 12,
+          "parent": 0,
+          "detail": "SEARCH deliverable_request USING COVERING INDEX sqlite_autoindex_requests_1 (id=?)"
+        },
+        {
+          "id": 28,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": "procurement-canvass",
+      "surface": "Procurement",
+      "flags": {
+        "fullScan": true,
+        "tempSort": true,
+        "tempGroup": false,
+        "indexes": [
+          "sqlite_autoindex_deliverables_1",
+          "sqlite_autoindex_request_lines_1"
+        ]
+      },
+      "steps": [
+        {
+          "id": 11,
+          "parent": 0,
+          "detail": "SCAN canvass"
+        },
+        {
+          "id": 13,
+          "parent": 0,
+          "detail": "SEARCH deliverable USING INDEX sqlite_autoindex_deliverables_1 (id=?) LEFT-JOIN"
+        },
+        {
+          "id": 21,
+          "parent": 0,
+          "detail": "SEARCH line USING INDEX sqlite_autoindex_request_lines_1 (id=?) LEFT-JOIN"
+        },
+        {
+          "id": 48,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": "event-activity-history",
+      "surface": "Events",
+      "flags": {
+        "fullScan": true,
+        "tempSort": true,
+        "tempGroup": false,
+        "indexes": []
+      },
+      "steps": [
+        {
+          "id": 4,
+          "parent": 0,
+          "detail": "SCAN history"
+        },
+        {
+          "id": 17,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR ORDER BY"
+        }
+      ]
+    },
+    {
+      "id": "administration-account-directory",
+      "surface": "Administration directory/accounts",
+      "flags": {
+        "fullScan": false,
+        "tempSort": false,
+        "tempGroup": false,
+        "indexes": [
+          "sqlite_autoindex_accounts_2"
+        ]
+      },
+      "steps": [
+        {
+          "id": 8,
+          "parent": 0,
+          "detail": "SCAN a USING INDEX sqlite_autoindex_accounts_2"
+        },
+        {
+          "id": 20,
+          "parent": 0,
+          "detail": "CORRELATED SCALAR SUBQUERY 1"
+        },
+        {
+          "id": 25,
+          "parent": 20,
+          "detail": "SEARCH log"
+        }
+      ]
+    },
+    {
+      "id": "canonical-staff-directory",
+      "surface": "Administration directory/accounts",
+      "flags": {
+        "fullScan": false,
+        "tempSort": false,
+        "tempGroup": false,
+        "indexes": [
+          "sqlite_autoindex_canonical_people_1",
+          "idx_account_staff_links_person_time",
+          "sqlite_autoindex_accounts_1",
+          "idx_person_emails_person_time",
+          "idx_staff_assignments_person_time"
+        ]
+      },
+      "steps": [
+        {
+          "id": 15,
+          "parent": 0,
+          "detail": "SCAN p USING COVERING INDEX sqlite_autoindex_canonical_people_1"
+        },
+        {
+          "id": 21,
+          "parent": 0,
+          "detail": "CORRELATED SCALAR SUBQUERY 1"
+        },
+        {
+          "id": 28,
+          "parent": 21,
+          "detail": "SEARCH lookup_link USING INDEX idx_account_staff_links_person_time (person_id=?)"
+        },
+        {
+          "id": 33,
+          "parent": 21,
+          "detail": "SEARCH lookup_account USING INDEX sqlite_autoindex_accounts_1 (id=?)"
+        },
+        {
+          "id": 49,
+          "parent": 0,
+          "detail": "SEARCH link USING INDEX idx_account_staff_links_person_time (person_id=?) LEFT-JOIN"
+        },
+        {
+          "id": 56,
+          "parent": 0,
+          "detail": "SEARCH email USING COVERING INDEX idx_person_emails_person_time (person_id=?) LEFT-JOIN"
+        },
+        {
+          "id": 62,
+          "parent": 0,
+          "detail": "SEARCH assignment USING COVERING INDEX idx_staff_assignments_person_time (person_id=?) LEFT-JOIN"
+        },
+        {
+          "id": 112,
+          "parent": 0,
+          "detail": "USE TEMP B-TREE FOR count(DISTINCT)"
+        }
+      ]
+    },
+    {
+      "id": "staff-account-activity-history",
+      "surface": "Activity history",
+      "flags": {
+        "fullScan": false,
+        "tempSort": false,
+        "tempGroup": false,
+        "indexes": [
+          "staff_account_activity_history_person_order"
+        ]
+      },
+      "steps": [
+        {
+          "id": 8,
+          "parent": 0,
+          "detail": "SEARCH staff_account_activity_history USING INDEX staff_account_activity_history_person_order (person_id=?)"
+        }
+      ]
+    },
+    {
+      "id": "profile-account-lookup",
+      "surface": "Profile/account lookup",
+      "flags": {
+        "fullScan": false,
+        "tempSort": false,
+        "tempGroup": false,
+        "indexes": [
+          "sqlite_autoindex_accounts_1",
+          "sqlite_autoindex_requester_departments_1",
+          "sqlite_autoindex_app_metadata_1"
+        ]
+      },
+      "steps": [
+        {
+          "id": 5,
+          "parent": 0,
+          "detail": "SEARCH a USING INDEX sqlite_autoindex_accounts_1 (id=?)"
+        },
+        {
+          "id": 10,
+          "parent": 0,
+          "detail": "SEARCH department USING INDEX sqlite_autoindex_requester_departments_1 (id=?) LEFT-JOIN"
+        },
+        {
+          "id": 27,
+          "parent": 0,
+          "detail": "CORRELATED SCALAR SUBQUERY 1"
+        },
+        {
+          "id": 32,
+          "parent": 27,
+          "detail": "SEARCH app_metadata USING INDEX sqlite_autoindex_app_metadata_1 (key=?)"
+        }
+      ]
+    }
+  ]
+}
