@@ -24,8 +24,12 @@ async function listAll(bucket, accept = () => true) {
   const objects = [];
   let cursor;
   do {
-    const page = await bucket.list({ ...(cursor ? { cursor } : {}), limit: 1000 });
-    objects.push(...page.objects.filter((object) => accept(object.key)));
+    const page = await bucket.list({
+      ...(cursor ? { cursor } : {}),
+      limit: 1000,
+      include: ['customMetadata'],
+    });
+    objects.push(...page.objects.filter((object) => accept(object)));
     cursor = page.truncated ? page.cursor : undefined;
   } while (cursor);
   return objects.sort((left, right) => left.key.localeCompare(right.key));
@@ -45,13 +49,21 @@ async function manifest(bucket, accept) {
   };
 }
 
-async function resetBucket(baseline, working, accept) {
-  const [baselineObjects, workingObjects] = await Promise.all([
-    listAll(baseline, accept),
-    listAll(working, accept),
+async function resetBucket(
+  baseline,
+  working,
+  { acceptBaseline = () => true, governedWorking = () => true } = {},
+) {
+  const [baselineObjects, allWorkingObjects] = await Promise.all([
+    listAll(baseline, acceptBaseline),
+    listAll(working),
   ]);
   const baselineByKey = new Map(baselineObjects.map((object) => [object.key, object]));
+  const workingObjects = allWorkingObjects.filter(
+    (object) => baselineByKey.has(object.key) || governedWorking(object),
+  );
   const workingByKey = new Map(workingObjects.map((object) => [object.key, object]));
+  const preservedUnclassified = allWorkingObjects.length - workingObjects.length;
   let deleted = 0;
   let restored = 0;
   for (const object of workingObjects) {
@@ -84,7 +96,15 @@ async function resetBucket(baseline, working, accept) {
     }
     restored += 1;
   }
-  return { deleted, restored };
+  return { deleted, restored, preservedUnclassified };
+}
+
+function governedBrandObject(object) {
+  const metadata = object?.customMetadata ?? {};
+  return (
+    ['PUBLIC_BRAND', 'PLAYGROUND_DEMO'].includes(String(metadata.classification ?? '')) ||
+    (typeof metadata.slot === 'string' && typeof metadata.versionId === 'string')
+  );
 }
 
 export default {
@@ -96,18 +116,25 @@ export default {
     if (!(await authorized(request, env.RESET_TOKEN))) {
       return new Response('Forbidden', { status: 403 });
     }
-    const redactedEvidence = (key) => key.startsWith('playground-redacted/');
+    const redactedEvidence = (object) => object.key.startsWith('playground-redacted/');
     const before = {
       brand: await manifest(env.WORKING_BRAND),
       evidence: await manifest(env.WORKING_EVIDENCE, redactedEvidence),
     };
     const [brand, evidence] = await Promise.all([
-      resetBucket(env.BASELINE_BRAND, env.WORKING_BRAND),
-      resetBucket(env.BASELINE_EVIDENCE, env.WORKING_EVIDENCE, redactedEvidence),
+      resetBucket(env.BASELINE_BRAND, env.WORKING_BRAND, {
+        governedWorking: governedBrandObject,
+      }),
+      resetBucket(env.BASELINE_EVIDENCE, env.WORKING_EVIDENCE, {
+        acceptBaseline: redactedEvidence,
+        governedWorking: redactedEvidence,
+      }),
     ]);
+    const baselineBrandKeys = new Set((await listAll(env.BASELINE_BRAND)).map((object) => object.key));
+    const governedWorkingBrand = (object) => baselineBrandKeys.has(object.key) || governedBrandObject(object);
     const [baselineBrand, workingBrand, baselineEvidence, workingEvidence] = await Promise.all([
       manifest(env.BASELINE_BRAND),
-      manifest(env.WORKING_BRAND),
+      manifest(env.WORKING_BRAND, governedWorkingBrand),
       manifest(env.BASELINE_EVIDENCE, redactedEvidence),
       manifest(env.WORKING_EVIDENCE, redactedEvidence),
     ]);
@@ -124,6 +151,10 @@ export default {
       baseline: { brand: baselineBrand, evidence: baselineEvidence },
       working: { brand: workingBrand, evidence: workingEvidence },
       changes: { brand, evidence },
+      preservedUnclassified: {
+        brand: brand.preservedUnclassified,
+        evidence: evidence.preservedUnclassified,
+      },
     });
   },
 };

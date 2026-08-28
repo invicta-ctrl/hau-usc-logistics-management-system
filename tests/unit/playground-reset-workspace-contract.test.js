@@ -1,8 +1,10 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   d1Rows,
   nextResetGeneration,
+  validatePlaygroundResetTarget,
   validateResetVerification,
 } from '../../scripts/playground/reset-workspace.mjs';
 
@@ -55,6 +57,69 @@ function r2Result(keys = ['evidence/redacted-a.json', 'evidence/redacted-b.json'
 }
 
 describe('Playground reset workspace contract', () => {
+  it('preserves a verified export, serializes resets, and records fail-closed ERROR state', () => {
+    const source = readFileSync(
+      new URL('../../scripts/playground/reset-workspace.mjs', import.meta.url),
+      'utf8',
+    );
+    expect(source).toContain("'d1', 'export'");
+    expect(source).toContain('restoreAndVerifyD1Export');
+    expect(source).toContain("open(lockPath, 'wx', 0o600)");
+    expect(source).toContain("state: 'ERROR'");
+    expect(source).toContain("state: 'RESETTING'");
+  });
+
+  it('keeps reset-cycle canaries private and proves old-session invalidation', () => {
+    const source = readFileSync(
+      new URL('../../scripts/playground/audit-live-p12-reset-cycle.mjs', import.meta.url),
+      'utf8',
+    );
+    expect(source).toContain('mode: 0o600');
+    expect(source).toContain('response.status === 401');
+    expect(source).toContain("hostname !== 'logistics.hausc.org'");
+    expect(source).toContain("productionMutation: 'NONE'");
+    expect(source).not.toContain('console.log(session');
+    expect(source).not.toContain('console.log(cookie');
+  });
+
+  it('accepts only a complete isolated Playground Worker, D1, and R2 tuple', () => {
+    const manifest = {
+      status: 'READY',
+      playgroundHostname: 'playground.hausc.org',
+      resources: {
+        names: {
+          d1Working: 'hau-usc-logistics-playground-working-safe',
+          r2BaselineBrand: 'hau-usc-logistics-playground-baseline-brand-safe',
+          r2WorkingBrand: 'hau-usc-logistics-playground-working-brand-safe',
+          r2BaselineEvidence: 'hau-usc-logistics-pg-baseline-evidence-safe',
+          r2WorkingEvidence: 'hau-usc-logistics-pg-working-evidence-safe',
+        },
+      },
+      d1: {
+        databaseId: '11111111-1111-4111-8111-111111111111',
+        cleanBaselineBookmark: 'sealed-bookmark',
+      },
+    };
+
+    expect(validatePlaygroundResetTarget(manifest)).toMatchObject({
+      hostname: 'playground.hausc.org',
+    });
+    expect(() =>
+      validatePlaygroundResetTarget({
+        ...manifest,
+        playgroundHostname: 'logistics.hausc.org',
+      }),
+    ).toThrow('isolated Playground tuple');
+    expect(() =>
+      validatePlaygroundResetTarget({
+        ...manifest,
+        resources: {
+          names: { ...manifest.resources.names, r2WorkingBrand: 'production-brand-assets' },
+        },
+      }),
+    ).toThrow('isolated Playground tuple');
+  });
+
   it('increments only a valid non-negative reset generation', () => {
     expect(nextResetGeneration(undefined)).toBe(1);
     expect(nextResetGeneration('3')).toBe(4);
@@ -83,8 +148,8 @@ describe('Playground reset workspace contract', () => {
     expect(() => validateResetVerification(verificationRow({ sessions: 1 }), r2Result(), 4)).toThrow(
       'D1 reset verification failed',
     );
-    expect(() =>
-      validateResetVerification(verificationRow(), r2Result(['evidence/other.json']), 4),
-    ).toThrow('D1 reset verification failed');
+    expect(() => validateResetVerification(verificationRow(), r2Result(['evidence/other.json']), 4)).toThrow(
+      'D1 reset verification failed',
+    );
   });
 });
