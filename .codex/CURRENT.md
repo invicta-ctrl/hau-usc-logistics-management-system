@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P15_UIUX_RESEARCH_COMPLETE;P16_ANTI_AI_SLOP_AUDIT_NEXT
+PHASE: P16_ANTI_AI_SLOP_AUDIT_COMPLETE;P17_RESTRAINED_GLASS_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -68,6 +68,8 @@ P14_STATUS: PASS_LOCAL_IMPLEMENTATION;LIVE_PROFILE_E2E_PENDING_P29_P31
 P14_AUDIT: .codex/PLAYGROUND_MASTER_P14_PROFILE_PERSONALIZATION.md
 P15_STATUS: PASS_CURRENT_PRIMARY_SOURCE_RESEARCH
 P15_AUDIT: .codex/PLAYGROUND_MASTER_P15_UIUX_RESEARCH.md
+P16_STATUS: PASS_BOUNDED_AUDIT;CORRECTIONS_ASSIGNED_P17_P23
+P16_AUDIT: .codex/PLAYGROUND_MASTER_P16_ANTI_AI_SLOP_AUDIT.md
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P16 Anti-AI-slop design rules. Audit the exact current candidate against the accepted avoid/prefer lists and record the smallest concrete design corrections needed before the broader UI refinement phases.
+NEXT_EXACT_ACTION: Begin P17 Restrained glass architecture. Map every current blurred/translucent surface to an accepted functional layer, convert dense operational content to solid semantic surfaces, preserve opaque/reduced-transparency fallbacks, and verify that no essential meaning depends on transparency.
 HANDOFF_STATUS: ACTIVE

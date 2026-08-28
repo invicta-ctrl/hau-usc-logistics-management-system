@@ -28,7 +28,7 @@ PRIOR_LATEST_MIGRATION: 0032_staff_account_activity_history.sql
 PRIOR_LIVE_STATE: DIRTY;RESET_GENERATION=3;ACTIVE_SESSIONS=1;TRANSIENT_TOTAL=1
 PRIOR_PRODUCTION_MUTATION: ZERO
 
-COMPLETED: P00–P15 are complete at their assigned gates. P12 completed two live guarded reset cycles and left generation 6 CLEAN. P13 implemented the Playground-only Administration reset center. P14 rebuilt Profile as an authenticated operational surface. P15 recorded a concise current-primary-source UI/UX decision note covering accessibility, restrained materials, operational tables, content-driven responsive behavior, and Core Web Vitals without changing product code.
+COMPLETED: P00–P16 are complete at their assigned gates. P12 completed two live guarded reset cycles and left generation 6 CLEAN. P13 implemented the Playground-only Administration reset center. P14 rebuilt Profile as an authenticated operational surface. P15 recorded the bounded current-primary-source UI/UX decision note. P16 audited the exact candidate against the accepted anti-AI-slop avoid/prefer lists and assigned only confirmed corrections to P17–P23.
 
 VALIDATION: P12 live evidence remains accepted. P14 passes 53 focused tests across 6 files, the full 166-file / 1229-test suite, 10 targeted Profile Playwright cases across the five configured viewport projects, the 1679-module frontend build, release-candidate lint with zero errors, targeted formatting, generated-artifact rebuild, and diff checks. Repository-wide lint remains blocked only by pre-existing browser-global errors in the excluded public-portals-r3 prototype.
 
@@ -39,7 +39,7 @@ EXTERNAL_ACTIONS: P07–P12 external actions remain recorded in their checkpoint
 DO_NOT_REPEAT: Do not recreate the reconciliation branch/worktree, broad-merge frontend/design branches, re-run frozen FI comparison, reuse failed v2 artifacts, repeat reset attempts A/B, or reapply the v2 overlay. Use the private v2 manifest and clean bookmark for later reset verification.
 
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P16 Anti-AI-slop design rules and audit the exact candidate against the accepted avoid/prefer lists.
+NEXT_EXACT_ACTION: Begin P17 Restrained glass architecture and map each translucent surface to an accepted functional layer before changing shared styles.
 RESUME_COMMANDS: Read the accepted master prompt, current chain, and reconciliation manifest; run exact Git handshake; reverify live Playground identity before any external mutation.
 PROHIBITED_ACTIONS: Production/main deployment or mutation; branch deletion; history rewrite; unknown residue mutation; Figma write; unbacked reset/migration; unverified R2 deletion.
 HANDOFF_STATUS: ACTIVE
