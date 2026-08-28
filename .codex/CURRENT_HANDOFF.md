@@ -12,7 +12,7 @@ ENDING_SHA: GIT_HEAD
 ENDING_TREE: GIT_HEAD_TREE
 UPSTREAM: origin/release/v0.8.3-fi12-playground; final parity required before handoff acceptance
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fi00-fi12-playground-candidate
-WORKTREE_STATE: DIRTY__CLOSEOUT_DOCS_ONLY;EXPECTED_CLEAN_AFTER_COMMIT
+WORKTREE_STATE: CLEAN
 ACTIVE_WRITER: NONE
 WRITER_LOCK: RELEASED
 ROUTE: SOLO
