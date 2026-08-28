@@ -432,7 +432,7 @@ test('FVR-001 public tracking projects only server-confirmed state', async ({ pa
   await page.getByRole('link', { name: 'Browse equipment' }).click();
   await page
     .getByRole('navigation', { name: 'Public lending navigation' })
-    .getByRole('link', { name: 'Track lending', exact: true })
+    .getByRole('button', { name: 'Track lending', exact: true })
     .click();
   await page.getByLabel('Request or Submission ID').fill('REQ-CONFIRMED');
   await page.getByLabel('Private tracking code').fill('private-request-code');
@@ -538,7 +538,7 @@ test('FVR-001 account application preserves 8-digit verification and private sta
   expect(statusAuthorization).toBe('Bearer private-status-token-1234567890');
   await page.getByLabel('Withdrawal reason').fill('No longer required');
   await page.getByRole('button', { name: 'Withdraw application' }).click();
-  await expect(page.getByText('WITHDRAWN')).toBeVisible();
+  await expect(page.getByText('WITHDRAWN', { exact: true })).toBeVisible();
   expect(withdrawalAuthorization).toBe('Bearer private-status-token-1234567890');
 });
 
@@ -552,13 +552,13 @@ test('FVR-001 Current falls back to media-error when the image request fails', a
     }),
   );
   await page.goto('/');
-  await expect(
-    page
-      .getByRole('article')
-      .getByText(
-        'This announcement image is temporarily unavailable. You can still read the published announcement details.',
-      ),
-  ).toBeVisible();
+  const mediaError = page
+    .getByRole('region', { name: 'What the council is doing now' })
+    .getByText(
+      'This announcement image is temporarily unavailable. You can still read the published announcement details.',
+    );
+  await expect(mediaError).toBeVisible();
+  await expect(mediaError).toHaveCount(1);
 });
 
 test('FVR-001 renders the poster-first hero with controlled decorative video', async ({ page }) => {

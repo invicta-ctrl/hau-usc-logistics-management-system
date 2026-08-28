@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P27_IMPECCABLE_AUDIT_AND_REPAIR_COMPLETE;P28_FINAL_ACCESSIBILITY_RESPONSIVE_MATRIX_NEXT
+PHASE: P28_FINAL_ACCESSIBILITY_RESPONSIVE_MATRIX_COMPLETE;P29_FREEZE_DEPLOY_EXACT_PLAYGROUND_CANDIDATE_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -99,6 +99,8 @@ P26_RECHECK: ZERO_CRITICAL;ZERO_MAJOR;TWO_JUSTIFIED_MINOR
 P27_STATUS: PASS_BOUNDED_REPAIR;IMPECCABLE_SCORE_19_OF_20;ERRORS_ZERO
 P27_AUDIT: .codex/PLAYGROUND_MASTER_P27_IMPECCABLE_AUDIT.md
 P27_EVIDENCE: .codex/evidence/P27_IMPECCABLE_LANDING_1440.png;.codex/evidence/P27_IMPECCABLE_LANDING_390.png;.codex/evidence/P27_IMPECCABLE_BORROW_1440.png
+P28_STATUS: PASS_LOCAL_EXACT_CANDIDATE;ACCESSIBILITY_RESPONSIVE_MATRIX_GREEN
+P28_AUDIT: .codex/PLAYGROUND_MASTER_P28_ACCESSIBILITY_RESPONSIVE_MATRIX.md
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P28 final accessibility and responsive matrix across the exact candidate. Verify headings, names, focus, zoom, accepted widths, themes, tables, dialogs, and public/staff route presentation without changing external state.
+NEXT_EXACT_ACTION: Begin P29 freeze/deploy preflight. Resolve and record exact source/tree, lockfile and artifact hashes, Playground Worker/D1/R2 identity, schema/migration, baseline/generation, theme/language versions, and rollback target; reverify remote/provider state before deploying only to Playground.
 HANDOFF_STATUS: ACTIVE

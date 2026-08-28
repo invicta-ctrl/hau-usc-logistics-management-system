@@ -451,10 +451,12 @@ test('LEND-02 the Public Lending Hub exposes no Request Center tab', async ({ pa
 
   const nav = page.getByRole('navigation', { name: 'Public lending navigation' });
   await expect(nav).toBeVisible();
-  await expect(nav.getByRole('button', { name: 'Request Center' })).toHaveCount(0);
-  for (const tab of ['Home', 'Lending Center', 'Track lending', 'Lending policy', 'Staff sign in']) {
+  await expect(nav.getByText('Request Center', { exact: true })).toHaveCount(0);
+  await expect(nav.getByRole('link', { name: 'Home', exact: true })).toBeVisible();
+  for (const tab of ['Lending Center', 'Track lending', 'Lending policy']) {
     await expect(nav.getByRole('button', { name: tab, exact: true })).toBeVisible();
   }
+  await expect(nav.getByRole('link', { name: 'Staff sign in', exact: true })).toBeVisible();
 });
 
 test('LEND-03 no public-request or public-front-door copy survives on the lending hub', async ({ page }) => {
