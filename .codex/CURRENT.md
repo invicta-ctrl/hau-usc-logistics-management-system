@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P14_PROFILE_PERSONALIZATION_LOCAL_COMPLETE;P15_UIUX_RESEARCH_NEXT
+PHASE: P15_UIUX_RESEARCH_COMPLETE;P16_ANTI_AI_SLOP_AUDIT_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -66,6 +66,8 @@ P13_STATUS: PASS_LOCAL_IMPLEMENTATION;LIVE_UI_RESET_E2E_PENDING_P29_P31
 P13_AUDIT: .codex/PLAYGROUND_MASTER_P13_RESET_CENTER.md
 P14_STATUS: PASS_LOCAL_IMPLEMENTATION;LIVE_PROFILE_E2E_PENDING_P29_P31
 P14_AUDIT: .codex/PLAYGROUND_MASTER_P14_PROFILE_PERSONALIZATION.md
+P15_STATUS: PASS_CURRENT_PRIMARY_SOURCE_RESEARCH
+P15_AUDIT: .codex/PLAYGROUND_MASTER_P15_UIUX_RESEARCH.md
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P15 UI/UX research. Use bounded current authoritative guidance for accessibility, restrained translucency/materials, enterprise operations UI, data-table/dashboard usability, responsive/mobile behavior, and Core Web Vitals. Record only the concise adopted/rejected decision note required by the accepted specification.
+NEXT_EXACT_ACTION: Begin P16 Anti-AI-slop design rules. Audit the exact current candidate against the accepted avoid/prefer lists and record the smallest concrete design corrections needed before the broader UI refinement phases.
 HANDOFF_STATUS: ACTIVE
