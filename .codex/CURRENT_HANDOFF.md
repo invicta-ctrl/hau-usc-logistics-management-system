@@ -28,18 +28,18 @@ PRIOR_LATEST_MIGRATION: 0032_staff_account_activity_history.sql
 PRIOR_LIVE_STATE: DIRTY;RESET_GENERATION=3;ACTIVE_SESSIONS=1;TRANSIENT_TOTAL=1
 PRIOR_PRODUCTION_MUTATION: ZERO
 
-COMPLETED: P00–P06 are complete. P07 preserved v1 and locally verified staging-safe v2 coverage without a new Production read. Attempt A was reconciled and repaired. Corrected attempt B passed and advanced the fixed Playground from generation 3 dirty to generation 4 clean: one session invalidated, all transient state zero, schema 32/migration 0032 and foreign keys pass, R2 is reconciled, D1-to-R2 evidence linkage passes, and Production mutation remains none. Reset is now a no-repeat action.
+COMPLETED: P00–P07 are complete. P07 preserved v1, derived and locally verified staging-safe v2 coverage without a new Production read, reconciled and repaired failed reset attempt A, completed corrected generation-4 reset, and installed `PGBL-20260828-COVERAGE-V2`. Live D1 is clean with transient zero, schema 32/migration 0032, foreign keys and D1-to-R2 linkage passing; required operational coverage and 20/20 inventory reconciliation pass; R2 parity/exceptions and role capabilities are recorded. Production and schema mutation are none. Reset and overlay install are no-repeat actions.
 
-VALIDATION: P06 frontend evidence remains accepted. The P07 v3 overlay passed fresh-v1 integrity, foreign-key, inventory, and coverage checks. Full Playground tests passed 11 files/44 tests after the restore repair. The successful private reset report and independent live inspection agree on generation 4, clean state, zero transient rows, zero FK violations, evidence linkage pass, and available recovery bookmark.
+VALIDATION: P06 frontend evidence remains accepted. P07 local aggregate audit, candidate integrity/FK checks, fresh-v1 overlay verification, full Playground suite (11 files/44 tests), generation-4 reset report, independent live inspection, v2 postflight, private live export restore, and 20/20 inventory reconciliation pass. Private v2 manifest/report/export hashes are recorded in the P07 audit.
 
 PRESERVED: main working state; backend and v0.8.4 worktrees; frontend-design-integration `.ai-bridge/` and `.local/`; all recovery/design/release refs; prior Playground D1/R2/runtime state; canonical root AGENTS.md.
 
-EXTERNAL_ACTIONS: Attempt A failed and was reconciled. Attempt B restored the fixed Playground D1 to the sealed v1 bookmark, reset R2 working state, advanced reset generation to 4, invalidated one session, and removed its temporary reset Worker. No v2 overlay, schema, migration, Production, main, Google, or Figma mutation occurred.
+EXTERNAL_ACTIONS: Attempt A failed and was reconciled. Attempt B restored fixed Playground D1/R2 to sealed v1 and advanced generation to 4. The additive v2 overlay then populated only the fixed Playground D1 and captured a distinct clean bookmark. Temporary reset/inspection Workers were removed. No schema, migration, Production, main, Google, or Figma mutation occurred.
 
-DO_NOT_REPEAT: Do not recreate the reconciliation branch/worktree, broad-merge frontend/design branches, re-run the frozen FI comparison, reuse failed v2 artifacts, or repeat reset attempts A or B. Generation 4 is the accepted clean reset state for the one v2 install attempt.
+DO_NOT_REPEAT: Do not recreate the reconciliation branch/worktree, broad-merge frontend/design branches, re-run frozen FI comparison, reuse failed v2 artifacts, repeat reset attempts A/B, or reapply the v2 overlay. Use the private v2 manifest and clean bookmark for later reset verification.
 
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Commit and push the generation-4 reset checkpoint, reconfirm Git/upstream and live generation 4, then run the v2 installer once to fresh private manifest/report/export paths. Require a distinct v2 bookmark, coverage postflight, live export reconciliation, and Production mutation zero.
+NEXT_EXACT_ACTION: Execute P08 from a fresh browser against clean generation 4. Reproduce and regression-gate Overview, Request, Lending, Release, Restocking, and Procurement owner-observed defects before repair; keep every normal route backend-backed and every unsupported operation truthful.
 RESUME_COMMANDS: Read the accepted master prompt, current chain, and reconciliation manifest; run exact Git handshake; reverify live Playground identity before any external mutation.
 PROHIBITED_ACTIONS: Production/main deployment or mutation; branch deletion; history rewrite; unknown residue mutation; Figma write; unbacked reset/migration; unverified R2 deletion.
 HANDOFF_STATUS: ACTIVE
