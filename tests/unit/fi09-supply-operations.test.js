@@ -6,10 +6,27 @@ import { listPreviewRoutes } from '../../src/frontend/preview/index/registry';
 const root = resolve(import.meta.dirname, '../..');
 const readSource = (relativePath) => readFileSync(resolve(root, relativePath), 'utf8');
 const cssFrom = (source) => source.match(/const css = `([\s\S]*)`;;\s*$/)?.[1];
+
+/* POST-FI17-DESIGN-RECOVERY-02 accepted delta, recorded the same way the FI-11
+ * responsive helpers are below rather than by weakening the parity assertion.
+ *
+ * Make v44 renders every supply status in one identical pill. Measured, not
+ * inferred: 16 pills across restocking, procurement and events resolve to ONE
+ * visual signature (background rgb(247,240,226), colour rgb(36,20,22), border
+ * rgb(230,220,201), weight 800, 11px), so "Not delivered" and "Received" are
+ * indistinguishable on the three surfaces whose job is spotting the
+ * outstanding ones. RECOVERY-02 §3.5 preserves a Make pattern "unless
+ * Hallmark/Impeccable identify a material usability/accessibility defect";
+ * this is that exception.
+ *
+ * Only the four appended tone rules are stripped. Make's own `em` rule, its
+ * tab composition and its palette all remain under byte-exact parity, so any
+ * other drift from v44 still fails this test. */
+const STATUS_TONE_DELTA = /em\[data-state="(?:done|progress|alert|neutral)"\]\{[^}]*\}/g;
 const supplyCssFrom = (source) => {
   const css = cssFrom(source);
   const rootAt = css?.indexOf('.sup{') ?? -1;
-  return rootAt >= 0 ? css?.slice(rootAt).trim() : undefined;
+  return rootAt >= 0 ? css?.slice(rootAt).replace(STATUS_TONE_DELTA, '').trim() : undefined;
 };
 
 describe('FI-09 Supply operations frontend integration', () => {

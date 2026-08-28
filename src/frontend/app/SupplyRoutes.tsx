@@ -54,6 +54,32 @@ const keepFocusInDialog = (event: KeyboardEvent, dialog: HTMLElement) => {
     first.focus({ preventScroll: true });
   }
 };
+/* POST-FI17-DESIGN-RECOVERY-02, accepted delta against Make v44.
+ *
+ * Make v44 renders every supply status in one identical pill. That is not a
+ * reading of the design — it is measured: 16 status pills across restocking,
+ * procurement and events resolve to ONE visual signature (background
+ * rgb(247,240,226), colour rgb(36,20,22), border rgb(230,220,201), weight 800,
+ * 11px). "Not delivered" and "Received" are byte-identical, so status carries
+ * no visual encoding at all on the three surfaces whose job is spotting the
+ * outstanding ones.
+ *
+ * RECOVERY-02 §3.5 preserves a Make pattern "unless Hallmark/Impeccable
+ * identify a material usability/accessibility defect". This is that exception,
+ * and it is the ONLY thing changed here: Make's tab composition and its
+ * palette are left exactly as v44 specifies, because changing those would be
+ * the aesthetic preference §3.6 forbids.
+ *
+ * Tones map onto Figma Design's status families, which the Design file defines
+ * and Make does not. Labels are unchanged. */
+function supplyTone(label: unknown): 'done' | 'progress' | 'alert' | 'neutral' {
+  const value = String(label ?? '').toLowerCase();
+  if (/not delivered|out of stock|overdue|rejected|void/.test(value)) return 'alert';
+  if (/^received|fully received|complete|closed/.test(value)) return 'done';
+  if (/partial|ordered|canvass|receiving|in transit|open/.test(value)) return 'progress';
+  return 'neutral';
+}
+
 export default function SupplyRoutes({
   dark,
   mode,
@@ -416,7 +442,7 @@ function Restocking({
                   <td>{r[3]}</td>
                   <td>{r[4]}</td>
                   <td>
-                    <em>{r[5]}</em>
+                    <em data-state={supplyTone(r[5])}>{r[5]}</em>
                   </td>
                 </tr>
               ))}
@@ -429,7 +455,7 @@ function Restocking({
             <>
               <p className="eye">{selected}</p>
               <h2>Receiving detail</h2>
-              <em>Partial</em>
+              <em data-state={supplyTone("Partial")}>Partial</em>
               <dl>
                 <div>
                   <dt>Purchase order</dt>
@@ -563,7 +589,7 @@ function Procurement({
                 <td>Supplier A · lowest compliant</td>
                 <td>Canvass</td>
                 <td>
-                  <em>Canvassing</em>
+                  <em data-state={supplyTone("Canvassing")}>Canvassing</em>
                 </td>
               </tr>
               <tr>
@@ -580,7 +606,7 @@ function Procurement({
                 <td>Supplier B · awaiting approval</td>
                 <td>Approval</td>
                 <td>
-                  <em>Awaiting approval</em>
+                  <em data-state={supplyTone("Awaiting approval")}>Awaiting approval</em>
                 </td>
               </tr>
             </tbody>
@@ -589,7 +615,7 @@ function Procurement({
             <article>
               <div>
                 <b>PRC-2026-0044</b>
-                <em>Canvassing</em>
+                <em data-state={supplyTone("Canvassing")}>Canvassing</em>
               </div>
               <h3>Wireless microphone ×12</h3>
               <p>3 quotes · Supplier A · lowest compliant</p>
@@ -603,7 +629,7 @@ function Procurement({
             <article>
               <div>
                 <b>PRC-2026-0041</b>
-                <em>Awaiting approval</em>
+                <em data-state={supplyTone("Awaiting approval")}>Awaiting approval</em>
               </div>
               <h3>Folding chair ×120</h3>
               <p>3 quotes · Supplier B · approval pending</p>
@@ -657,7 +683,7 @@ function Procurement({
                 <td>11 Sep</td>
                 <td>1 of 1 received</td>
                 <td>
-                  <em>Received</em>
+                  <em data-state={supplyTone("Received")}>Received</em>
                 </td>
               </tr>
               <tr>
@@ -670,7 +696,7 @@ function Procurement({
                 <td>14 Sep</td>
                 <td>0 of 1 received</td>
                 <td>
-                  <em>Ordered</em>
+                  <em data-state={supplyTone("Ordered")}>Ordered</em>
                 </td>
               </tr>
             </tbody>
@@ -679,7 +705,7 @@ function Procurement({
             <article>
               <div>
                 <b>DLV-2026-0022</b>
-                <em>Received</em>
+                <em data-state={supplyTone("Received")}>Received</em>
               </div>
               <h3>Sound system hire</h3>
               <p>EVT-2026-009 · Day 1 · 1 of 1 received</p>
@@ -687,7 +713,7 @@ function Procurement({
             <article>
               <div>
                 <b>DLV-2026-0019</b>
-                <em>Ordered</em>
+                <em data-state={supplyTone("Ordered")}>Ordered</em>
               </div>
               <h3>Food packs ×500</h3>
               <p>EVT-2026-009 · Day 2 · 0 of 1 received</p>
@@ -848,7 +874,7 @@ function ManagedEventsRoute({
                 <tr key={`${series.name}-${series.code}`}>
                   <td><b>{series.name}</b></td>
                   <td>{series.code || "Not reported"}</td>
-                  <td><em>{readableEventValue(series.status)}</em></td>
+                  <td><em data-state={supplyTone(readableEventValue(series.status))}>{readableEventValue(series.status)}</em></td>
                 </tr>
               ))}
             </tbody>
@@ -856,7 +882,7 @@ function ManagedEventsRoute({
           <div className="event-cards" aria-label="Event series">
             {data.series.map((series) => (
               <article key={`${series.name}-${series.code}`}>
-                <b>{series.name}</b><span>{series.code || "No display code reported"}</span><em>{readableEventValue(series.status)}</em>
+                <b>{series.name}</b><span>{series.code || "No display code reported"}</span><em data-state={supplyTone(readableEventValue(series.status))}>{readableEventValue(series.status)}</em>
               </article>
             ))}
           </div>
@@ -876,7 +902,7 @@ function ManagedEventsRoute({
             <tbody>
               {data.days.map((day) => (
                 <tr key={`${day.seriesName}-${day.name}-${day.date}`}>
-                  <td>{day.seriesName}</td><td><b>{day.name}</b></td><td>{day.date || "Not reported"}</td><td><em>{readableEventValue(day.status)}</em></td>
+                  <td>{day.seriesName}</td><td><b>{day.name}</b></td><td>{day.date || "Not reported"}</td><td><em data-state={supplyTone(readableEventValue(day.status))}>{readableEventValue(day.status)}</em></td>
                 </tr>
               ))}
             </tbody>
@@ -884,7 +910,7 @@ function ManagedEventsRoute({
           <div className="event-cards" aria-label="Event days">
             {data.days.map((day) => (
               <article key={`${day.seriesName}-${day.name}-${day.date}`}>
-                <b>{day.name}</b><span>{day.seriesName} · {day.date || "Date not reported"}</span><em>{readableEventValue(day.status)}</em>
+                <b>{day.name}</b><span>{day.seriesName} · {day.date || "Date not reported"}</span><em data-state={supplyTone(readableEventValue(day.status))}>{readableEventValue(day.status)}</em>
               </article>
             ))}
           </div>
@@ -904,7 +930,7 @@ function ManagedEventsRoute({
             <tbody>
               {data.activities.map((activity) => (
                 <tr key={`${activity.seriesName}-${activity.name}-${activity.date}-${activity.activityType}`}>
-                  <td><b>{activity.name}</b></td><td>{activity.seriesName}</td><td>{readableEventValue(activity.activityType)}</td><td>{readableEventValue(activity.timeStatus)}</td><td><em>{readableEventValue(activity.status)}</em></td>
+                  <td><b>{activity.name}</b></td><td>{activity.seriesName}</td><td>{readableEventValue(activity.activityType)}</td><td>{readableEventValue(activity.timeStatus)}</td><td><em data-state={supplyTone(readableEventValue(activity.status))}>{readableEventValue(activity.status)}</em></td>
                 </tr>
               ))}
             </tbody>
@@ -912,7 +938,7 @@ function ManagedEventsRoute({
           <div className="event-cards" aria-label="Event activities">
             {data.activities.map((activity) => (
               <article key={`${activity.seriesName}-${activity.name}-${activity.date}-${activity.activityType}`}>
-                <b>{activity.name}</b><span>{activity.seriesName} · {readableEventValue(activity.activityType)} · {readableEventValue(activity.timeStatus)}</span><em>{readableEventValue(activity.status)}</em>
+                <b>{activity.name}</b><span>{activity.seriesName} · {readableEventValue(activity.activityType)} · {readableEventValue(activity.timeStatus)}</span><em data-state={supplyTone(readableEventValue(activity.status))}>{readableEventValue(activity.status)}</em>
               </article>
             ))}
           </div>
@@ -956,7 +982,7 @@ function Cards({
         <article key={r[0]}>
           <div>
             <b>{r[0]}</b>
-            <em>{r[5]}</em>
+            <em data-state={supplyTone(r[5])}>{r[5]}</em>
           </div>
           <h3>{r[1]}</h3>
           <p>
@@ -1075,5 +1101,5 @@ function State({
 const css = `
 .event-stack{display:grid;gap:16px;margin-top:16px}.event-stack .plane{overflow:auto}.event-cards{display:none}
 @media(max-width:768px){.event-cards{display:grid;gap:10px;padding:12px}.event-cards article{display:grid;gap:8px;border:1px solid var(--line);padding:13px}.event-cards span{color:var(--muted);font-size:12px}}
-.sup{--bg:#fffdf8;--m1:#fff;--m2:#f7f0e2;--text:#241416;--muted:#6f5a60;--line:#e6dcc9;--ox:#6f1624;--gold:#a77417;min-height:100%;min-width:0;padding:24px;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans",Inter,Arial,sans-serif}.sup.dark{--bg:#1c1917;--m1:#242120;--m2:#2d2927;--text:#faf9f7;--muted:#b9aaa7;--line:#49413d;--ox:#8e2134;--gold:#d0a64a}.sup *{box-sizing:border-box}.sup button,.sup input,.sup select,.sup textarea{font:inherit;min-height:44px;padding:10px 12px;border:1px solid var(--line);background:var(--m1);color:var(--text)}.sup button:focus-visible,.sup input:focus-visible,.sup select:focus-visible,.sup textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}.sup button:disabled{opacity:.45}.sandbox,header,.head,.toolbar,.stale,.recordband{display:flex;justify-content:space-between;align-items:center;gap:14px}.sandbox,.modes,header,.rail,.grid,.plane,.stale,.recordband,.segments,.state,.skeleton,.live{max-width:1440px;margin-left:auto;margin-right:auto}.sandbox{padding:10px 12px;border:1px dashed var(--line);background:var(--m2);font-size:12px}.sandbox span{color:var(--muted)}.sandbox label{display:flex;gap:8px;align-items:center}.modes,.segments{display:flex;margin-top:12px}.modes button,.segments button{flex:1;text-transform:capitalize}.modes .active,.segments .active{background:var(--ox);color:#fff;border-color:var(--ox);font-weight:800}header{margin-top:22px;align-items:flex-end}header h1{font:700 clamp(28px,3vw,38px)/1.08 "Bricolage Grotesque","IBM Plex Sans",sans-serif;margin:4px 0 10px}header p{margin:0;color:var(--muted)}header small{border:1px solid var(--line);padding:8px}.eye{margin:0;color:var(--gold)!important;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.rail{display:grid;grid-template-columns:repeat(5,1fr);list-style:none;padding:0;margin-top:20px;border:1px solid var(--line);background:var(--m2)}.rail li{padding:10px;border-right:1px solid var(--line);font-size:10px;font-weight:800}.rail b{display:block;color:var(--gold)}.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,.75fr);gap:16px;margin-top:16px;align-items:start}.plane,.detail,.state,.task{background:var(--m1);border:1px solid var(--line)}.head{padding:17px;border-bottom:1px solid var(--line)}h2{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;margin:3px 0}.toolbar{justify-content:flex-start;padding:12px;background:var(--m2)}.toolbar input{width:min(360px,48vw)}.sup table{width:100%;border-collapse:collapse}.sup th,.sup td{text-align:left;padding:13px 15px;border-bottom:1px solid var(--line);font-size:13px}.sup th{background:var(--m2);font-size:10px;color:var(--muted);text-transform:uppercase}.row{display:grid;text-align:left;border:0!important;padding:0!important;background:transparent!important}.row span{color:var(--muted);font-size:11px}em{font-style:normal;display:inline-block;padding:5px 8px;background:var(--m2);border:1px solid var(--line);font-size:11px;font-weight:800}.cards{display:none}.detail{position:sticky;top:16px;padding:17px}.detail dl{display:grid;gap:8px}.detail dl div{display:grid;grid-template-columns:120px 1fr}.detail dt{color:var(--muted)}.detail dd{margin:0;font-weight:700}.detail li{padding:8px 0}.detail li span{display:block;color:var(--muted)}.warning{padding:12px;background:var(--m2);color:var(--muted)}.recordband{margin-top:14px;padding:12px;background:var(--m2);border:1px solid var(--line);font-size:12px}.segments{margin-top:8px}.dense{display:grid;gap:8px;padding:16px}.dense article{display:flex;justify-content:space-between;padding:12px;border-bottom:1px solid var(--line)}.stale{margin-top:14px;padding:12px;border:1px solid var(--line);border-left:4px solid var(--gold)}.stale span{color:var(--muted)}.paused{opacity:.65;pointer-events:none}.state{padding:42px 20px;margin-top:16px}.state p{color:var(--muted)}.skeleton{height:520px;margin-top:16px;background:var(--m2);border:1px solid var(--line)}.primary{background:var(--ox)!important;color:#fff!important;border-color:var(--ox)!important;font-weight:800}.veil{position:fixed;inset:0;z-index:60;background:#120b0bba;display:grid;place-items:center;padding:16px}.task{width:min(580px,100%);padding:22px;display:grid;gap:13px}.task label{display:grid;gap:5px}.actions{display:flex;gap:8px}.live{min-height:24px;margin-top:12px;color:var(--muted);font-size:12px}
+.sup{--bg:#fffdf8;--m1:#fff;--m2:#f7f0e2;--text:#241416;--muted:#6f5a60;--line:#e6dcc9;--ox:#6f1624;--gold:#a77417;min-height:100%;min-width:0;padding:24px;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans",Inter,Arial,sans-serif}.sup.dark{--bg:#1c1917;--m1:#242120;--m2:#2d2927;--text:#faf9f7;--muted:#b9aaa7;--line:#49413d;--ox:#8e2134;--gold:#d0a64a}.sup *{box-sizing:border-box}.sup button,.sup input,.sup select,.sup textarea{font:inherit;min-height:44px;padding:10px 12px;border:1px solid var(--line);background:var(--m1);color:var(--text)}.sup button:focus-visible,.sup input:focus-visible,.sup select:focus-visible,.sup textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}.sup button:disabled{opacity:.45}.sandbox,header,.head,.toolbar,.stale,.recordband{display:flex;justify-content:space-between;align-items:center;gap:14px}.sandbox,.modes,header,.rail,.grid,.plane,.stale,.recordband,.segments,.state,.skeleton,.live{max-width:1440px;margin-left:auto;margin-right:auto}.sandbox{padding:10px 12px;border:1px dashed var(--line);background:var(--m2);font-size:12px}.sandbox span{color:var(--muted)}.sandbox label{display:flex;gap:8px;align-items:center}.modes,.segments{display:flex;margin-top:12px}.modes button,.segments button{flex:1;text-transform:capitalize}.modes .active,.segments .active{background:var(--ox);color:#fff;border-color:var(--ox);font-weight:800}header{margin-top:22px;align-items:flex-end}header h1{font:700 clamp(28px,3vw,38px)/1.08 "Bricolage Grotesque","IBM Plex Sans",sans-serif;margin:4px 0 10px}header p{margin:0;color:var(--muted)}header small{border:1px solid var(--line);padding:8px}.eye{margin:0;color:var(--gold)!important;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.rail{display:grid;grid-template-columns:repeat(5,1fr);list-style:none;padding:0;margin-top:20px;border:1px solid var(--line);background:var(--m2)}.rail li{padding:10px;border-right:1px solid var(--line);font-size:10px;font-weight:800}.rail b{display:block;color:var(--gold)}.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,.75fr);gap:16px;margin-top:16px;align-items:start}.plane,.detail,.state,.task{background:var(--m1);border:1px solid var(--line)}.head{padding:17px;border-bottom:1px solid var(--line)}h2{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;margin:3px 0}.toolbar{justify-content:flex-start;padding:12px;background:var(--m2)}.toolbar input{width:min(360px,48vw)}.sup table{width:100%;border-collapse:collapse}.sup th,.sup td{text-align:left;padding:13px 15px;border-bottom:1px solid var(--line);font-size:13px}.sup th{background:var(--m2);font-size:10px;color:var(--muted);text-transform:uppercase}.row{display:grid;text-align:left;border:0!important;padding:0!important;background:transparent!important}.row span{color:var(--muted);font-size:11px}em{font-style:normal;display:inline-block;padding:5px 8px;background:var(--m2);border:1px solid var(--line);font-size:11px;font-weight:800}em[data-state="done"]{background:var(--status-done-bg);border-color:var(--status-done-line);color:var(--status-done-fg)}em[data-state="progress"]{background:var(--status-progress-bg);border-color:var(--status-progress-line);color:var(--status-progress-fg)}em[data-state="alert"]{background:var(--status-alert-bg);border-color:var(--status-alert-line);color:var(--status-alert-fg)}em[data-state="neutral"]{background:var(--status-neutral-bg);border-color:var(--status-neutral-line);color:var(--status-neutral-fg)}.cards{display:none}.detail{position:sticky;top:16px;padding:17px}.detail dl{display:grid;gap:8px}.detail dl div{display:grid;grid-template-columns:120px 1fr}.detail dt{color:var(--muted)}.detail dd{margin:0;font-weight:700}.detail li{padding:8px 0}.detail li span{display:block;color:var(--muted)}.warning{padding:12px;background:var(--m2);color:var(--muted)}.recordband{margin-top:14px;padding:12px;background:var(--m2);border:1px solid var(--line);font-size:12px}.segments{margin-top:8px}.dense{display:grid;gap:8px;padding:16px}.dense article{display:flex;justify-content:space-between;padding:12px;border-bottom:1px solid var(--line)}.stale{margin-top:14px;padding:12px;border:1px solid var(--line);border-left:4px solid var(--gold)}.stale span{color:var(--muted)}.paused{opacity:.65;pointer-events:none}.state{padding:42px 20px;margin-top:16px}.state p{color:var(--muted)}.skeleton{height:520px;margin-top:16px;background:var(--m2);border:1px solid var(--line)}.primary{background:var(--ox)!important;color:#fff!important;border-color:var(--ox)!important;font-weight:800}.veil{position:fixed;inset:0;z-index:60;background:#120b0bba;display:grid;place-items:center;padding:16px}.task{width:min(580px,100%);padding:22px;display:grid;gap:13px}.task label{display:grid;gap:5px}.actions{display:flex;gap:8px}.live{min-height:24px;margin-top:12px;color:var(--muted);font-size:12px}
 @media(max-width:768px){.sup{padding:14px}.sandbox,header,.stale,.recordband{flex-direction:column;align-items:flex-start}.modes,.segments{display:grid;grid-template-columns:1fr}.rail{grid-template-columns:1fr}.rail li{border-bottom:1px solid var(--line)}.grid{grid-template-columns:1fr}.sup table{display:none}.cards{display:grid;gap:10px;padding:12px}.cards article{border:1px solid var(--line);padding:13px}.cards article>div{display:flex;justify-content:space-between}.cards .primary{width:100%;min-height:48px}.detail{position:relative;top:auto}.toolbar{flex-direction:column;align-items:stretch}.toolbar input,.toolbar button{width:100%}.actions{display:grid}.actions button{width:100%;min-height:48px}}@media(max-width:390px){.sup{padding:12px}header h1{font-size:32px}.head,.dense article{flex-direction:column;align-items:flex-start}.detail dl div{grid-template-columns:1fr}}`;;

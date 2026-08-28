@@ -1311,3 +1311,168 @@ PLAYGROUND WRITES         0
 D1 / R2 / GOOGLE WRITES   0
 PORT 4173                 never bound (curl -> 000)
 ```
+
+---
+
+# SUPPLYROUTES RESOLVED — against the in-repo Make v44 provider export
+
+The environment gate still fails (see above): no Windows machine, no egress,
+so **live** Make could not be opened. But step 3's sub-item 3 — *"compare Make
+with the repository parity test/export"* — turned out to be executable, because
+the export is in the repo and is not a derived mirror:
+
+```text
+output/design/make-provider-export-v44/
+PROVIDER_FILE:        rP9W9MQlZkyQrUx38TVsFS
+PROVIDER_VERSION:     44
+EXPORT_METHOD:        Figma Make code view -> "Download code" -> zip, verbatim
+EXPORT_TIMESTAMP:     2026-08-24 01:27 local
+FILE_COUNT:           212      TRUNCATION_MARKERS: 0
+```
+
+Byte-faithful, per-file sha256, explicitly superseding the MCP-derived mirror
+that carried truncation. This is real Make content, four days stale at most —
+not live, and not treated as live.
+
+## What Make v44 actually specifies
+
+```text
+SupplyRoutes        .sup{--bg:#fffdf8; …}                          palette
+                    .modes .active{background:var(--ox);color:#fff} filled tab
+                    em{…background:var(--m2);…}                     one pill
+AdministrationRoute .adm{--bg:#fffdf8; …}                          palette
+                    .tabs{grid-template-columns:repeat(7,1fr)}      filled tab
+                    em{… identical …}                              one pill
+```
+
+So the tab wall, the grey status and the pre-canonical `#fffdf8` plane **are**
+Make v44 authority. §3.5 therefore says preserve them.
+
+Two things fell out of the comparison that were not previously known:
+
+1. **The repo had already diverged from Make on Administration before this
+   program started.** Make v44 says `repeat(7,1fr)`; the shipped code said
+   `repeat(3,1fr)`, forcing seven sections onto three rows. No test caught it,
+   because only SupplyRoutes is parity-bound. The underline rail introduced
+   earlier renders all seven on one row, which is closer to v44's structural
+   intent than what it replaced.
+2. **The previous pass's "triplicate notice" removal was itself an
+   unauthorized divergence.** Make v44 carries
+   `<small>Design fixture · not production data</small>` on Supply, Release
+   AND Administration. Removing it from two of them was a composition change
+   driven by preference — the thing §3.6 forbids. It has been **restored** on
+   both. The triplication is also partly repo-made: Make ships the chip plus
+   the sandbox band (two notices); the third is the repo's own
+   `PreviewInspectionRoute` banner, which is not Make's to answer for.
+   (`Authenticated read-only data` does not exist in v44 at all — that line is
+   repo-authored, so its inspection-mode suppression stands.)
+
+## The one change made, and why it is not preference
+
+§3.5 permits departing from Make where "Hallmark/Impeccable identify a material
+usability/accessibility defect". That was **measured, not argued**:
+
+```text
+BEFORE — computed styles of every status pill, three routes:
+  restocking   6 pills -> 1 distinct visual signature
+  procurement  4 pills -> 1 distinct visual signature
+  events       6 pills -> 1 distinct visual signature
+  all: background rgb(247,240,226) · colour rgb(36,20,22) ·
+       border rgb(230,220,201) · weight 800 · 11px
+
+"Not delivered" and "Received" were byte-identical. Status carried NO visual
+encoding on the three surfaces whose entire job is spotting the outstanding
+ones.
+
+AFTER — same measurement:
+  restocking   6 pills -> 3 distinct signatures
+  procurement  4 pills -> 2 distinct signatures
+```
+
+Only the status tones changed. Make's own `em` rule, its tab composition and
+its palette are untouched and still byte-compared.
+
+### Parity evidence updated alongside, not weakened
+
+`fi09` now strips exactly the four appended tone rules before comparing —
+following the precedent the test already set for the FI-11 responsive delta:
+
+```js
+const STATUS_TONE_DELTA = /em\[data-state="(?:done|progress|alert|neutral)"\]\{[^}]*\}/g;
+```
+
+Any other drift from v44 still fails. The v44 export itself was **not edited**;
+it is provider evidence and editing it would destroy the baseline.
+
+## STEP 6 — FINAL HALLMARK
+
+```text
+Philosophy   5  Identity intact and now verified against BOTH authorities.
+Hierarchy    5  Overview weighted per Figma; status differentiated on every
+                operational route.
+Execution    5  The one material defect fixed with recorded parity evidence;
+                Make composition preserved by authority; two of my own earlier
+                divergences found and reverted.
+Specificity  5  Every decision traces to a Figma node, a v44 export line, or an
+                owner sentence.
+Restraint    5  Make's tab wall preserved rather than "improved"; the chip
+                restored rather than defended.
+Variety      4  Release / Restocking / Procurement still share one queue +
+                inspector rhythm. That is Make v44's specification, so it is a
+                documented authority consequence, not a defect to fix here.
+
+All six >= 4. Target met.
+```
+
+## STEP 7 — FINAL IMPECCABLE
+
+```text
+COMMAND: harden — not distill again.
+Justified by the remaining defect profile: after the status fix nothing
+structural was left that is not authority-locked, so the work was to confirm
+the new states hold rather than to change more.
+
+ONE inspection -> ONE repair batch (the tones) -> ONE confirmation:
+  light/390 · light/1440 · dark/390 · dark/1440
+  3 distinct signatures at every combination
+  contrast 5.63 - 7.48 against a 4.5 minimum (11px/800 = normal text)
+  0 failures
+```
+
+## STEP 8 — FINAL ACCEPTANCE
+
+Only gates this pass invalidated were rerun.
+
+```text
+15-ROUTE MATRIX   light            75 combinations   0 findings
+                  dark             75 combinations   0 findings
+                  reduced motion   75 combinations   0 findings
+                  375·414·640·1920 60 combinations   0 findings
+                  (640 = 1280 at 200% zoom — the reflow gate)
+PREVIEW INDEX     16/16 interactive checks
+CONTRAST          66/66 system · 4/4 new supply pills · 0 failures
+TESTS             156 files, 1164 passed, 1 skipped, 0 failed
+LINT              0 errors, 2 pre-existing warnings
+BUILD             dist verified, sha256 b14dc9d0c363c84c...
+PRODUCTION DENIAL 0 of 10 Preview Index markers in production output
+```
+
+```text
+FM WRITES                 0
+FM PROCESS INTERRUPTIONS  0
+FIGMA WRITES              0
+PRODUCTION WRITES         0
+PLAYGROUND WRITES         0
+D1 / R2 / GOOGLE WRITES   0
+PORT 4173                 never bound
+```
+
+## STILL OUTSTANDING
+
+1. **Live Make was never opened.** Everything above is against the v44 export.
+   If live Make is now v45+, the palette and tab findings may have moved.
+2. **Reference websites** (step 5) — all 13 unreachable. Not inspected, and no
+   principle in this receipt is attributed to them.
+3. The `#fffdf8` palette on Supply and Administration stays Make-faithful and
+   therefore contradicts Figma Design's `paper = #f7f1e8`. A real Make/Design
+   contradiction, left unresolved deliberately: resolving it needs live Make.

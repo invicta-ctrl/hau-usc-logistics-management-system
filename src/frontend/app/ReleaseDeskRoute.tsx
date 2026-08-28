@@ -339,6 +339,7 @@ export default function ReleaseDeskRoute({
             synthetic result.
           </p>
         </div>
+        <small>Design fixture · not production data</small>
       </header>
       <ol className="steps">
         {[

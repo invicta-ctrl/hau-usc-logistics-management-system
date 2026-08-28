@@ -1136,6 +1136,7 @@ export function LegacyAdministrationFixture({
             before any permitted action.
           </p>
         </div>
+        <small>Design fixture · not production data</small>
       </header>
       <nav
         className="tabs"
