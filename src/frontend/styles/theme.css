@@ -31,56 +31,113 @@
   --font-record: "IBM Plex Mono", ui-monospace, monospace;
   --font-wordmark: "Newsreader", Georgia, serif;
 
-  /* Type ramp — POST-FI17-DESIGN-ISOLATION-01.
-     DESIGN.md recorded the absence of a ramp as real tokenization debt: the
-     system declared faces and weights but never steps, so the frontend had
-     accumulated seventeen distinct ad-hoc sizes (7,8,9,10,11,12,13,14,15,16,
-     17,18,20,22,24,26,28px) that no rule could arbitrate. These nine steps are
-     derived from where that usage actually clustered, not invented, so
-     adopting them is a collapse rather than a re-scaling.
+  /* Type system — FIGMA-DERIVED. Correction R1, POST-FI17-DESIGN-RECOVERY-02.
 
-     Named by ROLE, not t-shirt size, because this system is role-driven —
-     DESIGN.md names the faces the same way (record · body · display) and a
-     step only means something once you know which face wears it.
+     The previous pass invented a nine-step ramp (10,11,12,13,14,16,19,24,31)
+     from code archaeology, on DESIGN.md's word that the system "has never
+     defined a type ramp". That was true of theme.css and FALSE of the design
+     system: Figma hXJElH4p72KfgAaoUyfNOC carries eleven named text styles and
+     always did. The invented ramp was therefore a PARALLEL scale — wrong floor
+     (10 vs 11), no 15 at all while calling 13 the dominant body size when
+     Figma calls 13 Body Compact, 19 against 20, 31 against 30, and four steps
+     with no counterpart at all.
+
+     These six sizes and their metrics are read from the Figma text styles, not
+     chosen. Names match Figma's style names so the two systems can be checked
+     against each other by eye:
+
+       Display / Overview · Metric   Bricolage Regular  44/44  -0.97
+       Page Title                    Bricolage Bold     30/33  -0.66
+       Section Title                 Bricolage Bold     20/24  -0.44
+       Wordmark                      Newsreader Medium  20/23  -0.44
+       Body · Tabular                Plex Sans/Mono Reg 15/23  -0.15 / 0
+       Body Compact                  Plex Sans Regular  13/19  -0.13
+       Label · Caption · Reference   Plex Sans/Mono     11/16  +1.1 / -0.11
+
+     Floor is 0.6875rem/11px — Figma's floor, one step above the invented one.
 
      Namespaced --type-* on purpose. Tailwind owns --text-*, and the @layer
      base rules below still resolve h1–h4/label/button/input through it;
-     redefining those would silently re-scale every text-* utility in the app.
+     redefining those would silently re-scale every text-* utility in the app. */
+  --type-label:         0.6875rem;  /* 11px — Label · Caption · Reference / Mono */
+  --type-body-compact:  0.8125rem;  /* 13px — Body Compact */
+  --type-body:          0.9375rem;  /* 15px — Body · Tabular */
+  --type-section-title: 1.25rem;    /* 20px — Section Title · Wordmark */
+  --type-page-title:    1.875rem;   /* 30px — Page Title */
+  --type-display:       2.75rem;    /* 44px — Display / Overview · Metric */
 
-     Floor is 0.625rem/10px, and it is a floor: the ramp deliberately has no
-     step below it. Sub-10px type had reached 8.8px on the landing path
-     markers, which no amount of institutional convention makes legible. */
-  --type-record-xs: 0.625rem;   /* 10px — mono record caps, eyebrows, plane labels */
-  --type-record-sm: 0.6875rem;  /* 11px — mono meta, badges, tabular annotations */
-  --type-body-xs:   0.75rem;    /* 12px — dense secondary copy */
-  --type-body-sm:   0.8125rem;  /* 13px — operational body, the dominant reading size */
-  --type-body-md:   0.875rem;   /* 14px — emphasis body, control labels */
-  --type-body-lg:   1rem;       /* 16px — prose body, section headings */
-  --type-title-sm:  1.1875rem;  /* 19px — card and panel titles */
-  --type-title-md:  1.5rem;     /* 24px — inspector and sub-route titles */
-  --type-title-lg:  1.9375rem;  /* 31px — route titles */
+  /* Fluid steps. Both are anchored ON Figma steps rather than beside them: the
+     route-title clamp runs Page Title → Display, and the landing hero floors at
+     Display instead of the old 40.8px, which sat between steps. */
+  --type-display-fluid: clamp(1.875rem, 4vw, 2.75rem);
+  --type-display-hero:  clamp(2.75rem, 6.5vw, 5rem);
 
-  /* Fluid display steps. Kept in the ramp so route headings stop inventing
-     their own clamp() each time; both were already in use verbatim. */
-  --type-display-sm: clamp(2rem, 4vw, 3.6rem);
-  --type-display-lg: clamp(2.55rem, 6.5vw, 5.25rem);
+  /* Line heights, computed from the Figma pairs above. */
+  --leading-display:       1;      /* 44/44 */
+  --leading-page-title:    1.1;    /* 33/30 */
+  --leading-section-title: 1.2;    /* 24/20 */
+  --leading-wordmark:      1.15;   /* 23/20 */
+  --leading-body:          1.533;  /* 23/15 */
+  --leading-tabular:       1.467;  /* 22/15 */
+  --leading-body-compact:  1.462;  /* 19/13 */
+  --leading-label:         1.455;  /* 16/11 */
+  --leading-reference:     1.727;  /* 19/11 */
 
-  /* Line-height companions for the reading steps. Operational density lives
-     here: record type sets tight because it is scanned, body copy sets open
-     because it is read. */
-  --leading-record: 1.45;
-  --leading-tight: 1.25;
-  --leading-body: 1.55;
-  --leading-prose: 1.62;
+  /* Tracking, computed from the Figma pairs above. */
+  --tracking-display: -0.022em;
+  --tracking-title:   -0.022em;
+  --tracking-body:    -0.01em;
+  --tracking-label:   0.1em;
 
-  /* Four-point spacing and restrained motion */
-  --space-2xs: 0.25rem;
-  --space-xs: 0.5rem;
-  --space-sm: 0.75rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2.5rem;
-  --space-2xl: 4rem;
+  /* Spacing — FIGMA-DERIVED. Correction R9.
+     Figma HAU-USC / Spacing is 4·8·12·16·20·24·32·40·56. The shipped scale was
+     4·8·12·16·24·40·64 — missing 20 and 32 entirely, and ending on 64 where
+     Figma ends on 56. The numeric steps below ARE Figma's; the t-shirt aliases
+     are retained so the existing call sites keep resolving, which is what makes
+     this a token correction rather than a 200-site refactor. */
+  --space-1:  0.25rem;   /* 4  */
+  --space-2:  0.5rem;    /* 8  */
+  --space-3:  0.75rem;   /* 12 */
+  --space-4:  1rem;      /* 16 */
+  --space-5:  1.25rem;   /* 20 — was absent */
+  --space-6:  1.5rem;    /* 24 */
+  --space-8:  2rem;      /* 32 — was absent */
+  --space-10: 2.5rem;    /* 40 */
+  --space-12: 3.5rem;    /* 56 */
+
+  /* Figma's own semantic spacing roles. */
+  --space-control: var(--space-3);   /* 12 */
+  --space-row:     var(--space-4);   /* 16 */
+  --space-group:   var(--space-5);   /* 20 */
+  --space-section: var(--space-6);   /* 24 */
+  --space-chapter: var(--space-12);  /* 56 */
+
+  --space-2xs: var(--space-1);
+  --space-xs:  var(--space-2);
+  --space-sm:  var(--space-3);
+  --space-md:  var(--space-4);
+  --space-lg:  var(--space-6);
+  --space-xl:  var(--space-10);
+  --space-2xl: var(--space-12);      /* 64 -> 56, the one value that moves */
+
+  /* Size — FIGMA-DERIVED. Correction R10. HAU-USC / Size. */
+  --size-control-compact: 32px;
+  --size-control-default: 40px;
+  --size-control-large:   48px;
+  --size-touch-min:       44px;
+  --size-rail-full:       272px;
+  --size-rail-compact:    76px;
+  --size-content-max:     1520px;  /* build capped operational pages at 1280 */
+  --size-inspector:       380px;   /* build used 304-340 */
+
+  /* Layout grid — Figma HAU-USC / Layout. */
+  --grid-margin-desktop: 32px;
+  --grid-margin-tablet:  24px;
+  --grid-margin-mobile:  16px;
+  --grid-gutter-desktop: 24px;
+  --grid-gutter-tablet:  20px;
+  --grid-gutter-mobile:  12px;
+
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
@@ -88,6 +145,8 @@
   --dur-state: 200ms;
   --dur-surface: 280ms;
   --dur-narrative: 400ms;
+  --dur-overlay: 320ms;   /* Figma motion/overlay — was absent */
+  --dur-exit: 160ms;      /* Figma motion/exit — was absent */
 
   /* G0–G4 material hierarchy: depth communicates task and selection. */
   --g0-ground: var(--paper-bg);
@@ -235,10 +294,14 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Radius — FIGMA-DERIVED. Correction R9. Figma HAU-USC / Radius is a clean
+     6·10·14·18 progression; the derived scale was an irregular 6·8·10·14 with
+     no 18 at all. Repointed onto Figma's steps under the existing names. */
+  --radius-sm: 0.375rem;   /* 6  — Figma radius/xs */
+  --radius-md: 0.625rem;   /* 10 — Figma radius/sm */
+  --radius-lg: 0.875rem;   /* 14 — Figma radius/md */
+  --radius-xl: 1.125rem;   /* 18 — Figma radius/lg */
+  --radius-pill: 999px;
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -413,6 +476,41 @@
   /* focus ring follows the canonical gold */
   --ring:                      #d4af37;
 
+  /* R6 — Figma color/action/destructive. The first :root above declares
+     #d4183d; Figma holds #9c2630. Correcting it also repairs the tightest
+     contrast measured in the whole pass (3.52:1 on the Overview critical
+     numeral), because #9c2630 is materially darker. Dark mode already agreed. */
+  --destructive:               #9c2630;
+  --destructive-foreground:    #fdfaf6;
+
+  /* R7 — Figma's semantic status system, five families x three roles.
+     The build carried only --green-open and --destructive, so every status
+     surface invented its own values through color-mix(). These are read from
+     HAU-USC / Semantic Color, not chosen. */
+  --status-neutral-fg:   #5d4a4f;
+  --status-neutral-bg:   #ece3d3;
+  --status-neutral-line: #cdbfa7;
+  --status-info-fg:      #23557f;
+  --status-info-bg:      #e4eefa;
+  --status-info-line:    #b0cbe6;
+  --status-progress-fg:  #7d5518;
+  --status-progress-bg:  #fbeed2;
+  --status-progress-line:#dcbe8a;
+  --status-done-fg:      #1f6b41;
+  --status-done-bg:      #e2f3e9;
+  --status-done-line:    #a8d3ba;
+  --status-alert-fg:     #9c2630;
+  --status-alert-bg:     #fbe6e8;
+  --status-alert-line:   #e3aeb3;
+
+  /* Figma color/text/muted -> ink/dim. Had no CSS equivalent. */
+  --ink-dim:                   #716362;
+  /* Figma color/rail/* — the shell rail is a gradient, not a flat fill. */
+  --rail-from:                 #6b0e13;
+  --rail-to:                   #3d070a;
+  --rail-ink:                  #f7ecd9;
+  --rail-ink-dim:              #d9bfae;
+
   /* Landing atrium — pinned to the light palette in BOTH modes. See atriumPins(). */
   /* oxblood ground — fixed, not mode-following */
   --atrium-g0:                 #40070a;
@@ -511,6 +609,29 @@
   --ring:                      #e1c671;
   --destructive:               #f6acb2;
   --destructive-foreground:    #211615;
+
+  /* R7 dark — Figma HAU-USC / Semantic Color, Dark mode. */
+  --status-neutral-fg:   #cbb9bc;
+  --status-neutral-bg:   #3f3131;
+  --status-neutral-line: #6a5458;
+  --status-info-fg:      #a8cbf0;
+  --status-info-bg:      #333442;
+  --status-info-line:    #5d7c9e;
+  --status-progress-fg:  #eecb92;
+  --status-progress-bg:  #4d3521;
+  --status-progress-line:#96703c;
+  --status-done-fg:      #9ad9b2;
+  --status-done-bg:      #30382d;
+  --status-done-line:    #4d7d61;
+  --status-alert-fg:     #f6acb2;
+  --status-alert-bg:     #54272a;
+  --status-alert-line:   #96555c;
+
+  --ink-dim:                   #aba09f;
+  --rail-from:                 #2f1417;
+  --rail-to:                   #1d0f11;
+  --rail-ink:                  #f4e6d2;
+  --rail-ink-dim:              #c4a9ad;
   /* was #2a0508 */
   --sidebar:                   #211615;
   --sidebar-foreground:        #f4e6d2;

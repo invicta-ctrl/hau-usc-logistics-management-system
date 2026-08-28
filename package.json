@@ -86,7 +86,8 @@
     "design:make-landing": "node scripts/design/verify-make-landing-theme.mjs",
     "design:figma-tracker": "node scripts/design/figma-tracker-payload.mjs",
     "design:figma-tracker:check": "node scripts/design/figma-tracker-payload.mjs --check",
-    "design:serve": "node scripts/design/serve.mjs"
+    "design:serve": "node scripts/design/serve.mjs",
+    "verify:preview-absent": "node scripts/verify-preview-absent.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

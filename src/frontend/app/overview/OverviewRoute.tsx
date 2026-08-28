@@ -1,39 +1,66 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ExceptionInspector } from "./ExceptionInspector";
-import { EXCEPTIONS_FIXTURE, OPERATIONAL_PATH, PULSE_ENTRIES, RECON_ROWS, TOPOLOGY } from "./overviewFixtures";
-import type { ExceptionItem } from "./overviewTypes";
-import { SkeletonBlock } from "./SkeletonBlock";
+import { useEffect, useRef, useState } from 'react';
+import type { Route } from '../appTypes';
+import { ExceptionInspector } from './ExceptionInspector';
+import {
+  EXCEPTIONS_FIXTURE,
+  OPERATIONAL_PATH,
+  PROVENANCE,
+  RECENT_EVENTS,
+  RECON_ROWS,
+  RECON_SOURCE,
+  STANDING,
+} from './overviewFixtures';
+import type { ExceptionItem } from './overviewTypes';
+import { SkeletonBlock } from './SkeletonBlock';
 
-/* POST-FI17. This route was fully built and then never mounted: nothing in the
- * app or the preview lane referenced it, so `overview` — the first item in the
- * authenticated sidebar and the landing surface of the whole hub — resolved to
- * AuthPlaceholderRoute and told every operator "this workspace route is
- * reserved and has not yet been built", above 470 lines of live .command-* CSS.
+/* POST-FI17-DESIGN-RECOVERY-02, step 3. Corrected against the CURRENT Figma
+ * authority for this surface — frame 434:61, "CURRENT · R2 Glass Operations
+ * Command Table". The previous pass never read it, and three of its headline
+ * decisions went the other way:
  *
- * It takes a presentational operator name rather than a Session. The preview
- * lane is emphatic that it creates no authenticated session, and this surface
- * needs a string to print, not an authority object. */
-export function OverviewRoute({ operator, dark }: { operator: string; dark: boolean }) {
+ *   R8  the h1 is "Administrator overview", not "What needs attention today"
+ *   R4  the standing figures are ONE quiet run under a NOW · N EXCEPTIONS
+ *       label, not three weighted cards. Figma carries the priority in the
+ *       label; card chrome here contradicts "glass is localised to layers
+ *       that earn it" (Figma 568:13).
+ *   R3  reconciliation is a real MEASURE / LEDGER / PROJECTION / STATE table.
+ *       The previous pass called it a fake dashboard and collapsed it; ledger
+ *       against projection IS the reconciliation evidence.
+ *   R2  every exception row states its own next action, in gold. This is the
+ *       strongest idea on the Figma frame and it was missing entirely.
+ *   R5  the header carries Reconcile + Open Release Desk.
+ *
+ * Not a pixel copy. Two deliberate departures, both justified above Figma by
+ * DESIGN.md's authority order (owner instruction first):
+ *   - the rows stay interactive buttons opening the inspector, which is what
+ *     Figma's own lede describes ("Select a record to see evidence and the
+ *     permitted next action");
+ *   - "Evidence and provenance" carries three recent confirmed events, because
+ *     the owner's Overview brief requires this surface to answer "what
+ *     changed?" and Figma's panel shows only the last one.
+ *
+ * Dropped: the activity feed and the ledger-topology spine the previous pass
+ * built. Neither exists on the Figma CURRENT frame; both came from orphaned
+ * component code rather than from any design authority. */
+export function OverviewRoute({
+  operator,
+  dark,
+  navigate,
+}: {
+  operator: string;
+  dark: boolean;
+  navigate?: (route: Route) => void;
+}) {
   const [loading, setLoading] = useState(true);
   const [exceptions, setExceptions] = useState<ExceptionItem[]>(EXCEPTIONS_FIXTURE);
   const [selected, setSelected] = useState<ExceptionItem | null>(null);
   const [activePath, setActivePath] = useState(0);
-  const [isNarrow, setIsNarrow] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 59.99rem)").matches);
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const lastTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const topologyKeys = ["request", "released", "reserved", "loan"];
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 720);
     return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    const query = window.matchMedia("(max-width: 59.99rem)");
-    const sync = () => setIsNarrow(query.matches);
-    sync();
-    query.addEventListener("change", sync);
-    return () => query.removeEventListener("change", sync);
   }, []);
 
   function closeInspector() {
@@ -44,89 +71,88 @@ export function OverviewRoute({ operator, dark }: { operator: string; dark: bool
   }
 
   function resolveLocally(id: string) {
-    setExceptions((items) => items.map((item) => item.id === id ? { ...item, locallyResolved: true } : item));
-    setSelected((item) => item?.id === id ? { ...item, locallyResolved: true } : item);
+    setExceptions((items) =>
+      items.map((item) => (item.id === id ? { ...item, locallyResolved: true } : item)),
+    );
+    setSelected((item) => (item?.id === id ? { ...item, locallyResolved: true } : item));
   }
 
-  const openExceptions = exceptions.filter((item) => !item.locallyResolved).length;
-
-  /* The standing band. It replaces a flat mono run — "14 open requests · 9
-   * loans out · 6 awaiting release · 2 below threshold" — that gave four
-   * unrelated numbers identical weight and so answered none of the questions
-   * this surface exists to answer. These three are ordered and weighted by how
-   * much they should interrupt you, which is the actual hierarchy of a shift:
-   * what is stuck, what is waiting on you, what is simply moving. */
-  const standing = useMemo(() => [
-    {
-      key: "blocked",
-      weight: "critical" as const,
-      label: "Needs attention",
-      value: openExceptions,
-      unit: openExceptions === 1 ? "exception" : "exceptions",
-      detail: "Nothing advances until these are resolved or recorded.",
-    },
-    {
-      key: "ready",
-      weight: "ready" as const,
-      label: "Ready to act",
-      value: 6,
-      unit: "awaiting release",
-      detail: "Verified records at the custody boundary.",
-    },
-    {
-      key: "steady",
-      weight: "steady" as const,
-      label: "In flight",
-      value: 23,
-      unit: "open · on loan",
-      detail: "14 requests open, 9 items on loan. No action required.",
-    },
-  ], [openExceptions]);
-
-  const reconciled = RECON_ROWS.length;
+  const open = exceptions.filter((item) => !item.locallyResolved);
+  const openCount = open.length;
+  const countWord =
+    openCount === 1 ? 'One exception requires' : `${numberWord(openCount)} exceptions require`;
 
   return (
     <div className="command-table-page">
-      <header className="command-table-header">
-        <p className="command-kicker">Operations · design fixtures, not production records</p>
-        <h1>What needs attention today</h1>
-        <p className="command-record">Authorized preview · {operator} · local state only</p>
+      <header className="overview-head">
+        <div className="overview-head__copy">
+          <p className="command-kicker">Overview</p>
+          <h1>Administrator overview</h1>
+          <p className="overview-lede">
+            {countWord} review. Select a record to see evidence and the permitted next action.
+          </p>
+        </div>
+
+        {/* R5. Figma pairs a quiet reconcile with the gold primary. */}
+        <div className="overview-head__actions">
+          <button type="button" className="overview-action">
+            Reconcile
+          </button>
+          <button type="button" className="overview-action is-primary" onClick={() => navigate?.('release')}>
+            Open Release Desk
+          </button>
+        </div>
       </header>
 
-      {/* What is blocked, what is ready, what is merely moving. */}
-      <section className="overview-standing" aria-label="Shift standing">
-        {standing.map((figure) => (
-          <div key={figure.key} className="overview-figure" data-weight={figure.weight}>
-            <p className="overview-figure__label">{figure.label}</p>
-            <p className="overview-figure__value">
-              <strong>{loading ? "—" : figure.value}</strong>
-              <span>{figure.unit}</span>
-            </p>
-            <p className="overview-figure__detail">{figure.detail}</p>
-          </div>
-        ))}
+      {/* R4. One quiet run. The NOW label carries the priority, not card chrome. */}
+      <section className="overview-standing" aria-label="Current standing">
+        <p className="overview-standing__now">
+          Now · {openCount} {openCount === 1 ? 'exception' : 'exceptions'}
+        </p>
+        <ul className="overview-standing__run">
+          {STANDING.map((figure) => (
+            <li key={figure.label}>
+              <strong>{loading ? '—' : figure.value}</strong> {figure.label}
+            </li>
+          ))}
+        </ul>
+        <p className="overview-standing__stamp">Reconciled {PROVENANCE.lastConfirmedEvent}</p>
       </section>
 
-      <div className="command-layout">
-        <section className="command-ledger" aria-labelledby="command-exceptions-heading">
-          <div className="command-section-head">
-            <h2 id="command-exceptions-heading">Exceptions needing attention</h2>
-            <span>{openExceptions} open</span>
-          </div>
-          {loading ? (
-            <ul className="command-ledger-list" aria-label="Loading exception ledger" aria-busy="true">
-              {[1, 2, 3, 4].map((item) => <li key={item}><SkeletonBlock h={72} dark={dark} /></li>)}
-            </ul>
-          ) : (
-            <ul className="command-ledger-list">
+      <section className="command-ledger" aria-labelledby="command-exceptions-heading">
+        <div className="command-section-head">
+          <h2 id="command-exceptions-heading">Exception command table</h2>
+          <span>{openCount} open · highest consequence first</span>
+        </div>
+
+        {loading ? (
+          <ul className="command-ledger-list" aria-label="Loading exception ledger" aria-busy="true">
+            {[1, 2, 3, 4].map((item) => (
+              <li key={item}>
+                <SkeletonBlock h={76} dark={dark} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="command-ledger-list">
+            {/* Column headings, echoed as a row on narrow widths by the cells' own labels. */}
+            <div className="command-row command-row--head" aria-hidden="true">
+              <span>Record</span>
+              <span>Current state</span>
+              <span>Evidence</span>
+              <span>Next action</span>
+            </div>
+            <ul>
               {exceptions.map((item) => {
                 const isSelected = selected?.id === item.id;
                 return (
                   <li key={item.id}>
                     <button
-                      ref={(element) => { triggerRefs.current[item.id] = element; }}
+                      ref={(element) => {
+                        triggerRefs.current[item.id] = element;
+                      }}
                       type="button"
-                      className={`command-row${isSelected ? " is-selected" : ""}${item.locallyResolved ? " is-resolved" : ""}`}
+                      className={`command-row${isSelected ? ' is-selected' : ''}${item.locallyResolved ? ' is-resolved' : ''}`}
                       aria-pressed={isSelected}
                       aria-expanded={isSelected}
                       aria-controls="exception-inspector"
@@ -135,121 +161,161 @@ export function OverviewRoute({ operator, dark }: { operator: string; dark: bool
                         setSelected(item);
                       }}
                     >
-                      <span className="command-row__marker" aria-hidden="true" />
-                      <span className="command-row__copy">
-                        <span className="command-row__title">{item.title}</span>
-                        <span className="command-row__meta">{item.ref} · {item.state} · open {item.age}</span>
+                      <span className="command-row__record">
+                        <span className="command-row__ref">
+                          {item.ref} · {item.title}
+                        </span>
+                        <span className="command-row__lane">{item.lane}</span>
                       </span>
-                      <span className="command-row__badge" style={item.locallyResolved ? { color: "var(--green-open)" } : item.badgeStyle}>
-                        {item.locallyResolved ? "Resolved locally" : item.badge}
+                      <span className="command-row__state" data-label="State">
+                        {item.currentState}
+                      </span>
+                      <span className="command-row__evidence" data-label="Evidence">
+                        <span className="status-pill" data-tone={item.locallyResolved ? 'done' : item.tone}>
+                          {item.locallyResolved ? 'Resolved locally' : item.evidence}
+                        </span>
+                      </span>
+                      {/* R2 — the per-row next action, in gold. */}
+                      <span className="command-row__next" data-label="Next action">
+                        {item.locallyResolved ? '—' : item.nextActionLabel}
                       </span>
                     </button>
                   </li>
                 );
               })}
             </ul>
-          )}
-        </section>
-
-        <div className="command-side">
-          {selected && (
-            <ExceptionInspector item={selected} modal={isNarrow} onClose={closeInspector} onResolveLocally={resolveLocally} />
-          )}
-
-          <section className="command-path" aria-labelledby="command-path-heading">
-            <div className="command-section-head">
-              <h2 id="command-path-heading">Today’s operational path</h2>
-              <span>4 next actions</span>
-            </div>
-            {loading ? (
-              <ul className="command-path-list" aria-label="Loading operational path" aria-busy="true">
-                {[1, 2, 3, 4].map((item) => <li key={item}><SkeletonBlock h={58} dark={dark} /></li>)}
-              </ul>
-            ) : (
-              <ul className="command-path-list">
-                {OPERATIONAL_PATH.map((task, index) => (
-                  <li key={task.label}>
-                    <button type="button" className="command-path-step" aria-pressed={activePath === index} onClick={() => setActivePath(index)}>
-                      <span className="command-path-step__marker" aria-hidden="true" />
-                      <span><strong>{task.label}</strong><span>{task.detail}</span></span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </div>
-      </div>
-
-      <div className="command-support-grid">
-        <section className="command-pulse" aria-labelledby="command-pulse-heading">
-          <div className="command-section-head"><h2 id="command-pulse-heading">What changed</h2><span>Latest recorded activity</span></div>
-          {loading ? (
-            <ul className="command-pulse-list" aria-label="Loading operational activity" aria-busy="true">
-              {[1, 2, 3, 4, 5].map((item) => <li key={item}><SkeletonBlock h={48} dark={dark} /></li>)}
-            </ul>
-          ) : (
-            <ul className="command-pulse-list">
-              {PULSE_ENTRIES.map((entry) => (
-                <li key={`${entry.time}-${entry.action}`}>
-                  <time>{entry.time}</time>
-                  <div><strong>{entry.action}</strong><span>{entry.detail}</span></div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* Was a 3-column grid of six equal boxes, which showed six numbers and
-            no relationship between them. The ledger is a sequence, so it is
-            drawn as one: each stage carries its count and hands off to the
-            next, and selecting a path step lights the stage it acts on. */}
-        <section className="command-topology" aria-labelledby="command-topology-heading">
-          <div className="command-section-head"><h2 id="command-topology-heading">Where the ledger stands</h2><span>Request to return</span></div>
-          {loading ? (
-            <ul className="command-topology-list" aria-label="Loading ledger topology" aria-busy="true">
-              {[1, 2, 3, 4, 5, 6].map((item) => <li key={item}><SkeletonBlock h={44} dark={dark} /></li>)}
-            </ul>
-          ) : (
-            <ol className="command-topology-list">
-              {TOPOLOGY.map((node) => (
-                <li key={node.key} className={`command-topology-node${topologyKeys[activePath] === node.key ? " is-active" : ""}`}>
-                  <span className="command-topology-node__stage">{node.label}</span>
-                  <strong className="command-topology-node__count">{node.val}</strong>
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
-      </div>
-
-      {/* Was three padded rows each ending in an identical "Reconciled" pill —
-          a dashboard that restated the same fact three times. The headline is
-          the check result; the figures stay available beneath it, and a
-          discrepancy would break the row out rather than hide in a third pill. */}
-      <section className="command-reconciliation" aria-labelledby="command-recon-heading">
-        <div className="command-section-head">
-          <h2 id="command-recon-heading">Ledger reconciliation</h2>
-          <span>Projection against ledger</span>
-        </div>
-        {loading ? (
-          <div className="command-recon-strip" aria-busy="true"><SkeletonBlock h={56} dark={dark} /></div>
-        ) : (
-          <div className="command-recon-strip" data-state="reconciled">
-            <p className="command-recon-verdict">
-              <strong>{reconciled} of {reconciled} checks reconciled.</strong> Projection matches the ledger; nothing to investigate.
-            </p>
-            <dl className="command-recon-figures">
-              {RECON_ROWS.map((row) => (
-                <div key={row.label}>
-                  <dt>{row.label}</dt>
-                  <dd>{row.ledger}</dd>
-                </div>
-              ))}
-            </dl>
           </div>
         )}
       </section>
+
+      {selected && (
+        <ExceptionInspector
+          item={selected}
+          modal
+          onClose={closeInspector}
+          onResolveLocally={resolveLocally}
+        />
+      )}
+
+      <div className="overview-twoup">
+        <section className="command-path" aria-labelledby="command-path-heading">
+          <div className="command-section-head">
+            <h2 id="command-path-heading">Today’s operational path</h2>
+            <span>{OPERATIONAL_PATH.length} next actions</span>
+          </div>
+          {loading ? (
+            <ul className="command-path-list" aria-label="Loading operational path" aria-busy="true">
+              {[1, 2, 3, 4].map((item) => (
+                <li key={item}>
+                  <SkeletonBlock h={58} dark={dark} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul className="command-path-list">
+              {OPERATIONAL_PATH.map((task, index) => (
+                <li key={task.label}>
+                  <button
+                    type="button"
+                    className="command-path-step"
+                    aria-pressed={activePath === index}
+                    onClick={() => setActivePath(index)}
+                  >
+                    <span className="command-path-step__marker" aria-hidden="true" />
+                    <span>
+                      <strong>{task.label}</strong>
+                      <span>{task.detail}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="command-provenance" aria-labelledby="command-provenance-heading">
+          <div className="command-section-head">
+            <h2 id="command-provenance-heading">Evidence and provenance</h2>
+            <span>Ledger {PROVENANCE.ledgerRevision}</span>
+          </div>
+          <div className="provenance-body">
+            <dl className="provenance-facts">
+              <div>
+                <dt>Projection snapshot</dt>
+                <dd>{PROVENANCE.projectionSnapshot}</dd>
+              </div>
+              <div>
+                <dt>Last confirmed event</dt>
+                <dd>{PROVENANCE.lastConfirmedEvent}</dd>
+              </div>
+              <div>
+                <dt>Data</dt>
+                <dd>{PROVENANCE.fixtureNote}</dd>
+              </div>
+            </dl>
+            <div className="provenance-recent">
+              <p className="provenance-recent__title">What changed</p>
+              <ul>
+                {RECENT_EVENTS.map((entry) => (
+                  <li key={entry.time}>
+                    <time>{entry.time}</time>
+                    <span>{entry.action}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <p className="provenance-gap">{PROVENANCE.gap}</p>
+        </section>
+      </div>
+
+      {/* R3 — restored. Ledger against projection is the reconciliation evidence. */}
+      <section className="command-reconciliation" aria-labelledby="command-recon-heading">
+        <div className="command-section-head">
+          <h2 id="command-recon-heading">Reconciliation and provenance</h2>
+          <span>
+            {RECON_ROWS.length} of {RECON_ROWS.length} reconciled
+          </span>
+        </div>
+        {loading ? (
+          <SkeletonBlock h={160} dark={dark} />
+        ) : (
+          <div className="recon-table-wrap">
+            <table className="recon-table">
+              <thead>
+                <tr>
+                  <th scope="col">Measure</th>
+                  <th scope="col">Ledger</th>
+                  <th scope="col">Projection</th>
+                  <th scope="col">State</th>
+                </tr>
+              </thead>
+              <tbody>
+                {RECON_ROWS.map((row) => {
+                  const matched = row.ledger === row.projection;
+                  return (
+                    <tr key={row.label}>
+                      <th scope="row">{row.label}</th>
+                      <td>{row.ledger}</td>
+                      <td>{row.projection}</td>
+                      <td>
+                        <span className="status-pill" data-tone={matched ? 'done' : 'alert'}>
+                          {matched ? 'Reconciled' : 'Discrepancy'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <p className="command-record recon-source">{RECON_SOURCE}</p>
+      </section>
     </div>
   );
+}
+
+function numberWord(n: number) {
+  return ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'][n] ?? String(n);
 }

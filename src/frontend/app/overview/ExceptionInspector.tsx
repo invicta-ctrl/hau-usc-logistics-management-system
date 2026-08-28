@@ -51,15 +51,16 @@ export function ExceptionInspector({
         </div>
 
         <div className="command-inspector__body">
-          <span className="command-inspector__badge" style={item.badgeStyle}>{item.badge}</span>
+          <span className="status-pill" data-tone={item.tone}>{item.evidence}</span>
           <div>
             <h2 id="inspector-title">{item.title}</h2>
-            <p className="command-record">Open {item.age}</p>
+            <p className="command-record">{item.lane} · open {item.age}</p>
           </div>
           <dl className="command-inspector__fields">
             {[
               ["Record", item.ref],
-              ["State", item.state],
+              ["Current state", item.currentState],
+              ["Evidence", item.evidence],
               ["Owner", item.owner],
               ["Consequence", item.consequence],
               ["Next action", item.nextAction],

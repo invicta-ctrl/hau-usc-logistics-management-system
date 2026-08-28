@@ -79,7 +79,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   margin: 0;
   color: var(--gold-mid);
   font-family: var(--font-record);
-  font-size: var(--type-record-sm);
+  font-size: var(--type-label);
   letter-spacing: 0.11em;
   line-height: 1.45;
   text-transform: uppercase;
@@ -91,7 +91,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   min-width: 0;
   color: var(--atrium-ink);
   font-family: var(--font-display);
-  font-size: var(--type-display-lg);
+  font-size: var(--type-display-hero);
   font-weight: 700;
   font-style: normal;
   letter-spacing: -0.045em;
@@ -126,7 +126,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   align-items: center;
   justify-content: center;
   font-family: var(--font-body);
-  font-size: var(--type-body-md);
+  font-size: var(--type-body);
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
@@ -192,7 +192,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 }
 
 .atrium__action-note {
-  font-size: var(--type-record-sm);
+  font-size: var(--type-label);
   font-weight: 500;
   letter-spacing: 0.01em;
   opacity: 0.78;
@@ -244,7 +244,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   margin: 0 0 var(--space-2xs);
   color: var(--gold-mid);
   font-family: var(--font-record);
-  font-size: var(--type-record-xs);
+  font-size: var(--type-label);
   letter-spacing: 0.1em;
   line-height: 1.4;
   text-transform: uppercase;
@@ -265,7 +265,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   max-width: 46ch;
   color: color-mix(in oklch, var(--atrium-muted) 76%, transparent);
   font-family: var(--font-body);
-  font-size: var(--type-body-md);
+  font-size: var(--type-body);
   line-height: 1.55;
 }
 
@@ -297,7 +297,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   color: var(--oxblood-deep);
   background: var(--gold-vivid);
   font-family: var(--font-record);
-  font-size: var(--type-record-xs);
+  font-size: var(--type-label);
   letter-spacing: 0.08em;
   line-height: 1;
   text-transform: uppercase;
@@ -321,7 +321,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   border-left: 1px solid var(--atrium-edge);
   color: var(--atrium-muted);
   font-family: var(--font-body);
-  font-size: var(--type-body-sm);
+  font-size: var(--type-body-compact);
   line-height: 1.25;
 }
 
@@ -340,7 +340,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   color: var(--gold-cream);
   background: var(--atrium-g2);
   font-family: var(--font-record);
-  font-size: var(--type-record-xs);
+  font-size: var(--type-label);
   font-variant-numeric: tabular-nums;
 }
 
@@ -382,9 +382,9 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   margin: 0 0 var(--space-sm);
   color: var(--ink-light);
   font-family: var(--font-record);
-  font-size: var(--type-record-xs);
+  font-size: var(--type-label);
   letter-spacing: 0.1em;
-  line-height: var(--leading-record);
+  line-height: var(--leading-label);
   text-transform: uppercase;
 }
 
@@ -393,7 +393,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   max-width: 30ch;
   color: var(--foreground);
   font-family: var(--font-display);
-  font-size: var(--type-display-sm);
+  font-size: var(--type-display-fluid);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.05;
@@ -428,7 +428,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   padding: var(--space-xl);
   color: var(--paper-warm);
   font-family: var(--font-body);
-  font-size: var(--type-body-sm);
+  font-size: var(--type-body-compact);
   line-height: var(--leading-body);
   text-align: center;
 }
@@ -447,9 +447,9 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   margin: 0 0 var(--space-sm);
   color: var(--foreground);
   font-family: var(--font-display);
-  font-size: var(--type-title-sm);
+  font-size: var(--type-section-title);
   font-weight: 700;
-  line-height: var(--leading-tight);
+  line-height: var(--leading-section-title);
 }
 
 .current__copy {
@@ -457,7 +457,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   max-width: 68ch;
   color: var(--muted-foreground);
   font-family: var(--font-body);
-  font-size: var(--type-body-sm);
+  font-size: var(--type-body-compact);
   line-height: var(--leading-body);
 }
 
@@ -471,7 +471,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   background: none;
   border: 0;
   font-family: var(--font-record);
-  font-size: var(--type-record-sm);
+  font-size: var(--type-label);
   text-decoration: underline;
   text-underline-offset: 0.25rem;
 }
@@ -509,9 +509,9 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   max-width: 46ch;
   color: var(--foreground);
   font-family: var(--font-body);
-  font-size: var(--type-body-lg);
+  font-size: var(--type-body);
   font-weight: 600;
-  line-height: var(--leading-tight);
+  line-height: var(--leading-section-title);
 }
 
 @media (min-width: 60rem) {
@@ -556,9 +556,9 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   margin: 0 0 var(--space-sm);
   color: var(--gold-vivid);
   font-family: var(--font-record);
-  font-size: var(--type-record-xs);
+  font-size: var(--type-label);
   letter-spacing: 0.1em;
-  line-height: var(--leading-record);
+  line-height: var(--leading-label);
   text-transform: uppercase;
 }
 
@@ -566,7 +566,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   margin: 0;
   color: var(--hub-ink);
   font-family: var(--font-display);
-  font-size: var(--type-display-sm);
+  font-size: var(--type-display-fluid);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.05;
@@ -580,7 +580,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   max-width: 52ch;
   color: var(--hub-muted);
   font-family: var(--font-body);
-  font-size: var(--type-body-xs);
+  font-size: var(--type-body-compact);
   line-height: var(--leading-body);
 }
 
@@ -610,16 +610,16 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .logistics-hub__dept {
   color: var(--hub-ink);
   font-family: var(--font-wordmark);
-  font-size: var(--type-title-sm);
+  font-size: var(--type-section-title);
   font-weight: 700;
-  line-height: var(--leading-tight);
+  line-height: var(--leading-section-title);
 }
 
 .logistics-hub__council {
   color: var(--hub-muted);
   font-family: var(--font-body);
-  font-size: var(--type-record-sm);
-  line-height: var(--leading-record);
+  font-size: var(--type-label);
+  line-height: var(--leading-label);
 }
 
 .logistics-hub__lede {
@@ -627,7 +627,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   max-width: 46ch;
   color: var(--gold-cream);
   font-family: var(--font-body);
-  font-size: var(--type-body-sm);
+  font-size: var(--type-body-compact);
   line-height: var(--leading-body);
 }
 
@@ -675,33 +675,33 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 
 .logistics-hub__tile-label {
   font-family: var(--font-body);
-  font-size: var(--type-body-md);
+  font-size: var(--type-body);
   font-weight: 600;
-  line-height: var(--leading-tight);
+  line-height: var(--leading-section-title);
 }
 
 .logistics-hub__tile.is-primary .logistics-hub__tile-label {
-  font-size: var(--type-title-sm);
+  font-size: var(--type-section-title);
   letter-spacing: -0.01em;
 }
 
 .logistics-hub__tile-sub {
   color: var(--hub-muted);
   font-family: var(--font-body);
-  font-size: var(--type-record-sm);
+  font-size: var(--type-label);
   line-height: var(--leading-body);
 }
 
 .logistics-hub__tile.is-primary .logistics-hub__tile-sub {
   color: color-mix(in oklch, var(--oxblood-deep) 78%, transparent);
-  font-size: var(--type-body-xs);
+  font-size: var(--type-body-compact);
 }
 
 .logistics-hub__tile-note {
   margin-block-start: var(--space-2xs);
   color: color-mix(in oklch, var(--oxblood-deep) 88%, transparent);
   font-family: var(--font-record);
-  font-size: var(--type-record-xs);
+  font-size: var(--type-label);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -727,25 +727,25 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   padding-block-start: 0.15rem;
   color: var(--gold-vivid);
   font-family: var(--font-record);
-  font-size: var(--type-record-sm);
+  font-size: var(--type-label);
   font-variant-numeric: tabular-nums;
-  line-height: var(--leading-record);
+  line-height: var(--leading-label);
 }
 
 .logistics-hub__step-label {
   margin: 0;
   color: var(--hub-ink);
   font-family: var(--font-body);
-  font-size: var(--type-body-sm);
+  font-size: var(--type-body-compact);
   font-weight: 600;
-  line-height: var(--leading-tight);
+  line-height: var(--leading-section-title);
 }
 
 .logistics-hub__step-body {
   margin: var(--space-2xs) 0 0;
   color: var(--hub-muted);
   font-family: var(--font-body);
-  font-size: var(--type-record-sm);
+  font-size: var(--type-label);
   line-height: var(--leading-body);
 }
 
@@ -790,15 +790,15 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   background: color-mix(in oklch, var(--green-open) 8%, var(--g2-operational));
 }
 
-.auth-gate-status strong { font-size: var(--type-body-md); }
-.auth-gate-status span { color: var(--muted-foreground); font-size: var(--type-body-sm); line-height: 1.5; }
+.auth-gate-status strong { font-size: var(--type-body); }
+.auth-gate-status span { color: var(--muted-foreground); font-size: var(--type-body-compact); line-height: 1.5; }
 
 .auth-preview {
   border-block: 1px solid var(--border);
   padding-block: var(--space-sm);
   color: var(--muted-foreground);
   font-family: var(--font-body);
-  font-size: var(--type-body-xs);
+  font-size: var(--type-body-compact);
 }
 
 .auth-preview summary {
@@ -832,9 +832,9 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .command-table-page {
   position: relative;
   isolation: isolate;
-  width: min(100%, 80rem);
+  width: min(100%, var(--size-content-max));
   margin-inline: auto;
-  padding: clamp(1.25rem, 4vw, 2.5rem);
+  padding: clamp(var(--grid-margin-mobile), 4vw, var(--grid-margin-desktop));
   color: var(--foreground);
   font-family: var(--font-body);
   background-image:
@@ -855,7 +855,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   min-width: 0;
   color: var(--foreground);
   font-family: var(--font-display);
-  font-size: var(--type-display-sm);
+  font-size: var(--type-display-fluid);
   font-style: normal;
   font-weight: 700;
   letter-spacing: -0.04em;
@@ -868,7 +868,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   margin: 0;
   color: var(--muted-foreground);
   font-family: var(--font-record);
-  font-size: var(--type-record-sm);
+  font-size: var(--type-label);
   letter-spacing: 0.08em;
   line-height: 1.45;
   text-transform: uppercase;
@@ -879,101 +879,354 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   max-width: 72ch;
   color: var(--muted-foreground);
   font-family: var(--font-record);
-  font-size: var(--type-body-sm);
+  font-size: var(--type-body-compact);
   line-height: 1.65;
   font-variant-numeric: tabular-nums;
 }
 
 .command-summary strong { color: var(--foreground); font-weight: 600; }
 
-/* Standing band. Deliberately NOT three equal cards: the weights differ, and
-   the difference is the content. Critical takes more column and a semantic
-   rule, steady recedes to a hairline. If all three ever look the same, the
-   band has stopped doing its job. */
-.overview-standing {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-sm);
-  margin-block-end: var(--space-xl);
+/* ── Overview, corrected against Figma CURRENT frame 434:61 ───────────────── */
+
+/* Header. Copy left, action pair right — R5. */
+.overview-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-group);
+  margin-block-end: var(--space-section);
 }
 
-.overview-figure {
-  min-width: 0;
-  padding: var(--space-md) var(--space-md) var(--space-md) var(--space-sm);
-  border: 1px solid var(--glass-border-soft);
-  border-inline-start: 3px solid var(--border-warm);
-  border-radius: 0.875rem;
-  background: var(--g1-soft);
+.overview-head__copy { min-width: 0; flex: 1 1 28rem; }
+
+.overview-head h1 {
+  margin: var(--space-1) 0 var(--space-2);
+  max-width: 20ch;
+  color: var(--foreground);
+  font-family: var(--font-display);
+  font-size: var(--type-page-title);
+  font-weight: 700;
+  letter-spacing: var(--tracking-title);
+  line-height: var(--leading-page-title);
 }
 
-/* Mixed against the opaque ground, not against the G1/G2 glass tokens: those
-   carry alpha, and mixing a solid into a translucent colour in oklch fringed
-   the rounded corners in Chromium. */
-.overview-figure[data-weight="critical"] {
-  border-inline-start-color: var(--destructive);
-  background: color-mix(in oklch, var(--destructive) 7%, var(--g0-ground));
-}
-
-.overview-figure[data-weight="ready"] {
-  border-inline-start-color: var(--gold-vivid);
-  background: color-mix(in oklch, var(--gold-vivid) 9%, var(--g0-ground));
-}
-
-.overview-figure[data-weight="steady"] {
-  border-inline-start-color: color-mix(in oklch, var(--border-warm) 55%, transparent);
-  background: transparent;
-}
-
-.overview-figure__label {
+.overview-lede {
   margin: 0;
+  max-width: 62ch;
   color: var(--muted-foreground);
+  font-family: var(--font-body);
+  font-size: var(--type-body);
+  letter-spacing: var(--tracking-body);
+  line-height: var(--leading-body);
+}
+
+.overview-head__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.overview-action {
+  min-height: var(--size-touch-min);
+  padding-inline: var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--foreground);
+  background: var(--card);
+  font-family: var(--font-body);
+  font-size: var(--type-body-compact);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color var(--dur-state) var(--ease-out);
+}
+
+.overview-action.is-primary {
+  border-color: var(--gold-mid);
+  color: var(--oxblood-deep);
+  background: var(--gold-vivid);
+}
+
+.overview-action:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+
+/* Standing band — R4. One quiet run; the NOW label carries the priority.
+   Figma withholds card chrome here on purpose, and 568:13 says why: "glass is
+   localised to layers that earn it". */
+.overview-standing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3) var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  margin-block-end: var(--space-section);
+  border-block: 1px solid var(--glass-border-soft);
+}
+
+.overview-standing__now {
+  margin: 0;
+  color: var(--status-alert-fg);
   font-family: var(--font-record);
-  font-size: var(--type-record-xs);
-  letter-spacing: 0.09em;
-  line-height: var(--leading-record);
+  font-size: var(--type-label);
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  line-height: var(--leading-label);
   text-transform: uppercase;
 }
 
-.overview-figure__value {
-  margin: var(--space-2xs) 0 0;
+.overview-standing__run {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0;
   display: flex;
-  align-items: baseline;
-  gap: var(--space-xs);
   flex-wrap: wrap;
+  gap: var(--space-3) var(--space-6);
+  list-style: none;
 }
 
-.overview-figure__value strong {
-  color: var(--foreground);
-  font-family: var(--font-display);
-  font-size: var(--type-title-md);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.overview-figure[data-weight="critical"] .overview-figure__value strong {
-  font-size: var(--type-title-lg);
-  color: var(--destructive);
-}
-
-.overview-figure[data-weight="steady"] .overview-figure__value strong {
-  font-size: var(--type-title-sm);
-  color: var(--muted-foreground);
-}
-
-.overview-figure__value span {
-  color: var(--muted-foreground);
-  font-family: var(--font-record);
-  font-size: var(--type-record-sm);
-  line-height: var(--leading-record);
-}
-
-.overview-figure__detail {
-  margin: var(--space-xs) 0 0;
-  max-width: 42ch;
+.overview-standing__run li {
   color: var(--muted-foreground);
   font-family: var(--font-body);
-  font-size: var(--type-body-xs);
-  line-height: var(--leading-body);
+  font-size: var(--type-body-compact);
+  line-height: var(--leading-body-compact);
+}
+
+.overview-standing__run strong {
+  color: var(--foreground);
+  font-family: var(--font-display);
+  font-size: var(--type-section-title);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-title);
+}
+
+.overview-standing__stamp {
+  margin: 0;
+  margin-inline-start: auto;
+  color: var(--muted-foreground);
+  font-family: var(--font-record);
+  font-size: var(--type-label);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Status pill — R7. One component, five Figma families, no invented colour. */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--status-neutral-line);
+  border-radius: var(--radius-sm);
+  color: var(--status-neutral-fg);
+  background: var(--status-neutral-bg);
+  font-family: var(--font-record);
+  font-size: var(--type-label);
+  line-height: var(--leading-label);
+  white-space: nowrap;
+}
+
+.status-pill[data-tone="info"]     { color: var(--status-info-fg);     background: var(--status-info-bg);     border-color: var(--status-info-line); }
+.status-pill[data-tone="progress"] { color: var(--status-progress-fg); background: var(--status-progress-bg); border-color: var(--status-progress-line); }
+.status-pill[data-tone="done"]     { color: var(--status-done-fg);     background: var(--status-done-bg);     border-color: var(--status-done-line); }
+.status-pill[data-tone="alert"]    { color: var(--status-alert-fg);    background: var(--status-alert-bg);    border-color: var(--status-alert-line); }
+
+/* Exception command table. Four Figma columns; a stacked card below lg so the
+   Next action never scrolls off, which is the failure the Inventory table had. */
+.command-row {
+  width: 100%;
+  min-height: 72px;
+  padding: var(--space-3) var(--space-4);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: center;
+  border: 0;
+  border-block-start: 1px solid var(--glass-border-soft);
+  color: var(--foreground);
+  background: transparent;
+  text-align: start;
+  transition:
+    transform var(--dur-response) var(--ease-out),
+    background-color var(--dur-state) var(--ease-out);
+}
+
+.command-row--head { display: none; }
+.command-ledger-list ul li:first-child .command-row { border-block-start: 0; }
+
+.command-row.is-selected {
+  position: relative;
+  z-index: var(--z-raised);
+  background: var(--g3-raised);
+  box-shadow: inset 3px 0 0 var(--gold-vivid);
+}
+
+.command-row.is-resolved { opacity: 0.62; }
+
+.command-row__record { min-width: 0; display: grid; gap: 0.1rem; }
+
+.command-row__ref {
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: var(--type-body-compact);
+  font-weight: 650;
+  line-height: var(--leading-body-compact);
+}
+
+.command-row__lane {
+  color: var(--muted-foreground);
+  font-family: var(--font-record);
+  font-size: var(--type-label);
+  line-height: var(--leading-label);
+}
+
+.command-row__state,
+.command-row__evidence,
+.command-row__next { min-width: 0; }
+
+.command-row__state {
+  color: var(--muted-foreground);
+  font-family: var(--font-body);
+  font-size: var(--type-body-compact);
+  font-variant-numeric: tabular-nums;
+}
+
+/* R2 — the per-row next action. Gold, because Figma reserves gold for the
+   active control, and on this surface the next action IS the control. */
+.command-row__next {
+  color: var(--status-progress-fg);
+  font-family: var(--font-body);
+  font-size: var(--type-body-compact);
+  font-weight: 650;
+}
+
+/* Below lg the four columns stack, and each cell announces itself. */
+@media (max-width: 63.99rem) {
+  .command-row__state::before,
+  .command-row__next::before {
+    content: attr(data-label) " · ";
+    color: var(--muted-foreground);
+    font-family: var(--font-record);
+    font-size: var(--type-label);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+  }
+}
+
+/* Figma runs the exception table full width, with the operational path and the
+   provenance panel two-up beneath it. The previous pass had the path in a right
+   rail beside the table, which is what squeezed the four columns. */
+.overview-twoup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  margin-block-start: var(--space-section);
+  align-items: start;
+}
+
+/* Evidence and provenance. */
+.command-provenance { min-width: 0; }
+.command-reconciliation { min-width: 0; margin-block-start: var(--space-section); }
+
+.provenance-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--glass-border-soft);
+  border-radius: var(--radius-lg);
+  background: var(--g1-soft);
+}
+
+.provenance-facts { margin: 0; display: grid; gap: var(--space-3); align-content: start; }
+.provenance-facts div { display: grid; gap: 0.15rem; }
+.provenance-facts dt {
+  color: var(--muted-foreground);
+  font-family: var(--font-record);
+  font-size: var(--type-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.provenance-facts dd {
+  margin: 0;
+  color: var(--foreground);
+  font-family: var(--font-record);
+  font-size: var(--type-body-compact);
+  font-variant-numeric: tabular-nums;
+}
+
+.provenance-recent__title {
+  margin: 0 0 var(--space-2);
+  color: var(--muted-foreground);
+  font-family: var(--font-record);
+  font-size: var(--type-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.provenance-recent ul { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-2); }
+.provenance-recent li { display: grid; grid-template-columns: 3.25rem minmax(0, 1fr); gap: var(--space-2); }
+.provenance-recent time {
+  color: var(--muted-foreground);
+  font-family: var(--font-record);
+  font-size: var(--type-label);
+  font-variant-numeric: tabular-nums;
+}
+.provenance-recent span {
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: var(--type-body-compact);
+  line-height: var(--leading-body-compact);
+}
+
+.provenance-gap {
+  margin: var(--space-3) 0 0;
+  color: var(--status-progress-fg);
+  font-family: var(--font-record);
+  font-size: var(--type-label);
+}
+
+/* R3 — reconciliation restored as a table. Ledger against projection is the
+   evidence; a single "reconciled" verdict hides the only number that matters. */
+.recon-table-wrap { overflow-x: auto; border: 1px solid var(--glass-border-soft); border-radius: var(--radius-lg); }
+.recon-table { width: 100%; min-width: 34rem; border-collapse: collapse; }
+
+.recon-table th,
+.recon-table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: start;
+  border-block-start: 1px solid var(--glass-border-soft);
+  font-size: var(--type-body-compact);
+}
+
+.recon-table thead th {
+  border-block-start: 0;
+  color: var(--muted-foreground);
+  background: var(--g1-soft);
+  font-family: var(--font-record);
+  font-size: var(--type-label);
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.recon-table tbody th { color: var(--foreground); font-family: var(--font-body); font-weight: 650; }
+.recon-table td { color: var(--foreground); font-family: var(--font-record); font-variant-numeric: tabular-nums; }
+.recon-source { margin: var(--space-2) 0 0; }
+
+@media (min-width: 64rem) {
+  .command-row {
+    grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(0, 0.9fr);
+    gap: var(--space-4);
+  }
+  .command-row--head {
+    display: grid;
+    min-height: 0;
+    padding-block: var(--space-2);
+    border-block-start: 0;
+    border-block-end: 1px solid var(--glass-border-soft);
+    color: var(--muted-foreground);
+    font-family: var(--font-record);
+    font-size: var(--type-label);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+  .provenance-body { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--space-8); }
+  .overview-twoup { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: var(--space-8); }
 }
 
 .command-layout,
@@ -1004,7 +1257,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   margin: 0;
   color: var(--foreground);
   font-family: var(--font-body);
-  font-size: var(--type-body-lg);
+  font-size: var(--type-body);
   font-style: normal;
   font-weight: 700;
   line-height: 1.25;
@@ -1017,23 +1270,20 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   padding-block-start: 0.15rem;
   color: var(--muted-foreground);
   font-family: var(--font-record);
-  font-size: var(--type-record-sm);
+  font-size: var(--type-label);
   font-variant-numeric: tabular-nums;
   text-align: end;
 }
 
 .command-ledger,
 .command-path,
-.command-pulse,
-.command-topology,
 .command-reconciliation {
   min-width: 0;
 }
 
 .command-ledger-list,
-.command-path-list,
-.command-pulse-list,
-.command-topology-list {
+.command-ledger-list ul,
+.command-path-list {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1049,71 +1299,9 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   -webkit-backdrop-filter: var(--glass-blur-soft);
 }
 
-.command-row {
-  width: 100%;
-  min-height: 72px;
-  padding: var(--space-sm) var(--space-md);
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: var(--space-sm);
-  align-items: start;
-  border: 0;
-  border-block-start: 1px solid var(--glass-border-soft);
-  color: var(--foreground);
-  background: transparent;
-  text-align: start;
-  transition:
-    transform var(--dur-response) var(--ease-out),
-    background-color var(--dur-state) var(--ease-out),
-    opacity var(--dur-state) var(--ease-out);
-}
 
-.command-ledger-list li:first-child .command-row { border-block-start: 0; }
 
-.command-row.is-selected {
-  position: relative;
-  z-index: var(--z-raised);
-  transform: translateX(2px);
-  background: var(--g3-raised);
-  box-shadow: inset 3px 0 0 var(--gold-vivid);
-}
 
-.command-row.is-resolved { opacity: 0.62; }
-
-.command-row__marker {
-  width: 0.75rem;
-  height: 0.75rem;
-  margin-block-start: 0.2rem;
-  border: 1px solid currentColor;
-  border-radius: 0.2rem;
-  color: var(--destructive);
-  background: color-mix(in oklch, currentColor 15%, transparent);
-}
-
-.command-row__copy { min-width: 0; }
-.command-row__title { display: block; margin: 0; font-size: var(--type-body-md); font-weight: 650; line-height: 1.35; }
-.command-row__meta { display: block; margin: 0.25rem 0 0; color: var(--muted-foreground); font-family: var(--font-record); font-size: var(--type-record-sm); line-height: 1.45; font-variant-numeric: tabular-nums; }
-
-.command-row__badge {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid color-mix(in oklch, currentColor 30%, transparent);
-  border-radius: 999px;
-  font-family: var(--font-record);
-  font-size: var(--type-record-xs);
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.command-path-list,
-.command-pulse-list,
-.command-topology-list {
-  border: 1px solid var(--glass-border-soft);
-  border-radius: 0.875rem;
-  background: var(--g1-soft);
-  box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-highlight);
-  backdrop-filter: var(--glass-blur-soft);
-  -webkit-backdrop-filter: var(--glass-blur-soft);
-}
 
 .command-path-step {
   width: 100%;
@@ -1137,149 +1325,8 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .command-path-step[aria-pressed="true"] { background: var(--g3-raised); }
 .command-path-step__marker { width: 0.75rem; height: 0.75rem; margin-block-start: 0.2rem; border: 1px solid var(--glass-border-strong); border-radius: 50%; background: var(--g1-soft); }
 .command-path-step[aria-pressed="true"] .command-path-step__marker { background: var(--gold-vivid); }
-.command-path-step strong { display: block; font-size: var(--type-body-sm); line-height: 1.35; }
-.command-path-step span { display: block; margin-block-start: 0.2rem; color: var(--muted-foreground); font-family: var(--font-record); font-size: var(--type-record-sm); line-height: 1.4; }
-
-.command-pulse-list li {
-  padding: var(--space-sm) var(--space-md);
-  border-block-start: 1px solid var(--glass-border-soft);
-}
-
-.command-pulse-list li:first-child { border-block-start: 0; }
-.command-pulse-list li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-sm); }
-.command-pulse-list time { color: var(--muted-foreground); font-family: var(--font-record); font-size: var(--type-record-sm); font-variant-numeric: tabular-nums; }
-.command-pulse-list strong { display: block; font-size: var(--type-body-sm); line-height: 1.35; }
-.command-pulse-list span { display: block; margin-block-start: 0.2rem; color: var(--muted-foreground); font-family: var(--font-record); font-size: var(--type-record-sm); }
-
-/* The ledger is a sequence, so it is drawn as one. This was a grid of six
-   equal boxes: six numbers, no relationship, and the reader had to supply the
-   arrow themselves. Stages now sit on a single spine and hand off downward. */
-.command-topology-list {
-  padding: var(--space-xs) var(--space-md);
-}
-
-.command-topology-node {
-  position: relative;
-  min-width: 0;
-  padding: var(--space-sm) 0 var(--space-sm) var(--space-lg);
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  transition: background-color var(--dur-state) var(--ease-out);
-}
-
-/* The spine, plus the node marker sitting on it. */
-.command-topology-node::before {
-  content: "";
-  position: absolute;
-  inset-inline-start: 0.3rem;
-  inset-block: 0;
-  width: 1px;
-  background: var(--glass-border-soft);
-}
-
-.command-topology-node:first-child::before { inset-block-start: 50%; }
-.command-topology-node:last-child::before { inset-block-end: 50%; }
-
-.command-topology-node::after {
-  content: "";
-  position: absolute;
-  inset-inline-start: 0;
-  inset-block-start: calc(50% - 0.35rem);
-  width: 0.7rem;
-  height: 0.7rem;
-  border: 1px solid var(--glass-border-strong);
-  border-radius: 50%;
-  background: var(--g0-ground);
-}
-
-.command-topology-node.is-active::after {
-  background: var(--gold-vivid);
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--gold-vivid) 24%, transparent);
-}
-
-.command-topology-node.is-active { background: color-mix(in oklch, var(--gold-vivid) 8%, transparent); }
-
-.command-topology-node__stage {
-  color: var(--muted-foreground);
-  font-family: var(--font-record);
-  font-size: var(--type-record-sm);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.command-topology-node.is-active .command-topology-node__stage { color: var(--foreground); }
-
-.command-topology-node__count {
-  color: var(--foreground);
-  font-family: var(--font-display);
-  font-size: var(--type-title-sm);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-/* Reconciliation is a verdict, not a table. Three rows each ending in an
-   identical "Reconciled" pill said one thing three times and buried the only
-   number that would matter — a mismatch. The verdict leads; the figures stay
-   under it for anyone checking the working. */
-.command-recon-strip {
-  padding: var(--space-md);
-  border: 1px solid var(--glass-border-soft);
-  border-inline-start: 3px solid var(--green-open);
-  border-radius: 0.875rem;
-  background: var(--g1-soft);
-  box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-highlight);
-  backdrop-filter: var(--glass-blur-soft);
-  -webkit-backdrop-filter: var(--glass-blur-soft);
-}
-
-.command-recon-strip[data-state="discrepancy"] { border-inline-start-color: var(--destructive); }
-
-.command-recon-verdict {
-  margin: 0;
-  max-width: 76ch;
-  color: var(--muted-foreground);
-  font-family: var(--font-body);
-  font-size: var(--type-body-sm);
-  line-height: var(--leading-body);
-}
-
-.command-recon-verdict strong { color: var(--foreground); font-weight: 650; }
-
-/* Label above value, not beside it. Laid out as label/value pairs on one line
-   the row read as "89 Released lines" — each value bonding to the next label
-   instead of its own. */
-.command-recon-figures {
-  margin: var(--space-md) 0 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: var(--space-md);
-}
-
-.command-recon-figures div {
-  display: grid;
-  gap: var(--space-2xs);
-  padding-block-start: var(--space-xs);
-  border-block-start: 1px solid var(--glass-border-soft);
-}
-
-.command-recon-figures dt {
-  color: var(--muted-foreground);
-  font-family: var(--font-record);
-  font-size: var(--type-record-xs);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-.command-recon-figures dd {
-  margin: 0;
-  color: var(--foreground);
-  font-family: var(--font-display);
-  font-size: var(--type-title-sm);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
+.command-path-step strong { display: block; font-size: var(--type-body-compact); line-height: 1.35; }
+.command-path-step span { display: block; margin-block-start: 0.2rem; color: var(--muted-foreground); font-family: var(--font-record); font-size: var(--type-label); line-height: 1.4; }
 
 .command-inspector-backdrop {
   position: fixed;
@@ -1342,21 +1389,19 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .command-inspector__body,
 .command-inspector__head,
 .command-ledger-list > *,
-.command-path-list > *,
-.command-pulse-list > *,
-.command-topology-list > * {
+.command-path-list > * {
   position: relative;
   z-index: var(--z-base);
 }
 
-.command-inspector__body h2 { margin: 0; font-family: var(--font-display); font-size: var(--type-title-md); font-style: normal; line-height: 1.1; }
-.command-inspector__badge { justify-self: start; padding: 0.3rem 0.55rem; border-radius: 999px; font-family: var(--font-record); font-size: var(--type-record-xs); }
+.command-inspector__body h2 { margin: 0; font-family: var(--font-display); font-size: var(--type-section-title); font-style: normal; line-height: 1.1; }
+.command-inspector__badge { justify-self: start; padding: 0.3rem 0.55rem; border-radius: 999px; font-family: var(--font-record); font-size: var(--type-label); }
 .command-inspector__fields { margin: 0; display: grid; gap: var(--space-md); }
 .command-inspector__fields div { display: grid; gap: var(--space-2xs); }
-.command-inspector__fields dt { color: var(--muted-foreground); font-family: var(--font-record); font-size: var(--type-record-xs); letter-spacing: 0.07em; text-transform: uppercase; }
-.command-inspector__fields dd { margin: 0; font-size: var(--type-body-sm); line-height: 1.5; }
-.command-inspector__action { min-height: 44px; padding-inline: var(--space-md); border: 1px solid var(--glass-border-strong); border-radius: 0.625rem; color: var(--primary-foreground); background: var(--primary); font-family: var(--font-body); font-size: var(--type-body-sm); font-weight: 650; white-space: nowrap; }
-.command-inspector__note { margin: 0; color: var(--muted-foreground); font-family: var(--font-record); font-size: var(--type-record-sm); line-height: 1.5; }
+.command-inspector__fields dt { color: var(--muted-foreground); font-family: var(--font-record); font-size: var(--type-label); letter-spacing: 0.07em; text-transform: uppercase; }
+.command-inspector__fields dd { margin: 0; font-size: var(--type-body-compact); line-height: 1.5; }
+.command-inspector__action { min-height: 44px; padding-inline: var(--space-md); border: 1px solid var(--glass-border-strong); border-radius: 0.625rem; color: var(--primary-foreground); background: var(--primary); font-family: var(--font-body); font-size: var(--type-body-compact); font-weight: 650; white-space: nowrap; }
+.command-inspector__note { margin: 0; color: var(--muted-foreground); font-family: var(--font-record); font-size: var(--type-label); line-height: 1.5; }
 
 .command-local-success {
   padding: var(--space-sm);
@@ -1364,7 +1409,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   border-radius: 0.625rem;
   color: var(--green-open);
   background: color-mix(in oklch, var(--green-open) 8%, transparent);
-  font-size: var(--type-body-xs);
+  font-size: var(--type-body-compact);
   line-height: 1.45;
 }
 
@@ -1407,8 +1452,8 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   .atrium__copy { grid-column: 1 / span 6; grid-row: 1; padding-block-end: var(--space-xl); }
   .atrium__identity { grid-column: 6 / -1; grid-row: 1; margin-block-start: var(--space-xl); }
   .atrium__service-plane { margin-inline-start: clamp(2rem, 7vw, 6rem); transform: translateY(1rem); }
-  .command-layout { grid-template-columns: minmax(0, 1.7fr) minmax(19rem, 0.85fr); }
-  .command-support-grid { grid-template-columns: minmax(0, 1.35fr) minmax(19rem, 0.65fr); }
+  .command-layout { grid-template-columns: minmax(0, 1.7fr) minmax(var(--size-inspector), 0.85fr); }
+  .command-support-grid { grid-template-columns: minmax(0, 1.35fr) minmax(var(--size-inspector), 0.65fr); }
   .command-inspector-backdrop { display: none; }
   .command-inspector {
     position: sticky;
@@ -1431,8 +1476,6 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   .material-g4,
   .command-ledger-list,
   .command-path-list,
-  .command-pulse-list,
-  .command-topology-list,
   .command-inspector {
     background: var(--paper-warm);
   }
@@ -1443,8 +1486,6 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   .dark .material-g4,
   .dark .command-ledger-list,
   .dark .command-path-list,
-  .dark .command-pulse-list,
-  .dark .command-topology-list,
   .dark .command-inspector {
     background: #2d2927;
   }
@@ -1464,8 +1505,6 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   .atrium__service-plane,
   .command-ledger-list,
   .command-path-list,
-  .command-pulse-list,
-  .command-topology-list,
   .command-inspector {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
@@ -1477,8 +1516,6 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   .material-g4,
   .command-ledger-list,
   .command-path-list,
-  .command-pulse-list,
-  .command-topology-list,
   .command-inspector {
     background: var(--paper-warm) !important;
   }
@@ -1489,8 +1526,6 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   .dark .material-g4,
   .dark .command-ledger-list,
   .dark .command-path-list,
-  .dark .command-pulse-list,
-  .dark .command-topology-list,
   .dark .command-inspector {
     background: #2d2927 !important;
   }

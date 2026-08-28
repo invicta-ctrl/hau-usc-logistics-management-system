@@ -1412,12 +1412,12 @@ export function InternalLendingHub({
       ) : null}
 
       {loadState === 'loading' ? (
-        <section aria-busy="true" className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,.62fr)]">
+        <section aria-busy="true" className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(380px,.62fr)]">
           <div className="h-[430px] animate-pulse rounded-xl border border-[var(--border-paper)] bg-[var(--paper-mid)]" />
           <div className="hidden h-[430px] animate-pulse rounded-xl border border-[var(--border-paper)] bg-[var(--paper-mid)] lg:block" />
         </section>
       ) : (
-        <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,.62fr)]">
+        <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(380px,.62fr)]">
           <section
             className="min-w-0 rounded-xl border border-[var(--border-paper)] bg-[var(--paper-mid)] p-4"
             aria-labelledby="fi07-queue-heading"

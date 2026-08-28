@@ -239,22 +239,48 @@
   justify-self: start;
 }
 
+/* RECOVERY-02 §9. The launcher must sit fully inside the viewport, carry at
+   least a 44px target, and must not cover navigation.
+
+   It cleared the viewport at every tested width, but it sat on top of the
+   authenticated shell's mobile dock: that dock is `fixed bottom-0 … z-10` with
+   min-height 60, so it occupies 0-60px from the bottom edge, and the launcher
+   at `bottom: 1rem` with a 44px box occupied 16-60px of exactly that band — at
+   z-index 100, so it won over the navigation it was covering.
+
+   Below `lg`, where the dock renders, the launcher now clears it. Safe-area
+   insets are added on both axes so a notched device cannot reintroduce the
+   same collision, and max-width keeps a long label from ever reaching the
+   opposite edge. */
 .preview-index-launcher {
+  --preview-dock-height: 60px;
+  --preview-launcher-gap: 1rem;
+
   position: fixed;
-  inset-inline-end: 1rem;
-  inset-block-end: 1rem;
+  inset-inline-end: calc(var(--preview-launcher-gap) + env(safe-area-inset-right, 0px));
+  inset-block-end: calc(var(--preview-launcher-gap) + env(safe-area-inset-bottom, 0px));
   z-index: 100;
   min-height: 44px;
+  min-width: 44px;
+  max-width: calc(100vw - 2rem);
   padding: 0.625rem 0.875rem;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   color: var(--primary-foreground);
   background: var(--primary);
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--type-body-sm);
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--glass-shadow-soft);
+}
+
+@media (max-width: 63.99rem) {
+  .preview-index-launcher {
+    inset-block-end: calc(
+      var(--preview-dock-height) + var(--preview-launcher-gap) + env(safe-area-inset-bottom, 0px)
+    );
+  }
 }
 
 .preview-surface {

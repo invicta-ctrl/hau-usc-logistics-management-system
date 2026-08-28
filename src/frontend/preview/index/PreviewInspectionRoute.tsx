@@ -82,7 +82,7 @@ export function PreviewInspectionRoute({
            classifies overview as SURFACE_PREVIEW / VISUAL_ONLY and the surface
            labels its own fixtures — so no production-bound route begins showing
            fixture data as a side effect of a design pass. */
-        <OverviewRoute operator={LOCAL_PREVIEW_OPERATOR.displayName} dark={dark} />
+        <OverviewRoute operator={LOCAL_PREVIEW_OPERATOR.displayName} dark={dark} navigate={onOpenRoute} />
       ) : authRoute === 'profile' ? (
         <ProfileRoute dark={dark} onToggle={onToggleTheme} previewProfile={PREVIEW_PROFILE} />
       ) : authRoute === 'inventory' ? (

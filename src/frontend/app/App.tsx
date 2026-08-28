@@ -5,11 +5,17 @@ import { PreviewIndexPage } from '../preview/index/PreviewIndexPage';
 import { usePreviewIndex } from '../preview/index/usePreviewIndex';
 import { PreviewInspectionRoute } from '../preview/index/PreviewInspectionRoute';
 
+/* Inlined rather than imported from a shared constant: Rollup only folds this
+ * away reliably when Vite's define substitution puts the literal at the use
+ * site. Imported across a module boundary it stayed a runtime read and the
+ * preview modules survived tree-shaking — verify-preview-absent.mjs caught it. */
+const PREVIEW_TOOLING_ENABLED = import.meta.env.MODE !== 'production';
+
 export default function App() {
   const controller = useAppController();
   const preview = usePreviewIndex();
 
-  if (preview.inspection.mode === 'LOCAL_INDEX_INSPECTION') {
+  if (PREVIEW_TOOLING_ENABLED && preview.inspection.mode === 'LOCAL_INDEX_INSPECTION') {
     return (
       <PreviewInspectionRoute
         route={preview.inspection.route}
@@ -25,7 +31,7 @@ export default function App() {
     );
   }
 
-  if (preview.allowed && preview.indexOpen) {
+  if (PREVIEW_TOOLING_ENABLED && preview.allowed && preview.indexOpen) {
     return (
       <PreviewIndexPage
         navigate={controller.navigate}
@@ -42,7 +48,7 @@ export default function App() {
   return (
     <>
       <AppRouteRenderer controller={controller} />
-      {preview.allowed ? (
+      {PREVIEW_TOOLING_ENABLED && preview.allowed ? (
         <PreviewIndexLauncher
           onOpen={preview.openIndex}
           returnFocusRequestedRef={preview.returnFocusRequestedRef}

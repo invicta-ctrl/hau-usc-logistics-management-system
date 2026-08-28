@@ -13,14 +13,23 @@ export default defineConfig({
     'fi12-convergence.spec.js',
     'r3-a1-a2-routing.spec.js',
     'fi07-lending-hub.spec.js',
+    'preview-launcher-geometry.spec.js',
   ],
   timeout: 30_000,
   fullyParallel: false,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: { baseURL: localPreviewUrl, trace: 'retain-on-failure', screenshot: 'only-on-failure' },
+  /* Opt-in override for environments whose preinstalled Chromium does not match
+     the pinned Playwright build. Unset by default, so normal runs are unchanged. */
   projects: widths.map((width) => ({
     name: `frontend-${width}`,
-    use: { browserName: 'chromium', viewport: { width, height: width < 768 ? 844 : 1000 } },
+    use: {
+      browserName: 'chromium',
+      viewport: { width, height: width < 768 ? 844 : 1000 },
+      ...(process.env.HAU_CHROMIUM_PATH
+        ? { launchOptions: { executablePath: process.env.HAU_CHROMIUM_PATH } }
+        : {}),
+    },
   })),
   webServer:
     localPreviewPort === '4173'
