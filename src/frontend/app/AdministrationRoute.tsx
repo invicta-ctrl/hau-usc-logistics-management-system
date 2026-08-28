@@ -167,7 +167,8 @@ export default function AdministrationRoute({
 }) {
   const [tab, setTab] = useState<AdminTab>("Accounts & access");
   const [previewState, setPreviewState] = useState<Fi10PreviewState>("Populated");
-  const [loadState, setLoadState] = useState<Fi10LoadState>(inspection ? "ready" : "loading");
+  const [accountState, setAccountState] = useState<Fi10LoadState>(inspection ? "ready" : "loading");
+  const [directoryState, setDirectoryState] = useState<Fi10LoadState>(inspection ? "ready" : "loading");
   const [accounts, setAccounts] = useState<FrontendAdminAccount[]>(inspection ? previewAccounts : []);
   const [directory, setDirectory] = useState<FrontendStaffDirectoryItem[]>(
     inspection ? previewDirectory : [],
@@ -194,29 +195,40 @@ export default function AdministrationRoute({
       setAccounts(previewAccounts);
       setDirectory(previewDirectory);
       setSelectedAccount(previewAccounts[0]);
-      setLoadState("ready");
+      setAccountState("ready");
+      setDirectoryState("ready");
       return;
     }
     if (!accessAllowed) {
-      setLoadState("denied");
+      setAccountState("denied");
+      setDirectoryState("denied");
       return;
     }
     const abort = new AbortController();
-    setLoadState("loading");
-    void Promise.all([
-      frontendBackend.adminAccountDirectory(abort.signal),
-      frontendBackend.staffDirectory(abort.signal),
-    ])
-      .then(([accountResult, directoryResult]) => {
+    setAccountState("loading");
+    setDirectoryState("loading");
+    void frontendBackend
+      .adminAccountDirectory(abort.signal)
+      .then((accountResult) => {
         if (abort.signal.aborted) return;
         setAccounts(accountResult.items);
-        setDirectory(directoryResult.items);
         setSelectedAccount(accountResult.items[0] ?? null);
-        setLoadState("ready");
+        setAccountState("ready");
       })
       .catch((error: unknown) => {
         if (abort.signal.aborted) return;
-        setLoadState(error instanceof FrontendApiError && [401, 403].includes(error.status) ? "denied" : "unavailable");
+        setAccountState(error instanceof FrontendApiError && [401, 403].includes(error.status) ? "denied" : "unavailable");
+      });
+    void frontendBackend
+      .staffDirectory(abort.signal)
+      .then((directoryResult) => {
+        if (abort.signal.aborted) return;
+        setDirectory(directoryResult.items);
+        setDirectoryState("ready");
+      })
+      .catch((error: unknown) => {
+        if (abort.signal.aborted) return;
+        setDirectoryState(error instanceof FrontendApiError && [401, 403].includes(error.status) ? "denied" : "unavailable");
       });
     return () => abort.abort();
   }, [accessAllowed, inspection, reloadKey]);
@@ -335,7 +347,9 @@ export default function AdministrationRoute({
             : previewState === "Empty"
               ? "empty"
               : "ready"
-      : loadState;
+      : tab === "Accounts & access"
+        ? accountState
+        : directoryState;
 
   function retry() {
     if (inspection) {

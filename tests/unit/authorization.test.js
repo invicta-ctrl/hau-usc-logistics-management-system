@@ -61,6 +61,21 @@ describe('canonical authorization projection', () => {
     expect(can('ADMINISTRATOR', 'release')).toBe(false);
   });
 
+  it('keeps P10 administration capabilities owner-only', () => {
+    const administrationCapabilities = [
+      CAPABILITIES.ACCESS_ADMIN,
+      CAPABILITIES.REFERENCE_MANAGE,
+      CAPABILITIES.BRAND_MANAGE,
+      CAPABILITIES.SYSTEM_ADMIN,
+    ];
+
+    expect(capabilitiesFor('SYSTEM_OWNER')).toEqual(expect.arrayContaining(administrationCapabilities));
+    for (const capability of administrationCapabilities) {
+      expect(capabilitiesFor('DOL_STAFF')).not.toContain(capability);
+      expect(capabilitiesFor('REQUESTER')).not.toContain(capability);
+    }
+  });
+
   it('uses server capabilities and mapping state instead of trusting the client role', () => {
     const projected = projectClientAuthorization({
       id: 'SYNTHETIC-USER-001',

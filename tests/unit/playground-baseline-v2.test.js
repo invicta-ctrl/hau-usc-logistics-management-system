@@ -150,4 +150,31 @@ describe('Playground baseline coverage v2 safety contract', () => {
     expect(source).not.toContain('accountId');
     expect(source).not.toContain('password');
   });
+
+  it('keeps the P10 Administration browser audit independent, aggregate-only, and fail-closed', () => {
+    const source = readScript('audit-live-p10-administration.mjs');
+
+    expect(source).toContain("serviceWorkers: 'block'");
+    expect(source).toContain("privateExisting(process.argv[2], 'Playground resource manifest')");
+    expect(source).toContain("privateNew(process.argv[3], 'P10 audit report')");
+    expect(source).toContain("hostname === 'logistics.hausc.org'");
+    expect(source).toContain("playgroundMutation: 'SESSION_ONLY'");
+    for (const capability of ['access.admin', 'reference.manage', 'brand.manage', 'system.admin']) {
+      expect(source).toContain(`capabilities.includes('${capability}')`);
+    }
+    for (const tab of [
+      'Accounts & access',
+      'Staff directory',
+      'Activity',
+      'Reference administration',
+      'Link registry',
+      'Brand & media',
+      'System status',
+    ]) {
+      expect(source).toContain(tab);
+    }
+    expect(source).toContain('recordShapeExposed');
+    expect(source).not.toContain('accountId');
+    expect(source).not.toContain('password');
+  });
 });

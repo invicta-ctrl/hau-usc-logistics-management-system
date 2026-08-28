@@ -1,5 +1,11 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FrontendBackend } from '../../src/frontend/integration/backend.ts';
+
+const administrationSource = readFileSync(
+  new URL('../../src/frontend/app/AdministrationRoute.tsx', import.meta.url),
+  'utf8',
+);
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -11,6 +17,14 @@ function response(payload, status = 200) {
 }
 
 describe('FI-10 administration adapter', () => {
+  it('loads Accounts and Staff independently so one failed tab cannot collapse the other', () => {
+    expect(administrationSource).toContain('setAccountState');
+    expect(administrationSource).toContain('setDirectoryState');
+    expect(administrationSource).not.toMatch(
+      /Promise\.all\(\[\s*frontendBackend\.adminAccountDirectory[\s\S]*frontendBackend\.staffDirectory/u,
+    );
+  });
+
   it('projects only permitted account, directory, and activity display fields', async () => {
     const fetchMock = vi
       .fn()
@@ -33,9 +47,7 @@ describe('FI-10 administration adapter', () => {
       .mockResolvedValueOnce(
         response({
           ok: true,
-          page: 1,
-          pageSize: 25,
-          total: 1,
+          pagination: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
           items: [
             {
               accountId: 'ACC-DO-NOT-RENDER',

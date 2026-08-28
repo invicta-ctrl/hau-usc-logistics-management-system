@@ -28,18 +28,18 @@ PRIOR_LATEST_MIGRATION: 0032_staff_account_activity_history.sql
 PRIOR_LIVE_STATE: DIRTY;RESET_GENERATION=3;ACTIVE_SESSIONS=1;TRANSIENT_TOTAL=1
 PRIOR_PRODUCTION_MUTATION: ZERO
 
-COMPLETED: P00–P09 are complete. P08 local repairs remain pending live post-deploy acceptance at P29/P30. P09 fresh-browser Events passed without a product repair: System Owner `event.manage`, Worker authorization, HTTP 200 contract, generation-4 baseline relationships, adapter projection, terminal loading, rendering, retry wiring, privacy, and fail-closed denial are verified.
+COMPLETED: P00–P10 are complete. P08 and P10 local repairs remain pending live post-deploy acceptance at P29/P30. P10 independently audited all seven Administration tabs, preserved real-or-disabled behavior, identified the live nested-pagination adapter mismatch and shared FI10 failure domain, and repaired Accounts/Staff isolation so Activity remains reachable through Staff.
 
-VALIDATION: P08 evidence remains accepted. P09 fresh-browser Events returned 2 series, 3 days, 8 activities, and 2 links with zero unresolved relationships, zero Events console errors, no preview substitution, and terminal loading. Unauthenticated access returned 401 without record shape; an authenticated underprivileged service regression returns 403 before D1. Focused P09 validation passed 66 tests across 5 files plus formatting, targeted lint, and diff checks.
+VALIDATION: P09 evidence remains accepted. P10 live before-repair evidence passed Link registry, Brand & media, System status, and truthful Reference administration behavior. The local Administration repair passes 57 focused tests across 6 files, the full 164-file / 1210-test suite, Cloudflare build at 1679 modules, targeted lint, formatting, and diff checks. Live post-repair browser acceptance is deferred to P29/P30.
 
 PRESERVED: main working state; backend and v0.8.4 worktrees; frontend-design-integration `.ai-bridge/` and `.local/`; all recovery/design/release refs; prior Playground D1/R2/runtime state; canonical root AGENTS.md.
 
-EXTERNAL_ACTIONS: P07/P08 external actions remain recorded. P09 issued two staging-only System Owner convenience sessions: one preserved invalid harness attempt and one accepted fresh audit. The audit performed no event/business-data, R2, deployment, Production, main, Google, or Figma mutation. Live Playground is now correctly DIRTY/active with three sessions and transient total three; P12 owns the reset.
+EXTERNAL_ACTIONS: P07–P09 external actions remain recorded. P10 issued two staging-only System Owner convenience sessions: one preserved invalid harness attempt and one accepted before-repair audit. No Administration/business-data, R2, deployment, Production, main, Google, or Figma mutation occurred. Live Playground is now correctly DIRTY/active with five sessions and transient total five; P12 owns the reset.
 
 DO_NOT_REPEAT: Do not recreate the reconciliation branch/worktree, broad-merge frontend/design branches, re-run frozen FI comparison, reuse failed v2 artifacts, repeat reset attempts A/B, or reapply the v2 overlay. Use the private v2 manifest and clean bookmark for later reset verification.
 
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P10 Administration full recovery. Audit all seven named tabs independently against their exact capabilities, backend methods, staging-only data, tab isolation, terminal states, safe denial, and reset baseline.
+NEXT_EXACT_ACTION: Begin P11 production-equivalent end-to-end workflows against isolated Playground state only, using the exact accepted workflow and consequence matrix.
 RESUME_COMMANDS: Read the accepted master prompt, current chain, and reconciliation manifest; run exact Git handshake; reverify live Playground identity before any external mutation.
 PROHIBITED_ACTIONS: Production/main deployment or mutation; branch deletion; history rewrite; unknown residue mutation; Figma write; unbacked reset/migration; unverified R2 deletion.
 HANDOFF_STATUS: ACTIVE

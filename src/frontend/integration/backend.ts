@@ -935,10 +935,11 @@ export class FrontendBackend {
     if (payload.ok !== true || !Array.isArray(payload.items)) {
       incomplete('The account directory response did not match the supported access-admin contract.');
     }
+    const pagination = asRecord(payload.pagination);
     return {
-      page: requiredNumber(payload.page, 'account directory page'),
-      pageSize: requiredNumber(payload.pageSize, 'account directory pageSize'),
-      total: requiredNumber(payload.total, 'account directory total'),
+      page: requiredNumber(payload.page ?? pagination.page, 'account directory page'),
+      pageSize: requiredNumber(payload.pageSize ?? pagination.pageSize, 'account directory pageSize'),
+      total: requiredNumber(payload.total ?? pagination.total, 'account directory total'),
       items: records(payload.items).map((row) => ({
         accessId: requiredString(row.accessId, 'account directory accessId'),
         displayName: requiredString(row.displayName, 'account directory displayName'),
