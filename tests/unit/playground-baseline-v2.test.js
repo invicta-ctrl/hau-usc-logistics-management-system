@@ -177,4 +177,43 @@ describe('Playground baseline coverage v2 safety contract', () => {
     expect(source).not.toContain('accountId');
     expect(source).not.toContain('password');
   });
+
+  it('keeps the P11 workflow proof isolated, private, idempotent, and Google-write fail-closed', () => {
+    const source = readScript('audit-live-p11-workflows.mjs');
+
+    expect(source).toContain("serviceWorkers: 'block'");
+    expect(source).toContain("privateExisting(process.argv[2], 'Playground resource manifest')");
+    expect(source).toContain("privateNew(process.argv[3], 'P11 audit report')");
+    expect(source).toContain("hostname === 'logistics.hausc.org'");
+    expect(source).toContain("googleDrive === 'CONFIGURED'");
+    expect(source).toContain("googleMutation: 'NONE'");
+    expect(source).toContain("productionMutation: 'NONE'");
+    expect(source).toContain("playgroundMutation: 'ISOLATED_WORKFLOW_PROOF'");
+    for (const endpoint of [
+      '/api/public/request',
+      '/api/reviewRequest',
+      '/api/reserveStock',
+      '/api/confirmRelease',
+      '/api/postCycleCountAdjustment',
+      '/api/receiveRestock',
+      '/api/public/lending',
+      '/api/approveLendingTicket',
+      '/api/confirmLendingHandoff',
+      '/api/confirmReturn',
+      '/api/saveCanvassReference',
+      '/api/selectPreferredCanvass',
+      '/api/transitionDeliverable',
+      '/api/linkEventOperationalRecord',
+      '/api/admin/access/status',
+      '/api/admin/reference-links/create',
+      '/api/admin/reference-links/transition',
+    ]) {
+      expect(source).toContain(endpoint);
+    }
+    expect(source).toContain('idempotentReplay');
+    expect(source).toContain('mode: 0o600');
+    expect(source).not.toContain('console.log(reportPath)');
+    expect(source).not.toContain('console.log(manifestPath)');
+    expect(source).not.toMatch(/console\.log\([^)]*(?:csrf|password|accountId)/iu);
+  });
 });
