@@ -16,12 +16,13 @@ describe('post-FI17 Overview and hero-motion recovery', () => {
     const inspection = readSource('src/frontend/preview/index/PreviewInspectionRoute.tsx');
     const previewData = readSource('src/frontend/preview/index/previewData.ts');
     const overview = readSource('src/frontend/app/overview/OverviewRoute.tsx');
+    const overviewPreview = readSource('src/frontend/app/overview/OverviewPreviewRoute.tsx');
 
     expect(renderer).toMatch(
       /session && isAuthRoute\(route\)[\s\S]*route === 'overview'[\s\S]*<OverviewRoute session=\{session\} \/>/,
     );
     expect(inspection).toMatch(
-      /authRoute === 'overview'[\s\S]*<OverviewRoute session=\{LOCAL_PREVIEW_SESSION\} dark=\{dark\} \/>/,
+      /authRoute === 'overview'[\s\S]*<OverviewPreviewRoute session=\{LOCAL_PREVIEW_SESSION\} dark=\{dark\} \/>/,
     );
     expect(inspection).not.toContain('/api/');
     expect(inspection).not.toMatch(/\bfetch\s*\(/);
@@ -29,6 +30,11 @@ describe('post-FI17 Overview and hero-motion recovery', () => {
     expect(previewData).toMatch(/capabilities:\s*\[\s*'overview'/);
     expect(overview).not.toContain('This workspace route is reserved and has not yet been built.');
     expect(overview).not.toContain('Route reserved · not yet built');
+    expect(overview).toContain('<OperationalModuleRoute module="overview"');
+    expect(overviewPreview).toContain('Operations · design fixtures, not production records');
+    expect(overviewPreview).toContain('Glass operations command table');
+    expect(overviewPreview).toContain('Preview fixture · {session.displayName} · inspection state only');
+    expect(overviewPreview).not.toContain('frontendBackend');
   });
 
   it('bundles the owner hero media with autoplay-safe looping, poster fallback, pause/resume, and reduced-motion protection', () => {

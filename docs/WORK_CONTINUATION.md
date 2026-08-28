@@ -4,12 +4,12 @@
 
 - Repository/worktree: `D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-master-reconciliation`.
 - Branch/base: `reconcile/playground-master` from clean remote-parity `release/v0.8.3-fi12-playground@631724a5f32a49b9dcf45eec5a894aa7baf66266`.
-- Current phase: P04 Preview Index navigation repair and exhaustive local-candidate matrix complete; P05 accepted FI frontend reconciliation is next.
+- Current phase: P05 accepted FI frontend reconciliation complete; P06 normal-runtime fixture boundary audit is next.
 - Authority: accepted `PLAYGROUND-MASTER-2026-08-28`, project policy, repository functional contracts, live design-source roles, and the P01 reconciliation manifest.
-- Completed: P00–P03 authority/base/live diagnosis and local repair; P04 canonical real-route and protected-inspection hashes, deployed Playground gate, direct-load/history synchronization, truthful Preview wording, and exhaustive 15-entry 390/1440 Playwright matrix.
+- Completed: P00–P04 authority/base/live diagnosis/root/navigation; P05 182-path FI reconciliation, explicit divergence classifications, restored FI-13 containment, dual real/Preview Overview, rebuilt preview/shareable/staging artifacts, and focused verification.
 - Preserved: prior deployed Playground source `9d48eaa8...`, schema 32/migration 0032/generation-3 DIRTY state; main and other worktrees; frontend `.ai-bridge/` and `.local/`; every old recovery/design/release ref.
 - External state: read-only Git/live inspection, branch checkpoint pushes, and a controlled local 4173 test server now stopped; no provider, D1/R2, reset, migration, deployment, Production, Google, or Figma mutation.
-- Next action: execute P05 accepted FI tree/path reconciliation with explicit classifications and preservation of Playground-only integrations.
+- Next action: execute P06 full normal-runtime fixture/mock/simulated-success inventory and deterministic build boundary gate.
 - Resume commands: read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, accepted master prompt, and `.codex/PLAYGROUND_MASTER_RECONCILIATION_MANIFEST.md`; verify Git/upstream and live Playground identity.
 - Prohibited: Production/main mutation; broad branch merge; branch deletion; history rewrite; unknown residue mutation; unbacked reset/migration; unclassified R2 deletion; Figma write.
 

@@ -247,6 +247,10 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or prot
   });
 
   await page.goto('/#/__preview/index');
+  await page.locator('[data-preview-route="overview"] [data-action="open-preview"]').click();
+  await expect(page.getByRole('heading', { name: 'Glass operations command table' })).toBeVisible();
+  await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+
   await page.locator('[data-preview-search]').fill('inventory');
   await page.locator('[data-preview-route="inventory"] [data-action="open-preview"]').click();
   await expect(

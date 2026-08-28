@@ -7,7 +7,7 @@ import { InternalLendingHub } from '../../app/lending/InternalLendingHub';
 import ReleaseDeskRoute from '../../app/ReleaseDeskRoute';
 import SupplyRoutes from '../../app/SupplyRoutes';
 import AdministrationRoute from '../../app/AdministrationRoute';
-import { OverviewRoute } from '../../app/overview/OverviewRoute';
+import { OverviewPreviewRoute } from '../../app/overview/OverviewPreviewRoute';
 import { ExternalRequestCenter } from '../../app/request/ExternalRequestCenter';
 import { AuthenticatedShell } from '../../app/shell/AuthenticatedShell';
 import { LOCAL_PREVIEW_OPERATOR } from '../../app/shell/presentation';
@@ -79,7 +79,7 @@ export function PreviewInspectionRoute({
       onBackToPreview={onBackToIndex}
     >
       {authRoute === 'overview' ? (
-        <OverviewRoute session={LOCAL_PREVIEW_SESSION} dark={dark} />
+        <OverviewPreviewRoute session={LOCAL_PREVIEW_SESSION} dark={dark} />
       ) : authRoute === 'profile' ? (
         <ProfileRoute dark={dark} onToggle={onToggleTheme} previewProfile={PREVIEW_PROFILE} />
       ) : authRoute === 'inventory' ? (

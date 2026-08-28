@@ -10,5 +10,6 @@
 - P03: fresh 390/1440 live evidence passed for root mount, required assets, version/readiness, console, staging identity, and D1/R2 isolation. The deployed candidate is `9d48eaa8...`, schema 32, migration 0032; Production crossover is zero.
 - P03 confirmed a source-level fail-closed reveal state that could leave mounted landing content transparent if entrance animation stalled. The base state now fails open locally, with focused regression coverage and a passing staging build; no deployment occurred.
 - P04: the deployed no-op Preview action was reproduced; canonical real-route and protected-inspection hashes now provide direct load, Back/Forward, Index return, and reload persistence in the local candidate. All 15 entries passed at 390 and 1440; off-origin inspection remains denied.
-- The next phase is P05 accepted FI frontend reconciliation. P04 remains undeployed until the later exact-candidate deployment/rollback gate.
-- Production/main, provider resources, D1/R2, migrations, reset state, Google, Figma, and branch refs remain unchanged by P04.
+- P05: all 182 frozen FI frontend paths are reconciled. The accepted FI Overview and FI-13 containment gaps were repaired while real Playground backend/auth/reset/CSP integrations remain authoritative.
+- The next phase is P06 normal-runtime fixture/mock boundary audit. P03–P05 remain undeployed until the later exact-candidate deployment/rollback gate.
+- Production/main, provider resources, D1/R2, migrations, reset state, Google, Figma, and branch refs remain unchanged by P05.

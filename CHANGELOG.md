@@ -31,6 +31,13 @@
 - Added an exhaustive Playwright matrix for all 15 Preview Index entries at mobile and desktop widths, with a visible page landmark/heading and zero mutation requests.
 - Rebuilt the staging package and verified byte-identical hero reconstruction. The P04 candidate remains undeployed; no Playground data, provider, Production/main, Google, or Figma mutation occurred.
 
+### Playground Master P05 FI frontend reconciliation
+
+- Reconciled all 182 frozen accepted FI frontend paths against the current Playground lineage: 173 were source-identical at migration and every divergent frontend/test/pipeline path now has an explicit preservation, adoption, repair, shared-contract, or superseded decision.
+- Restored the accepted FI command-table Overview as a deterministic no-network Preview inspection while preserving the real backend Overview in normal runtime.
+- Restored the accepted FI-13 generic route-style containment conversion and its stronger responsive descendant regression.
+- Rebuilt and verified identical preview/shareable artifacts plus the staging package and byte-identical hero. No deployment, reset, migration, provider/D1/R2/business-data, Production/main, Google, or Figma mutation occurred.
+
 ### FI-13 through FI-17 immediate Playground migration
 
 - Migrated the accepted FI frontend completion plus post-FI17 Overview and hero-motion recovery into the FM branch while preserving real Worker/API, auth, D1/R2, reset, privacy, and operational behavior.

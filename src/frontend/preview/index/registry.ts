@@ -89,7 +89,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Operations overview',
     group: 'STAFF',
     description:
-      'Authenticated operations overview. The real route preserves the server-derived session boundary; Preview inspection uses a deterministic sanitized session.',
+      'Authenticated operations overview. The real route preserves the server-derived session boundary; Preview inspection uses deterministic sanitized fixtures with no protected request.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'PARTIAL',
     access: 'AUTHENTICATED',

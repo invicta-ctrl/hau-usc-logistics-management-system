@@ -10,16 +10,25 @@ const routeMounts = [
 ];
 
 function fixture(root) {
-  return `${root}{color:canvas}${root} button:disabled{opacity:.45}header{margin-top:22px}@media(max-width:768px){${root}{padding:14px}header{display:block}}`;
+  return `${root}{color:canvas}${root} button:disabled{opacity:.45}header{margin-top:22px}${root} table{display:table}${root} th{font-size:12px}${root} td{padding:8px}@media(max-width:768px){${root}{padding:14px}${root} table{display:none}${root} th{display:none}${root} td{display:block}header{display:block}}`;
 }
 
 describe('FI-12 route-style containment', () => {
-  it.each(routeMounts)('contains local selectors below %s without losing its responsive root rule', (root) => {
-    const scoped = scopeRouteCss(root, fixture(root));
-    expect(scoped).toContain(`@scope (${root}){header{margin-top:22px}`);
-    expect(scoped).toContain('@media(max-width:768px){:scope{padding:14px}header{display:block}}');
-    expect(scoped).not.toContain(`${root}}@scope`);
-  });
+  it.each(routeMounts)(
+    'contains local selectors below %s without losing its responsive root rule',
+    (root) => {
+      const scoped = scopeRouteCss(root, fixture(root));
+      expect(scoped).toContain(`@scope (${root}){header{margin-top:22px}`);
+      expect(scoped).toContain(':scope table{display:table}:scope th{font-size:12px}:scope td{padding:8px}');
+      expect(scoped).toContain(
+        '@media(max-width:768px){:scope{padding:14px}:scope table{display:none}:scope th{display:none}:scope td{display:block}header{display:block}}',
+      );
+      expect(scoped).not.toContain(`${root} table`);
+      expect(scoped).not.toContain(`${root} th`);
+      expect(scoped).not.toContain(`${root} td`);
+      expect(scoped).not.toContain(`${root}}@scope`);
+    },
+  );
 
   it.each(routeMounts)('%s is used by its route-owned style mount', (root, file) => {
     const source = readFileSync(resolve(process.cwd(), file), 'utf8');
