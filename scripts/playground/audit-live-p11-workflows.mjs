@@ -815,6 +815,7 @@ try {
   requireCondition(activeAccount?.accountId, 'active account available for no-op');
   const accountNoopCommand = {
     accountId: activeAccount.accountId,
+    expectedRevision: activeAccount.revision,
     status: 'ACTIVE',
     reason: 'P11 isolated account status no-op proof.',
     clientRequestId: retryKey('access-status-noop'),

@@ -216,4 +216,24 @@ describe('Playground baseline coverage v2 safety contract', () => {
     expect(source).not.toContain('console.log(manifestPath)');
     expect(source).not.toMatch(/console\.log\([^)]*(?:csrf|password|accountId)/iu);
   });
+
+  it('reconciles interrupted P11 evidence without repeating completed public workflows', () => {
+    const source = readScript('audit-live-p11-reconciliation.mjs');
+
+    expect(source).toContain("serviceWorkers: 'block'");
+    expect(source).toContain("privateExisting(process.argv[2], 'Playground resource manifest')");
+    expect(source).toContain("privateNew(process.argv[3], 'P11 reconciliation report')");
+    expect(source).toContain("playgroundMutation: 'ADMINISTRATION_COMPLETION_ONLY'");
+    expect(source).toContain("googleMutation: 'NONE'");
+    expect(source).toContain("productionMutation: 'NONE'");
+    expect(source).toContain('expectedRevision: activeAccount.revision');
+    expect(source).toContain("scope = 'confirmRelease'");
+    expect(source).toContain("scope = 'receiveRestock'");
+    expect(source).toContain("scope = 'postCycleCountAdjustment'");
+    expect(source).toContain('pragma_foreign_key_check');
+    expect(source).not.toContain("api('/api/public/request'");
+    expect(source).not.toContain("api('/api/public/lending'");
+    expect(source).not.toContain('console.log(reportPath)');
+    expect(source).not.toContain('console.log(manifestPath)');
+  });
 });
