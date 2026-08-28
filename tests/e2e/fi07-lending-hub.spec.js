@@ -646,7 +646,7 @@ test('FI-07 blocks mixed traceable reusable return outcomes before any protected
     .getByRole('checkbox', { name: /I confirm the inspected quantities and condition/u })
     .check();
   await returnDialog.getByRole('button', { name: 'Upload evidence and confirm return', exact: true }).click();
-  await expect(returnDialog.getByText(/exactly one nonzero outcome bucket/u)).toBeVisible();
+  await expect(returnDialog.getByText(/exactly one nonzero outcome/u)).toBeVisible();
   expect(returnRequests).toBe(0);
   expect(evidenceRequests).toBe(0);
 });
@@ -675,7 +675,7 @@ test('FI-07 A4 Preview Index inspection is local-only and sends no protected len
   await page.locator('[data-preview-route="lending"] [data-action="open-preview"]').click();
   await expect(page.locator('[data-preview-inspection="true"][data-preview-route="lending"]')).toBeVisible();
   await expect(page.locator('[data-fi07-lending-hub][data-fi07-mode="preview"]')).toBeVisible();
-  await expect(page.getByText(/No backend read, mutation, or evidence upload/u)).toBeVisible();
+  await expect(page.getByText(/Actions are unavailable in inspection mode/u)).toBeVisible();
   await page.locator('[data-ticket-trigger="LEND-PREVIEW-REVIEW"]:visible').click();
   await page.getByRole('button', { name: 'Demonstrate review', exact: true }).click();
   const review = page.getByRole('dialog', { name: 'Review LEND-PREVIEW-REVIEW' });

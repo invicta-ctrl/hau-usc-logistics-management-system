@@ -143,29 +143,29 @@ describe('preview index trusted gate and registry foundations', () => {
     expect(PREVIEW_FILTER_LABELS.ALL).toBe('All');
     expect(PREVIEW_FILTER_LABELS.ACCEPTED).toBe('Accepted');
     expect(PREVIEW_FILTER_LABELS.IN_PROGRESS).toBe('In progress');
-    expect(PREVIEW_FILTER_LABELS.BACKEND_WIRED).toBe('Backend-wired');
-    expect(PREVIEW_FILTER_LABELS.PREVIEW_ONLY).toBe('Preview-only');
+    expect(PREVIEW_FILTER_LABELS.BACKEND_WIRED).toBe('Connected');
+    expect(PREVIEW_FILTER_LABELS.PREVIEW_ONLY).toBe('Inspection only');
     expect(PREVIEW_FILTER_LABELS.NOT_STARTED).toBe('Not started');
     expect(PREVIEW_FILTER_LABELS.PUBLIC).toBe('Public');
     expect(PREVIEW_FILTER_LABELS.AUTHENTICATED).toBe('Authenticated');
   });
 
-  it('exposes exact uppercase status and backend display labels', () => {
+  it('exposes concise operational status and connection labels', () => {
     expect(IMPLEMENTATION_STATUS_LABELS).toEqual({
-      ACCEPTED: 'ACCEPTED',
-      IN_PROGRESS: 'IN PROGRESS',
-      SURFACE_PREVIEW: 'SURFACE PREVIEW',
-      NOT_STARTED: 'NOT STARTED',
+      ACCEPTED: 'Accepted',
+      IN_PROGRESS: 'In progress',
+      SURFACE_PREVIEW: 'Inspection only',
+      NOT_STARTED: 'Not started',
     });
     expect(BACKEND_STATUS_LABELS).toEqual({
-      REAL_BACKEND: 'REAL BACKEND',
-      PARTIAL: 'PARTIAL',
-      VISUAL_ONLY: 'VISUAL ONLY',
+      REAL_BACKEND: 'Connected',
+      PARTIAL: 'Partially connected',
+      VISUAL_ONLY: 'Inspection only',
     });
     expect(ACCESS_REQUIREMENT_LABELS.PUBLIC).toBe('Public');
     expect(ACCESS_REQUIREMENT_LABELS.AUTHENTICATED).toBe('Authenticated');
-    expect(PREVIEW_MODE_LABELS.REAL_MODULE).toBe('Real module');
-    expect(PREVIEW_MODE_LABELS.SURFACE_PREVIEW).toBe('Surface preview');
+    expect(PREVIEW_MODE_LABELS.REAL_MODULE).toBe('Operational page');
+    expect(PREVIEW_MODE_LABELS.SURFACE_PREVIEW).toBe('Inspection page');
     expect(ROUTE_GROUP_LABELS).toEqual({
       PUBLIC: 'Public',
       REQUESTER: 'External requester',

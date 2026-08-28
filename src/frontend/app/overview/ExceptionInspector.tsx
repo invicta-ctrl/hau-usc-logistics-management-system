@@ -81,7 +81,7 @@ export function ExceptionInspector({
             </button>
           )}
 
-          <p className="command-inspector__note">Local design fixture only. No data is submitted and no backend confirms any change.</p>
+      <p className="command-inspector__note">Actions are unavailable in inspection mode.</p>
         </div>
       </aside>
     </>

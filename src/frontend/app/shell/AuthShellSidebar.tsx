@@ -218,7 +218,7 @@ export function AuthShellSidebar({
             type="button"
             onClick={onBackToPreview}
             className="flex items-center justify-center px-2 py-2 w-full rounded-[8px] text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)] xl:justify-start xl:gap-2 xl:px-3"
-            aria-label="Back to Preview Index"
+            aria-label="Back to Playground Index"
           >
             <span
               className="hidden xl:inline"
@@ -228,7 +228,7 @@ export function AuthShellSidebar({
                 color: 'color-mix(in oklch, var(--sidebar-foreground) 72%, transparent)',
               }}
             >
-              Preview Index
+              Playground Index
             </span>
           </button>
         )}

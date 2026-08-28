@@ -24,7 +24,7 @@ export function PreviewIndexLauncher({
       data-preview-index-launcher
       onClick={() => onOpen(true)}
     >
-      Preview Index
+      Playground Index
     </button>
   );
 }

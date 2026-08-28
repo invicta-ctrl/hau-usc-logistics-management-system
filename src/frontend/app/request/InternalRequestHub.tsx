@@ -55,7 +55,7 @@ const PREVIEW_QUEUE: FrontendRequestBootstrap = {
       catalogType: 'OFFICE_INVENTORY',
       department: 'Preview committee',
       requesterName: 'Preview requester',
-      purpose: 'Inspection-only request fixture',
+      purpose: 'Sample logistics request',
       status: 'FOR_REVIEW',
       priority: 'URGENT',
       createdAt: '2026-08-24T00:00:00.000Z',
@@ -69,7 +69,7 @@ const PREVIEW_QUEUE: FrontendRequestBootstrap = {
       eventId: 'EVENT-PREVIEW',
       itemId: 'ITM-PREVIEW-001',
       description: 'Preview folding chair',
-      specification: 'Fixture only',
+      specification: 'Sample requirement',
       category: 'Equipment',
       quantity: 12,
       unit: 'piece',
@@ -102,7 +102,7 @@ const PREVIEW_QUEUE: FrontendRequestBootstrap = {
       startAt: '2026-08-30T09:00:00.000Z',
       endAt: '2026-08-30T12:00:00.000Z',
       eventDayId: 'DAY-PREVIEW',
-      activityType: 'Fixture',
+      activityType: 'Sample activity',
       timeStatus: 'SCHEDULED',
       venue: 'Preview only',
       status: 'ACTIVE',
@@ -399,7 +399,7 @@ function NoticeCard({
         <p className="text-sm font-semibold">{notice.title}</p>
         <p className="mt-0.5 text-sm leading-5">{notice.message}</p>
         {notice.correlationId && (
-          <p className="mt-1 font-mono text-[10px]">Correlation {notice.correlationId}</p>
+          <p className="mt-1 font-mono text-[10px]">Support reference {notice.correlationId}</p>
         )}
         {notice.refetch && (
           <button
@@ -407,7 +407,7 @@ function NoticeCard({
             className="mt-2 inline-flex items-center gap-1 text-sm font-semibold underline"
             onClick={onRefetch}
           >
-            Refresh authoritative queue
+            Refresh request queue
             <RefreshCw size={13} />
           </button>
         )}
@@ -476,7 +476,7 @@ function lifecycleFor(status: string) {
             ? 'Awaiting explicit line routing.'
             : outcomeRecorded
               ? 'Review outcome is recorded.'
-              : `Server state: ${labelFor(status)}.`,
+              : `Current status: ${labelFor(status)}.`,
     },
     {
       label: 'Line routing',
@@ -484,8 +484,8 @@ function lifecycleFor(status: string) {
       current: false,
       note:
         status === 'ACCEPTED'
-          ? 'The server recorded downstream line routes.'
-          : 'No route is inferred by this browser.',
+          ? 'Downstream line routes are recorded.'
+          : 'No line route has been recorded.',
     },
     {
       label: 'Outcome',
@@ -493,10 +493,10 @@ function lifecycleFor(status: string) {
       current: false,
       note:
         status === 'REJECTED'
-          ? 'The server recorded rejection.'
+          ? 'The request was rejected.'
           : status === 'CLOSED'
             ? 'The record is closed.'
-            : 'Wait for the authoritative lifecycle update.',
+            : 'Wait for the next lifecycle update.',
     },
   ];
 }
@@ -635,7 +635,7 @@ function RequestInspector({
               className="mt-3 inline-block rounded-md px-2 py-1 font-mono text-[9px] uppercase tracking-[0.8px]"
               style={{ color: '#7d5518', background: '#fbeed2', border: '1px solid #dcbe8a' }}
             >
-                Preview inspection fixture · no service action
+              Sample data · Actions unavailable
             </p>
           )}
         </div>
@@ -691,7 +691,7 @@ function RequestInspector({
               className="rounded-lg px-3 py-3 text-sm"
               style={{ color: colors.muted, background: colors.inset, border: `1px solid ${colors.border}` }}
             >
-              No reviewable lines remain for this server-projected record.
+              No reviewable lines remain for this request.
             </p>
           ) : (
             <div className="overflow-hidden rounded-lg" style={{ border: `1px solid ${colors.border}` }}>
@@ -737,7 +737,7 @@ function RequestInspector({
                             border: `1px solid ${colors.border}`,
                           }}
                         >
-                          <option value="">Select a server-permitted route</option>
+                          <option value="">Select a permitted route</option>
                           {permittedReviewRoutes(item, line).map((route) => (
                             <option key={route} value={route}>
                               {ROUTE_LABELS[route]}
@@ -808,7 +808,7 @@ function RequestInspector({
                     style={{ color: '#7d5518' }}
                     onClick={onRefetch}
                   >
-                    Refresh authoritative queue
+                    Refresh request queue
                     <RefreshCw size={13} />
                   </button>
                 )}
@@ -823,14 +823,13 @@ function RequestInspector({
             >
               {submitting && <LoaderCircle className="animate-spin" size={15} />}
               {submitting
-                ? 'Recording server review…'
+                ? 'Recording review…'
                 : inspection
-                  ? 'Record local review demonstration'
-                  : 'Record review'}
+                  ? 'Check review action'
+                  : 'Record request review'}
             </button>
             <p className="mt-2 text-center font-mono text-[9px] leading-4" style={{ color: colors.muted }}>
-              Every reviewable line needs one explicit route. This browser does not calculate stock or
-              reservations.
+              Choose one route for every reviewable line.
             </p>
           </section>
         )}
@@ -953,9 +952,8 @@ export function InternalRequestHub({
       setInlineError('');
       setNotice({
         tone: 'success',
-        title: 'Local review demonstration recorded',
-        message:
-          'This fixture-only interaction did not contact a protected service or create a business record.',
+        title: 'Review action checked',
+        message: 'Inspection mode did not change an operational record.',
       });
       return;
     }
@@ -979,8 +977,8 @@ export function InternalRequestHub({
       });
       setNotice({
         tone: 'success',
-        title: 'Server review recorded',
-        message: `${result.requestId} is now ${labelFor(result.status)}${result.replayed ? ' (idempotent replay)' : ''}. Refreshing the authoritative queue.`,
+        title: 'Request review recorded',
+        message: `${result.requestId} is now ${labelFor(result.status)}. Refreshing the current queue.`,
         correlationId: result.correlationId || undefined,
       });
       closeInspector();
@@ -994,7 +992,7 @@ export function InternalRequestHub({
       setNotice({
         tone: conflict ? 'warning' : 'error',
         title: conflict
-          ? 'Review changed on the server'
+          ? 'The request review changed'
           : denied
             ? 'Review is not permitted'
             : 'Review was not recorded',
@@ -1023,7 +1021,7 @@ export function InternalRequestHub({
       <State
         dark={dark}
         title="Access limited"
-        detail="This DOL-only Internal Request Hub requires both the internal workspace and request-view capabilities from the current server session."
+        detail="This account does not have access to the Internal Request Hub. Return to the overview."
         action={() => navigate('overview')}
         actionLabel="Return to overview"
       />
@@ -1033,7 +1031,7 @@ export function InternalRequestHub({
       <State
         dark={dark}
         title="Request queue unavailable"
-        detail="No request data was changed. Retry the same authenticated bootstrap when the service is available."
+        detail="No request data was changed. Retry loading the queue."
         action={refetch}
         actionLabel="Retry queue"
       />
@@ -1060,7 +1058,7 @@ export function InternalRequestHub({
             Request review queue
           </h1>
           <p className="mt-1 text-sm" style={{ color: colors.muted }}>
-            Review server-projected requests and record an explicit route for every reviewable line.
+            Review authorized requests and record a route for every reviewable line.
           </p>
         </div>
         <button
@@ -1080,16 +1078,14 @@ export function InternalRequestHub({
           className="mb-4 rounded-lg px-3 py-2 text-xs"
           style={{ color: '#7d5518', background: '#fbeed2', border: '1px solid #dcbe8a' }}
         >
-          Local Preview Inspection: deterministic fixture and local-only action demonstration. No protected
-          request or mutation is sent.
+          Sample data · Actions unavailable.
         </p>
       ) : !canReviewRequests ? (
         <p
           className="mb-4 rounded-lg px-3 py-2 text-xs"
           style={{ color: colors.muted, background: colors.inset, border: `1px solid ${colors.border}` }}
         >
-          Read-only queue: the current server-projected session does not include request.review. The Worker
-          remains authoritative for every review attempt.
+          Read-only queue: this account can view requests but cannot record reviews.
         </p>
       ) : null}
       {loadState === 'stale' && (
@@ -1103,7 +1099,7 @@ export function InternalRequestHub({
           }}
         >
           Last known queue shown. The refresh did not complete, so review controls remain disabled until a
-          fresh authoritative page arrives.
+           current page loads.
         </p>
       )}
       {loadState === 'refreshing' && (
@@ -1116,7 +1112,7 @@ export function InternalRequestHub({
             border: `1px solid ${colors.border}`,
           }}
         >
-          Updating the authoritative queue. Review controls are temporarily disabled until this refresh
+          Updating the request queue. Review controls are temporarily disabled until this refresh
           completes.
         </p>
       )}
@@ -1135,7 +1131,7 @@ export function InternalRequestHub({
             >
               <p className="text-sm font-semibold">Queue</p>
               <span className="font-mono text-[10px]" style={{ color: colors.muted }}>
-                {queue.pagination.total} server-scoped {queue.pagination.total === 1 ? 'request' : 'requests'}
+                {queue.pagination.total} authorized {queue.pagination.total === 1 ? 'request' : 'requests'}
               </span>
             </div>
             <div className="border-b px-4 py-3" style={{ borderColor: colors.border }}>
@@ -1241,8 +1237,7 @@ export function InternalRequestHub({
               className="border-b px-4 py-2 text-[11px]"
               style={{ color: colors.muted, borderColor: colors.border }}
             >
-              Server filter and pagination define this queue. Status chips refine only the loaded page; the
-              browser does not infer queue membership or route legality.
+              Search and page controls define this queue. Status filters apply only to the loaded page.
             </p>
             {visible.length === 0 ? (
               <div className="flex min-h-56 flex-col items-center justify-center gap-3 px-5 py-12 text-center">
@@ -1446,7 +1441,7 @@ export function InternalRequestHub({
                   className="font-mono text-[9px] uppercase tracking-[0.7px]"
                   style={{ color: colors.muted }}
                 >
-                  Scope revision
+                  Queue version
                 </dt>
                 <dd className="mt-1 break-all" style={{ color: colors.text }}>
                   {queue.scopeRevision?.token || 'Not reported'}
@@ -1460,7 +1455,7 @@ export function InternalRequestHub({
                   Event references
                 </dt>
                 <dd className="mt-1" style={{ color: colors.text }}>
-                  {queue.events.length} projected for this page
+                  {queue.events.length} available for this page
                 </dd>
               </div>
               <div>
@@ -1471,7 +1466,7 @@ export function InternalRequestHub({
                   Catalog references
                 </dt>
                 <dd className="mt-1" style={{ color: colors.text }}>
-                  {queue.inventoryItems.length} projected; no availability is calculated here
+                  {queue.inventoryItems.length} listed; availability is not calculated here
                 </dd>
               </div>
             </dl>
@@ -1497,10 +1492,10 @@ export function InternalRequestHub({
           canWrite={writeEnabled}
           readOnlyReason={
             loadState === 'refreshing'
-              ? 'Review controls are temporarily disabled while the authoritative queue updates.'
+              ? 'Review controls are temporarily disabled while the queue updates.'
               : loadState === 'stale'
-                ? 'Review controls are disabled until a fresh authoritative page arrives.'
-                : 'Read-only: the current session has no server-projected request.review capability.'
+                ? 'Review controls are disabled until the current page reloads.'
+                : 'Read-only: this account cannot record request reviews.'
           }
           inspection={inspection}
           submitting={submitting}

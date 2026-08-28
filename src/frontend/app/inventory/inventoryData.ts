@@ -21,12 +21,12 @@ export function inventoryItemFromBootstrap(item: FrontendInventoryItem): InvItem
     outOfStock,
     unconfirmed,
     consequence: outOfStock
-      ? 'No available-to-promise quantity is currently projected by the authoritative inventory bootstrap.'
+      ? 'No inventory is available for new commitments.'
       : belowThreshold
-        ? 'The authoritative inventory bootstrap currently marks this item as low stock.'
-        : 'The displayed quantities are the current ledger-derived server projection.',
+        ? 'This item is below its reorder threshold.'
+        : 'The displayed quantities reflect current inventory records.',
     nextAction:
-      'This FI-05 surface is read-only. Use an authorized operational workflow for any inventory action.',
+      'Use Restocking or another authorized workflow to update inventory.',
     dataOrigin: 'REAL_BOOTSTRAP',
     unit: item.unit,
     classificationStatus: item.classificationStatus,

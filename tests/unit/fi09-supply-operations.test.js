@@ -60,8 +60,8 @@ describe('FI-09 Supply operations frontend integration', () => {
     expect(runtime).toContain('LEDGER');
     expect(runtime).toContain('Restocking queue');
     expect(runtime).toContain('PRC-2026-0044');
-    expect(runtime).toContain('Revision 5');
-    expect(runtime).toContain('Contracts · unavailable');
+    expect(runtime).toContain('Version 5');
+    expect(runtime).toContain('Supplier agreements · unavailable');
     expect(runtime).toContain('Named supplier summaries');
     expect(runtime).toContain('Delivery relationships');
     expect(runtime).toContain('setSelected("RST-2026-0044")');
@@ -69,21 +69,22 @@ describe('FI-09 Supply operations frontend integration', () => {
     expect(runtime).toContain('event.key === "Escape"');
     expect(runtime).toContain('aria-labelledby="supply-task-title"');
     expect(runtime).toMatch(/confirm=\{\(\) => \{\s*closeTask\(\);/u);
-    expect(runtime).toContain('Receiving values are cumulative and prior');
+    expect(runtime).toContain('Receiving values are');
+    expect(runtime).toContain('cumulative and prior receipts remain unchanged.');
   });
 
   it('retains synthetic, cumulative, and no-write supply truth', () => {
     const supplyRoutes = readSource('src/frontend/app/SupplyRoutes.tsx');
 
-    expect(supplyRoutes).toContain('Synthetic prototype · no backend');
+  expect(supplyRoutes).toContain('Sample data · Actions unavailable');
     expect(supplyRoutes).toContain('PO-2026-0031');
     expect(supplyRoutes).toContain('<dt>Ordered</dt>');
     expect(supplyRoutes).toContain('<dd>12</dd>');
     expect(supplyRoutes).toContain('<dt>Received</dt>');
     expect(supplyRoutes).toContain('<dd>6</dd>');
     expect(supplyRoutes).toContain('<dt>Outstanding</dt>');
-    expect(supplyRoutes).toContain('No inventory, procurement, receiving,');
-    expect(supplyRoutes).toContain('event, or ledger write.');
+    expect(supplyRoutes).toContain('does not change inventory, procurement,');
+    expect(supplyRoutes).toContain('receiving, event, or transaction records.');
   });
 
   it('records accepted real-module delivery without claiming a backend binding', () => {
@@ -93,7 +94,7 @@ describe('FI-09 Supply operations frontend integration', () => {
       label: 'Restocking',
       group: 'STAFF',
       description:
-        'Authenticated Restocking and receiving real module. Preview inspection is deterministic synthetic presentation with no protected request or mutation.',
+        'Review restock requests and receiving records. Inspection uses sample data and does not change records.',
       implementationStatus: 'ACCEPTED',
       backendStatus: 'VISUAL_ONLY',
       access: 'AUTHENTICATED',
@@ -106,7 +107,7 @@ describe('FI-09 Supply operations frontend integration', () => {
       label: 'Procurement',
       group: 'STAFF',
       description:
-        'Authenticated Procurement lifecycle real module. Preview inspection is deterministic synthetic presentation with no protected request or mutation.',
+        'Review procurement work, canvass references, and linked requests. Inspection uses sample data.',
       implementationStatus: 'ACCEPTED',
       backendStatus: 'VISUAL_ONLY',
       access: 'AUTHENTICATED',

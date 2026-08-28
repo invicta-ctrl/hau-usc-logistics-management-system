@@ -273,7 +273,7 @@ export default function RequestCenterRouteWithStates({
                   whiteSpace: "nowrap",
                 }}
               >
-                Review
+                Review request
               </button>
             </div>
           </div>
@@ -295,7 +295,7 @@ export default function RequestCenterRouteWithStates({
                   letterSpacing: "0.4px",
                 }}
               >
-                Reviewed locally · no service interaction occurred.
+                Sample request reviewed. No operational record changed.
               </p>
             </div>
           )}

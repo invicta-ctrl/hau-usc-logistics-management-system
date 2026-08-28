@@ -43,7 +43,7 @@ export const INV_FIXTURE: InvItem[] = [
     category: "Venue",
     onHand: "—", reserved: "—", available: "—", threshold: "—",
     lending: "lendable", belowThreshold: false, outOfStock: false, unconfirmed: true,
-    consequence: "Quantity truth for this item is not confirmed in this design fixture. Do not act on these values.",
-    nextAction: "Quantities must be verified against the authoritative ledger before any reserve action.",
+    consequence: "This sample quantity is not confirmed. Do not act on it.",
+    nextAction: "Verify quantities against the current inventory record before reserving stock.",
   },
 ];

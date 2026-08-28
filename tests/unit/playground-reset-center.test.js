@@ -14,10 +14,10 @@ describe('P13 Playground Reset Center contract', () => {
   it('places an exact-confirmation full reset control in Administration System status', () => {
     expect(administrationSource).toContain('data-playground-reset-center="true"');
     expect(administrationSource).toContain('Playground controls');
-    expect(administrationSource).toContain('Reset Entire Playground');
+    expect(administrationSource).toContain('Reset Playground');
     expect(administrationSource).toMatch(/resetConfirmation !== ["']RESET PLAYGROUND["']/u);
-    expect(administrationSource).toContain('This session will be invalidated when the reset completes.');
-    expect(administrationSource).toContain('Playground reset controls are unavailable outside');
+    expect(administrationSource).toContain('Resetting ends every current Playground session');
+    expect(administrationSource).toContain('Playground reset is available only inside');
   });
 
   it('publishes a safe final receipt and clears the pending operation only after reset verification state', () => {

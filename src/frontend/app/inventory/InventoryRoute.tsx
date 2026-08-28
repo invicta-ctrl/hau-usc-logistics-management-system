@@ -166,7 +166,7 @@ export function InventoryRoute({
                 textTransform: 'uppercase',
               }}
             >
-              Preview state
+              Inspection state
             </label>
             <select
               id="inv-preview-state"
@@ -353,7 +353,7 @@ export function InventoryRoute({
                         marginTop: 2,
                       }}
                     >
-                      Acknowledged locally · No service interaction occurred
+                      Outdated record acknowledged
                     </p>
                   ) : (
                     <p
@@ -468,8 +468,8 @@ export function InventoryRoute({
               }}
             >
               {inspection
-                ? 'Local preview fixture · no server read'
-                : 'Authenticated bootstrap · ledger-derived'}
+                ? 'Inspection sample · actions unavailable'
+                : 'Current authorized inventory records'}
             </span>
             <span style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>{items.length} records</span>
           </div>
@@ -509,8 +509,7 @@ export function InventoryRoute({
                 <p
                   style={{ fontFamily: sans, fontSize: 12, color: c.muted, marginTop: 8, lineHeight: '18px' }}
                 >
-                  The authenticated bootstrap returned no records. Adjusting the local search or filter cannot
-                  add inventory data.
+                  No records were returned for this account. Search and filters cannot add inventory data.
                 </p>
               </div>
             </div>

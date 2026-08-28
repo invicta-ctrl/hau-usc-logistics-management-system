@@ -204,7 +204,7 @@ export function ExternalRequestCenter({
 
   async function submit() {
     if (inspection) {
-      setAlert('Preview inspection does not submit requests or contact the protected requester service.');
+      setAlert('Actions are unavailable in inspection mode.');
       return;
     }
     if (!canSubmit) {
@@ -414,11 +414,8 @@ export function ExternalRequestCenter({
               The requester portal is not available for this account
             </strong>
             <p style={{ fontSize: 13, color: c.muted, lineHeight: '20px' }}>
-              Your account is signed in, but the request service does not currently accept submissions from
-              it. This is a known limitation on the service side, not a problem with your sign-in.
-            </p>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: c.muted }}>
-              BACKEND_CONTRACT_GAP_DOL_REQUESTER_MODE · {portalErrorCode || 'REQUESTER_PORTAL_REQUIRED'}
+              Your account is signed in, but it cannot submit requests here. Open the Logistics Hub if your
+              account has internal access, or return home.
             </p>
             <div className="flex flex-wrap gap-3">
               {presentation.internalOperator && (

@@ -302,7 +302,7 @@ export function AuthMobileDrawer({
                   letterSpacing: -0.1,
                 }}
               >
-                Back to Preview Index
+                Back to Playground Index
               </span>
             </button>
           ) : (

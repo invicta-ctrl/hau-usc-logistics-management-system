@@ -63,7 +63,7 @@ export const PULSE_ENTRIES = [
   { time: "09:18", action: "Receiving recorded for PO-2026-0031", detail: "Authorized staff member · partial · 2 of 5 lines", ref: "PO-2026-0031" },
   { time: "08:55", action: "Loan LN-2026-0085 flagged overdue", detail: "System · overdue state recorded", ref: "LN-2026-0085" },
   { time: "08:30", action: "REQ-2026-0139 returned for correction", detail: "Authorized staff member · reason recorded", ref: "REQ-2026-0139" },
-  { time: "08:02", action: "Reference revision published", detail: "Authorized staff member · departments · rev 14", ref: "rev 14" },
+  { time: "08:02", action: "Reference list published", detail: "Authorized staff member · departments · version 14", ref: "version 14" },
 ];
 
 export const TOPOLOGY = [

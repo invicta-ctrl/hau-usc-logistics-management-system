@@ -60,41 +60,41 @@ test('FI-11 exposes truthful sanitized Event and Administration inspection surfa
   await expect(page.locator('[data-preview-index]')).toBeVisible();
   await expect(
     page.locator('[data-preview-route="events"] [data-preview-entry-meta="status"] dd'),
-  ).toHaveText('ACCEPTED');
+  ).toHaveText('Accepted');
   await expect(
     page.locator('[data-preview-route="events"] [data-preview-entry-meta="backend"] dd'),
-  ).toHaveText('REAL BACKEND');
+  ).toHaveText('Connected');
   await expect(
     page.locator('[data-preview-route="events"] [data-preview-entry-meta="mode"] dd'),
-  ).toHaveText('Real module');
+  ).toHaveText('Operational page');
 
   await page.locator('[data-preview-route="events"] [data-action="open-preview"]').click();
   const events = page.locator('[data-fi11-events="true"]');
   await expect(events).toBeVisible();
   await expect(events.getByRole('heading', { name: 'Read-only event relationships' })).toBeVisible();
   await expect(events).toContainText('Sanitized event series');
-  await expect(events.getByText('Synthetic preview · no session, backend, or protected data')).toBeVisible();
+  await expect(events.getByText('Sample data · Actions unavailable')).toBeVisible();
   await expect(events.getByRole('button', { name: 'New event' })).toHaveCount(0);
   await expect(events.locator('[role="dialog"]')).toHaveCount(0);
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth))
     .toBeLessThanOrEqual(1);
-  await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
 
   await page.locator('[data-preview-route="administration"] [data-action="open-preview"]').click();
   const administration = page.locator('[data-fi11-administration="true"]');
   await expect(administration).toBeVisible();
   await selectAdministrationTab(page, administration, 'Reference administration');
-  await expect(administration).toContainText('Reference-set data is not available in this frontend contract');
+  await expect(administration).toContainText('This page does not include reference-set records.');
   await expect(administration).not.toContainText('departments 18');
   await selectAdministrationTab(page, administration, 'Link registry');
   await expect(administration).toContainText('Sanitized governed destination');
-  await expect(administration).toContainText('Raw link identifiers, revision internals, and correlation data are not shown.');
+  await expect(administration).toContainText('Internal link identifiers are not shown.');
   await selectAdministrationTab(page, administration, 'Brand & media');
   await expect(administration).toContainText('Sanitized brand slot');
-  await expect(administration).toContainText('Upload, replacement, publish, rollback, provider synchronization, hashes, and storage internals remain outside this frontend slice.');
+  await expect(administration).toContainText('Upload, replacement, publishing, and rollback are not available from this page.');
   await selectAdministrationTab(page, administration, 'System status');
-  await expect(administration).toContainText('No live technical or readiness request was made in local Preview Index inspection.');
+  await expect(administration).toContainText('Current system readiness is unavailable in inspection mode.');
   await expect(administration).toContainText('REDACTED · READ-ONLY');
   await expect(administration).not.toContainText('schema 30');
   await expect

@@ -89,11 +89,11 @@ const PREVIEW_QUEUE: FrontendLendingBootstrap = {
       borrowerName: 'Preview Angelite',
       borrowerType: 'ANGELITE',
       department: 'Preview Department',
-      contact: 'Preview-only contact',
+      contact: 'Sample contact',
       email: 'preview.borrower@local.invalid',
       courseYear: 'Preview course/year',
       positionRole: '',
-      purpose: 'Deterministic review fixture',
+      purpose: 'Sample review request',
       dueAt: '2026-09-14T17:00:00.000Z',
       requestedStartAt: '2026-09-09T09:00:00.000Z',
       requestedEndAt: '2026-09-14T17:00:00.000Z',
@@ -129,8 +129,8 @@ const PREVIEW_QUEUE: FrontendLendingBootstrap = {
           previousStatus: '',
           newStatus: 'FOR_REVIEW',
           changedAt: '2026-08-24T09:00:00.000Z',
-          changedBy: 'Preview fixture',
-    reason: 'Preview inspection seed',
+          changedBy: 'Preview operator',
+          reason: 'Inspection sample',
           metadata: {},
         },
       ],
@@ -148,18 +148,18 @@ const PREVIEW_QUEUE: FrontendLendingBootstrap = {
       borrowerName: 'Preview Office',
       borrowerType: 'USC_STAFF',
       department: 'Preview Office',
-      contact: 'Preview-only contact',
+      contact: 'Sample contact',
       email: 'preview.office@local.invalid',
       courseYear: '',
       positionRole: 'Officer',
-      purpose: 'Deterministic issue fixture',
+      purpose: 'Sample supply issue',
       dueAt: '',
       requestedStartAt: '2026-09-09T09:00:00.000Z',
       requestedEndAt: '',
       ticketType: 'CONSUMABLE',
       status: 'READY_TO_CLAIM',
       reviewDecision: 'APPROVE',
-      reviewNotes: 'Fixture approval',
+      reviewNotes: 'Sample approval',
       rejectionReason: '',
       substitutionNote: '',
       eligibilitySource: 'APPROVED_ACTIVE_USC_SOURCE',
@@ -171,8 +171,8 @@ const PREVIEW_QUEUE: FrontendLendingBootstrap = {
           previousStatus: 'FOR_REVIEW',
           newStatus: 'READY_TO_CLAIM',
           changedAt: '2026-08-24T09:30:00.000Z',
-          changedBy: 'Preview fixture',
-          reason: 'Fixture approval',
+          changedBy: 'Preview operator',
+          reason: 'Sample approval',
           metadata: {},
         },
       ],
@@ -190,18 +190,18 @@ const PREVIEW_QUEUE: FrontendLendingBootstrap = {
       borrowerName: 'Preview Custodian',
       borrowerType: 'ANGELITE',
       department: 'Preview Department',
-      contact: 'Preview-only contact',
+      contact: 'Sample contact',
       email: 'preview.custody@local.invalid',
       courseYear: 'Preview course/year',
       positionRole: '',
-      purpose: 'Deterministic return fixture',
+      purpose: 'Sample return',
       dueAt: '2020-09-01T17:00:00.000Z',
       requestedStartAt: '2020-08-25T09:00:00.000Z',
       requestedEndAt: '2020-09-01T17:00:00.000Z',
       ticketType: 'LOAN',
       status: 'ON_LOAN',
       reviewDecision: 'APPROVE',
-      reviewNotes: 'Fixture approval',
+      reviewNotes: 'Sample approval',
       rejectionReason: '',
       substitutionNote: '',
       eligibilitySource: 'APPROVED_ANGELITE_IDENTITY_RULE',
@@ -213,8 +213,8 @@ const PREVIEW_QUEUE: FrontendLendingBootstrap = {
           previousStatus: 'READY_TO_CLAIM',
           newStatus: 'ON_LOAN',
           changedAt: '2020-08-25T09:00:00.000Z',
-          changedBy: 'Preview fixture',
-          reason: 'Fixture handoff',
+          changedBy: 'Preview operator',
+          reason: 'Sample handoff',
           metadata: {},
         },
       ],
@@ -461,7 +461,7 @@ export function returnReconciliationError(input: {
     return 'Returned, lost, and damaged-beyond-use quantities must exactly equal the quantity on loan.';
   }
   if (!input.item) {
-    return 'The canonical return inventory item is not projected; return outcomes cannot be reconciled.';
+    return 'The current return item is unavailable. Refresh the queue and try again.';
   }
   const traceabilityIsKnownAggregate =
     input.item.lendingKind === 'REUSABLE' &&
@@ -472,7 +472,7 @@ export function returnReconciliationError(input: {
     mustUseOneOutcomeBucket &&
     [input.returned, input.lost, input.damaged].filter((value) => value > 0).length !== 1
   ) {
-    return 'Traceable or unprojected reusable returns require exactly one nonzero outcome bucket because one lifecycle condition applies to every assigned asset.';
+    return 'Reusable returns without confirmed asset identities require exactly one nonzero outcome because one condition applies to every assigned asset.';
   }
   if (input.lost > 0 && input.damaged > 0) {
     return 'A single return condition cannot truthfully represent both lost and damaged-beyond-use outcomes.';
@@ -512,15 +512,15 @@ export function traceableReviewError(input: {
   assetIds: string[];
 }) {
   if (!input.item)
-    return 'The canonical target inventory item is not projected; reusable assignment is unavailable.';
+    return 'The selected inventory item is unavailable. Refresh the queue and try again.';
   if (input.item.lendingKind === 'CONSUMABLE') {
     return input.assetIds.length ? 'Consumable approvals cannot include traceable asset assignments.' : '';
   }
   if (input.item.lendingKind !== 'REUSABLE') {
-    return 'The canonical target lending kind is unavailable; traceable assignment cannot be verified.';
+    return 'The selected item type is unavailable, so asset assignment cannot be verified.';
   }
   if (input.item.traceableAssets === undefined) {
-    return 'Traceable asset assignment is unavailable because the canonical target inventory projection is redacted.';
+    return 'Asset assignment is unavailable because the selected item details are restricted.';
   }
   if (input.item.traceableAssets === 0) {
     return input.assetIds.length
@@ -770,7 +770,7 @@ export function InternalLendingHub({
               tone: 'warning',
               title: 'Selected ticket is no longer on this loaded page',
               message:
-                'The authoritative reload no longer projects that ticket here. Its dialog and draft were closed before any action could be submitted.',
+                'The refreshed queue no longer includes that ticket. Its dialog and draft were closed before any action could be submitted.',
             });
           } else {
             selectedRef.current = replacement;
@@ -783,7 +783,7 @@ export function InternalLendingHub({
                 tone: 'warning',
                 title: 'Selected ticket lifecycle changed',
                 message:
-                  'The authoritative record is now ' +
+                  'The current record is now ' +
                   label(replacement.status) +
                   '. Its no-longer-applicable confirmation dialog was closed.',
               });
@@ -881,8 +881,8 @@ export function InternalLendingHub({
                       previousStatus: ticket.status,
                       newStatus: status,
                       changedAt: '2026-08-24T10:00:00.000Z',
-                      changedBy: 'Preview fixture',
-                      reason: 'Local-only FI-07 demonstration',
+                      changedBy: 'Preview operator',
+                      reason: 'Inspection action',
                       metadata: {},
                     },
                   ],
@@ -916,12 +916,12 @@ export function InternalLendingHub({
       setNotice({
         tone: conflict ? 'warning' : 'error',
         title: conflict
-          ? 'The lending record changed on the server'
+          ? 'The lending record changed'
           : denied
             ? 'This action is not permitted'
             : 'The action was not recorded',
         message: conflict
-          ? message + ' The authoritative queue will be refreshed; review the current record before retrying.'
+          ? message + ' The queue will be refreshed; review the current record before retrying.'
           : message,
         correlationId: api?.correlationId || undefined,
         refetch: conflict || denied,
@@ -945,7 +945,7 @@ export function InternalLendingHub({
   const submitReview = useCallback(async () => {
     if (!selected || !review || submitting || inFlight.current) return;
     if (loadState !== 'ready')
-      return setInlineError('Actions are paused until the authoritative queue reloads.');
+      return setInlineError('Actions are paused until the current queue reloads.');
     const quantity = numberValue(review.approvedQuantity);
     const targetItem = review.decision === 'SUBSTITUTE' ? review.substitutionItemId : selected.itemId;
     const targetInventoryItem = queue.inventoryItems.find((item) => item.id === targetItem) ?? null;
@@ -961,7 +961,7 @@ export function InternalLendingHub({
     if (review.decision === 'PARTIAL_APPROVE' && quantity >= selected.requestedQuantity)
       return setInlineError('Partial approve must be lower than the requested quantity.');
     if (review.decision === 'SUBSTITUTE' && (!targetItem || targetItem === selected.itemId))
-      return setInlineError('Choose a different canonical lending item for substitution.');
+      return setInlineError('Choose a different lending item for substitution.');
     if (review.decision !== 'APPROVE' && !review.reason.trim())
       return setInlineError('Record a reason for partial approval, substitution, or rejection.');
     if (review.decision !== 'REJECT') {
@@ -977,8 +977,8 @@ export function InternalLendingHub({
     if (inspection) {
       previewTransition(
         review.decision === 'REJECT' ? 'REJECTED' : 'READY_TO_CLAIM',
-        'Local lending review demonstrated',
-        'This fixture-only review did not contact a protected service or change a business record.',
+        'Review action checked',
+        'Inspection mode did not change an operational record.',
       );
       return;
     }
@@ -1021,16 +1021,15 @@ export function InternalLendingHub({
       });
       complete({
         tone: 'success',
-        title: 'Server lending review recorded',
+        title: 'Lending review recorded',
         message:
           result.ticketId +
           ' is now ' +
-          label(result.status) +
-          (result.replayed ? ' (idempotent replay).' : '.'),
+          label(result.status) + '.',
         correlationId: result.correlationId || undefined,
       });
     } catch (error) {
-      failed(error, 'The lending review could not be recorded. No local success was assumed.');
+      failed(error, 'The lending review was not recorded. Review the current ticket and try again.');
     } finally {
       inFlight.current = false;
       setSubmitting(false);
@@ -1050,14 +1049,14 @@ export function InternalLendingHub({
   const submitHandoff = useCallback(async () => {
     if (!selected || submitting || inFlight.current) return;
     if (loadState !== 'ready')
-      return setInlineError('Actions are paused until the authoritative queue reloads.');
+      return setInlineError('Actions are paused until the current queue reloads.');
     if (!handoff.acknowledged)
       return setInlineError('Acknowledge the custody consequence before recording this handoff or issue.');
     if (inspection) {
       previewTransition(
         selected.ticketType === 'CONSUMABLE' ? 'COMPLETED' : 'ON_LOAN',
-        'Local custody action demonstrated',
-        'This fixture-only handoff or issue did not contact a protected service or create a ledger movement.',
+        'Custody action checked',
+        'Inspection mode did not change an operational record.',
       );
       return;
     }
@@ -1079,16 +1078,15 @@ export function InternalLendingHub({
       });
       complete({
         tone: 'success',
-        title: selected.ticketType === 'CONSUMABLE' ? 'Server issue recorded' : 'Server handoff recorded',
+        title: selected.ticketType === 'CONSUMABLE' ? 'Item issue recorded' : 'Item handoff recorded',
         message:
           result.ticketId +
           ' is now ' +
-          label(result.status) +
-          (result.replayed ? ' (idempotent replay).' : '.'),
+          label(result.status) + '.',
         correlationId: result.correlationId || undefined,
       });
     } catch (error) {
-      failed(error, 'The custody action could not be recorded. No local success was assumed.');
+      failed(error, 'The custody action was not recorded. Review the current ticket and try again.');
     } finally {
       inFlight.current = false;
       setSubmitting(false);
@@ -1098,7 +1096,7 @@ export function InternalLendingHub({
   const submitReturn = useCallback(async () => {
     if (!selected || !returnState || submitting || inFlight.current) return;
     if (loadState !== 'ready')
-      return setInlineError('Actions are paused until the authoritative queue reloads.');
+      return setInlineError('Actions are paused until the current queue reloads.');
     const returned = numberValue(returnState.returned);
     const lost = numberValue(returnState.lost);
     const damaged = numberValue(returnState.damaged);
@@ -1117,8 +1115,8 @@ export function InternalLendingHub({
     if (inspection) {
       previewTransition(
         'RETURNED',
-        'Local return demonstrated',
-        'This fixture-only return did not upload evidence, contact a protected service, or create a custody or ledger record.',
+        'Return action checked',
+        'Inspection mode did not change an operational record.',
       );
       return;
     }
@@ -1180,16 +1178,15 @@ export function InternalLendingHub({
       });
       complete({
         tone: 'success',
-        title: 'Server return recorded',
+        title: 'Item return recorded',
         message:
           result.ticketId +
           ' is now ' +
-          label(result.status) +
-          (result.replayed ? ' (idempotent replay).' : '.'),
+          label(result.status) + '.',
         correlationId: result.correlationId || evidence.correlationId || undefined,
       });
     } catch (error) {
-      failed(error, 'The return could not be recorded. No local success was assumed.');
+      failed(error, 'The return was not recorded. Review the current ticket and try again.');
     } finally {
       inFlight.current = false;
       setSubmitting(false);
@@ -1230,8 +1227,8 @@ export function InternalLendingHub({
         <p className="mt-4 font-mono text-xs uppercase tracking-[.08em]">Internal Lending Hub</p>
         <h1 className="mt-1 font-serif text-5xl">Access limited</h1>
         <p className="mt-3 max-w-lg text-sm leading-6 text-[var(--ink-mid)]">
-          This DOL-only workspace requires the current server session to grant internal access. This message
-          does not confirm whether any protected lending record exists.
+          This workspace is not available to your account. This message does not confirm whether any protected
+          lending record exists.
         </p>
         <button
           type="button"
@@ -1250,7 +1247,7 @@ export function InternalLendingHub({
         <p className="mt-4 font-mono text-xs uppercase tracking-[.08em]">Internal Lending Hub</p>
         <h1 className="mt-1 font-serif text-5xl">Lending queue unavailable</h1>
         <p className="mt-3 max-w-lg text-sm leading-6 text-[var(--ink-mid)]">
-          No lending record was changed. Retry the same authenticated bootstrap when the service is available.
+          No lending record was changed. Try loading the lending queue again.
         </p>
         <button
           type="button"
@@ -1303,18 +1300,16 @@ export function InternalLendingHub({
             Loans and custody
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--ink-mid)]">
-            Find a lending ticket, verify the authoritative record, then complete only the permitted next
+            Find a lending ticket, verify the current record, then complete only the permitted next
             action.
           </p>
         </div>
         <aside className="min-w-0 rounded-lg border border-[var(--border-paper)] bg-[var(--paper-mid)] px-4 py-3 text-xs sm:min-w-64">
           <strong className="block">
-                {inspection ? 'Preview inspection fixture' : 'Authenticated lending projection'}
+            {inspection ? 'Inspection mode' : 'Current lending records'}
           </strong>
           <span className="mt-1 block leading-5 text-[var(--ink-mid)]">
-            {inspection
-              ? 'No backend read, mutation, or evidence upload.'
-              : 'Lending revision ' + queue.scopeRevision.token}
+            {inspection ? 'Sample data · Actions unavailable' : 'Records are current as of this page load.'}
           </span>
         </aside>
       </header>
@@ -1331,22 +1326,10 @@ export function InternalLendingHub({
         ))}
       </ol>
 
-      {inspection ? (
-        <section
-          role="note"
-          className="flex gap-2 rounded-lg border border-[#d1b478] bg-[#fff4d6] p-3 text-sm leading-5 text-[#40070a]"
-        >
-          <ShieldAlert size={18} className="mt-0.5 shrink-0" />
-          <span>
-            <strong>Preview inspection</strong> · deterministic fixture and local-only action simulation. No
-            authenticated session, capability, protected read, mutation, or evidence upload is created.
-          </span>
-        </section>
-      ) : null}
       {loadState === 'refreshing' ? (
         <p role="status" className="flex items-center gap-2 text-sm text-[var(--ink-mid)]">
           <LoaderCircle size={16} className="animate-spin" />
-          Refreshing the authoritative lending queue…
+          Refreshing the lending queue…
         </p>
       ) : null}
       {loadState === 'stale' ? (
@@ -1358,7 +1341,7 @@ export function InternalLendingHub({
           <div className="flex-1">
             <strong>Last-known lending data</strong>
             <p className="m-0 mt-1 text-sm text-[var(--ink-mid)]">
-              The lending revision may have changed. Actions are paused until a successful reload.
+              This information may be outdated. Actions are paused until the queue reloads.
             </p>
           </div>
           <button type="button" className={primaryButton} onClick={refetch}>
@@ -1393,7 +1376,7 @@ export function InternalLendingHub({
             <p className="m-0 mt-1 text-sm leading-5">{notice.message}</p>
             {notice.correlationId ? (
               <small className="mt-1 block font-mono text-[11px]">
-                Correlation ID: {notice.correlationId}
+                Support reference: {notice.correlationId}
               </small>
             ) : null}
           </div>
@@ -1427,12 +1410,12 @@ export function InternalLendingHub({
                 </h2>
               </div>
               <span className="max-w-36 text-right font-mono text-[10px] leading-4 text-[var(--ink-mid)]">
-                Server page {queue.pagination.page} · {queue.lendingTickets.length} loaded
+                 Page {queue.pagination.page} · {queue.lendingTickets.length} loaded
               </span>
             </div>
             <p className="mt-3 text-xs leading-5 text-[var(--ink-mid)]">
-              Search and status filters apply only to this loaded authoritative page. No global lending-ticket
-              total is shown because the current bootstrap total is not ticket-owned.
+              Search and status filters apply only to this loaded page. A total is not shown because it cannot
+              be confirmed for lending tickets.
             </p>
             <div className="mt-4 grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(10rem,.42fr)_auto]">
               <label className="grid gap-1 text-xs font-semibold text-[var(--ink-mid)]">
@@ -1520,7 +1503,7 @@ export function InternalLendingHub({
                 <ClipboardCheck size={28} />
                 <h3 className="mt-1 text-base font-semibold">No loaded lending tickets match</h3>
                 <p className="m-0 max-w-md text-sm leading-5 text-[var(--ink-mid)]">
-                  Change the loaded-page filters or reload the authoritative lending queue.
+                  Change the loaded-page filters or reload the lending queue.
                 </p>
                 <button
                   type="button"
@@ -1568,7 +1551,7 @@ export function InternalLendingHub({
                                 className="grid w-full gap-1 text-left"
                               >
                                 <strong>
-                                  {item?.name ?? 'Canonical item unavailable in this projection'}
+                                   {item?.name ?? 'Item details unavailable'}
                                 </strong>
                                 <span className="font-mono text-[11px] text-[var(--ink-mid)]">
                                   {ticket.id} · {ticket.quantity} {ticket.unit}
@@ -1611,7 +1594,7 @@ export function InternalLendingHub({
                           <StatusBadge status={derivedLendingStatus(ticket, now)} />
                         </div>
                         <h3 className="mt-4 text-base font-semibold">
-                          {item?.name ?? 'Canonical item unavailable in this projection'}
+                           {item?.name ?? 'Item details unavailable'}
                         </h3>
                         <p className="mt-1 text-xs leading-5 text-[var(--ink-mid)]">
                           {borrowerLabel(ticket)} · {ticket.quantity} {ticket.unit} ·{' '}
@@ -1653,7 +1636,7 @@ export function InternalLendingHub({
                     {selected.id}
                   </p>
                   <h2 id="fi07-ticket-title" className="mt-1 font-serif text-3xl">
-                    {selectedItem?.name ?? 'Canonical lending ticket'}
+                     {selectedItem?.name ?? 'Lending ticket'}
                   </h2>
                 </div>
                 <button
@@ -1775,23 +1758,23 @@ export function InternalLendingHub({
                   </ul>
                 ) : selected.status === 'FOR_REVIEW' ? (
                   <p className="mt-2 text-xs leading-5 text-[var(--ink-mid)]">
-                    No matching available review candidates are projected for this item. Assignment remains
-                    unavailable until the authoritative review contract projects eligible candidates.
+                    No matching assets are available for this item. Assignment remains unavailable until
+                    eligible assets are included in the record.
                   </p>
                 ) : (
                   <p className="mt-2 text-xs leading-5 text-[var(--ink-mid)]">
-                    Assigned custody asset identities are not projected by this contract.
+                    Assigned custody asset identities are not included in this record.
                   </p>
                 )}
                 {selected.status === 'FOR_REVIEW' ? (
                   <p className="mt-2 text-xs leading-5 text-[var(--ink-mid)]">
-                    Available review candidates — not yet assigned. The server establishes any traceable
-                    custody assignment only when it accepts the review.
+                    Available review candidates are not yet assigned. A custody assignment is recorded only
+                    after the review is accepted.
                   </p>
                 ) : null}
               </section>
               <section className="mt-4 border-t border-[var(--border-paper)] pt-4">
-                <h3 className="text-sm font-semibold">Server status history</h3>
+                <h3 className="text-sm font-semibold">Status history</h3>
                 {selected.history.length ? (
                   <ol className="mt-3 grid gap-2">
                     {selected.history.map((entry, index) => (
@@ -1809,18 +1792,18 @@ export function InternalLendingHub({
                   </ol>
                 ) : (
                   <p className="mt-2 text-xs text-[var(--ink-mid)]">
-                    No status history is projected for this ticket.
+                    No status history is available for this ticket.
                   </p>
                 )}
               </section>
               <section className="mt-4 border-l-4 border-[#c8992f] bg-amber-500/10 p-3 text-xs leading-5">
                 <strong className="font-mono text-[10px] uppercase tracking-[.06em]">
-                  Contract-gated controls
+                  Unavailable actions
                 </strong>
                 <p className="m-0 mt-1">
                   Due reminders, monitoring, cancellation, asset registration, and maintenance logging are not
-                  accepted FI-07 actions. Condition and maintenance are presentation-only where canonical data
-                  reports them.
+                  available here. Condition and maintenance appear only when they are included in the current
+                  record.
                 </p>
               </section>
               <div className="mt-4 grid gap-2">
@@ -1833,7 +1816,7 @@ export function InternalLendingHub({
                   >
                     <ClipboardCheck size={17} />
                     {inspection
-                      ? 'Demonstrate review'
+                      ? 'Check sample review'
                       : canApproveLending
                         ? 'Review ticket'
                         : 'Review not permitted'}
@@ -1875,7 +1858,7 @@ export function InternalLendingHub({
               <ClipboardCheck size={25} className="mx-auto" />
               <strong className="mt-3 text-[var(--ink-deep)]">Select a lending ticket</strong>
               <span className="mt-1 text-sm leading-5">
-                Inspect borrower custody, canonical availability context, and the permitted next action.
+                Inspect borrower custody, item availability, and the permitted next action.
               </span>
             </aside>
           )}
@@ -1899,8 +1882,8 @@ export function InternalLendingHub({
             }}
           >
             <p className="m-0 text-sm leading-6 text-[var(--ink-mid)]">
-              The Worker rechecks identity, scope, availability, quantity, asset assignment, lifecycle, and
-              idempotency before recording this review.
+              The review is checked against identity, access, availability, quantity, asset assignment, lifecycle,
+              and duplicate protection before it is recorded.
             </p>
             <Field label="Decision">
               <select
@@ -1952,7 +1935,7 @@ export function InternalLendingHub({
                   />
                 </Field>
                 {review.decision === 'SUBSTITUTE' ? (
-                  <Field label="Canonical substitute item">
+                  <Field label="Substitute item">
                     <select
                       className={inputClass}
                       value={review.substitutionItemId}
@@ -1985,19 +1968,19 @@ export function InternalLendingHub({
                     </legend>
                     {reviewTargetItem.traceableAssets === undefined ? (
                       <p role="alert" className="m-0 text-xs leading-5 text-rose-800">
-                        Traceable asset assignment is unavailable because the canonical target inventory
-                        projection is redacted. This reusable review cannot be submitted.
+                        Asset assignment is unavailable because the selected item details are restricted.
+                        This reusable review cannot be submitted.
                       </p>
                     ) : reviewTargetItem.traceableAssets === 0 ? (
                       <p className="m-0 text-xs leading-5 text-[var(--ink-mid)]">
-                        The canonical target has no traceable assets. No asset identities will be submitted
+                        The selected item has no traceable assets. No asset identities will be submitted
                         for this review.
                       </p>
                     ) : (
                       <>
                         <p className="m-0 text-xs leading-5 text-[var(--ink-mid)]">
                           Choose exactly the approved quantity from matching available candidates. They are
-                          not custody assignments until the server accepts this review.
+                           not custody assignments until the review is accepted.
                         </p>
                         {reviewAssets.length ? (
                           reviewAssets.map((asset) => (
@@ -2028,7 +2011,7 @@ export function InternalLendingHub({
                           ))
                         ) : (
                           <p role="alert" className="m-0 text-xs leading-5 text-rose-800">
-                            No matching available review candidates are projected. This traceable reusable
+                            No matching assets are available. This traceable reusable
                             review cannot be submitted.
                           </p>
                         )}
@@ -2069,8 +2052,7 @@ export function InternalLendingHub({
               </p>
             ) : null}
             <p className="m-0 text-xs leading-5 text-[var(--ink-mid)]">
-              Recording this review changes the authoritative lending lifecycle only after server validation
-              succeeds.
+              Recording this review changes the lending lifecycle only after all required checks succeed.
             </p>
             <div className="flex flex-wrap justify-end gap-2">
               <button className={primaryButton} type="submit" disabled={submitting || actionPaused}>
@@ -2080,9 +2062,9 @@ export function InternalLendingHub({
                     Recording…
                   </>
                 ) : inspection ? (
-                  'Record local demonstration'
+                  'Check review action'
                 ) : (
-                  'Record server review'
+                  'Record lending review'
                 )}
               </button>
               <button
@@ -2121,7 +2103,7 @@ export function InternalLendingHub({
               {selected.ticketType === 'CONSUMABLE'
                 ? 'This confirms a consumable issue.'
                 : 'This transfers reusable custody to the borrower.'}{' '}
-              The server records the authoritative inventory movement and lifecycle outcome.
+              The confirmed action records the inventory movement and lifecycle outcome.
             </p>
             <Field label="Handoff condition label (optional)">
               <input
@@ -2174,7 +2156,7 @@ export function InternalLendingHub({
                     Recording…
                   </>
                 ) : inspection ? (
-                  'Record local demonstration'
+                  'Check sample handoff'
                 ) : selected.ticketType === 'CONSUMABLE' ? (
                   'Confirm issue'
                 ) : (
@@ -2212,8 +2194,7 @@ export function InternalLendingHub({
           >
             <p className="m-0 text-sm leading-6 text-[var(--ink-mid)]">
               Returned, lost, and damaged-beyond-use quantities must exactly reconcile to {selected.quantity}{' '}
-              {selected.unit}. The real workflow stores governed return evidence before the server can accept
-              the return.
+               {selected.unit}. Required return evidence must be stored before the return can be accepted.
             </p>
             <Field label="Return condition">
               <select
@@ -2289,8 +2270,7 @@ export function InternalLendingHub({
               >
                 <Camera size={18} className="shrink-0" />
                 <span>
-                  <strong>Fixture evidence simulation</strong> · no file is selected or uploaded in Preview
-                  Index inspection.
+                  <strong>Sample evidence</strong> · no file is selected or uploaded during inspection.
                 </span>
               </section>
             ) : (

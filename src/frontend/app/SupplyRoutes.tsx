@@ -13,10 +13,10 @@ type Prev =
   | "Filtered empty"
   | "Selected record"
   | "Validation error"
-  | "Stale revision"
+  | "Outdated record"
   | "Denied"
   | "Unavailable"
-  | "Locally confirmed";
+  | "Action checked";
 const focusableSelector = [
   "a[href]",
   "button:not([disabled])",
@@ -131,18 +131,18 @@ export default function SupplyRoutes({
     "Filtered empty",
     "Selected record",
     "Validation error",
-    "Stale revision",
+    "Outdated record",
     "Denied",
     "Unavailable",
-    "Locally confirmed",
+    "Action checked",
   ];
   const top = (
     <>
       <section className="sandbox">
-        <b>Design fixture</b>
-        <span>Synthetic prototype · no backend</span>
+          <b>Inspection mode</b>
+          <span>Sample data · Actions unavailable</span>
         <label>
-          Preview state
+          Inspection state
           <select
             value={prev}
             onChange={(e) => setPrev(e.target.value as Prev)}
@@ -175,7 +175,7 @@ export default function SupplyRoutes({
       <State
         k={prev}
         h="No records match this view"
-        p="Change the filter or restore the populated fixture."
+        p="Change the filter or restore the sample records."
       >
         <button
           className="primary"
@@ -207,7 +207,7 @@ export default function SupplyRoutes({
           className="primary"
           onClick={() => setPrev("Populated")}
         >
-          Retry
+          Retry supply records
         </button>
       </State>
     ) : null;
@@ -228,19 +228,19 @@ export default function SupplyRoutes({
           <p>
             {mode === "events"
               ? "Preserve series, day, activity, request, and inventory-transfer identity."
-              : "Follow authoritative sequence and keep selected-record state visible."}
+              : "Follow the current process and keep the selected record visible."}
           </p>
         </div>
-        <small>Design fixture · not production data</small>
+              <small>Sample data</small>
       </header>
       {generic || (
         <>
-          {prev === "Stale revision" && (
+          {prev === "Outdated record" && (
             <section className="stale">
               <div>
                 <b>Last-known record · actions paused</b>
                 <span>
-                  Reload the local fixture before acting.
+                  Reload the current record before acting.
                 </span>
               </div>
               <button
@@ -253,7 +253,7 @@ export default function SupplyRoutes({
           )}
           <div
             className={
-              prev === "Stale revision" ? "paused" : ""
+              prev === "Outdated record" ? "paused" : ""
             }
           >
             {mode === "restocking" ? (
@@ -287,18 +287,18 @@ export default function SupplyRoutes({
           invalid={prev === "Validation error"}
           confirm={() => {
             closeTask();
-            setPrev("Locally confirmed");
+            setPrev("Action checked");
             setNotice(
-              "Locally confirmed · synthetic fixture only · no service write",
+            "Sample action checked · No operational record changed",
             );
           }}
         />
       )}
-      {prev === "Locally confirmed" && (
+      {prev === "Action checked" && (
         <State
-          k="Synthetic result"
-          h="Local fixture updated"
-          p="No backend, ledger, provider, inventory, procurement, or event write occurred."
+          k="Inspection result"
+          h="Sample action checked"
+          p="No operational record was changed."
         >
           <button
             className="primary"
@@ -498,7 +498,7 @@ function Procurement({
       />
       <div className="recordband">
         <b>PRC-2026-0044</b>
-        <span>Revision 5</span>
+        <span>Version 5</span>
         <span>{panel}</span>
         <span>3 suppliers · 2 deliverables</span>
         <strong>Next: review compliant quotations</strong>
@@ -519,7 +519,7 @@ function Procurement({
           disabled
           title="Not available in your authorized capability"
         >
-          Contracts · unavailable
+          Supplier agreements · unavailable
         </button>
       </div>
       <section className="plane">
@@ -621,18 +621,18 @@ function Procurement({
             <article>
               <b>Supplier A</b>
               <span>
-                Named fixture · lowest compliant for
+                Sample supplier · lowest compliant for
                 PRC-2026-0044
               </span>
             </article>
             <article>
               <b>Supplier B</b>
               <span>
-                Named fixture · approval pending for
+                Sample supplier · approval pending for
                 PRC-2026-0041
               </span>
             </article>
-            <p>No price, award, or contract is invented.</p>
+            <p>No price or award is shown without a recorded source.</p>
           </div>
         ) : (
           <>
@@ -837,7 +837,7 @@ function ManagedEventsRoute({
               <p className="eye">Event series</p>
               <h2 id="event-series-title">Series and governed relationships</h2>
             </div>
-            <b>Read-only projection</b>
+            <b>Current records</b>
           </div>
           <table>
             <thead>
@@ -895,7 +895,7 @@ function ManagedEventsRoute({
               <p className="eye">Activities</p>
               <h2 id="event-activities-title">Read-only activity relationships</h2>
             </div>
-            <b>Server projection is authoritative</b>
+            <b>Current authorized records</b>
           </div>
           <table>
             <thead>
@@ -926,17 +926,17 @@ function ManagedEventsRoute({
       <style>{scopeRouteCss(".sup", css, [".event-stack", ".event-cards"])}</style>
       {inspection ? (
         <section className="sandbox" data-fi11-events-inspection="true">
-            <b>Sanitized Preview inspection</b>
-          <span>Synthetic preview · no session, backend, or protected data</span>
+          <b>Inspection mode</b>
+          <span>Sample data · Actions unavailable</span>
         </section>
       ) : null}
       <header>
         <div>
           <p className="eye">Events</p>
           <h1>Read-only event relationships</h1>
-          <p>Review the current authorized projection without creating or changing an event record.</p>
+          <p>Review the current authorized records without creating or changing an event.</p>
         </div>
-        <small>{inspection ? "Sanitized fixture · not production data" : "Authenticated read-only data"}</small>
+        <small>{inspection ? "Sample data" : "Current authorized records"}</small>
       </header>
       <Rail labels={["SERIES", "DAY", "ACTIVITY", "READ-ONLY", "NO CHANGES"]} />
       {content}
@@ -1000,11 +1000,11 @@ function Task({
         <p className="eye">
           {kind === "event"
             ? "New event"
-            : "Record-native task"}
+            : "Supply record"}
         </p>
         <h2 id="supply-task-title">
           {kind === "event"
-            ? "Create synthetic event"
+            ? "Create sample event"
             : "Update selected supply record"}
         </h2>
         {kind === "event" ? (
@@ -1038,13 +1038,13 @@ function Task({
           <p role="alert">Complete required fields.</p>
         )}
         <p id="supply-task-description" className="warning">
-          Local prototype only. No inventory, procurement, receiving,
-          event, or ledger write. Receiving values are cumulative and prior
-          receipts remain unchanged.
+          This inspection action does not change inventory, procurement,
+          receiving, event, or transaction records. Receiving values are
+          cumulative and prior receipts remain unchanged.
         </p>
         <div className="actions">
           <button className="primary" onClick={confirm}>
-            Confirm local preview
+            Check sample action
           </button>
           <button onClick={close}>Cancel</button>
         </div>

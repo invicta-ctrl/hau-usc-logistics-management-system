@@ -550,8 +550,8 @@ export default function PublicFlows({
           <h2>Protected information</h2>
           <p>Public tracking does not reveal staff identity, contact information, internal notes, or whether another
              protected account exists.</p>
-          <h2>Service boundary</h2>
-          <p>The browser submits only to the same-origin guarded service. Authorization, validation, inventory, review, and record truth remain server-owned.</p>
+          <h2>Protected actions</h2>
+          <p>Each submission is checked for permission, required information, inventory availability, and valid status before a record changes.</p>
         </section>
       )}
     </main>

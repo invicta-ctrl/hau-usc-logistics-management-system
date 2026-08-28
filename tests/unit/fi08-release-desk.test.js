@@ -30,8 +30,8 @@ describe('FI-08 Release Desk frontend integration', () => {
     );
     expect(inspection).not.toContain('/api/');
     expect(inspection).not.toMatch(/\bfetch\s*\(/);
-    expect(releaseDesk).toContain('Synthetic prototype · no backend');
-    expect(releaseDesk).toContain('Synthetic confirmation only · no service or ledger write');
+  expect(releaseDesk).toContain('Sample data · Actions unavailable');
+    expect(releaseDesk).toContain('Sample action checked · No operational record changed');
     expect(releaseDesk).toContain('data-release-trigger');
     expect(releaseDesk).toContain('state === "Focused task"');
     expect(releaseDesk).toContain('keepFocusInDialog');
@@ -45,7 +45,7 @@ describe('FI-08 Release Desk frontend integration', () => {
       label: 'Release Desk',
       group: 'STAFF',
       description:
-        'Capability-gated Release Desk visual module. Preview inspection uses deterministic synthetic states and action simulation with no protected request or mutation.',
+        'Review ready work and record physical handoffs. Inspection uses sample data and does not change records.',
       implementationStatus: 'ACCEPTED',
       backendStatus: 'VISUAL_ONLY',
       access: 'AUTHENTICATED',

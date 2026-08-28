@@ -37,7 +37,7 @@ test('allows the exact direct route and shows the launcher when playground is tr
   await installVersion(page, true);
   await page.goto('/#/__preview/index');
   await expect(page.locator('[data-preview-index]')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Preview Module Index' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Playground Index' })).toBeVisible();
 
   await page.goto('/');
   await expect(page.locator('[data-preview-index-launcher]')).toBeVisible();
@@ -69,13 +69,13 @@ test('fails closed on every spoofed version signal regardless of hash, query, or
     await installDeniedVersion(page, scenario.payload);
     await page.goto('/?preview=1#/__preview/index');
     await expect(
-      page.getByRole('heading', { name: 'Every request. Every handoff. On record.' }),
+    page.getByRole('heading', { name: 'Logistics services and records' }),
     ).toBeVisible();
     await expect(page.locator('[data-preview-index]')).toHaveCount(0);
     await expect(page.locator('[data-preview-index-launcher]')).toHaveCount(0);
     await expect(page.locator('[data-preview-surface]')).toHaveCount(0);
     await expect(page.getByText('Operations overview')).toHaveCount(0);
-    await expect(page.getByText('Preview Module Index')).toHaveCount(0);
+    await expect(page.getByText('Playground Index')).toHaveCount(0);
   }
 });
 
@@ -88,11 +88,11 @@ test('fails closed when the version endpoint errors', async ({ page }) => {
     }),
   );
   await page.goto('/#/__preview/index');
-  await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Logistics services and records' })).toBeVisible();
   await expect(page.locator('[data-preview-index]')).toHaveCount(0);
   await expect(page.locator('[data-preview-index-launcher]')).toHaveCount(0);
   await expect(page.locator('[data-preview-surface]')).toHaveCount(0);
-  await expect(page.getByText('Preview Module Index')).toHaveCount(0);
+  await expect(page.getByText('Playground Index')).toHaveCount(0);
 });
 
 test('renders exactly 15 registry entries, groups, and drives search and all filters', async ({ page }) => {
@@ -112,49 +112,49 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
 
   await expect(
     page.locator('[data-preview-route="landing"] [data-preview-entry-meta="status"] dd'),
-  ).toHaveText('ACCEPTED');
+  ).toHaveText('Accepted');
   await expect(
     page.locator('[data-preview-route="landing"] [data-preview-entry-meta="backend"] dd'),
-  ).toHaveText('REAL BACKEND');
+  ).toHaveText('Connected');
   await expect(
     page.locator('[data-preview-route="lending"] [data-preview-entry-meta="status"] dd'),
-  ).toHaveText('ACCEPTED');
+  ).toHaveText('Accepted');
   await expect(
     page.locator('[data-preview-route="lending"] [data-preview-entry-meta="backend"] dd'),
-  ).toHaveText('REAL BACKEND');
+  ).toHaveText('Connected');
   await expect(
     page.locator('[data-preview-route="overview"] [data-preview-entry-meta="status"] dd'),
-  ).toHaveText('SURFACE PREVIEW');
+  ).toHaveText('Accepted');
   await expect(
     page.locator('[data-preview-route="overview"] [data-preview-entry-meta="backend"] dd'),
-  ).toHaveText('VISUAL ONLY');
+  ).toHaveText('Partially connected');
   await expect(
     page.locator('[data-preview-route="release"] [data-preview-entry-meta="status"] dd'),
-  ).toHaveText('ACCEPTED');
+  ).toHaveText('Accepted');
   await expect(
     page.locator('[data-preview-route="release"] [data-preview-entry-meta="backend"] dd'),
-  ).toHaveText('VISUAL ONLY');
+  ).toHaveText('Inspection only');
   await expect(
     page.locator('[data-preview-route="release"] [data-preview-entry-meta="mode"] dd'),
-  ).toHaveText('Real module');
+  ).toHaveText('Operational page');
   await expect(
     page.locator('[data-preview-route="restocking"] [data-preview-entry-meta="status"] dd'),
-  ).toHaveText('ACCEPTED');
+  ).toHaveText('Accepted');
   await expect(
     page.locator('[data-preview-route="restocking"] [data-preview-entry-meta="backend"] dd'),
-  ).toHaveText('VISUAL ONLY');
+  ).toHaveText('Inspection only');
   await expect(
     page.locator('[data-preview-route="restocking"] [data-preview-entry-meta="mode"] dd'),
-  ).toHaveText('Real module');
+  ).toHaveText('Operational page');
   await expect(
     page.locator('[data-preview-route="procurement"] [data-preview-entry-meta="status"] dd'),
-  ).toHaveText('ACCEPTED');
+  ).toHaveText('Accepted');
   await expect(
     page.locator('[data-preview-route="procurement"] [data-preview-entry-meta="backend"] dd'),
-  ).toHaveText('VISUAL ONLY');
+  ).toHaveText('Inspection only');
   await expect(
     page.locator('[data-preview-route="procurement"] [data-preview-entry-meta="mode"] dd'),
-  ).toHaveText('Real module');
+  ).toHaveText('Operational page');
 
   await page.locator('[data-preview-search]').fill('release');
   await expect(page.locator('[data-preview-route]')).toHaveCount(1);
@@ -167,7 +167,7 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   await page.locator('[data-filter="PUBLIC"]').click();
   await expect(page.locator('[data-preview-route]')).toHaveCount(4);
   await page.locator('[data-filter="PREVIEW_ONLY"]').click();
-  await expect(page.locator('[data-preview-route]')).toHaveCount(1);
+  await expect(page.locator('[data-preview-route]')).toHaveCount(0);
   await page.locator('[data-filter="IN_PROGRESS"]').click();
   await expect(page.locator('[data-preview-empty]')).toBeVisible();
   await expect(page.locator('[data-preview-count]')).toHaveText('0 routes');
@@ -185,7 +185,7 @@ test('opens a public real route from the index', async ({ page }) => {
   await installEmptyFeed(page);
   await page.goto('/#/__preview/index');
   await page.locator('[data-preview-route="landing"] [data-action="open"]').click();
-  await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Logistics services and records' })).toBeVisible();
   await expect(page.locator('[data-preview-index]')).toHaveCount(0);
 });
 
@@ -249,17 +249,17 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or prot
   await page.goto('/#/__preview/index');
   await page.locator('[data-preview-route="overview"] [data-action="open-preview"]').click();
   await expect(page.getByRole('heading', { name: 'Glass operations command table' })).toBeVisible();
-  await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
 
   await page.locator('[data-preview-search]').fill('inventory');
   await page.locator('[data-preview-route="inventory"] [data-action="open-preview"]').click();
   await expect(
     page.locator('[data-preview-inspection="true"][data-preview-route="inventory"]'),
   ).toBeVisible();
-  await expect(page.getByText('PREVIEW INSPECTION', { exact: false })).toBeVisible();
+  await expect(page.getByText('PLAYGROUND INSPECTION', { exact: false })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
   await expect(page.locator('[data-preview-index]')).toBeVisible();
   await expect(page.locator('[data-preview-search]')).toHaveValue('inventory');
   await page.locator('[data-preview-search]').fill('');
@@ -267,15 +267,15 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or prot
   await expect(page.locator('[data-preview-inspection="true"][data-preview-route="profile"]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Preview Operator' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
   await page.locator('[data-preview-route="release"] [data-action="open-preview"]').click();
   await expect(
     page.locator('[data-preview-inspection="true"][data-preview-route="release"]'),
   ).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Confirm physical release' })).toBeVisible();
-  await expect(page.getByText('Synthetic prototype · no backend')).toBeVisible();
+  await expect(page.getByText('Sample data · Actions unavailable')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
   await page.locator('[data-preview-route="external-request"] [data-action="open-preview"]').click();
   await expect(
     page.locator('[data-preview-inspection="true"][data-preview-route="external-request"]'),
@@ -285,7 +285,7 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or prot
   expect(protectedRequests).toEqual([]);
 });
 
-test('P04 opens every Preview Index entry with canonical direct, Back, Forward, Index-return, and reload state', async ({
+test('P04 opens every Playground Index entry with direct, Back, Forward, Index-return, and reload state', async ({
   page,
 }) => {
   test.skip(!exactInspectionPort, 'Run explicitly against the accepted 4173 supervisor.');
@@ -350,7 +350,7 @@ test('P04 opens every Preview Index entry with canonical direct, Back, Forward, 
     await expectWorkspace(entry);
 
     if (entry.action === 'open-preview') {
-      await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+      await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
       await expect(page.locator('[data-preview-index]')).toBeVisible();
     }
   }
@@ -476,7 +476,7 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   const restocking = page.locator('.sup');
   const previewState = restocking.getByLabel('Preview state');
   await expect(page.getByRole('heading', { name: 'Restocking and receiving' })).toBeVisible();
-  await expect(restocking.getByText('Synthetic prototype · no backend')).toBeVisible();
+  await expect(restocking.getByText('Sample data · Actions unavailable')).toBeVisible();
 
   const restockTaskOpener = restocking.getByRole('button', { name: 'Restock an item' });
   await expect(restockTaskOpener).toHaveCount(1);
@@ -544,7 +544,7 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   await previewState.selectOption('Locally confirmed');
   await expect(restocking.getByRole('heading', { name: 'Local fixture updated' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
   await page.locator('[data-preview-route="procurement"] [data-action="open-preview"]').click();
   await expect(
     page.locator('[data-preview-inspection="true"][data-preview-route="procurement"]'),
@@ -618,7 +618,7 @@ test('FI-10 renders the bounded Administration inspection safely at every accept
   await page.goto('/#/__preview/index');
   for (const width of [320, 390, 768, 1024, 1440]) {
     if (width !== 320) {
-      await page.getByRole('button', { name: 'Back to Preview Index' }).first().click();
+  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
       await expect(page.locator('[data-preview-index]')).toBeVisible();
     }
     await page.setViewportSize({ width, height: 1000 });
@@ -696,7 +696,7 @@ test('reaches the real staff sign-in page through Test Real Login Flow', async (
   await expect(page.locator('[data-preview-index]')).toHaveCount(0);
 });
 
-test('shows a labeled, sanitized, read-only surface preview with no additional API traffic', async ({
+test('shows no obsolete surface-preview action when every registered page is operational', async ({
   page,
 }) => {
   await installVersion(page, true);
@@ -713,13 +713,7 @@ test('shows a labeled, sanitized, read-only surface preview with no additional A
   await expect(page.locator('[data-preview-index]')).toBeVisible();
   requests.length = 0;
 
-  await page.locator('[data-preview-route="overview"] [data-action="surface"]').click();
-  await expect(page.locator('[data-preview-surface]')).toBeVisible();
-  await expect(page.getByRole('note').getByText(/Visual reference only/)).toBeVisible();
-  await expect(page.locator('[data-preview-surface] input')).toHaveCount(0);
-  await expect(page.locator('[data-preview-surface] form')).toHaveCount(0);
-
-  await page.locator('[data-action="surface-back"]').click();
+  await expect(page.locator('[data-action="surface"]')).toHaveCount(0);
   await expect(page.locator('[data-preview-surface]')).toHaveCount(0);
 
   expect(requests.filter((request) => request.pathname !== '/api/version')).toEqual([]);
@@ -755,7 +749,7 @@ test('does not focus the reappearing launcher after Open or Test Real Login', as
   await page.locator('[data-preview-index-launcher]').click();
   await expect(page.locator('[data-preview-index]')).toBeVisible();
   await page.locator('[data-preview-route="landing"] [data-action="open"]').click();
-  await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Logistics services and records' })).toBeVisible();
   const launcher = page.locator('[data-preview-index-launcher]');
   await expect(launcher).toBeVisible();
   await expect(launcher).not.toBeFocused();

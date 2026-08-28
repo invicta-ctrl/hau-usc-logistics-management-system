@@ -103,7 +103,7 @@ const REQUESTS: ReqItem[] = [
       { name: "Wireless microphone",      qty: 4,   avail: "short", shortBy: 1 },
       { name: "Trestle table 6ft",        qty: 12,  avail: "available", itemId: "ITM-DEMO-161" },
     ],
-    context: "6 line items pending DOL review. Urgent flag set — needed by 12 Sep. 3 representative lines shown; full set requires authoritative ledger check.",
+    context: "6 line items pending DOL review. Urgent flag set — needed by 12 Sep. 3 representative lines shown; verify the full set before acting.",
     nextAction: "Review line availability. Issue from stock if the line is confirmed, or mark missing information if any line needs clarification. Every line needs its own route.",
   },
   {
@@ -157,11 +157,11 @@ const STATUS_CFG: Record<ReqStatus, { label: string; bg: string; color: string; 
 // ── action config ─────────────────────────────────────────────────────────────
 
 const ACTION_CFG: Record<ActionType, { label: string; desc: string; confirmLabel: string; danger?: boolean }> = {
-  accept:  { label: "Catalog restock",   confirmLabel: "Record catalog restock locally",   desc: "Reserve the listed quantities against this request. Availability will be checked against the current ledger." },
-  fulfil:  { label: "Issue from stock",    confirmLabel: "Issue from stock locally",    desc: "Mark the request as fulfilled directly from available stock without a separate reservation step." },
-  ask:     { label: "Missing information",  confirmLabel: "Mark missing information locally",              desc: "Hold the request and send a clarification note to the requester. Awaiting their response before further DOL action." },
-  canvass: { label: "Procurement / canvass",  confirmLabel: "Route to procurement locally",  desc: "Route this request to the canvassing queue for alternative sourcing or inter-department coordination." },
-  reject:  { label: "Reject",              confirmLabel: "Reject locally",                desc: "Reject this request and notify the requester. In a live system this would close the record.", danger: true },
+  accept:  { label: "Catalog restock",   confirmLabel: "Record catalog restock",   desc: "Reserve the listed quantities against this request. Availability will be checked against the current inventory record." },
+  fulfil:  { label: "Issue from stock",    confirmLabel: "Issue from stock",    desc: "Mark the request as fulfilled directly from available stock without a separate reservation step." },
+  ask:     { label: "Missing information",  confirmLabel: "Request missing information",              desc: "Hold the request and send a clarification note to the requester. Await their response before further DOL action." },
+  canvass: { label: "Procurement / canvass",  confirmLabel: "Route to procurement",  desc: "Route this request to the canvassing queue for alternative sourcing or inter-department coordination." },
+  reject:  { label: "Reject",              confirmLabel: "Reject request",                desc: "Reject this request and notify the requester. This closes the inspection record.", danger: true },
 };
 
 // ── small components ──────────────────────────────────────────────────────────
@@ -409,7 +409,7 @@ function Inspector({
           )}
           <div className="mt-3 inline-block rounded-[5px] px-2 py-0.5" style={{ background: dark ? "color-mix(in oklch, var(--gold-vivid) 8%, transparent)" : "#fbeed2", border: "1px solid #dcbe8a" }}>
             <span style={{ fontFamily: mono, fontSize: 9, color: "#7d5518", letterSpacing: "0.8px", textTransform: "uppercase" }}>
-              Design fixture · not production data
+              Sample request
             </span>
           </div>
         </div>
@@ -570,7 +570,7 @@ function Inspector({
               <div className="flex flex-col gap-2">
                 {confirmedActions.size > 0 && (
                   <div className="rounded-[8px] px-4 py-3 mb-1" style={{ background: "rgba(31,107,65,0.07)", border: "1px solid rgba(31,107,65,0.22)" }}>
-                    <p style={{ fontFamily: mono, fontSize: 9, color: "#1f6b41", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 2 }}>Actioned locally only</p>
+                    <p style={{ fontFamily: mono, fontSize: 9, color: "#1f6b41", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 2 }}>Sample action checked</p>
                     <p style={{ fontFamily: sans, fontSize: 11, color: "#1f6b41", lineHeight: "16px" }}>
                       No request, reservation, message, rejection, or service action was submitted or confirmed.
                     </p>
@@ -626,20 +626,20 @@ function Inspector({
           </p>
         </div>
 
-        {/* Ledger provenance — REQ-2026-0142 */}
+        {/* Record details — REQ-2026-0142 */}
         {is0142 && (
           <div className="px-5 py-4 shrink-0">
             <p style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 8 }}>
-              Ledger · provenance
+              Record details
             </p>
-            {[["Revision","4"],["Snapshot","f5fcfafc"],["Source","DESIGN FIXTURE"]].map(([k,v]) => (
+            {[["Version","4"],["Reference","f5fcfafc"],["Source","Inspection sample"]].map(([k,v]) => (
               <div key={k} className="flex items-center justify-between py-1">
                 <span style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>{k}</span>
                 <span style={{ fontFamily: mono, fontSize: 10, color: c.text }}>{v}</span>
               </div>
             ))}
             <p style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.4px", marginTop: 10, lineHeight: "14px" }}>
-              Session-local only. No data submitted; no service has confirmed any value shown here.
+              Sample data · Actions unavailable.
             </p>
           </div>
         )}
@@ -729,7 +729,7 @@ export default function RequestCenterRoute({
           className="self-start mt-1 rounded-[5px] px-2 py-0.5"
           style={{ fontFamily: mono, fontSize: 9, color: "#7d5518", background: "#fbeed2", border: "1px solid #dcbe8a", letterSpacing: "0.8px", textTransform: "uppercase", whiteSpace: "nowrap" }}
         >
-          Design fixture · not production data
+          Inspection mode
         </span>
       </div>
 
@@ -920,9 +920,9 @@ export default function RequestCenterRoute({
           {/* Table footer */}
           <div className="flex items-center gap-4 px-4 py-2" style={{ borderTop: `1px solid ${c.border}`, background: thBg }}>
             <span style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.6px", textTransform: "uppercase" }}>
-              Design fixture · not production data
+              Sample data
             </span>
-            <span style={{ fontFamily: mono, fontSize: 9, color: c.muted }}>snapshot f5fcfafc · revision 4</span>
+            <span style={{ fontFamily: mono, fontSize: 9, color: c.muted }}>Actions unavailable</span>
           </div>
         </div>
       )}

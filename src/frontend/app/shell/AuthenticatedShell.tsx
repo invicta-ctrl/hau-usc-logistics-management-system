@@ -66,13 +66,13 @@ export function AuthenticatedShell({
               className="mx-4 mt-4 rounded-[8px] px-4 py-3 flex flex-wrap items-center justify-between gap-3"
               style={{ background: 'var(--theme-warning)', border: '1px solid var(--border)', color: 'var(--theme-page)' }}
               role="note"
-              aria-label="Preview inspection"
+              aria-label="Playground inspection"
             >
               <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '0.35px' }}>
-                PREVIEW INSPECTION · Local frontend review only. No backend authorization has been granted.
+                PLAYGROUND INSPECTION · Sample data · Actions are unavailable.
               </p>
               <button type="button" className="preview-action" onClick={onBackToPreview}>
-                Back to Preview Index
+                Back to Playground Index
               </button>
             </section>
           ) : null}

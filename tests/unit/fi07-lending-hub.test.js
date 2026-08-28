@@ -337,7 +337,7 @@ describe('FI-07 internal lending frontend contract', () => {
         quantity: 1,
         assetIds: ['AST-1'],
       }),
-    ).toMatch(/redacted/u);
+    ).toMatch(/restricted/u);
     expect(
       traceableReviewError({
         item: { lendingKind: 'REUSABLE', traceableAssets: 0 },
@@ -408,7 +408,7 @@ describe('FI-07 internal lending frontend contract', () => {
         note: 'One unit lost during inspection.',
         item: traceableReusable,
       }),
-    ).toMatch(/exactly one nonzero outcome bucket/u);
+    ).toMatch(/exactly one nonzero outcome/u);
     expect(
       returnReconciliationError({
         quantity: 2,
@@ -419,7 +419,7 @@ describe('FI-07 internal lending frontend contract', () => {
         note: 'One unit damaged beyond use during inspection.',
         item: traceableReusable,
       }),
-    ).toMatch(/exactly one nonzero outcome bucket/u);
+    ).toMatch(/exactly one nonzero outcome/u);
     expect(
       returnReconciliationError({
         quantity: 2,
@@ -485,7 +485,7 @@ describe('FI-07 internal lending frontend contract', () => {
         note: 'Traceability is unavailable.',
         item: { lendingKind: 'REUSABLE', traceableAssets: undefined },
       }),
-    ).toMatch(/exactly one nonzero outcome bucket/u);
+    ).toMatch(/exactly one nonzero outcome/u);
     expect(
       returnReconciliationError({
         quantity: 2,
@@ -496,7 +496,7 @@ describe('FI-07 internal lending frontend contract', () => {
         note: '',
         item: null,
       }),
-    ).toMatch(/canonical return inventory item is not projected/u);
+    ).toMatch(/current return item is unavailable/u);
   });
 
   it('makes evidence idempotency content-aware without persisting selected file bytes', async () => {

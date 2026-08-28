@@ -31,9 +31,8 @@ describe('post-FI17 Overview and hero-motion recovery', () => {
     expect(overview).not.toContain('This workspace route is reserved and has not yet been built.');
     expect(overview).not.toContain('Route reserved · not yet built');
     expect(overview).toContain('<OperationalModuleRoute module="overview"');
-    expect(overviewPreview).toContain('Operations · design fixtures, not production records');
-    expect(overviewPreview).toContain('Glass operations command table');
-    expect(overviewPreview).toContain('Preview fixture · {session.displayName} · inspection state only');
+    expect(overviewPreview).toContain('Operations overview');
+    expect(overviewPreview).toContain('Signed in as {session.displayName}');
     expect(overviewPreview).not.toContain('frontendBackend');
   });
 

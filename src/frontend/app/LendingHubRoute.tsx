@@ -128,7 +128,7 @@ export default function LendingHubRoute({
           ? {
               ...x,
               timing: "Returned just now",
-              evidence: "Recorded locally",
+              evidence: "Recorded",
               state: "Returned",
             }
           : x,
@@ -138,9 +138,7 @@ export default function LendingHubRoute({
     focusIdRef.current = id;
     restorePendingRef.current = true;
     setSelected(null);
-    setNotice(
-      "Prototype confirmation · local fixture only · no service call",
-    );
+    setNotice("Sample return checked · No operational record changed");
   };
   const normal =
     preview === "Default" ||
@@ -151,11 +149,11 @@ export default function LendingHubRoute({
       <style>{css}</style>
       <section className="sandbox">
         <div>
-          <strong>Design fixture</strong>
-          <span>Local synthetic state · no backend</span>
+          <strong>Inspection mode</strong>
+          <span>Sample data · Actions unavailable</span>
         </div>
         <label>
-          Preview state
+          Inspection state
           <select
             value={preview}
             onChange={(e) =>
@@ -184,7 +182,7 @@ export default function LendingHubRoute({
             permitted next action.
           </p>
         </div>
-        <small>Design fixture · not production data</small>
+            <small>Sample data · Actions unavailable</small>
       </header>
       <ol className="steps">
         {[
@@ -239,7 +237,7 @@ export default function LendingHubRoute({
               <div>
                 <strong>Last-known loan data</strong>
                 <span>
-                  Revision may have changed. Actions are paused.
+                  This information may be outdated. Actions are paused.
                 </span>
               </div>
               <div>
@@ -252,11 +250,11 @@ export default function LendingHubRoute({
                 <button
                   onClick={() =>
                     setNotice(
-                      "Reviewed locally · no service interaction occurred",
+                      "Sample record reviewed",
                     )
                   }
                 >
-                  Review
+                  Review loan
                 </button>
               </div>
             </section>
@@ -396,7 +394,7 @@ export default function LendingHubRoute({
                     </div>
                     <div>
                       <dt>Student ID</dt>
-                      <dd>2026-00417 · synthetic fixture</dd>
+              <dd>2026-00417 · Sample record</dd>
                     </div>
                     <div>
                       <dt>Contact</dt>
@@ -425,13 +423,11 @@ export default function LendingHubRoute({
                 </section>
                 <section className="gate">
                   <b>
-                    PROPOSED UX · CONTRACT-GATED · NOT
-                    IMPLEMENTATION-READY
+                    Proposed capability · unavailable
                   </b>
                   <strong>Due reminder — unavailable</strong>
                   <p>
-                    No scheduler or notification contract is
-                    approved.
+                    Automatic reminders are not available.
                   </p>
                   <button disabled>Remind borrower</button>
                 </section>
@@ -442,7 +438,7 @@ export default function LendingHubRoute({
                     onClick={() => setReturning(true)}
                   >
                     {selected.state === "For review"
-                      ? "Review"
+                      ? "Review loan"
                       : selected.state === "Ready to claim"
                         ? selected.kind === "consumable"
                           ? "Confirm issue"
@@ -454,7 +450,7 @@ export default function LendingHubRoute({
                   <button
                     onClick={() =>
                       setNotice(
-                        "Register asset opened locally · no service call",
+                        "Sample asset form opened",
                       )
                     }
                   >
@@ -463,7 +459,7 @@ export default function LendingHubRoute({
                   <button
                     onClick={() =>
                       setNotice(
-                        "Maintenance log opened locally · no service call",
+                        "Sample maintenance form opened",
                       )
                     }
                   >
@@ -477,9 +473,9 @@ export default function LendingHubRoute({
                   </button>
                   <button
                     disabled
-                    title="Monitoring service is unavailable"
+                    title="Loan monitoring is unavailable"
                   >
-                    Monitor
+                    Monitor loan
                   </button>
                 </div>
               </aside>
@@ -521,12 +517,12 @@ export default function LendingHubRoute({
               Evidence note
               <textarea
                 rows={3}
-                placeholder="Optional local prototype note"
+                placeholder="Optional inspection note"
               />
             </label>
             <p className="consequence">
-              Confirming changes only this local design fixture.
-              No service or ledger write occurs.
+              This inspection action does not change an operational
+              record.
             </p>
             <div className="actions">
               <button className="primary" onClick={confirm}>

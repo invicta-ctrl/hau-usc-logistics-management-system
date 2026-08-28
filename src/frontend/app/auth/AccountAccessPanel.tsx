@@ -23,7 +23,7 @@ const WITHDRAWABLE = new Set([
 
 const messageFor = (error: unknown) => error instanceof FrontendApiError
   ? error.message
-  : "The account-application service is temporarily unavailable.";
+  : "Account applications are temporarily unavailable. Try again in a few minutes.";
 
 const requestId = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 
@@ -119,7 +119,7 @@ export function AccountAccessPanel({ initialMode = "apply", onClose }: { initial
       setStatusToken(result.statusToken || "");
       setApplication(result);
       setApplyStep("receipt");
-      setNotice("The service confirmed the application submission.");
+      setNotice("Application submitted.");
     } catch (nextError) {
       setError(messageFor(nextError));
     } finally {
@@ -137,7 +137,7 @@ export function AccountAccessPanel({ initialMode = "apply", onClose }: { initial
     setError("");
     try {
       setApplication(await frontendBackend.accountApplicationStatus(statusToken.trim()));
-      setNotice("Status loaded from the account-application service.");
+      setNotice("Application status loaded.");
     } catch (nextError) {
       setApplication(null);
       setError(messageFor(nextError));
@@ -161,7 +161,7 @@ export function AccountAccessPanel({ initialMode = "apply", onClose }: { initial
       });
       setApplication(result);
       setWithdrawReason("");
-      setNotice("The service confirmed the withdrawal.");
+      setNotice("Application withdrawn.");
     } catch (nextError) {
       setError(messageFor(nextError));
     } finally {
@@ -239,7 +239,7 @@ export function AccountAccessPanel({ initialMode = "apply", onClose }: { initial
       {mode === "status" && <>
         <form className="account-access-form" onSubmit={loadStatus}>
           <h2>Check application status</h2>
-          <p>The token stays in page memory and is sent only as an authorization header.</p>
+          <p>The token remains on this page only while you check the application.</p>
           <label>Private status token<input type="password" autoComplete="off" minLength={20} maxLength={512} required value={statusToken} onChange={(event) => setStatusToken(event.target.value)} /></label>
           <button className="account-primary" disabled={busy}>{busy ? "Checking…" : "Check status"}</button>
         </form>
@@ -261,7 +261,6 @@ function ApplicationStatusCard({ application, statusToken = "" }: { application:
   return <div className="account-status-card" role="status">
     <p><span>Application reference</span><strong>{application.applicationCode}</strong></p>
     <p><span>Current status</span><strong>{application.state.replaceAll("_", " ")}</strong></p>
-    <p><span>Revision</span><strong>{application.revision}</strong></p>
     {application.nextStep && <p><span>Next step</span><strong>{application.nextStep}</strong></p>}
     {application.changeRequestSummary && <p><span>Requested changes</span><strong>{application.changeRequestSummary}</strong></p>}
     {application.accountCode && <p><span>Account code</span><strong>{application.accountCode}</strong></p>}

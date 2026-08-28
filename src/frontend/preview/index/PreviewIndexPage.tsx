@@ -51,7 +51,7 @@ function PreviewEntryRow({
             value={IMPLEMENTATION_STATUS_LABELS[entry.implementationStatus]}
             kind="status"
           />
-          <EntryMeta label="Backend" value={BACKEND_STATUS_LABELS[entry.backendStatus]} kind="backend" />
+          <EntryMeta label="Connection" value={BACKEND_STATUS_LABELS[entry.backendStatus]} kind="backend" />
           <EntryMeta label="Access" value={ACCESS_REQUIREMENT_LABELS[entry.access]} kind="access" />
           <EntryMeta label="Mode" value={PREVIEW_MODE_LABELS[entry.previewMode]} kind="mode" />
           <EntryMeta
@@ -70,7 +70,7 @@ function PreviewEntryRow({
               data-action="open-preview"
               onClick={() => onOpenPreview(entry)}
             >
-              Open Preview
+              Open inspection
             </button>
             <button
               type="button"
@@ -78,12 +78,12 @@ function PreviewEntryRow({
               data-action="test-real-access"
               onClick={() => onOpen(entry)}
             >
-              Test Real Access
+              Check signed-in access
             </button>
           </>
         ) : (
           <button type="button" className="preview-action" data-action="open" onClick={() => onOpen(entry)}>
-            Open
+            Open page
           </button>
         )}
         {entry.previewMode === 'SURFACE_PREVIEW' ? (
@@ -94,7 +94,7 @@ function PreviewEntryRow({
             ref={(node) => surfaceTriggerRef(entry.route, node)}
             onClick={(event) => onSurface(entry, event.currentTarget)}
           >
-            Surface Preview
+            Open inspection page
           </button>
         ) : null}
       </div>
@@ -113,7 +113,7 @@ function SurfacePreview({ entry, onClose }: { entry: PreviewRouteEntry; onClose:
     <section className="preview-surface" aria-labelledby="preview-surface-heading" data-preview-surface>
       <header className="preview-surface-header">
         <div>
-          <p className="preview-surface-eyebrow">Surface preview</p>
+          <p className="preview-surface-eyebrow">Inspection page</p>
           <h2 id="preview-surface-heading">{entry.label}</h2>
         </div>
         <button
@@ -123,12 +123,12 @@ function SurfacePreview({ entry, onClose }: { entry: PreviewRouteEntry; onClose:
           data-action="surface-back"
           onClick={onClose}
         >
-          Back
+          Back to index
         </button>
       </header>
       <div className="preview-surface-body">
         <p className="preview-surface-note" role="note">
-          Visual reference only. This surface is not functionally wired and does not indicate acceptance.
+          Sample data · Actions unavailable. This page is not an accepted operational workflow.
         </p>
         <dl className="preview-surface-sample">
           <div>
@@ -252,12 +252,12 @@ export function PreviewIndexPage({
       <div className="preview-index-inner">
         <header className="preview-index-header">
           <div>
-            <p className="preview-index-eyebrow">Private operator surface</p>
+            <p className="preview-index-eyebrow">Playground inspection</p>
             <h1 ref={headingRef} tabIndex={-1} className="preview-index-title">
-              Preview Module Index
+              Playground Index
             </h1>
             <p className="preview-index-subtitle">
-              Canonical route inventory. Visual-only surfaces are not functional acceptance.
+              Review each page, its access requirement, and its current readiness.
             </p>
           </div>
           <button type="button" className="preview-action" data-action="back" onClick={onClose}>
@@ -268,16 +268,16 @@ export function PreviewIndexPage({
         <div className="preview-index-list" style={{ display: surfaceRoute ? 'none' : undefined }}>
           <div className="preview-index-controls">
             <label className="preview-search">
-              <span className="preview-sr-only">Search preview routes</span>
+              <span className="preview-sr-only">Search Playground pages</span>
               <input
                 type="search"
                 data-preview-search
-                placeholder="Search routes"
+                placeholder="Search pages"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />
             </label>
-            <div className="preview-filters" role="group" aria-label="Filter preview routes">
+            <div className="preview-filters" role="group" aria-label="Filter Playground pages">
               {PREVIEW_FILTER.map((item) => (
                 <button
                   key={item}
@@ -299,7 +299,7 @@ export function PreviewIndexPage({
 
           {visibleEntries.length === 0 ? (
             <p className="preview-empty" data-preview-empty>
-              No preview routes match the current search and filters.
+              No Playground pages match the current search and filters.
             </p>
           ) : (
             groups.map((group) => (
@@ -337,7 +337,7 @@ export function PreviewIndexPage({
             data-action="test-login"
             onClick={testRealLogin}
           >
-            Test Real Login Flow
+            Test staff sign-in
           </button>
         </div>
 

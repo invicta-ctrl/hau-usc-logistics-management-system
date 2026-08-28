@@ -63,7 +63,7 @@ const ROUTE_COPY: Record<
   overview: {
     title: 'Current operational picture',
     summary:
-      'A read-only projection of the requests, events, inventory, and work queues currently authorized for this account.',
+      'Review the requests, events, inventory, and work queues currently authorized for this account.',
     collections: ['requests', 'events', 'inventoryItems', 'requestLines'],
   },
   release: {
@@ -75,7 +75,7 @@ const ROUTE_COPY: Record<
   restocking: {
     title: 'Restocking and receiving',
     summary:
-      'Review restock requests, receipts, and canvass references from the authenticated operational contract.',
+      'Review restock requests, receipts, and canvass references from the current authorized records.',
     collections: ['restockRequests', 'restockRecords', 'canvassReferences', 'inventoryItems'],
   },
   procurement: {
@@ -195,7 +195,7 @@ function Collection({ name, rows }: { name: string; rows: RecordRow[] }) {
         <div className="border-y border-dashed border-border px-4 py-8 text-center">
           <p className="font-semibold">No records are currently reported</p>
           <p className="mt-1 text-sm opacity-70">
-            The backend returned an empty authorized collection. No sample rows were substituted.
+            No authorized records are available. No sample rows were added.
           </p>
         </div>
       )}
@@ -330,7 +330,7 @@ function ReleaseWorkflow({
         ]),
       });
       onCommitted(
-        `${receipt.status === 'COMPLETED' ? 'Full' : 'Partial'} release recorded by Worker/D1. The queue, reservation coverage, and inventory ledger were reloaded.`,
+        `${receipt.status === 'COMPLETED' ? 'Full' : 'Partial'} release recorded. The queue, reservation coverage, and inventory records were reloaded.`,
       );
     } catch (error) {
       const conflict = error instanceof FrontendApiError && error.status === 409;
@@ -358,8 +358,7 @@ function ReleaseWorkflow({
       </h2>
       {!enabled ? (
         <p className="mt-3 text-sm opacity-75">
-          This account can read the queue but cannot run the Worker release command or upload its required
-          evidence.
+          This account can view the queue but cannot record releases or upload the required evidence.
         </p>
       ) : !candidates.length ? (
         <p className="mt-3 text-sm opacity-75">
@@ -564,7 +563,7 @@ function RestockWorkflow({
         ]),
       });
       onCommitted(
-        `${receipt.status === 'RECEIVED' ? 'Full' : 'Partial'} receipt recorded by Worker/D1. Cumulative receiving and the linked inventory movement were reloaded.`,
+        `${receipt.status === 'RECEIVED' ? 'Full' : 'Partial'} receipt recorded. Cumulative receiving and the linked inventory movement were reloaded.`,
       );
     } catch (error) {
       const conflict = error instanceof FrontendApiError && error.status === 409;
@@ -592,8 +591,7 @@ function RestockWorkflow({
       </h2>
       {!enabled ? (
         <p className="mt-3 text-sm opacity-75">
-          This account can read restocking data but cannot run the Worker receiving command or upload its
-          required evidence.
+          This account can view restocking data but cannot record receipts or upload the required evidence.
         </p>
       ) : !candidates.length ? (
         <p className="mt-3 text-sm opacity-75">
@@ -737,7 +735,7 @@ export function OperationalModuleRoute({
           </div>
           <div className="text-right text-xs opacity-70">
             <p className="font-bold uppercase tracking-[.12em]">
-              Real backend ·{' '}
+              Current records ·{' '}
               {mutationEnabled && ['release', 'restocking'].includes(module)
                 ? 'operational writes enabled'
                 : 'read-only'}
@@ -767,7 +765,7 @@ export function OperationalModuleRoute({
           <h2 className="mt-2 font-serif text-3xl">
             The {copy.title.toLowerCase()} service is temporarily unavailable
           </h2>
-          <p className="mt-2 opacity-75">No record was changed, and no fixture data was substituted.</p>
+          <p className="mt-2 opacity-75">No record was changed, and no sample data was added.</p>
           <button
             className="mt-5 min-h-11 rounded-lg border border-border bg-card px-4 py-2 font-semibold"
             type="button"
@@ -784,7 +782,7 @@ export function OperationalModuleRoute({
               <strong>{totalRows}</strong> authorized rows across {collections.length} operational collections
             </span>
             <span className="opacity-70">
-              Revision {bootstrap?.scopeRevision.token} · page {bootstrap?.pagination.page}
+              Record version {bootstrap?.scopeRevision.token} · page {bootstrap?.pagination.page}
             </span>
           </div>
           {module === 'release' && bootstrap ? (
@@ -799,13 +797,11 @@ export function OperationalModuleRoute({
           </div>
           {module !== 'overview' && module !== 'release' && module !== 'restocking' ? (
             <aside className="mt-5 border-t border-dashed border-border px-1 pt-4 text-sm opacity-75">
-              This route is read-only because the current accepted frontend contract does not expose a
-              supported mutation for this surface. Existing Worker authorization remains authoritative.
+              This page is read-only because no approved update action is available for this record.
             </aside>
           ) : !mutationEnabled && (module === 'release' || module === 'restocking') ? (
             <aside className="mt-5 border-t border-dashed border-border px-1 pt-4 text-sm opacity-75">
-              Mutation controls remain unavailable because this session lacks the exact Worker command or
-              evidence capability.
+              Update controls are unavailable for this account.
             </aside>
           ) : null}
         </>

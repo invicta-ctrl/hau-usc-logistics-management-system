@@ -20,12 +20,11 @@ export function HeroSection({
           <p className="atrium__institution">HAU-USC · Institutional Logistics Ledger</p>
 
           <h1 id="hero-heading" className="atrium__title">
-            Every request. Every handoff. On record.
+            Logistics services and records
           </h1>
 
           <p className="atrium__lede">
-            HAU-USC Logistics coordinates equipment and supply services through a governed record—from first
-            request to confirmed return.
+            Request equipment or supplies, use public lending, or sign in to manage authorized logistics work.
           </p>
 
           <div className="atrium__actions">

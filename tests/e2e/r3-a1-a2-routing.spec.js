@@ -363,7 +363,7 @@ const INELIGIBLE = {
   capabilities: [],
 };
 
-const HERO_HEADING = 'Every request. Every handoff. On record.';
+const HERO_HEADING = 'Logistics services and records';
 
 async function openPublicLending(page) {
   await page.goto('/');
@@ -706,8 +706,8 @@ test('FI-06 Internal Request Hub reads the scoped bootstrap, submits explicit ro
   await openInternalRequestHub(page, testInfo);
   const dialog = await openRequestRecord(page);
   await dialog.getByLabel('Route Authoritative chair').selectOption('ISSUE_FROM_STOCK');
-  await dialog.getByRole('button', { name: 'Record review' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Server review recorded' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Record request review' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Request review recorded' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect.poll(() => bootstrapReads).toBeGreaterThanOrEqual(2);
   expect(reviews).toBe(1);
@@ -745,24 +745,24 @@ test('FI-06 prevents duplicate review writes and keys retries from the exact com
   await openInternalRequestHub(page, testInfo);
   let dialog = await openRequestRecord(page);
   await dialog.getByLabel('Route Authoritative chair').selectOption('ISSUE_FROM_STOCK');
-  const recordReview = dialog.getByRole('button', { name: 'Record review' });
+  const recordReview = dialog.getByRole('button', { name: 'Record request review' });
   await recordReview.evaluate((element) => {
     element.click();
     element.click();
   });
   await expect.poll(() => commands.length).toBe(1);
   await expect(page.getByRole('alert').filter({ hasText: 'Review was not recorded' })).toBeVisible();
-  await expect(page.getByText('Server review recorded')).toHaveCount(0);
+  await expect(page.getByText('Request review recorded')).toHaveCount(0);
 
   await recordReview.click();
   await expect.poll(() => commands.length).toBe(2);
   expect(commands[1].clientRequestId).toBe(commands[0].clientRequestId);
-  await expect(page.getByRole('status').filter({ hasText: 'Server review recorded' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Request review recorded' })).toBeVisible();
   await expect(page.locator('[data-fi06-state="ready"]')).toBeVisible();
 
   dialog = await openRequestRecord(page);
   await dialog.getByLabel('Route Authoritative chair').selectOption('PROCUREMENT');
-  await dialog.getByRole('button', { name: 'Record review' }).click();
+  await dialog.getByRole('button', { name: 'Record request review' }).click();
   await expect.poll(() => commands.length).toBe(3);
   expect(commands[2].clientRequestId).not.toBe(commands[1].clientRequestId);
   await expect(page.locator('[data-fi06-state="ready"]')).toBeVisible();
@@ -770,7 +770,7 @@ test('FI-06 prevents duplicate review writes and keys retries from the exact com
   dialog = await openRequestRecord(page);
   await dialog.getByLabel('Route Authoritative chair').selectOption('PROCUREMENT');
   await dialog.getByLabel(/Review note/u).fill('A changed authoritative review note.');
-  await dialog.getByRole('button', { name: 'Record review' }).click();
+  await dialog.getByRole('button', { name: 'Record request review' }).click();
   await expect.poll(() => commands.length).toBe(4);
   expect(commands[3].clientRequestId).not.toBe(commands[2].clientRequestId);
 });
@@ -824,9 +824,9 @@ test('FI-06 reports conflict and denied review receipts without inventing local 
   const dialog = await openRequestRecord(page);
   const routeSelect = dialog.getByLabel('Route Authoritative chair');
   await routeSelect.selectOption('ISSUE_FROM_STOCK');
-  await dialog.getByRole('button', { name: 'Record review' }).click();
+  await dialog.getByRole('button', { name: 'Record request review' }).click();
   await expect(page.getByRole('alert').filter({ hasText: 'Review changed on the server' })).toBeVisible();
-  await expect(page.getByText('Server review recorded')).toHaveCount(0);
+  await expect(page.getByText('Request review recorded')).toHaveCount(0);
   const recovery = dialog.getByRole('button', { name: 'Refresh authoritative queue' });
   await expect(recovery).toBeVisible();
   useFreshProjection = true;
@@ -835,11 +835,11 @@ test('FI-06 reports conflict and denied review receipts without inventing local 
   await expect(dialog.getByRole('heading', { name: 'Fresh server projection' })).toBeVisible();
   await expect(routeSelect).toHaveValue('ISSUE_FROM_STOCK');
 
-  await dialog.getByRole('button', { name: 'Record review' }).click();
+  await dialog.getByRole('button', { name: 'Record request review' }).click();
   await expect.poll(() => commands.length).toBe(2);
   expect(commands[1].clientRequestId).not.toBe(commands[0].clientRequestId);
   await expect(page.getByRole('alert').filter({ hasText: 'Review is not permitted' })).toBeVisible();
-  await expect(page.getByText('Server review recorded')).toHaveCount(0);
+  await expect(page.getByText('Request review recorded')).toHaveCount(0);
   await expect(dialog.getByRole('button', { name: 'Refresh authoritative queue' })).toBeVisible();
 });
 
@@ -856,11 +856,11 @@ test('FI-06 keeps DOL read-only capability presentation separate from server mut
   });
 
   await openInternalRequestHub(page, testInfo);
-  await expect(page.getByText(/Read-only queue: the current server-projected session/u)).toBeVisible();
+  await expect(page.getByText(/Read-only queue: this account can view requests/u)).toBeVisible();
   const dialog = await openRequestRecord(page);
   await expect(dialog.getByLabel(/Route /u)).toHaveCount(0);
   await expect(dialog.getByLabel(/Review note/u)).toHaveCount(0);
-  await expect(dialog.getByRole('button', { name: /Record review/u })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: /Record request review/u })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Release', exact: true })).toHaveCount(0);
   await expect(dialog).not.toContainText(/On hand|Available to promise|Reserved/u);
   expect(reviewRequests).toBe(0);
@@ -987,7 +987,7 @@ test('FI-06 labels retained data refreshing before success and stale only after 
     page.getByRole('status').filter({ hasText: 'Updating the authoritative queue' }),
   ).toBeVisible();
   const dialog = await openRequestRecord(page);
-  await expect(dialog.getByRole('button', { name: /Record review/u })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: /Record request review/u })).toHaveCount(0);
   releaseRefreshing();
   await expect(page.locator('[data-fi06-state="ready"]')).toBeVisible();
   await page.keyboard.press('Escape');
@@ -1098,7 +1098,7 @@ test('FI-06 presents one responsive queue, restores exact request focus, and sup
   await opener.click();
   const dialog = page.getByRole('dialog');
   const close = dialog.getByRole('button', { name: 'Back to requests' });
-  const record = dialog.getByRole('button', { name: 'Record review' });
+  const record = dialog.getByRole('button', { name: 'Record request review' });
   await expect(close).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   await expect(record).toBeFocused();
@@ -1149,7 +1149,7 @@ test('FI-06 preview inspection records only a local action and never contacts re
   ).toBeVisible();
   const dialog = await openRequestRecord(page, 'Inspection-only request fixture');
   await dialog.getByLabel('Route Preview folding chair').selectOption('ISSUE_FROM_STOCK');
-  await dialog.getByRole('button', { name: 'Record local review demonstration' }).click();
+  await dialog.getByRole('button', { name: 'Check review action' }).click();
   await expect(
     page.getByRole('status').filter({ hasText: 'Local review demonstration recorded' }),
   ).toBeVisible();

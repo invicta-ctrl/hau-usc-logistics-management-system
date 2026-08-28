@@ -222,8 +222,8 @@ export function InventoryInspector({
               }}
             >
               {isPreviewFixture
-                ? 'Local preview fixture · no server read'
-                : 'Authenticated bootstrap · ledger-derived'}
+                ? 'Inspection sample · actions unavailable'
+                : 'Current authorized inventory records'}
             </p>
           </div>
         </div>
@@ -240,8 +240,8 @@ export function InventoryInspector({
             {item.unconfirmed ? (
               <p style={{ color: c.muted, fontStyle: 'italic' }}>
                 {isPreviewFixture
-                  ? 'Not confirmed in this local preview fixture.'
-                  : 'Not confirmed in the current server projection.'}
+                  ? 'Not confirmed in this inspection sample.'
+                  : 'Not confirmed in the current inventory record.'}
               </p>
             ) : (
               <div className="flex gap-6 mt-1">
@@ -308,11 +308,11 @@ export function InventoryInspector({
             )}
           </Field>
 
-          {/* REVISION / PROVENANCE */}
-          <Field label="REVISION / PROVENANCE">
+          {/* Record history */}
+          <Field label="RECORD HISTORY">
             {isPreviewFixture ? (
               <p style={{ color: c.muted, fontStyle: 'italic' }}>
-                No movement entries are included in this local preview fixture.
+                No movement entries are included in this inspection sample.
               </p>
             ) : (
               <>
@@ -321,7 +321,7 @@ export function InventoryInspector({
                   <span style={{ color: c.muted }}>{item.classificationStatus || 'Not reported'}</span>
                 </p>
                 <p style={{ marginTop: 4 }}>
-                  Last server projection:{' '}
+                  Last inventory update:{' '}
                   <span style={{ color: c.muted }}>{item.updatedAt || 'Not reported'}</span>
                 </p>
               </>
@@ -366,7 +366,7 @@ export function InventoryInspector({
                 marginBottom: 4,
               }}
             >
-              {isPreviewFixture ? 'Local preview fixture' : 'Read-only inventory projection'}
+              {isPreviewFixture ? 'Inspection sample' : 'Read-only inventory record'}
             </p>
             <p
               style={{
@@ -377,8 +377,8 @@ export function InventoryInspector({
               }}
             >
               {isPreviewFixture
-                ? 'This view is session-local. No protected service was contacted and no value shown here is a production record.'
-                : 'This surface has no inventory mutation control. Quantities remain derived by the server ledger and reservations.'}
+                ? 'Sample data · Actions unavailable.'
+                : 'This page is read-only. Quantities reflect current inventory records and reservations.'}
             </p>
           </div>
         </div>

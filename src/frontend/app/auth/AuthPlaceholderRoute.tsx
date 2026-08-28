@@ -15,16 +15,16 @@ export function AuthPlaceholderRoute({ route }: { route: AuthRoute }) {
           {label}
         </h1>
         <p style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 13, color: "var(--muted-foreground)", letterSpacing: -0.15, lineHeight: "21px" }}>
-          This workspace route is reserved and has not yet been built.
+          This page is not available from the current workspace.
         </p>
       </div>
       <div
         className="mt-8 rounded-[12px] flex items-center justify-center"
         style={{ background: "var(--muted)", border: "1px dashed var(--border)", minHeight: 200 }}
-        aria-label="Route placeholder"
+        aria-label="Page unavailable"
       >
         <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", letterSpacing: "0.9px", textTransform: "uppercase" }}>
-          Route reserved · not yet built
+          Page unavailable
         </p>
       </div>
     </div>

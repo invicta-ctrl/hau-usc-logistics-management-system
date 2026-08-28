@@ -27,7 +27,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     route: 'landing',
     label: 'Landing',
     group: 'PUBLIC',
-    description: 'Public landing, current announcements, and the poster-first atrium hero.',
+    description: 'Public landing page with announcements and links to logistics services.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'PUBLIC',
@@ -40,7 +40,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'External Request Center',
     group: 'REQUESTER',
     description:
-      'Authenticated USC requester surface backed by GET/POST /api/portal/request. R3-A1-A2: sign-in required; this is no longer a public portal.',
+      'Submit and track requests for an authorized USC office. Staff sign-in required.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -52,7 +52,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     route: 'tracking',
     label: 'Track Record',
     group: 'PUBLIC',
-    description: 'Public request and lending status lookup through the tracking service.',
+    description: 'Check a request or loan using its reference and private code.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'PUBLIC',
@@ -76,7 +76,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     route: 'staff-signin',
     label: 'Staff Sign In',
     group: 'PUBLIC',
-    description: 'Staff authentication entry point backed by the session and login services.',
+    description: 'Sign in to open the workspaces authorized for a staff account.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'PUBLIC',
@@ -89,7 +89,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Operations overview',
     group: 'STAFF',
     description:
-      'Authenticated operations overview. The real route preserves the server-derived session boundary; Preview inspection uses deterministic sanitized fixtures with no protected request.',
+      'Review authorized requests, events, inventory, and work queues. Inspection uses sample data.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'PARTIAL',
     access: 'AUTHENTICATED',
@@ -102,7 +102,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Inventory',
     group: 'STAFF',
     description:
-      'Authenticated Inventory surface projected through the existing read-only module bootstrap. Preview inspection uses a deterministic fixture with no protected request.',
+      'Review current inventory quantities and item status. Inspection uses sample data.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -115,7 +115,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Internal Request Hub',
     group: 'STAFF',
     description:
-      'DOL-only Internal Request Hub projected through the existing read-only bootstrap; Preview inspection uses a no-network fixture.',
+      'Review and route internal logistics requests. Department of Logistics access required.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -128,7 +128,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Internal Lending Hub',
     group: 'STAFF',
     description:
-      'DOL-only lending queue projected from the strict lending bootstrap; Preview inspection uses a deterministic no-network fixture and action simulation.',
+      'Review lending records, custody, handoffs, and returns. Department of Logistics access required.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -141,7 +141,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Release Desk',
     group: 'STAFF',
     description:
-      'Capability-gated Release Desk visual module. Preview inspection uses deterministic synthetic states and action simulation with no protected request or mutation.',
+      'Review ready work and record physical handoffs. Inspection uses sample data and does not change records.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'VISUAL_ONLY',
     access: 'AUTHENTICATED',
@@ -154,7 +154,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Restocking',
     group: 'STAFF',
     description:
-      'Authenticated Restocking and receiving real module. Preview inspection is deterministic synthetic presentation with no protected request or mutation.',
+      'Review restock requests and receiving records. Inspection uses sample data and does not change records.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'VISUAL_ONLY',
     access: 'AUTHENTICATED',
@@ -167,7 +167,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Procurement',
     group: 'STAFF',
     description:
-      'Authenticated Procurement lifecycle real module. Preview inspection is deterministic synthetic presentation with no protected request or mutation.',
+      'Review procurement work, canvass references, and linked requests. Inspection uses sample data.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'VISUAL_ONLY',
     access: 'AUTHENTICATED',
@@ -180,7 +180,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Events',
     group: 'STAFF',
     description:
-      'Authenticated event.manage read-only projection. Preview inspection uses a deterministic sanitized fixture with no protected request or mutation.',
+      'Review authorized event records and logistics requirements. Inspection uses sample data.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -193,7 +193,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Administration',
     group: 'ADMINISTRATION',
     description:
-      'Authenticated FI-10 Accounts, Directory, and Activity module plus independently gated FI-11 Reference, Link, Brand, and System read-only panels. Preview inspection is a sanitized deterministic presentation with no protected request or mutation.',
+      'Review authorized accounts, directory, activity, references, brand assets, and system status. Inspection uses sample data.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -206,7 +206,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     label: 'Account profile',
     group: 'ADMINISTRATION',
     description:
-      'Authenticated read-only profile surface. Preview inspection uses an explicit deterministic presentation fixture.',
+      'Review account details and update appearance preferences. Inspection uses sample data.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',

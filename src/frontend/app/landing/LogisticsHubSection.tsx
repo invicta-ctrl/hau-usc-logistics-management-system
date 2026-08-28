@@ -41,7 +41,7 @@ export function LogisticsHubSection({
               The Logistics hub
             </h2>
             <p style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: "#f6e29a", letterSpacing: -0.15, fontVariationSettings: '"wdth" 100' }}>
-              {"The council’s only specialised service currently running"}
+              Public equipment lending is available without sign-in.
             </p>
           </div>
         </div>

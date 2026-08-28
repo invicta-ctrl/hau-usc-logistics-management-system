@@ -126,7 +126,7 @@ test('FVR-001 landing renders the governed Current feed responsively without ove
   );
   await page.goto('/');
 
-  await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Logistics services and records' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'What the council is doing now' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Governed announcement' })).toBeVisible();
   await expect(page.getByAltText('Council announcement artwork.')).toBeVisible();
@@ -161,7 +161,7 @@ test('FVR-001 Current preserves intentional empty and request-error states', asy
  * same controls are exercised against the owner's corrected product policy.
  */
 
-test('FVR-001 confirms sign-in mounts the shell without exposing future authenticated fixture routes', async ({
+test('FVR-001 confirms sign-in mounts the operational shell without fixture-only copy', async ({
   page,
 }, testInfo) => {
   await installPublicFeed(page, 'empty');
@@ -198,11 +198,12 @@ test('FVR-001 confirms sign-in mounts the shell without exposing future authenti
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
   await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
-  await expect(page.getByText('Route reserved · not yet built')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Current operational picture', exact: true })).toBeVisible();
+  await expect(page.getByText('Route reserved · not yet built')).toHaveCount(0);
   await expect(page.getByText('Access authorized')).toHaveCount(0);
   await expect(page.getByText(/Design fixture|Synthetic prototype|Simulated save/u)).toHaveCount(0);
   await signOutFromShell(page, testInfo);
-  await expect(page.getByRole('heading', { name: 'Every request. Every handoff. On record.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Logistics services and records' })).toBeVisible();
   expect(logoutCsrf).toBe('csrf-confirmed-session');
 });
 
@@ -258,7 +259,8 @@ test('FVR-001 completes the server-owned starter activation lifecycle', async ({
   await page.getByRole('button', { name: 'Activate account', exact: true }).click();
 
   await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
-  await expect(page.getByText('Route reserved · not yet built')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Current operational picture', exact: true })).toBeVisible();
+  await expect(page.getByText('Route reserved · not yet built')).toHaveCount(0);
   await expect(page.getByText('Access authorized')).toHaveCount(0);
   expect(activationCsrf).toBe('activation-csrf-token');
   expect(activationRequest).toEqual({
@@ -307,7 +309,7 @@ test('FVR-001 preserves keyboard focus, theme behavior, and 200 percent reflow',
   if (testInfo.project.name === 'frontend-1440') {
     await page.setViewportSize({ width: 720, height: 500 });
     await expect(
-      page.getByRole('heading', { name: 'Every request. Every handoff. On record.' }),
+    page.getByRole('heading', { name: 'Logistics services and records' }),
     ).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -540,9 +542,13 @@ test('FVR-001 Current falls back to media-error when the image request fails', a
   ).toBeVisible();
 });
 
-test('FVR-001 renders the poster-only hero with no autoplay video element', async ({ page }) => {
+test('FVR-001 renders the poster-first hero with controlled decorative video', async ({ page }) => {
   await installPublicFeed(page, 'empty');
   await page.goto('/');
   await expect(page.locator('.atrium__poster')).toHaveCount(1);
-  await expect(page.locator('.atrium__video')).toHaveCount(0);
+  const video = page.locator('.atrium__video');
+  await expect(video).toHaveCount(1);
+  expect(
+    await video.evaluate((node) => ({ muted: node.muted, loop: node.loop, playsInline: node.playsInline })),
+  ).toEqual({ muted: true, loop: true, playsInline: true });
 });

@@ -27,14 +27,14 @@ export type CompletenessClassification = (typeof COMPLETENESS_CLASSIFICATION)[nu
 
 export const COMPLETENESS_CLASSIFICATION_LABELS: Readonly<Record<CompletenessClassification, string>> =
   Object.freeze({
-    COMPLETE_REAL: 'COMPLETE REAL',
-    COMPLETE_SAFE_PREVIEW: 'COMPLETE SAFE PREVIEW',
-    BACKEND_WIRED_COMPLETE: 'BACKEND-WIRED COMPLETE',
-    VISUAL_PREVIEW_COMPLETE: 'VISUAL PREVIEW COMPLETE',
-    OWNER_DEFERRED: 'OWNER DEFERRED',
-    UNFINISHED_PLACEHOLDER: 'UNFINISHED PLACEHOLDER',
-    BROKEN: 'BROKEN',
-    UNVERIFIED: 'UNVERIFIED',
+    COMPLETE_REAL: 'Ready',
+    COMPLETE_SAFE_PREVIEW: 'Ready for inspection',
+    BACKEND_WIRED_COMPLETE: 'Connected and complete',
+    VISUAL_PREVIEW_COMPLETE: 'Inspection complete',
+    OWNER_DEFERRED: 'Deferred',
+    UNFINISHED_PLACEHOLDER: 'Not started',
+    BROKEN: 'Needs attention',
+    UNVERIFIED: 'Not verified',
   });
 
 export const PREVIEW_FILTER = [
@@ -53,24 +53,24 @@ export const PREVIEW_FILTER_LABELS: Readonly<Record<PreviewFilter, string>> = Ob
   ALL: 'All',
   ACCEPTED: 'Accepted',
   IN_PROGRESS: 'In progress',
-  BACKEND_WIRED: 'Backend-wired',
-  PREVIEW_ONLY: 'Preview-only',
+  BACKEND_WIRED: 'Connected',
+  PREVIEW_ONLY: 'Inspection only',
   NOT_STARTED: 'Not started',
   PUBLIC: 'Public',
   AUTHENTICATED: 'Authenticated',
 });
 
 export const IMPLEMENTATION_STATUS_LABELS: Readonly<Record<ImplementationStatus, string>> = Object.freeze({
-  ACCEPTED: 'ACCEPTED',
-  IN_PROGRESS: 'IN PROGRESS',
-  SURFACE_PREVIEW: 'SURFACE PREVIEW',
-  NOT_STARTED: 'NOT STARTED',
+  ACCEPTED: 'Accepted',
+  IN_PROGRESS: 'In progress',
+  SURFACE_PREVIEW: 'Inspection only',
+  NOT_STARTED: 'Not started',
 });
 
 export const BACKEND_STATUS_LABELS: Readonly<Record<BackendStatus, string>> = Object.freeze({
-  REAL_BACKEND: 'REAL BACKEND',
-  PARTIAL: 'PARTIAL',
-  VISUAL_ONLY: 'VISUAL ONLY',
+  REAL_BACKEND: 'Connected',
+  PARTIAL: 'Partially connected',
+  VISUAL_ONLY: 'Inspection only',
 });
 
 export const ACCESS_REQUIREMENT_LABELS: Readonly<Record<AccessRequirement, string>> = Object.freeze({
@@ -79,8 +79,8 @@ export const ACCESS_REQUIREMENT_LABELS: Readonly<Record<AccessRequirement, strin
 });
 
 export const PREVIEW_MODE_LABELS: Readonly<Record<PreviewMode, string>> = Object.freeze({
-  REAL_MODULE: 'Real module',
-  SURFACE_PREVIEW: 'Surface preview',
+  REAL_MODULE: 'Operational page',
+  SURFACE_PREVIEW: 'Inspection page',
 });
 
 export const ROUTE_GROUP_LABELS: Readonly<Record<RouteGroup, string>> = Object.freeze({

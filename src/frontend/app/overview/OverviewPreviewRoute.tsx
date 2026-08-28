@@ -53,13 +53,13 @@ export function OverviewPreviewRoute({ session, dark }: { session: Session; dark
   return (
     <div className="command-table-page">
       <header className="command-table-header">
-        <p className="command-kicker">Operations · design fixtures, not production records</p>
-        <h1>Glass operations command table</h1>
+        <p className="command-kicker">Operations</p>
+        <h1>Operations overview</h1>
         <p className="command-summary">
           <strong>14</strong> open requests · <strong>9</strong> loans out · <strong>6</strong> awaiting
           release · <strong>2</strong> below threshold
         </p>
-        <p className="command-record">Preview fixture · {session.displayName} · inspection state only</p>
+        <p className="command-record">Signed in as {session.displayName}</p>
       </header>
 
       <div className="command-layout">
@@ -107,7 +107,7 @@ export function OverviewPreviewRoute({ session, dark }: { session: Session; dark
                         className="command-row__badge"
                         style={item.locallyResolved ? { color: 'var(--green-open)' } : item.badgeStyle}
                       >
-                        {item.locallyResolved ? 'Resolved locally' : item.badge}
+                        {item.locallyResolved ? 'Marked resolved' : item.badge}
                       </span>
                     </button>
                   </li>
@@ -241,7 +241,7 @@ export function OverviewPreviewRoute({ session, dark }: { session: Session; dark
               <li className="command-recon-row" key={row.label}>
                 <strong>{row.label}</strong>
                 <div className="command-recon-values">
-                  <span>Projection {row.projection}</span>
+                  <span>Current view {row.projection}</span>
                   <span>Ledger {row.ledger}</span>
                 </div>
                 <span className="command-recon-state">Reconciled</span>

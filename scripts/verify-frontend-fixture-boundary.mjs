@@ -90,7 +90,7 @@ for (const expected of [
   '<InternalRequestHub dark={dark} navigate={onOpenRoute} inspection canReviewRequests />',
   '<AdministrationRoute dark={dark} navigate={onOpenRoute} inspection />',
   'data-preview-inspection="true"',
-  'Sanitized fixture only. No backend authorization has been granted.',
+  'PLAYGROUND INSPECTION · Sample data · Actions are unavailable.',
 ]) {
   requireText(previewRenderer, expected, 'PreviewInspectionRoute');
 }
@@ -135,7 +135,7 @@ for (const [path, fixtureExpression] of sharedFixtureContracts) {
 const requestHub = read('src/frontend/app/request/InternalRequestHub.tsx');
 requireText(
   requestHub,
-  "title: 'Local review demonstration recorded'",
+  "title: 'Request review recorded'",
   'InternalRequestHub inspection branch',
 );
 if (

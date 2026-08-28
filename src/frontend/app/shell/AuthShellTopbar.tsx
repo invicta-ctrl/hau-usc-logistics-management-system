@@ -50,7 +50,7 @@ export function AuthShellTopbar({
             letterSpacing: '0.55px',
           }}
         >
-          {localPreview ? 'LOCAL LIVE PREVIEW · NOT A DEPLOYMENT' : 'SHELL STATUS'}
+          {localPreview ? 'PLAYGROUND' : 'SIGNED-IN WORKSPACE'}
         </span>
         <span
           style={{
@@ -61,7 +61,7 @@ export function AuthShellTopbar({
             textAlign: 'right',
           }}
         >
-          SERVER-AUTHORIZED · CAPABILITY-PROJECTED
+          AUTHORIZED ACCOUNT
         </span>
       </div>
 

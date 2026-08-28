@@ -33,10 +33,10 @@ type Prev =
   | "Filtered empty"
   | "Pending activation"
   | "Denied"
-  | "Stale revision"
+  | "Outdated record"
   | "Validation error"
   | "Unavailable"
-  | "Simulated save success";
+  | "Save checked";
 const tabs: Tab[] = [
   "Accounts & access",
   "Staff directory",
@@ -58,7 +58,7 @@ const administrationTabs: AdminTab[] = [...fi10Tabs, ...fi11Tabs];
 const previewAccounts: FrontendAdminAccount[] = [
   {
     accessId: "SANITIZED-ACCOUNT-A",
-    displayName: "Sanitized account fixture",
+    displayName: "Sample account",
     roleId: "WITHHELD_IN_PREVIEW",
     status: "PREVIEW_ONLY",
     firstLoginPending: false,
@@ -66,7 +66,7 @@ const previewAccounts: FrontendAdminAccount[] = [
   },
   {
     accessId: "SANITIZED-ACCOUNT-B",
-    displayName: "Sanitized account fixture",
+    displayName: "Sample account",
     roleId: "WITHHELD_IN_PREVIEW",
     status: "PREVIEW_ONLY",
     firstLoginPending: false,
@@ -453,10 +453,10 @@ export default function AdministrationRoute({
       <State
         k="Sanitized preview"
         h="No administration records are shown in this preview state"
-              p="Preview inspection has no protected roster or activity data."
+              p="Inspection mode does not include staff roster or activity records."
       >
         <button className="primary" onClick={retry}>
-          Restore preview fixture
+                Restore sample data
         </button>
       </State>
     );
@@ -483,8 +483,8 @@ export default function AdministrationRoute({
       <style>{scopeRouteCss(".adm", css)}</style>
       {inspection ? (
         <section className="sandbox" data-fi10-inspection="true">
-              <b>Sanitized Preview inspection</b>
-          <span>Synthetic preview · no session, backend, or protected data</span>
+            <b>Inspection mode</b>
+            <span>Sample data · Actions unavailable</span>
           <label>
             Preview state
             <select
@@ -503,9 +503,9 @@ export default function AdministrationRoute({
         <div>
           <p className="eye">Administration + governance</p>
           <h1>Authorized system controls</h1>
-          <p>Review only the current authorized read-only projection without changing authority.</p>
+          <p>Review the current authorized records. Changes are available only in their assigned workflows.</p>
         </div>
-        <small>{inspection ? "Sanitized fixture · not production data" : "Authenticated read-only data"}</small>
+            <small>{inspection ? "Sample data" : "Current authorized records"}</small>
       </header>
       <nav className="tabs" aria-label="Administration sections" data-fi10-tabs="true" data-fi11-tabs="true">
         {administrationTabs.map((item) => (
@@ -569,7 +569,7 @@ function Fi10Panel({
               <p className="eye">Account access</p>
               <h2>Assigned identity and access</h2>
             </div>
-            <b>Read-only server projection</b>
+            <b>Current authorized records</b>
           </div>
           {accounts.length === 0 ? (
             <p className="note">No account records are available in the current response.</p>
@@ -590,7 +590,7 @@ function Fi10Panel({
                       <td>
                         <button className="row" type="button" onClick={() => onSelectAccount(account)}>
                           <b>{account.displayName}</b>
-                          <span>Server-provided display identity</span>
+                          <span>Authorized display identity</span>
                         </button>
                       </td>
                       <td>{account.accessId}</td>
@@ -645,7 +645,7 @@ function Fi10Panel({
             <p className="note">Select an account record to inspect the supported read-only fields.</p>
           )}
           <section className="gate">
-            <b>READ-ONLY · MUTATION NOT IN THIS SLICE</b>
+            <b>Read-only account record</b>
             <p>Changes to access, roles, approval, or account state remain in their existing authorized workflow.</p>
             <button disabled type="button">Modify access unavailable</button>
           </section>
@@ -660,13 +660,13 @@ function Fi10Panel({
         <section className="plane">
           <div className="head">
             <div>
-              <p className="eye">Canonical directory</p>
+              <p className="eye">Staff directory</p>
               <h2>Authorized staff records</h2>
             </div>
-            <b>{inspection ? "Sanitized fixture" : "Identity exposure is contract-gated"}</b>
+            <b>{inspection ? "Sample data" : "Protected identity fields"}</b>
           </div>
           {directory.length === 0 ? (
-            <p className="note">No canonical staff records are available in the current response.</p>
+            <p className="note">No staff records are available for this account.</p>
           ) : (
             <>
               <table>
@@ -768,9 +768,9 @@ function Fi10Panel({
         <b>{inspection ? "Sanitized preview · no live history" : "One row per retained event"}</b>
       </div>
       {inspection ? (
-        <p className="note">Preview inspection intentionally withholds staff activity. Use authenticated administration for the supported read-only history projection.</p>
+              <p className="note">Staff activity is unavailable in inspection mode. Use Administration to review authorized account activity.</p>
       ) : !selectedStaff || activityState === "selection" ? (
-        <p className="note">Select a canonical staff directory record to load its retained activity. Raw account, person, and correlation identifiers are never shown.</p>
+        <p className="note">Select a staff directory record to review its retained activity.</p>
       ) : activityState === "loading" ? (
         <div className="skeleton" aria-busy="true" aria-label="Loading selected staff activity" />
       ) : activityState === "denied" ? (
@@ -828,7 +828,7 @@ function Fi10Panel({
           </div>
         </>
       )}
-      <p className="note">No raw account, person, correlation, or account-access snapshot is rendered in this history view.</p>
+      <p className="note">This view includes only authorized activity details.</p>
     </section>
   );
 }
@@ -895,7 +895,7 @@ function Fi11Panel({
       <State
         k="Unavailable"
         h={`${tab} is temporarily unavailable`}
-        p="No reference, brand, event, provider, or system record was changed."
+        p="No operational record was changed."
       >
         <button className="primary" type="button" onClick={onRetry}>Retry read-only load</button>
       </State>
@@ -906,9 +906,9 @@ function Fi11Panel({
       <State
         k="Sanitized preview"
         h={`No ${tab.toLowerCase()} records are shown in this preview state`}
-        p="Preview inspection has no protected or live technical data."
+        p="Inspection mode does not include protected or current technical data."
       >
-        <button className="primary" type="button" onClick={onRetry}>Restore preview fixture</button>
+          <button className="primary" type="button" onClick={onRetry}>Restore sample data</button>
       </State>
     );
   }
@@ -919,16 +919,16 @@ function Fi11Panel({
         <div className="head">
           <div>
             <p className="eye">Reference administration</p>
-            <h2>Reference-set data is not available in this frontend contract</h2>
+            <h2>Reference sets are unavailable</h2>
           </div>
-          <b>Truthful contract gap</b>
+          <b>Records unavailable</b>
         </div>
         <p className="note">
-          This frontend does not receive a supported read-only reference-set projection. The Link Registry tab separately shows only the governed destination records supplied by its own contract.
+          This page does not include reference-set records. The Link Registry separately lists the available approved destinations.
         </p>
         <section className="gate">
           <b>READ-ONLY · NO REFERENCE-SET MUTATION</b>
-          <p>Creating, editing, publishing, synchronizing, or inferring reference-set data is outside this FI-11 frontend slice.</p>
+          <p>Reference-set changes are not available from this page.</p>
           <button type="button" disabled>Reference-set actions unavailable</button>
         </section>
       </section>
@@ -943,7 +943,7 @@ function Fi11Panel({
             <p className="eye">Governed destinations</p>
             <h2>Link Registry</h2>
           </div>
-          <b>{inspection ? 'Sanitized fixture · no live read' : 'Read-only server projection'}</b>
+          <b>{inspection ? 'Sample data · actions unavailable' : 'Current authorized records'}</b>
         </div>
         {links.length === 0 ? (
           <p className="note">No governed destinations are available in the current response.</p>
@@ -976,7 +976,7 @@ function Fi11Panel({
             </div>
           </>
         )}
-        <p className="note">Raw link identifiers, revision internals, and correlation data are not shown.</p>
+        <p className="note">Internal link identifiers are not shown.</p>
       </section>
     );
   }
@@ -989,7 +989,7 @@ function Fi11Panel({
             <p className="eye">Governed brand media</p>
             <h2>Published public asset references</h2>
           </div>
-          <b>{inspection ? 'Sanitized fixture · no R2 read' : 'R2 authority preserved'}</b>
+          <b>{inspection ? 'Sample data · actions unavailable' : 'Current brand assets'}</b>
         </div>
         {brandSlots.length === 0 ? (
           <p className="note">No public brand asset slots are available in the current response.</p>
@@ -1020,8 +1020,8 @@ function Fi11Panel({
           </>
         )}
         <section className="gate">
-          <b>R2-GOVERNED · READ-ONLY</b>
-          <p>Upload, replacement, publish, rollback, provider synchronization, hashes, and storage internals remain outside this frontend slice.</p>
+          <b>READ-ONLY</b>
+          <p>Upload, replacement, publishing, and rollback are not available from this page.</p>
           <button type="button" disabled>Brand media actions unavailable</button>
         </section>
       </section>
@@ -1035,10 +1035,10 @@ function Fi11Panel({
           <p className="eye">Owner system report</p>
           <h2>Redacted technical response</h2>
         </div>
-        <b>{inspection ? 'Synthetic inspection · no live request' : 'system.admin presentation gate'}</b>
+          <b>{inspection ? 'Inspection mode' : 'System status'}</b>
       </div>
       {inspection ? (
-        <p className="note">No live technical or readiness request was made in local Preview Index inspection.</p>
+            <p className="note">Current system readiness is unavailable in inspection mode.</p>
       ) : systemStatus ? (
         <dl>
           <div><dt>Technical response</dt><dd>Current response received</dd></div>
@@ -1058,8 +1058,7 @@ function Fi11Panel({
             <div><dt>Last reset</dt><dd>{systemStatus.playground.lastReset ? `${humanize(systemStatus.playground.lastReset.status)} · ${dateLabel(systemStatus.playground.lastReset.completedAt)}` : "No reset receipt reported"}</dd></div>
           </dl>
           <p>
-            Resetting invalidates every current Playground session, removes transient D1 work,
-            reconciles governed R2 working objects to the sealed baseline, and requires a new Enter Playground session.
+            Resetting ends every current Playground session, removes transient work, restores governed working files to the sealed baseline, and requires a new Playground session.
           </p>
           {systemStatus.playground.lastReset?.consequences.length ? (
             <ul>
@@ -1087,7 +1086,7 @@ function Fi11Panel({
               resetConfirmation !== systemStatus.playground.confirmationPhrase
             }
           >
-            {resetBusy ? "Requesting reset…" : "Reset Entire Playground"}
+            {resetBusy ? "Resetting Playground…" : "Reset Playground"}
           </button>
           {systemStatus.playground.pendingOperation ? (
             <p role="status">Reset progress: {humanize(systemStatus.playground.pendingOperation.state)}</p>
@@ -1097,7 +1096,7 @@ function Fi11Panel({
       ) : (
         <section className="gate">
           <b>REDACTED · READ-ONLY</b>
-          <p>Playground reset controls are unavailable outside the isolated staging Playground. Release, schema, migration, dependency, provider, correlation, and internal diagnostic fields are not shown here.</p>
+          <p>Playground reset is available only inside the isolated Playground environment.</p>
           <button type="button" disabled>System actions unavailable</button>
         </section>
       )}
@@ -1125,10 +1124,10 @@ export function LegacyAdministrationFixture({
     "Filtered empty",
     "Pending activation",
     "Denied",
-    "Stale revision",
+    "Outdated record",
     "Validation error",
     "Unavailable",
-    "Simulated save success",
+    "Save checked",
   ];
   const content =
     prev === "Loading" ? (
@@ -1146,17 +1145,17 @@ export function LegacyAdministrationFixture({
           Back to overview
         </button>
       </State>
-    ) : prev === "Stale revision" ? (
+    ) : prev === "Outdated record" ? (
       <State
-        k="Revision conflict"
-        h="Revision 9 is no longer current"
-        p="No capability change was applied. Reload the latest authorized revision."
+        k="Outdated record"
+        h="This account record changed"
+        p="No access change was applied. Reload the current account record."
       >
         <button
           className="primary"
           onClick={() => setPrev("Populated")}
         >
-          Reload revision
+          Reload account record
         </button>
       </State>
     ) : prev === "Unavailable" ? (
@@ -1169,14 +1168,14 @@ export function LegacyAdministrationFixture({
           className="primary"
           onClick={() => setPrev("Populated")}
         >
-          Retry
+          Retry administration records
         </button>
       </State>
     ) : prev === "Empty" || prev === "Filtered empty" ? (
       <State
         k={prev}
         h="No administration records match this view"
-        p="Restore the populated fixture without changing authority."
+        p="Restore the sample records without changing any operational data."
       >
         <button
           className="primary"
@@ -1185,11 +1184,11 @@ export function LegacyAdministrationFixture({
           Clear filters
         </button>
       </State>
-    ) : prev === "Simulated save success" ? (
+    ) : prev === "Save checked" ? (
       <State
-        k="Synthetic result"
-        h="Revision 10 preview saved locally"
-        p="No server, roster, Google, provider, D1, R2, or audit write occurred."
+        k="Inspection result"
+        h="Sample change recorded"
+        p="No operational record was changed."
       >
         <button
           className="primary"
@@ -1215,10 +1214,10 @@ export function LegacyAdministrationFixture({
     <div className={"adm " + (dark ? "dark" : "light")}>
       <style>{scopeRouteCss(".adm", css)}</style>
       <section className="sandbox">
-        <b>Design fixture</b>
-        <span>Synthetic prototype · no backend</span>
+        <b>Inspection mode</b>
+        <span>Sample data · Actions unavailable</span>
         <label>
-          Preview state
+          Inspection state
           <select
             value={prev}
             onChange={(e) => setPrev(e.target.value as Prev)}
@@ -1234,11 +1233,11 @@ export function LegacyAdministrationFixture({
           <p className="eye">Administration + governance</p>
           <h1>Authorized system controls</h1>
           <p>
-            Review consequence, authority, and current revision
+            Review the consequence, permission, and current record
             before any permitted action.
           </p>
         </div>
-        <small>Design fixture · not production data</small>
+        <small>Sample data</small>
       </header>
       <nav
         className="tabs"
@@ -1298,10 +1297,10 @@ function Panel({
         <section className="plane">
           <div className="head">
             <div>
-              <p className="eye">Account revisions</p>
+              <p className="eye">Account versions</p>
               <h2>Assigned identity and access</h2>
             </div>
-            <b>Server acceptance is authoritative</b>
+            <b>Current authorized records</b>
           </div>
           <table>
             <thead>
@@ -1309,7 +1308,7 @@ function Panel({
                 <th>Account</th>
                 <th>Scope</th>
                 <th>State</th>
-                <th>Revision</th>
+                <th>Version</th>
               </tr>
             </thead>
             <tbody>
@@ -1378,8 +1377,8 @@ function Panel({
         </section>
         <aside className="detail">
           <p className="eye">{selected}</p>
-          <h2>Revision consequence preview</h2>
-          <p>Current revision 9 must remain current.</p>
+          <h2>Access change preview</h2>
+          <p>The current account record must remain current.</p>
           <dl>
             <div>
               <dt>Record receiving</dt>
@@ -1406,12 +1405,12 @@ function Panel({
             <button
               className="primary"
               disabled={!dirty}
-              onClick={() => setPrev("Simulated save success")}
+              onClick={() => setPrev("Save checked")}
             >
-              Save revision 10
+              Save access change
             </button>
             <button onClick={() => setDirty(false)}>
-              Discard
+              Discard changes
             </button>
           </div>
         </aside>
@@ -1492,12 +1491,10 @@ function Panel({
           </dl>
           <section className="gate">
             <b>
-              PROPOSED UX · CONTRACT-GATED · NOT
-              IMPLEMENTATION-READY
+              Staff information changes unavailable
             </b>
             <p>
-              Blocked by field-level roster / identity authority
-              contract.
+              These fields cannot be changed from this page.
             </p>
             <button disabled>Add staff information</button>
             <button disabled>Edit fields</button>
@@ -1513,16 +1510,16 @@ function Panel({
           <div className="actions">
             <button
               onClick={() =>
-                setNotice("Synthetic consequence preview only")
+                setNotice("Sample consequence shown")
               }
             >
-              Preview
+              Preview change
             </button>
             <button
               disabled={!reason.trim()}
               onClick={() =>
                 setNotice(
-                  "Applied locally · no Google or provider write",
+                  "Sample change recorded",
                 )
               }
             >
@@ -1530,7 +1527,7 @@ function Panel({
             </button>
             <button
               onClick={() =>
-                setNotice("Local preview rolled back")
+                setNotice("Sample change rolled back")
               }
             >
               Roll back
@@ -1545,7 +1542,7 @@ function Panel({
         <div className="head">
           <div>
             <p className="eye">System status</p>
-            <h2>STAGING · verified by service fixture</h2>
+          <h2>STAGING · Service checks passed</h2>
           </div>
           <em>Production denial guard active</em>
         </div>
@@ -1563,31 +1560,31 @@ function Panel({
               [
                 "Playground mode",
                 "True",
-                "Fixed fixture",
+                "Inspection sample",
                 "Now",
               ],
               [
                 "Schema",
                 "30 · migration 0030",
-                "Service fixture",
+                "Inspection sample",
                 "Now",
               ],
               [
                 "D1",
                 "Isolated · connected",
-                "Service fixture",
+                "Inspection sample",
                 "Now",
               ],
               [
                 "Static assets",
                 "Served",
-                "Service fixture",
+                "Inspection sample",
                 "Now",
               ],
               [
                 "Brand / evidence assets",
                 "R2 isolated",
-                "Service fixture",
+                "Inspection sample",
                 "Now",
               ],
             ].map((r) => (
@@ -1609,13 +1606,13 @@ function Panel({
           [
             "Departments",
             "18 rows",
-            "Revision 14",
+            "Version 14",
             "Published",
           ],
           [
             "Item categories",
             "9 rows",
-            "Revision 6 · draft 7",
+            "Version 6 · draft 7",
             "Draft",
           ],
         ]}
@@ -1684,8 +1681,8 @@ function Panel({
             ],
             [
               "08:02",
-              "Departments revision published",
-              "Revision 14",
+              "Department list published",
+              "Version 14",
               "Published",
             ],
           ].map((r) => (
@@ -1698,8 +1695,7 @@ function Panel({
         </tbody>
       </table>
       <p className="note">
-        Automated reminder unavailable — scheduler contract
-        absent. No duplicate activity rows.
+        Automated reminders are unavailable. No duplicate activity rows.
       </p>
     </section>
   );
@@ -1709,8 +1705,8 @@ const brandAssets = [
   [dolLogo, "DOL logo", "Published", "Current Logistics hub"],
   [combinedLockup, "Combined lockup", "Published", "Operational shell"],
   [loginBackground, "Login background", "Published", "Staff sign-in"],
-  [favicon, "Favicon", "Published but unlinked in Production", "Prototype browser identity"],
-  [defaultItemImage, "Default item image", "Published · catalog empty", "Lending fixture fallback"],
+  [favicon, "Favicon", "Published but unlinked in Production", "Browser identity"],
+  [defaultItemImage, "Default item image", "Published · catalog empty", "Lending placeholder"],
 ] as const;
 function BrandMedia() {
   return (
@@ -1720,10 +1716,10 @@ function BrandMedia() {
           <p className="eye">Production web-asset parity</p>
           <h2>Governed asset slots and current fallback</h2>
         </div>
-        <b>Local static prototype copies</b>
+        <b>Current sample assets</b>
       </div>
       <table className="asset-table">
-        <thead><tr><th>Preview</th><th>Asset</th><th>Production state</th><th>Prototype use</th></tr></thead>
+        <thead><tr><th>Image</th><th>Asset</th><th>Production state</th><th>Inspection use</th></tr></thead>
         <tbody>{brandAssets.map(([src, name, state, use]) => (
           <tr key={name}>
             <td><img className="asset-preview" src={src} alt="" /></td>
@@ -1734,7 +1730,7 @@ function BrandMedia() {
       <div className="asset-cards">{brandAssets.map(([src, name, state, use]) => (
         <article key={name}><img className="asset-preview" src={src} alt="" /><div><b>{name}</b><span>{state}</span><small>{use}</small></div></article>
       ))}</div>
-      <p className="note">Design fixture only. No production, R2, provider, or asset-governance write occurred.</p>
+      <p className="note">Brand and media changes are unavailable in inspection mode.</p>
     </section>
   );
 }
@@ -1752,7 +1748,7 @@ function Dense({
           <p className="eye">Administration</p>
           <h2>{title}</h2>
         </div>
-        <b>Read-only synthetic fixture</b>
+      <b>Sample data · read-only</b>
       </div>
       <table>
         <tbody>
@@ -1784,7 +1780,7 @@ function Cards({
             <em>{r[2]}</em>
           </div>
           <p>
-            {r[1]} · revision {r[3] || "—"}
+            {r[1]} · {r[3] || "—"}
           </p>
           <button
             className="primary"

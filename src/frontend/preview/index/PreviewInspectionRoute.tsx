@@ -39,13 +39,13 @@ export function PreviewInspectionRoute({
             color: 'var(--oxblood-deep)',
           }}
           role="note"
-          aria-label="Preview inspection"
+          aria-label="Playground inspection"
         >
           <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '0.35px' }}>
-            PREVIEW INSPECTION · Sanitized fixture only. No backend authorization has been granted.
+            PLAYGROUND INSPECTION · Sample data · Actions are unavailable.
           </p>
           <button type="button" className="preview-action" onClick={onBackToIndex}>
-            Back to Preview Index
+            Back to Playground Index
           </button>
         </section>
         <ExternalRequestCenter

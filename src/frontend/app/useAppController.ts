@@ -148,7 +148,7 @@ export function useAppController() {
           setAuthError(
             error instanceof FrontendApiError
               ? error.message
-              : 'The authentication service is temporarily unavailable.',
+              : 'Sign-in is temporarily unavailable. Try again in a few minutes.',
           );
           setAuthState('service-error');
         });
@@ -254,7 +254,7 @@ export function useAppController() {
         if (!result.session) {
           setSession(null);
           setAuthState('service-error');
-          setAuthError('The authentication service returned an incomplete session.');
+          setAuthError('Sign-in could not be completed. Try again.');
           return;
         }
         const next = projectSession(result.session.user);
@@ -267,7 +267,7 @@ export function useAppController() {
         setAuthError(
           error instanceof FrontendApiError
             ? error.message
-            : 'The authentication service is temporarily unavailable.',
+            : 'Sign-in is temporarily unavailable. Try again in a few minutes.',
         );
         setAuthState('service-error');
       }
@@ -296,7 +296,7 @@ export function useAppController() {
         setAuthError(
           error instanceof FrontendApiError
             ? error.message
-            : 'The activation service is temporarily unavailable.',
+            : 'Account activation is temporarily unavailable. Try again in a few minutes.',
         );
         setAuthState('service-error');
       }
@@ -320,7 +320,7 @@ export function useAppController() {
       setAuthError(
         error instanceof FrontendApiError
           ? error.message
-          : 'The Playground session service is temporarily unavailable.',
+          : 'Playground sign-in is temporarily unavailable. Try again in a few minutes.',
       );
       setAuthState('service-error');
     }

@@ -49,7 +49,7 @@ type Prev =
   | "Loading"
   | "Empty"
   | "Filtered empty"
-  | "Stale revision"
+  | "Outdated record"
   | "Denied"
   | "Unavailable"
   | "Validation error"
@@ -204,7 +204,7 @@ export default function ReleaseDeskRoute({
       setPrev("Confirmed success");
       setTask(false);
       setNotice(
-        "Synthetic confirmation only · no service or ledger write",
+        "Sample action checked · No operational record changed",
       );
     }, 500);
   };
@@ -292,8 +292,8 @@ export default function ReleaseDeskRoute({
     <div className={"rel " + (dark ? "dark" : "light")}>
       <style>{scopeRouteCss(".rel", css)}</style>
       <section className="sandbox">
-        <b>Design fixture</b>
-        <span>Synthetic prototype · no backend</span>
+          <b>Inspection mode</b>
+          <span>Sample data · Actions unavailable</span>
         <label>
           Preview state
           <select
@@ -308,7 +308,7 @@ export default function ReleaseDeskRoute({
               "Loading",
               "Empty",
               "Filtered empty",
-              "Stale revision",
+              "Outdated record",
               "Denied",
               "Unavailable",
               "Validation error",
@@ -325,10 +325,10 @@ export default function ReleaseDeskRoute({
           <h1>Confirm physical release</h1>
           <p>
             Verify the ready record, custody consequence, and
-            synthetic result.
+            inspection result.
           </p>
         </div>
-        <small>Design fixture · not production data</small>
+              <small>Sample data</small>
       </header>
       <ol className="steps">
         {[
@@ -337,7 +337,7 @@ export default function ReleaseDeskRoute({
           "VERIFY PREFILLED DATA",
           "RECORD CORRECTION",
           "CONFIRM CONSEQUENCE",
-          "SIMULATED RESPONSE",
+          "CHECK RESULT",
           "REFRESH",
         ].map((x, i) => (
           <li key={x}>
@@ -374,7 +374,7 @@ export default function ReleaseDeskRoute({
             className="primary"
             onClick={() => setPrev("Populated")}
           >
-            Retry
+            Retry release queue
           </button>
         </State>
       ) : prev === "Empty" || prev === "Filtered empty" ? (
@@ -392,9 +392,9 @@ export default function ReleaseDeskRoute({
         </State>
       ) : prev === "Confirmed success" ? (
         <State
-          k="Synthetic confirmation"
+          k="Inspection result"
           h="RLS-2026-0231"
-          p="Three lines against REQ-2026-0136 · ledger preview 09:42 · no real audit write."
+          p="Three sample lines checked against REQ-2026-0136. No operational record was changed."
         >
           <button
             ref={confirmedActionRef}
@@ -406,22 +406,22 @@ export default function ReleaseDeskRoute({
           <button
             onClick={() =>
               setNotice(
-                "Read-only synthetic audit summary opened",
+                "Sample audit summary opened",
               )
             }
           >
-            View audit entry
+            View sample audit
           </button>
         </State>
       ) : (
         <>
-          {prev === "Stale revision" && (
+          {prev === "Outdated record" && (
             <section className="stale">
               <div>
                 <b>
-                  Last-known release projection · revision 3
+                This release record is out of date
                 </b>
-                <span>Actions paused until local reload.</span>
+                <span>Reload the current record before continuing.</span>
               </div>
               <button
                 className="primary"
@@ -434,7 +434,7 @@ export default function ReleaseDeskRoute({
           <div
             className={
               "grid " +
-              (prev === "Stale revision" ? "paused" : "")
+              (prev === "Outdated record" ? "paused" : "")
             }
           >
             {queue}
@@ -467,7 +467,7 @@ export default function ReleaseDeskRoute({
                     <dd>{sel.owner}</dd>
                   </div>
                   <div>
-                    <dt>Projection revision</dt>
+                    <dt>Record version</dt>
                     <dd>3</dd>
                   </div>
                   <div>
@@ -494,19 +494,16 @@ export default function ReleaseDeskRoute({
                 </section>
                 <section className="gate">
                   <b>
-                    PROPOSED UX · CONTRACT-GATED · NOT
-                    IMPLEMENTATION-READY
+                    Photograph upload unavailable
                   </b>
                   <strong>Add photograph — Disabled</strong>
                   <p>
-                    Protected media contract unavailable.
-                    Existing reference EVD-2026-0118 is
-                    read-only.
+                    Existing reference EVD-2026-0118 is read-only.
                   </p>
                   <button disabled>Add photograph</button>
                 </section>
                 <section className="gate">
-                  <b>V-26 LOCAL SIMULATION PREREQUISITE</b>
+                  <b>Required handoff confirmation</b>
                   <label className="hoff-label">
                     <input
                       type="checkbox"
@@ -520,8 +517,8 @@ export default function ReleaseDeskRoute({
                     required
                   </label>
                   <p>
-                    Removal or replacement of this prerequisite
-                    is contract-gated.
+                    Confirm the physical handoff before recording
+                    the release.
                   </p>
                 </section>
                 <div className="actions">
@@ -543,7 +540,7 @@ export default function ReleaseDeskRoute({
                   <button
                     onClick={() =>
                       setNotice(
-                        "Request opened locally · no service call",
+                        "Sample request opened",
                       )
                     }
                   >
@@ -597,8 +594,7 @@ export default function ReleaseDeskRoute({
               </p>
             )}
             <p className="consequence">
-              Nothing is released until a service confirms. This
-              sandbox produces only a synthetic result.
+              Inspection mode does not record a release.
             </p>
             <div className="actions">
               <button className="primary" onClick={confirm}>
@@ -607,7 +603,7 @@ export default function ReleaseDeskRoute({
               <button
                 onClick={() =>
                   setNotice(
-                    "Verification saved locally · no service call",
+                    "Sample verification saved",
                   )
                 }
               >
