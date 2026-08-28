@@ -37,14 +37,9 @@ describe('canonical workspace routes', () => {
   });
 
   it('synchronizes route-derived module chrome before accepting a reloaded workspace', async () => {
-    const runtime = await readFile(
-      resolve(import.meta.dirname, '../../src/visual/runtime.js'),
-      'utf8',
-    );
+    const runtime = await readFile(resolve(import.meta.dirname, '../../src/visual/runtime.js'), 'utf8');
     expect(runtime).toContain('applyEssentialNavigation(next);acceptAuthoritativeState(next)');
-    expect(runtime).toContain(
-      "button.classList.toggle('active',button.dataset.view===ui.view)",
-    );
+    expect(runtime).toContain("button.classList.toggle('active',button.dataset.view===ui.view)");
     expect(runtime).toContain("safeText(byId('pageTitle'),VIEW_TITLES[ui.view]||'Logistics')");
   });
 });
@@ -79,6 +74,7 @@ describe('countable operational quantities', () => {
       'can',
       'pair',
       'pallet',
+      'sachet',
       'tray',
     ]) {
       expect(isCountableUnit(unit)).toBe(true);
@@ -94,10 +90,7 @@ describe('countable operational quantities', () => {
   });
 
   it('normalizes catalog-backed preview lines before mutating local request state', async () => {
-    const runtime = await readFile(
-      resolve(import.meta.dirname, '../../src/visual/runtime.js'),
-      'utf8',
-    );
+    const runtime = await readFile(resolve(import.meta.dirname, '../../src/visual/runtime.js'), 'utf8');
     const validation = runtime.indexOf('const lines=payload.lines.map');
     const mutation = runtime.indexOf('state.requests.push(record)', validation);
     expect(validation).toBeGreaterThan(-1);

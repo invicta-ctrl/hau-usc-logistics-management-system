@@ -14,6 +14,7 @@ export const COUNTABLE_QUANTITY_UNITS = Object.freeze([
   'piece',
   'ream',
   'roll',
+  'sachet',
   'service',
   'set',
   'sheet',
