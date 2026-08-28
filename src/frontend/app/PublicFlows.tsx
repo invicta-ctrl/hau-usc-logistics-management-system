@@ -222,7 +222,10 @@ export default function PublicFlows({
   }
 
   return (
-    <main className={`pub ${dark ? "dark" : "light"}`}>
+    /* RECOVERY-03 Hallmark. Every other surface names its <main> "main-content"
+       so index.html's global skip link lands somewhere; this one did not, so on
+       borrow and tracking "Skip to main content" was a dead anchor — measured. */
+    <main id="main-content" className={`pub ${dark ? "dark" : "light"}`}>
       <style>{css}</style>
 
       {/* G0 · institutional ground. Decorative only, so it is never announced. */}
@@ -232,6 +235,16 @@ export default function PublicFlows({
       <div className="sr-only" role="status" aria-live="polite">{live}</div>
       <div className="sr-only" role="alert" aria-live="assertive">{alert}</div>
 
+      {/* RECOVERY-03 Hallmark, and the one finding this pass deliberately did
+          NOT act on. This masthead Home and the navigation's Home call the same
+          onBack, so the surface shows the control twice at every width. That
+          reads as duplication — but R3-A1-A2's Home semantics name NAV_HOME and
+          LENDING_HOME as distinct controls, and e2e HOME-01/HOME-02 asserts this
+          exact pair, the masthead one by `.mast`. Reading the amendment against
+          its own acceptance test is the owner's call, not a design micro-decision,
+          so both stay. The unambiguous half of the defect — the site header's
+          dead #hero/#logistics anchors and its duplicate Home and Staff sign in
+          off the landing page — is fixed in PublicNavbar. */}
       <header className="mast">
         <button type="button" onClick={onBack} className="back"><span className="navArrow" aria-hidden="true">← </span>Home</button>
         <div className="identity">

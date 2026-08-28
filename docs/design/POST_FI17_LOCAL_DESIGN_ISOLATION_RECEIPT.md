@@ -1476,3 +1476,401 @@ PORT 4173                 never bound
 3. The `#fffdf8` palette on Supply and Administration stays Make-faithful and
    therefore contradicts Figma Design's `paper = #f7f1e8`. A real Make/Design
    contradiction, left unresolved deliberately: resolving it needs live Make.
+
+---
+
+# RECOVERY_03_AUTONOMOUS_COMPLETION
+
+Written under POST-FI17-DESIGN-RECOVERY-03, which supersedes RECOVERY-02's
+stop-on-every-blocker behaviour and puts the technical micro-decisions inside
+this accepted local design scope with Claude. No owner pause was taken; every
+blocker below was resolved by fallback and recorded.
+
+```text
+START_HEAD:  897c91158bff0c1bbceee14f1d1410e9e3cb9cd6
+END_HEAD:    (this commit)
+END_TREE:    (this commit's tree)
+```
+
+## AUTONOMOUS_DECISIONS
+
+Five blockers were reached. None was escalated.
+
+### 1 · The Preview Index could not open eleven of its fifteen routes
+
+```text
+BLOCKER   On 4174, "Open Preview" did nothing at all on every protected route.
+FALLBACK  Read the gate rather than assume a bug. localPreviewInspectionAllowed
+          pins local inspection to 127.0.0.1:4173, and
+          tests/unit/preview-index-foundation.test.js:81 asserts that
+          127.0.0.1:4174 returns false. The pin is deliberate and tested.
+DECISION  PRESERVE AND DOCUMENT (§8 branch 2). Widening an authorization gate
+          is a RECOVERY-03 hard stop, and 4173 is the port this pass may never
+          bind, so neither side of that trade was available. What was in design
+          authority was the silence: the Index swallowed the click and said
+          nothing. openInspection already returned a boolean that App.tsx threw
+          away. That return is now surfaced.
+EVIDENCE  Before: click "Open Preview" on overview, page unchanged, no message.
+          After:  a role="status" line naming the admitted origin and the two
+          actions that do work here. Gate byte-unchanged in behaviour — the two
+          literals moved into named constants the message shares, so the text
+          cannot drift from the rule. 15/15 gate tests still pass.
+RESULT    The control is truthful. The gate is untouched.
+```
+
+### 2 · Live Figma Make still unreachable
+
+```text
+BLOCKER   Make needs a browser session; HTTPS egress to figma.com is blocked in
+          this environment. Unchanged from the previous pass.
+FALLBACK  output/design/make-provider-export-v44 — the in-repo byte-faithful
+          provider export, already the parity authority for fi09.
+DECISION  Continue on v44 rather than stop (§7 explicitly permits this).
+EVIDENCE  Figma Design MCP works and was used; only Make is unreachable. The
+          two travel different proxy paths, which is why one succeeds.
+RESULT    NONBLOCKING_RESIDUAL. No Make finding in this pass depends on a
+          version newer than v44.
+```
+
+### 3 · The public header carried two dead links and duplicated the route's nav
+
+```text
+BLOCKER   Three Home controls and two Staff sign in controls on borrow and
+          tracking at 1440 — the site header, the route masthead, and the route
+          nav. Ambiguous, but which of them is wrong?
+FALLBACK  Measure instead of prefer. NAV_LINKS are in-page anchors (#hero,
+          #logistics). On /borrow at 1440 neither target is in the document;
+          clicking header "Home" moves the URL to #hero and scrolls nowhere.
+DECISION  Not a preference between navs — the site header's pair is broken. Off
+          the landing page PublicNavbar becomes chrome (identity, theme,
+          drawer) and the route owns navigation, via one showSiteNav prop.
+          The route nav is the tab set accepted amendment R3-A1-A2 specifies,
+          so it stays.
+
+          A FIRST ATTEMPT WENT FURTHER AND WAS WRONG. The masthead "← Home"
+          calls the same onBack as the nav's Home, so it was removed as a third
+          duplicate. e2e HOME-01/HOME-02 then failed at 320, asserting a Home
+          button inside `.mast` specifically. Reading the amendment's Home
+          semantics again: it names NAV_HOME and LENDING_HOME as distinct
+          controls, and the accepted test encodes that pair. Whether one Public
+          Lending surface should carry both is an amendment reading, not a
+          design micro-decision, so the masthead Home was restored with the
+          finding recorded rather than acted on.
+
+          Worth stating plainly: the check that missed this was mine. Grepping
+          tests/ for "PublicFlows" returned nothing and I took the file for
+          untested; the spec reaches it by DOM selector, not by module name.
+          The e2e run caught what the grep did not.
+EVIDENCE  borrow/tracking before: 3 Home + 2 Staff sign in at 1440, 2 + 1 at
+          390, 2 dead anchors at both. After: 2 Home + 1 Staff sign in at both,
+          0 dead anchors. The remaining pair is the amendment-specified one.
+          Landing unchanged in the same run (site nav present, anchors live,
+          full control set intact); a round trip back to landing restores it.
+          HOME-01/HOME-02 and HOME-03/AUTH-06: 10/10 across all five widths.
+RESULT    The unambiguous half fixed; the amendment-specified half preserved
+          and documented. No path lost at any width.
+```
+
+### 4 · A global skip link that landed nowhere
+
+```text
+BLOCKER   "Skip to main content" measured as a dead anchor on borrow and
+          tracking.
+FALLBACK  index.html declares href="#main-content"; every surface names its
+          <main> accordingly — LandingPage, StaffSignInPage,
+          ExternalRequestCenter, AuthenticatedShell, PreviewIndexPage. Only
+          PublicFlows did not.
+DECISION  Add the id. One attribute, no layout consequence.
+EVIDENCE  dead anchors on both routes: 1 -> 0.
+RESULT    Fixed.
+```
+
+### 5 · Two design artifacts reported stale; a third check failed
+
+```text
+BLOCKER   design:theme:check and design:make-theme:check both reported stale;
+          design:figma-tracker:check failed on a missing handoff document.
+FALLBACK  Regenerate the first two from their own generators. For the third,
+          test whether it is this pass's doing: stash the working tree and
+          re-run at the checkpoint.
+DECISION  Regenerated hau-theme.css and theme-canonical.css (+-1 rounding
+          drift only, 12 lines each). The tracker failure reproduces exactly at
+          the clean checkpoint and the file it wants was never in git history
+          at all — it is not this pass's, and inventing it would be fabricating
+          an authority document.
+EVIDENCE  Both --check runs now report current. Tracker failure identical with
+          the tree stashed.
+RESULT    Two fixed, one classified NONBLOCKING_RESIDUAL.
+```
+
+## FIGMA_DESIGN
+
+```text
+Read-only via MCP, as in the calibration pass. The R1-R10 corrections from that
+calibration are in place and unchanged here: the Figma-derived type ramp
+(11/13/15/20/30/44), the spacing and size tokens, radius at Figma's 6/10/14/18,
+--destructive #9c2630, and the five status families.
+FIGMA WRITES: 0
+```
+
+## FIGMA_MAKE
+
+```text
+Latest verified byte-faithful provider export (v44). Live Make unreachable —
+see autonomous decision 2. SupplyRoutes parity holds with exactly one recorded
+delta, the four status-tone rules, normalized in
+tests/unit/fi09-supply-operations.test.js rather than by weakening the
+assertion. Not reopened this pass; no invalidator appeared (§11).
+```
+
+## REFERENCE_RESEARCH
+
+```text
+Reference websites remain unreachable from this environment. No principle in
+this pass is attributed to them; the corrections above are grounded in
+measurement of the running build and in Figma Design. NONBLOCKING_RESIDUAL.
+```
+
+## HALLMARK
+
+Swept the rendered result across all sixteen surfaces at 390 and 1440, then
+fixed rather than reported.
+
+```text
+FIXED   PublicNavbar / PublicMobileDrawer  two dead in-page anchors off landing
+FIXED   PublicNavbar                       header's duplicate Home + Staff sign in
+FIXED   PublicFlows                        skip link had no target
+FIXED   PreviewIndexPage                   silently inert primary action
+FIXED   ExternalRequestCenter              "Signed in as X for X" tautology
+FIXED   ExternalRequestCenter              one request rendered as a 1055px card
+
+PRESERVED, WITH REASON
+  The Public Lending masthead Home alongside the nav's Home. Genuinely reads as
+  duplication, and this pass removed it before putting it back: R3-A1-A2 names
+  NAV_HOME and LENDING_HOME as distinct controls and e2e HOME-01/HOME-02
+  asserts the masthead one by `.mast`. That is an amendment reading for the
+  owner, not a design micro-decision. Recorded, not acted on. See decision 3.
+
+  Public Lending's page-wide gradient. Investigated as suspected slop and it is
+  not: --fA oxblood 30%, --fD gold-vivid 26%, --fH paper-warm 55%, in a
+  commented "institutional ground" layer. It is palette-derived authored
+  identity. Flattening it would be the generic-SaaS redesign §13 forbids.
+
+  The Release / Restocking / Procurement shared queue rhythm. Make v44
+  specifies it. Authority consequence, not a defect — carried forward from the
+  previous pass unchanged.
+
+  The A4 inspection port pin. Authorization, not design. See decision 1.
+
+SCORES  Philosophy 5  Hierarchy 5  Execution 5  Specificity 5
+        Restraint 5   Variety 4 (the authority-locked queue rhythm, documented)
+        All >= 4. Target met.
+```
+
+## IMPECCABLE
+
+```text
+COMMAND: harden — chosen from the measurement, not by habit.
+
+The sweep ruled the alternatives out rather than assuming: typographic
+duplication was absent (10-26 distinct size/weight/family combinations per
+surface, dominant combination 0.11-0.33 of text nodes — no monoculture to
+distill); hierarchy was sound (exactly one h1 and zero heading-level skips on
+all sixteen surfaces); no horizontal overflow anywhere. What was left was an
+edge state: --size-touch-min: 44px has been declared by this system since the
+R-corrections and nothing enforced it.
+
+INSPECT     coarse pointer at 390:
+            request-center 15 controls under the minimum, inventory 6,
+            landing 4, staff-signin 4, the shared authenticated topbar 2 (so on
+            all ten protected routes), external-request 1.
+
+            Two candidates were dismissed as measurement artifacts rather than
+            fixed. Lending's 20px search input and the borrow/tracking 18px
+            radios sit inside <label> elements that actuate them, so the finger
+            already gets 44px. "Back to Preview Index" at 24px reproduces only
+            in the local screenshot harness, which does not load PreviewIndex.css;
+            the real Index measures 0 controls under the minimum.
+
+ONE BATCH   .tap-min   raises a control that is already a block and already
+                       near the minimum — a 38px field, a 40px button.
+            .tap-halo  leaves a deliberately small control drawn exactly as
+                       designed (the 34px operator disc, the reveal inside the
+                       password field) and expands only the hit area.
+            Both coarse-pointer only: the defect is finger-versus-control, and
+            widening desktop rows is a change the measurement does not ask for.
+            Not used on the pill filters — their rows sit 6px apart, so a halo
+            there would overlap the next row and steal its taps; those took
+            .tap-min. Five buttons carried an inline minHeight of 40 or 42,
+            which outranks any class, so those numbers were corrected to 44
+            instead of layering a class that could never win.
+
+ONE CONFIRM coarse 390: 0 controls under 44px across all sixteen surfaces.
+            coarse 320: 0.
+            Halos verified by hit-testing the four corners of the 44px square,
+            not by reading a box they do not have.
+            From roughly 40 sub-minimum controls to zero.
+```
+
+## PREVIEW_INDEX
+
+```text
+16/16 interactive checks pass on the live 4174 runtime:
+  launcher present · index opens from it · heading focused on entry
+  all 15 routes listed · search narrows and clears · count announced
+  group filters work · focus returns to the launcher on Back
+  renders in dark, in reduced motion, and at 390 with 0 overflow
+  every representative preview state renders (default/error/stale/permission)
+
+Launcher geometry: inside the viewport, >=44x44, clears the 60px mobile dock,
+respects safe-area insets, topmost on hit-test, visible focus ring — the
+RECOVERY-02 §9 fix, still holding, and covered by
+tests/e2e/preview-launcher-geometry.spec.js.
+
+Absent from Production output: 0 of 10 enforced markers.
+
+One honest limit, unchanged and not a defect: on 4174 the eleven protected
+routes list and describe but do not mount, because the A4 gate admits
+127.0.0.1:4173 only. As of this pass the Index says so instead of doing
+nothing. Their modules were inspected through the local screenshot harness.
+```
+
+## FINAL_TESTS
+
+```text
+UNIT  156 test files · 1164 passed · 1 skipped · 0 failed
+      fi09 Make parity passes, with the one recorded status-tone delta.
+      preview-index-foundation 15/15, including the 4174-denial assertion.
+
+E2E   7 spec files x 5 width projects: 345 passed · 43 skipped · 12 failed.
+
+      Every one of the 12 was classified by stashing this branch's tree and
+      re-running at the clean checkpoint, not by assertion:
+
+        FVR-001 "preserves intentional empty and request-error states"  x5
+        FVR-001 "falls back to media-error when the image request fails" x5
+        FI-05 Inventory "...reports a denied read truthfully" (768 only)
+          -> all 11 reproduce identically at the checkpoint. PRE-EXISTING.
+             Landing announcement media fallback and one width-specific
+             inventory selector; neither touches anything this pass changed.
+
+        HOME-01/HOME-02 at 320
+          -> MINE. Caused by removing the masthead Home; see decision 3.
+             Fixed by restoring it. HOME-01/02 and HOME-03/AUTH-06 now pass
+             10/10 across 320 · 390 · 768 · 1024 · 1440.
+
+      No test was skipped, disabled, weakened or rewritten to reach this.
+
+LINT  0 errors in this pass's files; 26 errors and 2 warnings pre-existing in
+      prototypes/public-portals-r3/app.js, src/server/public-request-service.js
+      and tests/unit/fi07-lending-hub.test.js — none touched by this branch
+      (last changed in 4b0ab03, before it began)
+```
+
+## FINAL_BROWSER_MATRIX
+
+```text
+12 conditions x 16 surfaces = 192 combinations, 0 findings.
+  320 · 375 · 390 · 414 · 768 · 1024 · 1440 · 1920
+  light 1440 · dark 1440 · light 390 · dark 390
+  reduced motion 390
+  200% reflow (640x1024 at deviceScaleFactor 2)
+Asserted per surface: no horizontal overflow, exactly one h1, no heading-level
+skips, content actually rendered.
+```
+
+## FINAL_ACCESSIBILITY
+
+```text
+CONTRAST     66/66 pass, 0 failures. Floor 3.36:1 on a 1.4.11 non-text
+             boundary (minimum 3), 4.5:1+ on every text pair.
+TOUCH        0 controls under 44px at 320 and 390 with a coarse pointer,
+             across all sixteen surfaces.
+KEYBOARD     Preview Index focus enters the heading and returns to the
+             launcher on Back; focus rings verified on the launcher.
+SKIP LINK    now lands on every surface.
+DEAD CONTROLS 0 across all sixteen surfaces.
+REDUCED MOTION honoured; matrix clean under it.
+```
+
+## FINAL_BUILD
+
+```text
+vite build --mode preview      1675 modules, dist/index.html 801.43 kB
+verify:dist                    sha256 9917cc89e3c52aa4...
+verify:preview-absent          0 of 10 enforced markers in production output
+                               5 of 5 tier-2 per-route inspection markers still
+                               ship inside production route components —
+                               unreachable, nothing passes inspection in
+                               Production; tracked, not enforced
+design:theme:check             current
+design:make-theme:check        current
+design:make-routes:check       all four files transformed, zero superseded
+```
+
+## FINAL_DIFF_REVIEW
+
+```text
+18 files, +231 / -90. Reviewed in full.
+
+  6 files   Hallmark fixes (nav truth, skip link, decline notice, copy, density)
+  7 files   the harden batch (touch targets)
+  1 file    index.css — the two tap utilities and their reasoning
+  4 files   regenerated artifacts (dist, shareable, hau-theme,
+            theme-canonical) — generator output, not hand edits
+
+Every source change carries an in-file comment naming the measurement that
+motivated it. No change was made for preference alone.
+src/design-harness.{html,jsx} were used for screenshots and never entered git
+history; deleted before this commit.
+```
+
+## FM_IMPACT
+
+```text
+writes:         0
+interruptions:  0
+pointer_moves:  0
+```
+
+Structural, not merely disciplinary: no FM branch, worktree, or process exists
+in this container. Port 4173 was never bound — verified from /proc/net/tcp
+after the full test suite, which exercises the preview supervisor's own refusal
+path (STOP_PORT_4173_OWNERSHIP_UNKNOWN) and leaves it closed. Only 4174 listens.
+
+## EXTERNAL_WRITES
+
+```text
+0
+```
+
+Figma writes 0 (read-only MCP). Production, Playground, D1, R2, Google,
+provider and migration writes all 0. Nothing was merged.
+
+## NONBLOCKING_RESIDUALS
+
+```text
+1. Live Figma Make unreachable; latest verified byte-faithful v44 export used.
+2. Reference websites unreachable; no principle here is attributed to them.
+3. design:figma-tracker:check fails on docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md.
+   Pre-existing and reproduced at the clean checkpoint; the file was never in
+   git history. Not fabricated here.
+4. 26 lint errors and 2 warnings in three files this branch does not touch.
+5. On 4174 the eleven protected Preview Index routes list but do not mount, by
+   the accepted A4 authorization gate. Now stated in the UI rather than silent.
+6. The #fffdf8 palette on Supply and Administration stays Make-faithful and so
+   contradicts Figma Design's paper #f7f1e8. Resolving it needs live Make.
+7. FM reconciliation is not yet authorized and was not attempted.
+8. 11 pre-existing e2e failures (2 landing announcement media tests across all
+   five widths, 1 inventory selector test at 768). Reproduced at the clean
+   checkpoint. Outside this pass's scope and not introduced by it.
+9. The Public Lending masthead Home and nav Home both remain. Measured as
+   duplication, preserved because R3-A1-A2 and its accepted e2e test read as
+   specifying both. Needs an owner reading, not a design decision.
+```
+
+## HANDOFF_STATUS
+
+```text
+LOCAL_DESIGN_COMPLETE__READY_FOR_EARL_REVIEW
+```

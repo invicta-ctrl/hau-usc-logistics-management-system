@@ -17,9 +17,9 @@
      overlay  dialogs, command palette, context panels
 
    THE LADDER, MEASURED
-     light L*  ground 87.4  ->  inset 91.4  ->  work 95.4  ->  raised 97.1  ->  overlay 98.4
+     light L*  ground 87.4  ->  inset 91.6  ->  work 95.4  ->  raised 97.1  ->  overlay 98.4
            on work  primary 13.1:1  secondary 7.4:1  muted 5.1:1
-     dark  L*  ground 8.6  ->  inset 11.9  ->  work 15.0  ->  raised 19.0  ->  overlay 22.6
+     dark  L*  ground 8.6  ->  inset 11.9  ->  work 15.0  ->  raised 18.9  ->  overlay 22.6
            on work  primary 12.7:1  secondary 9.5:1  muted 6.0:1
 
    Light stops short of white (overlay is L* 98.5, and only dialogs use it) and
@@ -57,7 +57,7 @@
 
   /* Surface ladder — ground -> inset -> work -> raised -> overlay */
   --ground:   #e5dac7;   /* L* 87.4 */
-  --inset:    #efe5d7;   /* L* 91.4 */
+  --inset:    #efe6d7;   /* L* 91.6 */
   --work:     #f7f1e8;   /* L* 95.4 */
   --raised:   #fbf6f0;   /* L* 97.1 */
   --overlay:  #fdfaf6;   /* L* 98.4 */
@@ -71,8 +71,8 @@
   --on-accent: #40070a;
 
   /* Borders. control and selected-line carry 1.4.11, the others decorate. */
-  --border-subtle: #e3dcd1;
-  --border-default: #d1c8bb;
+  --border-subtle: #e2dcd1;
+  --border-default: #d1c9bb;
   --border-strong: #afa494;
   --border-control: #7f7469;
   --selected-line: #76592f;
@@ -159,7 +159,7 @@
   --ground:   #211615;   /* L* 8.6 */
   --inset:    #291c1c;   /* L* 11.9 */
   --work:     #312222;   /* L* 15.0 */
-  --raised:   #3b2a2a;   /* L* 19.0 */
+  --raised:   #3a2a2a;   /* L* 18.9 */
   --overlay:  #433231;   /* L* 22.6 */
 
   /* Text */
@@ -174,7 +174,7 @@
   --border-subtle: #392c2c;
   --border-default: #493a39;
   --border-strong: #685554;
-  --border-control: #8b7b7a;
+  --border-control: #8b7b79;
   --selected-line: #c8ac7e;
 
   /* Institution, action, focus */

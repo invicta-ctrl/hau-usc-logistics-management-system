@@ -73,8 +73,8 @@ export function AuthShellTopbar({
         <button
           type="button"
           onClick={onOpenDrawer}
-          className="flex items-center gap-2 rounded-[8px] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c] transition-colors hover:bg-white/8"
-          style={{ minHeight: 40, background: navigateBackground }}
+          className="tap-min min-h-10 flex items-center gap-2 rounded-[8px] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c] transition-colors hover:bg-white/8"
+          style={{ background: navigateBackground }}
           aria-label="Open navigation"
           data-navigate-surface={dark ? 'dark-command' : 'light-oxblood'}
         >
@@ -157,7 +157,7 @@ export function AuthShellTopbar({
           <button
             type="button"
             onClick={() => navigate('profile')}
-            className="flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+            className="tap-halo flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
             aria-label={`${presentation.displayName} — go to profile`}
             style={{ width: 34, height: 34, background: '#e8b93c', flexShrink: 0 }}
           >

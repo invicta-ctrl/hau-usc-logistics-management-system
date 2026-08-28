@@ -183,7 +183,7 @@ export function InventoryRoute({
                 setPreviewState(e.target.value as typeof previewState);
                 setStaleAcknowledged(false);
               }}
-              className="rounded-[8px] px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#e8b93c]"
+              className="tap-min rounded-[8px] px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#e8b93c]"
               style={{
                 background: dark ? '#2d2927' : '#ffffff',
                 border: `1px solid ${c.border}`,
@@ -432,7 +432,7 @@ export function InventoryRoute({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by item name, ID, or category…"
-                className="w-full rounded-[8px] pl-9 pr-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#e8b93c]"
+                className="tap-min w-full rounded-[8px] pl-9 pr-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#e8b93c]"
                 style={{
                   background: dark ? '#2d2927' : '#ffffff',
                   border: `1px solid ${c.border}`,
@@ -444,7 +444,7 @@ export function InventoryRoute({
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value as typeof filter)}
-              className="rounded-[8px] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#e8b93c]"
+              className="tap-min rounded-[8px] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#e8b93c]"
               style={{
                 background: dark ? '#2d2927' : '#ffffff',
                 border: `1px solid ${c.border}`,

@@ -312,7 +312,7 @@ export function ExternalRequestCenter({
         </div>
         <div className="flex items-center gap-2 ml-auto">
           <ThemeToggle dark={dark} onToggle={onToggleTheme} />
-          <button type="button" onClick={onHome} style={{ ...quietButton, color: '#faeecb', minHeight: 36 }}>
+          <button type="button" onClick={onHome} style={{ ...quietButton, color: '#faeecb' }}>
             <span className="inline-flex items-center gap-2">
               <Home size={14} strokeWidth={1.6} aria-hidden="true" />
               Home
@@ -322,7 +322,7 @@ export function ExternalRequestCenter({
             <button
               type="button"
               onClick={() => void onSignOut()}
-              style={{ ...quietButton, color: '#faeecb', minHeight: 36 }}
+              style={{ ...quietButton, color: '#faeecb' }}
             >
               Sign out
             </button>
@@ -384,7 +384,12 @@ export function ExternalRequestCenter({
             Submit USC operational needs — inventory and pantry restocking, office supplies, event materials
             and food, venue and activity support. Signed in as{' '}
             <strong style={{ color: c.text }}>{presentation.displayName}</strong>
-            {portal?.profile.displayName ? (
+            {/* RECOVERY-03. The "for X" clause names the office being requested
+                on behalf of. When the portal resolves it to the same string as
+                the signed-in identity, the sentence rendered as "Signed in as
+                Preview Requester for Preview Requester", which reads as a
+                rendering fault rather than a fact. Suppressed when they match. */}
+            {portal?.profile.displayName && portal.profile.displayName !== presentation.displayName ? (
               <>
                 {' '}
                 for <strong style={{ color: c.text }}>{portal.profile.displayName}</strong>
@@ -516,7 +521,13 @@ export function ExternalRequestCenter({
                   </p>
                 </div>
               ) : (
-                <ul className="flex flex-col gap-3">
+                /* RECOVERY-03. Was a single stacked column, so one open request
+                   became a 1055px-wide card holding four short lines — the
+                   lowest-density surface in the product, on the route a
+                   requester sees most. A responsive grid sizes each request to
+                   its content and fills the row as the list grows, without
+                   changing what a card says. */
+                <ul className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   {portal.requests.map((request) => (
                     <li
                       key={request.id}

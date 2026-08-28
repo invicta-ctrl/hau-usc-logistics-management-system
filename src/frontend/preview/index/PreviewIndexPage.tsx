@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Route } from '../../app/appTypes';
 import { listPreviewRoutes } from './registry';
 import type { PreviewRouteEntry } from './registry';
-import type { PreviewIndexBrowseState } from './inspection';
+import { LOCAL_INSPECTION_ORIGIN, type PreviewIndexBrowseState } from './inspection';
 import { filterPreviewRoutes, groupPreviewRoutes, searchPreviewRoutes } from './selectors';
 import {
   ACCESS_REQUIREMENT_LABELS,
@@ -31,12 +31,19 @@ function PreviewEntryRow({
   onOpenPreview,
   onSurface,
   surfaceTriggerRef,
+  declined,
 }: {
   entry: PreviewRouteEntry;
   onOpen: (entry: PreviewRouteEntry) => void;
   onOpenPreview: (entry: PreviewRouteEntry) => void;
   onSurface: (entry: PreviewRouteEntry, trigger: HTMLButtonElement) => void;
   surfaceTriggerRef: (route: string, node: HTMLButtonElement | null) => void;
+  /* RECOVERY-03 Hallmark. The A4 gate admits local inspection on one origin
+   * only, so away from it "Open Preview" used to do nothing at all — measured
+   * on 4174, where all eleven protected cards were silently inert. The gate is
+   * an accepted authorization control and stays exactly as it is; what changes
+   * is that the Index now says so instead of swallowing the click. */
+  declined: boolean;
 }) {
   return (
     <li className="preview-entry" data-preview-route={entry.route}>
@@ -90,6 +97,13 @@ function PreviewEntryRow({
           >
             Surface Preview
           </button>
+        ) : null}
+        {declined ? (
+          <p className="preview-entry-declined" role="status" data-preview-declined={entry.route}>
+            Local inspection is admitted on {LOCAL_INSPECTION_ORIGIN} only. This origin is not it, so
+            the protected module was not mounted. <em>Surface Preview</em> and <em>Test Real Access</em>{' '}
+            still work here.
+          </p>
         ) : null}
       </div>
     </li>
@@ -158,11 +172,14 @@ export function PreviewIndexPage({
   returnFocusRequestedRef: { current: boolean };
   browseState: PreviewIndexBrowseState;
   onBrowseStateChange: (state: PreviewIndexBrowseState) => void;
-  onOpenPreview: (entry: PreviewRouteEntry) => void;
+  /** Returns whether the A4 gate actually mounted the module, so a declined
+   *  click can be reported rather than swallowed. */
+  onOpenPreview: (entry: PreviewRouteEntry) => boolean;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [query, setQuery] = useState(browseState.query);
   const [filter, setFilter] = useState<PreviewFilter>(browseState.filter);
+  const [declinedRoute, setDeclinedRoute] = useState<string | null>(null);
   const [surfaceRoute, setSurfaceRoute] = useState<string | null>(null);
   const surfaceTriggers = useRef(new Map<string, HTMLButtonElement>());
 
@@ -220,7 +237,7 @@ export function PreviewIndexPage({
 
   const openPreviewRoute = (entry: PreviewRouteEntry) => {
     onBrowseStateChange({ query, filter, scrollTop: window.scrollY });
-    onOpenPreview(entry);
+    setDeclinedRoute(onOpenPreview(entry) ? null : entry.route);
   };
 
   const openSurface = (entry: PreviewRouteEntry, trigger: HTMLButtonElement) => {
@@ -314,6 +331,7 @@ export function PreviewIndexPage({
                       entry={entry}
                       onOpen={openRoute}
                       onOpenPreview={openPreviewRoute}
+                      declined={declinedRoute === entry.route}
                       onSurface={openSurface}
                       surfaceTriggerRef={(route, node) => {
                         if (node) surfaceTriggers.current.set(route, node);

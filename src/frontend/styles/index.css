@@ -1544,6 +1544,51 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   opacity: 0.72 !important;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   RECOVERY-03 Impeccable · harden — touch target minimum
+
+   The system has declared --size-touch-min: 44px since the R-corrections, but
+   nothing enforced it. Measured at 390px with a coarse pointer: 15 controls
+   under the minimum on the Internal Request Hub, 6 on Inventory, 4 each on
+   Landing and Staff sign-in, 2 on the shared authenticated topbar (so on all
+   ten protected routes), and one 20px-tall search field on Lending.
+
+   Both utilities are coarse-pointer only. The defect is a finger-vs-control
+   defect; a mouse hits a 27px chip perfectly well, and widening rows on the
+   desktop layouts would be a change the measurement does not ask for.
+
+   Two tools, chosen per control rather than one blanket rule:
+
+   .tap-min  grows a control that is already a block and already close to the
+             minimum — a 38px field, a 40px button. Costs a few pixels.
+   .tap-halo leaves a deliberately small control drawn exactly as designed —
+             the 34px operator disc, the reveal button inside a password
+             field — and expands only the area the finger has to land in.
+             Layout-neutral, so it never moves anything.
+
+   Not used on the pill filters: their rows sit 6px apart, so a halo there
+   would overlap the neighbouring row and steal its taps. Those take .tap-min.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (pointer: coarse) {
+  .tap-min {
+    min-height: var(--size-touch-min);
+  }
+
+  .tap-halo {
+    position: relative;
+  }
+
+  .tap-halo::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: 50%;
+    inset-block-start: 50%;
+    translate: -50% -50%;
+    inline-size: max(100%, var(--size-touch-min));
+    block-size: max(100%, var(--size-touch-min));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto !important; }
 

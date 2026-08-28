@@ -31,6 +31,14 @@ export function isProtectedPreviewRoute(route: Route): route is AuthRoute | 'ext
   );
 }
 
+/* The one origin the A4 gate below admits. Exported so the Index can name it
+ * when it declines, instead of leaving the control silently inert — the message
+ * and the gate then cannot drift apart. Changing these values is an
+ * authorization change, not a design change. */
+export const LOCAL_INSPECTION_HOSTNAME = '127.0.0.1';
+export const LOCAL_INSPECTION_PORT = '4173';
+export const LOCAL_INSPECTION_ORIGIN = `${LOCAL_INSPECTION_HOSTNAME}:${LOCAL_INSPECTION_PORT}`;
+
 export function localPreviewInspectionAllowed({
   indexAllowed,
   indexOpen,
@@ -46,8 +54,8 @@ export function localPreviewInspectionAllowed({
 }): boolean {
   return Boolean(
     dev &&
-    location?.hostname === '127.0.0.1' &&
-    location.port === '4173' &&
+    location?.hostname === LOCAL_INSPECTION_HOSTNAME &&
+    location.port === LOCAL_INSPECTION_PORT &&
     indexAllowed &&
     indexOpen &&
     explicitIndexAction,

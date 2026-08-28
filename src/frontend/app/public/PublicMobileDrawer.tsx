@@ -13,6 +13,7 @@ export function PublicMobileDrawer({
   onToggleTheme,
   onNavigate,
   onHome,
+  showSectionAnchors = true,
 }: {
   open: boolean;
   onClose: () => void;
@@ -20,6 +21,11 @@ export function PublicMobileDrawer({
   onToggleTheme: () => void;
   onNavigate: (r: Route) => void;
   onHome: () => void;
+  /* RECOVERY-03 Hallmark, same defect as PublicNavbar's: NAV_LINKS point at
+   * landing-page section anchors, so on a route surface they are dead links in
+   * the drawer too. The functional buttons below stay — they call real
+   * handlers and work from every surface. */
+  showSectionAnchors?: boolean;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   useDialogFocusTrap({ open, dialogRef });
@@ -92,6 +98,7 @@ export function PublicMobileDrawer({
           </button>
         </div>
 
+        {showSectionAnchors && (
         <nav className="flex flex-col gap-1 px-5 py-6" aria-label="Site navigation">
           {NAV_LINKS.map((link) => (
             <a
@@ -110,6 +117,7 @@ export function PublicMobileDrawer({
             </a>
           ))}
         </nav>
+        )}
 
         <div
           className="mt-auto flex flex-col gap-3 px-5 pb-8 pt-4 border-t"

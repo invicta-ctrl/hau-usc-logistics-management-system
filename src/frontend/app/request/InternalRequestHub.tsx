@@ -1066,7 +1066,7 @@ export function InternalRequestHub({
         <button
           type="button"
           disabled={loadState === 'loading' || inspection}
-          className="inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+          className="tap-min inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
           style={{ color: colors.text, background: colors.inset, border: `1px solid ${colors.border}` }}
           onClick={refetch}
         >
@@ -1154,7 +1154,7 @@ export function InternalRequestHub({
                       setPage(1);
                     }}
                     placeholder="Search request ID, purpose, or requester…"
-                    className="w-full rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--gold-vivid)]"
+                    className="tap-min w-full rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--gold-vivid)]"
                     style={{
                       color: colors.text,
                       background: colors.inset,
@@ -1174,7 +1174,7 @@ export function InternalRequestHub({
                           setArchiveFilter(filter.value);
                           setPage(1);
                         }}
-                        className="rounded-full px-3 py-1 text-[11px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--gold-vivid)]"
+                        className="tap-min rounded-full px-3 py-1 text-[11px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--gold-vivid)]"
                         style={{
                           color: active ? '#7d5518' : colors.muted,
                           background: active
@@ -1208,7 +1208,7 @@ export function InternalRequestHub({
                             active ? current.filter((entry) => entry !== status) : [...current, status],
                           )
                         }
-                        className="rounded-full px-3 py-1 text-[11px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--gold-vivid)]"
+                        className="tap-min rounded-full px-3 py-1 text-[11px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--gold-vivid)]"
                         style={{
                           color: active ? meta.color : colors.muted,
                           background: active ? meta.background : 'transparent',
@@ -1228,7 +1228,7 @@ export function InternalRequestHub({
                         setServerQuery('');
                         setPage(1);
                       }}
-                      className="rounded-full px-3 py-1 text-[11px] underline"
+                      className="tap-min rounded-full px-3 py-1 text-[11px] underline"
                       style={{ color: colors.muted }}
                     >
                       Clear filters
@@ -1410,7 +1410,7 @@ export function InternalRequestHub({
                   type="button"
                   disabled={queue.pagination.page <= 1}
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
-                  className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+                  className="tap-min inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
                   style={{ color: colors.text, border: `1px solid ${colors.border}` }}
                 >
                   <ChevronLeft size={14} />
@@ -1420,7 +1420,7 @@ export function InternalRequestHub({
                   type="button"
                   disabled={!queue.pagination.hasMore}
                   onClick={() => setPage((current) => current + 1)}
-                  className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+                  className="tap-min inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
                   style={{ color: colors.text, border: `1px solid ${colors.border}` }}
                 >
                   Next

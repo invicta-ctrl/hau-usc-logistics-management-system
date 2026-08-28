@@ -12,6 +12,7 @@ export function PublicNavbar({
   onToggle,
   onNavigate,
   onHome,
+  showSiteNav = true,
 }: {
   dark: boolean;
   onToggle: () => void;
@@ -19,6 +20,16 @@ export function PublicNavbar({
   /** R3A1A2-HOME-ROUTING. One semantic Home for every surface: land, scroll to
    *  top, close transient chrome, keep the session. Never a sign-out. */
   onHome: () => void;
+  /* RECOVERY-03 Hallmark. `NAV_LINKS` are in-page anchors (#hero, #logistics)
+   * that exist on the landing page only. Measured on /borrow at 1440: neither
+   * target is in the document, and clicking header "Home" moves the URL to
+   * #hero and scrolls nowhere — two dead controls. The same surfaces render
+   * PublicFlows' own tab set, which additionally duplicated Home and Staff
+   * sign in. So off the landing page this header is chrome — identity, theme,
+   * and the mobile drawer — and the route owns navigation. No path is lost:
+   * PublicFlows carries Home, Lending Center, Track lending, Lending policy
+   * and Staff sign in at every width. */
+  showSiteNav?: boolean;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
@@ -49,20 +60,24 @@ export function PublicNavbar({
             </span>
           </button>
 
-          <nav className="hidden lg:flex items-center gap-5 flex-1 justify-end" aria-label="Site navigation">
-            {NAV_LINKS.map((link) => <NavLink key={link.href} {...link} />)}
-          </nav>
+          {showSiteNav && (
+            <nav className="hidden lg:flex items-center gap-5 flex-1 justify-end" aria-label="Site navigation">
+              {NAV_LINKS.map((link) => <NavLink key={link.href} {...link} />)}
+            </nav>
+          )}
 
-          <div className="hidden lg:flex items-center gap-3 ml-auto lg:ml-0">
+          <div className={`hidden lg:flex items-center gap-3 ml-auto ${showSiteNav ? "lg:ml-0" : ""}`}>
             <ThemeToggle dark={dark} onToggle={onToggle} />
-            <button
-              type="button"
-              onClick={() => onNavigate("staff-signin")}
-              className="flex items-center justify-center rounded-[10px] text-[11px] font-semibold tracking-[-0.11px] whitespace-nowrap transition-opacity hover:opacity-90 active:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
-              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 32, paddingLeft: 13, paddingRight: 13, border: "1px solid #d1b478" }}
-            >
-              Staff sign in
-            </button>
+            {showSiteNav && (
+              <button
+                type="button"
+                onClick={() => onNavigate("staff-signin")}
+                className="flex items-center justify-center rounded-[10px] text-[11px] font-semibold tracking-[-0.11px] whitespace-nowrap transition-opacity hover:opacity-90 active:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+                style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 32, paddingLeft: 13, paddingRight: 13, border: "1px solid #d1b478" }}
+              >
+                Staff sign in
+              </button>
+            )}
           </div>
 
           <div className="flex lg:hidden items-center gap-2 ml-auto">
@@ -88,6 +103,7 @@ export function PublicNavbar({
         onToggleTheme={onToggle}
         onNavigate={onNavigate}
         onHome={onHome}
+        showSectionAnchors={showSiteNav}
       />
     </>
   );

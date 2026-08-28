@@ -65,7 +65,7 @@
   /* raised — temporary elevation */
   --paper-mid:                 #fbf6f0;
   /* inset — recess inside the work plane */
-  --paper-light:               #efe5d7;
+  --paper-light:               #efe6d7;
   /* ground — environmental canvas */
   --paper-bg:                  #e5dac7;
   /* text/primary */
@@ -77,7 +77,7 @@
   /* border/control — carries WCAG 1.4.11 */
   --border-warm:               #7f7469;
   /* border/subtle */
-  --border-paper:              #e3dcd1;
+  --border-paper:              #e2dcd1;
   /* status/done/fg */
   --green-open:                #1f6b41;
 
@@ -142,7 +142,7 @@
   /* work — primary reading and operational plane */
   --paper-warm:                #312222;
   /* raised — temporary elevation */
-  --paper-mid:                 #3b2a2a;
+  --paper-mid:                 #3a2a2a;
   /* inset — recess inside the work plane */
   --paper-light:               #291c1c;
   /* ground — environmental canvas */
@@ -154,7 +154,7 @@
   /* accent/text — gold that passes as ink */
   --ink-light:                 #c9a45f;
   /* border/control — carries WCAG 1.4.11 */
-  --border-warm:               #8b7b7a;
+  --border-warm:               #8b7b79;
   /* border/subtle */
   --border-paper:              #392c2c;
   /* status/done/fg */
@@ -181,7 +181,7 @@
   /* was var(--gold-cream): cream body copy */
   --foreground:                #f1e9e3;
   /* was #2a0508 */
-  --card:                      #3b2a2a;
+  --card:                      #3a2a2a;
   --card-foreground:           #f1e9e3;
   /* was #2a0508 */
   --popover:                   #433231;

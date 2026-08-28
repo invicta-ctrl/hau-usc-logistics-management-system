@@ -239,6 +239,28 @@
   justify-self: start;
 }
 
+/* RECOVERY-03. The reason the A4 gate gives back when it declines a mount. It
+   takes the whole row so it reads as an explanation of the click rather than a
+   fourth button, and it sits in the neutral status family rather than the alert
+   one — nothing failed here, the origin simply is not the admitted one. */
+.preview-entry-declined {
+  flex-basis: 100%;
+  margin: 0.25rem 0 0;
+  padding: 0.5rem 0.625rem;
+  border-left: 2px solid var(--status-neutral-line, var(--border));
+  border-radius: 0 var(--radius-sm, 6px) var(--radius-sm, 6px) 0;
+  background: var(--status-neutral-bg, var(--muted));
+  color: var(--status-neutral-fg, var(--muted-foreground));
+  font-size: var(--type-label, 0.6875rem);
+  line-height: 1.5;
+  text-align: left;
+}
+
+.preview-entry-declined em {
+  font-style: normal;
+  font-weight: 600;
+}
+
 /* RECOVERY-02 §9. The launcher must sit fully inside the viewport, carry at
    least a 44px target, and must not cover navigation.
 

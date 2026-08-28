@@ -298,7 +298,7 @@ export function StaffSignInPage({
                 <button
                   type="button"
                   onClick={() => setShowPw((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+                  className="tap-halo absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
                   aria-label={showPw ? "Hide password" : "Show password"}
                   aria-controls="signin-pw"
                   aria-pressed={showPw}
@@ -352,12 +352,12 @@ export function StaffSignInPage({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" aria-label="Account application links">
               <button type="button" onClick={() => setAccessMode("apply")}
                 className="rounded-[10px] text-[13px] font-semibold"
-                style={{ color: dark ? "#faeecb" : "#610b0f", minHeight: 42, border: "1px solid #d1b478" }}>
+                style={{ color: dark ? "#faeecb" : "#610b0f", minHeight: 44, border: "1px solid #d1b478" }}>
                 Apply for staff access
               </button>
               <button type="button" onClick={() => setAccessMode("status")}
                 className="rounded-[10px] text-[13px] font-semibold"
-                style={{ color: dark ? "#faeecb" : "#610b0f", minHeight: 42, border: "1px solid #d1b478" }}>
+                style={{ color: dark ? "#faeecb" : "#610b0f", minHeight: 44, border: "1px solid #d1b478" }}>
                 Check application status
               </button>
             </div>
@@ -366,7 +366,7 @@ export function StaffSignInPage({
 
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 text-[13px] tracking-[-0.15px] transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#610b0f] rounded-sm self-start"
+            className="tap-min inline-flex items-center gap-2 text-[13px] tracking-[-0.15px] transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#610b0f] rounded-sm self-start"
             style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: dark ? "#f6e29a" : "#610b0f", background: "none" }}
           >
             <ArrowLeft size={14} strokeWidth={1.5} aria-hidden="true" />

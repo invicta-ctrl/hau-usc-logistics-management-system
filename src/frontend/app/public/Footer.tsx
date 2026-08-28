@@ -37,7 +37,7 @@ export function Footer({
               <li>
                 <a
                   href="#logistics"
-                  className="flex items-center gap-2 text-[13px] tracking-[-0.15px] transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c] rounded-sm"
+                  className="tap-min flex items-center gap-2 text-[13px] tracking-[-0.15px] transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c] rounded-sm"
                   style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb" }}
                 >
                   Logistics hub
@@ -56,21 +56,21 @@ export function Footer({
             <button
               onClick={() => onNavigate("external-request")}
               className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
-              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", background: "#e8b93c", color: "#40070a", minHeight: 40, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
+              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", background: "#e8b93c", color: "#40070a", minHeight: 44, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
             >
               Start a logistics request
             </button>
             <button
               onClick={onHome}
               className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
-              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 40, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
+              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 44, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
             >
               Home
             </button>
             <button
               onClick={() => onNavigate("staff-signin")}
               className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
-              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 40, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
+              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 44, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
             >
               Staff sign in
             </button>

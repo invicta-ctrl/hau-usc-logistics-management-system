@@ -136,7 +136,13 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: dark ? '#40070a' : '#f2eae5' }}>
-      <PublicNavbar dark={dark} onToggle={toggleTheme} onNavigate={navigate} onHome={goHome} />
+      <PublicNavbar
+        dark={dark}
+        onToggle={toggleTheme}
+        onNavigate={navigate}
+        onHome={goHome}
+        showSiteNav={route === 'landing'}
+      />
 
       {route !== 'landing' ? (
         <PublicFlows route={route as PublicSubRoute} onBack={goHome} dark={dark} onNavigate={navigate} />
