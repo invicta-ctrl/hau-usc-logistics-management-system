@@ -26,6 +26,11 @@ import {
 } from '../../src/frontend/preview/index/vocabulary';
 import { listPreviewRoutes, PREVIEW_INDEX_REGISTRY } from '../../src/frontend/preview/index/registry';
 import {
+  normalizeRecentPreviewRoutes,
+  PREVIEW_RECENT_ROUTES_KEY,
+  recordRecentPreviewRoute,
+} from '../../src/frontend/preview/index/recent';
+import {
   filterPreviewRoutes,
   groupPreviewRoutes,
   searchPreviewRoutes,
@@ -301,6 +306,8 @@ describe('preview index trusted gate and registry foundations', () => {
   it('derives search, filter, and group results deterministically from the registry', () => {
     expect(searchPreviewRoutes('')).toHaveLength(15);
     expect(searchPreviewRoutes('   RELEASE   ').map((entry) => entry.route)).toEqual(['release']);
+    expect(searchPreviewRoutes('invtry').map((entry) => entry.route)).toEqual(['inventory']);
+    expect(searchPreviewRoutes('req hub').map((entry) => entry.route)).toEqual(['request-center']);
     expect(searchPreviewRoutes('does-not-exist')).toEqual([]);
 
     expect(filterPreviewRoutes('ALL')).toHaveLength(15);
@@ -337,6 +344,24 @@ describe('preview index trusted gate and registry foundations', () => {
     expect(groups.find((group) => group.group === 'REQUESTER').items).toHaveLength(1);
     expect(groups.find((group) => group.group === 'STAFF').items).toHaveLength(8);
     expect(groups.find((group) => group.group === 'ADMINISTRATION').items).toHaveLength(2);
+  });
+
+  it('keeps a bounded, valid, de-duplicated recent-workspace list without sensitive state', () => {
+    expect(PREVIEW_RECENT_ROUTES_KEY).toBe('hau-playground-recent-routes-v1');
+    expect(normalizeRecentPreviewRoutes(['inventory', 'bogus', 'inventory', 'landing', 4, 'profile'])).toEqual([
+      'inventory',
+      'landing',
+      'profile',
+    ]);
+
+    const writes = [];
+    const next = recordRecentPreviewRoute('release', ['inventory', 'release', 'landing', 'profile'], {
+      setItem(key, value) {
+        writes.push([key, value]);
+      },
+    });
+    expect(next).toEqual(['release', 'inventory', 'landing', 'profile']);
+    expect(writes).toEqual([[PREVIEW_RECENT_ROUTES_KEY, JSON.stringify(next)]]);
   });
 
   it('exposes an immutable registry and pure selectors without mutable fixtures', () => {

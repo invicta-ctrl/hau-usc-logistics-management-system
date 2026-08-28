@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P20_HTML_ACCESSIBILITY_SEMANTICS_COMPLETE;P21_PLAYGROUND_INDEX_QA_HUB_NEXT
+PHASE: P21_PLAYGROUND_INDEX_QA_HUB_COMPLETE;P22_PERFORMANCE_BASELINE_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -78,6 +78,8 @@ P19_STATUS: PASS_LOCAL_IMPLEMENTATION;LIVE_UI_ACCEPTANCE_PENDING_P29_P31
 P19_AUDIT: .codex/PLAYGROUND_MASTER_P19_COPY_SEMANTICS_UX_WRITING.md
 P20_STATUS: PASS_LOCAL_IMPLEMENTATION;LIVE_UI_ACCEPTANCE_PENDING_P29_P31
 P20_AUDIT: .codex/PLAYGROUND_MASTER_P20_HTML_ACCESSIBILITY_SEMANTICS.md
+P21_STATUS: PASS_LOCAL_IMPLEMENTATION;LIVE_UI_ACCEPTANCE_PENDING_P29_P31
+P21_AUDIT: .codex/PLAYGROUND_MASTER_P21_PLAYGROUND_INDEX_QA_HUB.md
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P21 Playground Index and QA Hub redesign. Add in-memory fuzzy workspace search, keyboard navigation, grouped module status, backend health, baseline and generation identity, recent workspaces, authorized reset access, one-click navigation, and measured intent-based prefetch.
+NEXT_EXACT_ACTION: Begin P22 performance baseline. Measure current artifact bytes, route chunks, request and payload counts, LCP, interaction latency, CLS, TTFB, representative route transitions and data loads, Index search, 390 and 1440 widths, constrained CPU, and slower network profiles before optimizing.
 HANDOFF_STATUS: ACTIVE

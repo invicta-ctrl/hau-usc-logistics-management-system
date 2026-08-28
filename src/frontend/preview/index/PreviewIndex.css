@@ -218,6 +218,9 @@
 }
 
 .preview-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 44px;
   padding: 0.5rem 0.875rem;
   border: 1px solid var(--border);
@@ -227,6 +230,9 @@
   font: inherit;
   font-size: 0.8125rem;
   font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -333,14 +339,201 @@
   border: 0;
 }
 
+/* P21 QA launcher: compact runtime identity and workspace launch grid. */
+.preview-qa-status,
+.preview-recent,
+.preview-index-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.preview-qa-status {
+  padding: clamp(1rem, 2vw, 1.375rem);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--card);
+}
+
+.preview-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.preview-section-heading h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.preview-section-heading p,
+.preview-section-heading > span {
+  margin: 0.25rem 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.preview-section-heading kbd {
+  padding: 0.0625rem 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  background: var(--muted);
+  font-family: var(--font-record);
+}
+
+.preview-environment-badge {
+  flex: none;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--foreground) !important;
+  background: var(--muted);
+  font-family: var(--font-record);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.preview-status-strip {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.preview-status-strip > div {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--background);
+}
+
+.preview-status-strip dt {
+  color: var(--muted-foreground);
+  font-family: var(--font-record);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.preview-status-strip dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+.preview-reset-shortcut {
+  justify-self: start;
+  color: var(--link);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  text-underline-offset: 0.2em;
+}
+
+.preview-recent ul {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  list-style: none;
+}
+
+.preview-recent a {
+  min-height: 44px;
+  padding: 0.65rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  color: var(--foreground);
+  background: var(--card);
+  text-decoration: none;
+}
+
+.preview-recent a:focus-visible,
+.preview-reset-shortcut:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.preview-recent span {
+  font-weight: 650;
+}
+
+.preview-recent small {
+  color: var(--muted-foreground);
+  font-family: var(--font-record);
+}
+
+.preview-entry-list {
+  display: grid;
+  gap: 0.75rem;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.preview-entry,
+.preview-entry-list > li:first-child {
+  align-content: space-between;
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--card);
+}
+
+.preview-entry-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.preview-entry-route {
+  flex: none;
+  margin: 0;
+}
+
+.preview-entry-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.preview-entry-metas {
+  margin-block-start: 0.625rem;
+  gap: 0.35rem 0.875rem;
+}
+
+.preview-entry-actions {
+  align-self: end;
+}
+
+@media (min-width: 48rem) {
+  .preview-status-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .preview-entry-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (min-width: 60rem) {
   .preview-entry {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
   }
 
   .preview-entry-actions {
-    justify-content: flex-end;
+    justify-content: flex-start;
   }
 }
 

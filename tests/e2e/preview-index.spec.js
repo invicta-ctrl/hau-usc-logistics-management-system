@@ -2,6 +2,17 @@ import { expect, test } from '@playwright/test';
 
 const VERSION = '**/api/version';
 const exactInspectionPort = process.env.HAU_FRONTEND_E2E_PORT === '4173';
+const QA_HUB_READS = new Set([
+  '/api/version',
+  '/api/public/advertisements',
+  '/api/health',
+  '/api/readiness',
+  '/api/playground/status',
+]);
+
+function isUnexpectedInspectionRequest(pathname) {
+  return pathname.startsWith('/api/') && !QA_HUB_READS.has(pathname);
+}
 
 function installVersion(page, playground) {
   return page.route(VERSION, (route) =>
@@ -29,6 +40,34 @@ function installEmptyFeed(page) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ ok: true, items: [] }),
+    }),
+  );
+}
+
+async function installQaStatus(page) {
+  await page.route('**/api/health', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }),
+  );
+  await page.route('**/api/readiness', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true,"ready":true}' }),
+  );
+  await page.route('**/api/playground/status', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        resetCenter: {
+          baselineId: 'playground-clean-v2',
+          baselineVersion: '2',
+          generation: 6,
+          workingState: 'CLEAN',
+          activeTestSession: false,
+          resetAvailable: true,
+          confirmationPhrase: 'RESET PLAYGROUND',
+          pendingOperation: null,
+          lastReset: null,
+        },
+      }),
     }),
   );
 }
@@ -180,6 +219,47 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   expect(overflow).toBeLessThanOrEqual(1);
 });
 
+test('P21 provides a fast keyboard QA launcher with runtime identity, fuzzy search, and local recents', async ({
+  page,
+}) => {
+  await installVersion(page, true);
+  await installEmptyFeed(page);
+  await installQaStatus(page);
+  const apiRequests = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/api/')) apiRequests.push(new URL(request.url()).pathname);
+  });
+
+  await page.goto('/#/__preview/index');
+  await expect(page.locator('[data-preview-backend-health]')).toHaveText('Ready');
+  await expect(page.locator('[data-preview-baseline]')).toHaveText('playground-clean-v2 · v2');
+  await expect(page.locator('[data-preview-generation]')).toHaveText('6');
+  await expect(page.getByRole('link', { name: 'Open authorized reset controls' })).toHaveAttribute(
+    'href',
+    '#/route/administration',
+  );
+
+  const requestsAfterStatus = apiRequests.length;
+  await page.keyboard.press('/');
+  await expect(page.locator('[data-preview-search]')).toBeFocused();
+  await page.locator('[data-preview-search]').fill('invtry');
+  await expect(page.locator('[data-preview-route]')).toHaveCount(1);
+  await expect(page.locator('[data-preview-route="inventory"]')).toBeVisible();
+  expect(apiRequests).toHaveLength(requestsAfterStatus);
+
+  await page.locator('[data-preview-search]').press('Escape');
+  await expect(page.locator('[data-preview-search]')).toHaveValue('');
+  await page.locator('[data-preview-search]').press('ArrowDown');
+  await expect(page.locator('[data-preview-route-link]').first()).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.locator('[data-preview-route-link]').nth(1)).toBeFocused();
+
+  await page.locator('[data-preview-route="landing"] [data-action="open"]').click();
+  await expect(page.getByRole('heading', { name: 'Logistics services and records' })).toBeVisible();
+  await page.goto('/#/__preview/index');
+  await expect(page.locator('[data-preview-recent-route="landing"]')).toBeVisible();
+});
+
 test('opens a public real route from the index', async ({ page }) => {
   await installVersion(page, true);
   await installEmptyFeed(page);
@@ -209,14 +289,11 @@ test('INDEX-GATE fails closed outside the exact local 4173 inspection origin', a
   test.skip(exactInspectionPort, 'The exact-4173 invocation asserts positive local inspection instead.');
   await installVersion(page, true);
   await installEmptyFeed(page);
+  await installQaStatus(page);
   const protectedRequests = [];
   page.on('request', (request) => {
     const pathname = new URL(request.url()).pathname;
-    if (
-      pathname.startsWith('/api/') &&
-      pathname !== '/api/version' &&
-      pathname !== '/api/public/advertisements'
-    ) {
+    if (isUnexpectedInspectionRequest(pathname)) {
       protectedRequests.push({ method: request.method(), pathname });
     }
   });
@@ -228,20 +305,17 @@ test('INDEX-GATE fails closed outside the exact local 4173 inspection origin', a
   expect(protectedRequests).toEqual([]);
 });
 
-test('INDEX-INSPECT opens exact-4173 protected modules without real auth or protected network traffic', async ({
+test('INDEX-INSPECT opens exact-4173 protected modules without real auth or operational data traffic', async ({
   page,
 }) => {
   test.skip(!exactInspectionPort, 'Run explicitly against the accepted 4173 supervisor.');
   await installVersion(page, true);
   await installEmptyFeed(page);
+  await installQaStatus(page);
   const protectedRequests = [];
   page.on('request', (request) => {
     const pathname = new URL(request.url()).pathname;
-    if (
-      pathname.startsWith('/api/') &&
-      pathname !== '/api/version' &&
-      pathname !== '/api/public/advertisements'
-    ) {
+    if (isUnexpectedInspectionRequest(pathname)) {
       protectedRequests.push({ method: request.method(), pathname });
     }
   });
@@ -367,11 +441,7 @@ test('FI-08R keeps focused-task preview and both dialog focus lifecycles inside 
   const protectedRequests = [];
   page.on('request', (request) => {
     const pathname = new URL(request.url()).pathname;
-    if (
-      pathname.startsWith('/api/') &&
-      pathname !== '/api/version' &&
-      pathname !== '/api/public/advertisements'
-    ) {
+    if (isUnexpectedInspectionRequest(pathname)) {
       protectedRequests.push({ method: request.method(), pathname });
     }
   });
@@ -450,15 +520,12 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   test.skip(!exactInspectionPort, 'Run explicitly against the accepted 4173 supervisor.');
   await installVersion(page, true);
   await installEmptyFeed(page);
+  await installQaStatus(page);
   const protectedRequests = [];
   const consoleErrors = [];
   page.on('request', (request) => {
     const pathname = new URL(request.url()).pathname;
-    if (
-      pathname.startsWith('/api/') &&
-      pathname !== '/api/version' &&
-      pathname !== '/api/public/advertisements'
-    ) {
+    if (isUnexpectedInspectionRequest(pathname)) {
       protectedRequests.push({ method: request.method(), pathname });
     }
   });
@@ -474,7 +541,7 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
     page.locator('[data-preview-inspection="true"][data-preview-route="restocking"]'),
   ).toBeVisible();
   const restocking = page.locator('.sup');
-  const previewState = restocking.getByLabel('Preview state');
+  const previewState = restocking.getByLabel('Inspection state');
   await expect(page.getByRole('heading', { name: 'Restocking and receiving' })).toBeVisible();
   await expect(restocking.getByText('Sample data · Actions unavailable')).toBeVisible();
 
@@ -484,7 +551,7 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   const supplyTask = restocking.locator('.task[role="dialog"]');
   const quantity = supplyTask.getByRole('spinbutton', { name: 'Quantity' });
   const cancel = supplyTask.getByRole('button', { name: 'Cancel' });
-  const confirm = supplyTask.getByRole('button', { name: 'Confirm local preview' });
+  const confirm = supplyTask.getByRole('button', { name: 'Check sample action' });
   await expect(supplyTask).toBeVisible();
   await expect(supplyTask).toHaveAttribute('aria-labelledby', 'supply-task-title');
   await expect(
@@ -518,9 +585,9 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   await confirm.click();
   await expect(supplyTask).toHaveCount(0);
   await expect(receivingTaskOpener).toBeFocused();
-  await expect(restocking.getByRole('heading', { name: 'Local fixture updated' })).toBeVisible();
+  await expect(restocking.getByRole('heading', { name: 'Sample action checked' })).toBeVisible();
   await expect(restocking.getByRole('status')).toHaveText(
-    'Locally confirmed · synthetic fixture only · no service write',
+    'Sample action checked · No operational record changed',
   );
 
   await previewState.selectOption('Loading');
@@ -533,7 +600,7 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   await restockTaskOpener.click();
   await expect(supplyTask.getByRole('alert')).toHaveText('Complete required fields.');
   await page.keyboard.press('Escape');
-  await previewState.selectOption('Stale revision');
+  await previewState.selectOption('Outdated record');
   await expect(restocking.getByText('Last-known record · actions paused')).toBeVisible();
   await previewState.selectOption('Denied');
   await expect(
@@ -541,8 +608,8 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   ).toBeVisible();
   await previewState.selectOption('Unavailable');
   await expect(restocking.getByRole('heading', { name: 'Supply service unavailable' })).toBeVisible();
-  await previewState.selectOption('Locally confirmed');
-  await expect(restocking.getByRole('heading', { name: 'Local fixture updated' })).toBeVisible();
+  await previewState.selectOption('Action checked');
+  await expect(restocking.getByRole('heading', { name: 'Sample action checked' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
   await page.locator('[data-preview-route="procurement"] [data-action="open-preview"]').click();
@@ -552,7 +619,7 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   const procurement = page.locator('.sup');
   await expect(page.getByRole('heading', { name: 'Procurement lifecycle' })).toBeVisible();
   await expect(procurement.locator('.recordband > b')).toHaveText('PRC-2026-0044');
-  await expect(procurement.getByRole('button', { name: 'Contracts · unavailable' })).toBeDisabled();
+  await expect(procurement.getByRole('button', { name: 'Supplier agreements · unavailable' })).toBeDisabled();
   const desktopCanvassingRecord = procurement.getByRole('button', {
     name: /Wireless microphone ×12/u,
   });
@@ -596,15 +663,12 @@ test('FI-10 renders the bounded Administration inspection safely at every accept
   test.skip(!exactInspectionPort, 'Run explicitly against the accepted 4173 supervisor.');
   await installVersion(page, true);
   await installEmptyFeed(page);
+  await installQaStatus(page);
   const protectedRequests = [];
   const consoleErrors = [];
   page.on('request', (request) => {
     const pathname = new URL(request.url()).pathname;
-    if (
-      pathname.startsWith('/api/') &&
-      pathname !== '/api/version' &&
-      pathname !== '/api/public/advertisements'
-    ) {
+    if (isUnexpectedInspectionRequest(pathname)) {
       protectedRequests.push({ method: request.method(), pathname });
     }
   });
@@ -628,17 +692,18 @@ test('FI-10 renders the bounded Administration inspection safely at every accept
       '[data-preview-inspection="true"][data-preview-route="administration"] [data-fi10-administration="true"]',
     );
     await expect(administration).toBeVisible();
-    await expect(administration.getByText('Sanitized Preview inspection', { exact: true })).toBeVisible();
+    await expect(administration.getByText('Inspection mode', { exact: true })).toBeVisible();
     await expect(
-      administration.getByText('Synthetic preview · no session, backend, or protected data', { exact: true }),
+      administration.getByText('Sample data · Actions unavailable', { exact: true }),
     ).toBeVisible();
-    await expect(administration.getByRole('button', { name: 'Reference administration' })).toHaveCount(0);
-    await expect(administration.getByRole('button', { name: 'Link registry' })).toHaveCount(0);
-    await expect(administration.getByRole('button', { name: 'Brand & media' })).toHaveCount(0);
-    await expect(administration.getByRole('button', { name: 'System status' })).toHaveCount(0);
+    const administrationTabs = administration.locator('[data-fi10-tabs="true"] button');
+    await expect(administrationTabs.filter({ hasText: 'Reference administration' })).toHaveCount(1);
+    await expect(administrationTabs.filter({ hasText: 'Link registry' })).toHaveCount(1);
+    await expect(administrationTabs.filter({ hasText: 'Brand & media' })).toHaveCount(1);
+    await expect(administrationTabs.filter({ hasText: 'System status' })).toHaveCount(1);
     await expect(administration).not.toContainText('preview-fi10-person-a');
 
-    const previewState = administration.getByLabel('FI-10 preview state');
+    const previewState = administration.getByLabel('Administration preview state');
     await previewState.selectOption('Loading');
     await expect(administration.locator('[aria-busy="true"]')).toBeVisible();
     await previewState.selectOption('Populated');
@@ -670,7 +735,7 @@ test('FI-10 renders the bounded Administration inspection safely at every accept
       .click();
     await expect(administration.locator('[data-fi10-activity="true"]')).toBeVisible();
     await expect(
-      administration.getByText('Preview inspection intentionally withholds staff activity.', { exact: false }),
+      administration.getByText('Staff activity is unavailable in inspection mode.', { exact: false }),
     ).toBeVisible();
 
     await previewState.selectOption('Empty');
@@ -696,7 +761,7 @@ test('reaches the real staff sign-in page through Test Real Login Flow', async (
   await expect(page.locator('[data-preview-index]')).toHaveCount(0);
 });
 
-test('shows no obsolete surface-preview action when every registered page is operational', async ({
+test('shows no obsolete surface-preview action or speculative per-route preload when every registered page is operational', async ({
   page,
 }) => {
   await installVersion(page, true);
@@ -716,7 +781,8 @@ test('shows no obsolete surface-preview action when every registered page is ope
   await expect(page.locator('[data-action="surface"]')).toHaveCount(0);
   await expect(page.locator('[data-preview-surface]')).toHaveCount(0);
 
-  expect(requests.filter((request) => request.pathname !== '/api/version')).toEqual([]);
+  const allowedQaRequests = new Set(['/api/version', '/api/health', '/api/readiness', '/api/playground/status']);
+  expect(requests.filter((request) => !allowedQaRequests.has(request.pathname))).toEqual([]);
   expect(requests.filter((request) => request.method !== 'GET')).toEqual([]);
 });
 
