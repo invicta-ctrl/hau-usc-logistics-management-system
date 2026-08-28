@@ -38,6 +38,13 @@
 - Restored the accepted FI-13 generic route-style containment conversion and its stronger responsive descendant regression.
 - Rebuilt and verified identical preview/shareable artifacts plus the staging package and byte-identical hero. No deployment, reset, migration, provider/D1/R2/business-data, Production/main, Google, or Figma mutation occurred.
 
+### Playground Master P06 normal-runtime fixture boundary
+
+- Classified all fixture/mock/preview/simulated-success search results against the actual application route graph: normal operational routes remain backend-backed, while deterministic records and local demonstrations require explicit Preview inspection.
+- Added a deterministic verifier that rejects fixture-only imports or `inspection` props in the normal renderer, expanded Preview/legacy references, weakened shared-component defaults, and missing Preview gateway or truthful failure markers.
+- Wired the verifier before preview, staging, and production-mode frontend builds; focused frontend tests and both preview/staging builds passed with unchanged artifact hashes.
+- Preserved three proven-unreferenced legacy fixture components for later preservation-gated residue work. No deployment, reset, migration, provider/D1/R2/business-data, Production/main, Google, or Figma mutation occurred.
+
 ### FI-13 through FI-17 immediate Playground migration
 
 - Migrated the accepted FI frontend completion plus post-FI17 Overview and hero-motion recovery into the FM branch while preserving real Worker/API, auth, D1/R2, reset, privacy, and operational behavior.

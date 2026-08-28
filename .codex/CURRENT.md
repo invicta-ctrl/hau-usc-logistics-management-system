@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P05_FI_FRONTEND_RECONCILIATION_COMPLETE;P06_NORMAL_RUNTIME_FIXTURE_AUDIT_NEXT
+PHASE: P06_NORMAL_RUNTIME_FIXTURE_AUDIT_COMPLETE;P07_CLEAN_BASELINE_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -39,6 +39,8 @@ P04_STATUS: PASS_LOCAL_CANDIDATE;LIVE_DEPLOYMENT_PENDING
 P04_AUDIT: .codex/PLAYGROUND_MASTER_P04_NAVIGATION_AUDIT.md
 P05_STATUS: PASS_ACCEPTED_FI_AND_PLAYGROUND_INTEGRATION_RECONCILED
 P05_AUDIT: .codex/PLAYGROUND_MASTER_P05_FI_RECONCILIATION.md
+P06_STATUS: PASS_NORMAL_RUNTIME_BACKEND_BACKED_AND_FIXTURE_BOUNDARY_GATED
+P06_AUDIT: .codex/PLAYGROUND_MASTER_P06_FIXTURE_BOUNDARY_AUDIT.md
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Execute P06: inventory the normal deployed application graph for fixture/mock/simulated-success and hard-coded operational data, confine all deterministic data to explicit Preview/test modes, add or strengthen the build boundary gate, and preserve truthful empty/denied/unavailable/error behavior.
+NEXT_EXACT_ACTION: Execute P07: verify the current one-way privacy-filtered Playground baseline, refresh from Production read-only only if stale or incomplete, add staging-safe deterministic coverage only where required, and record baseline identity, transforms, schema, domain counts, inventory/R2 integrity, capabilities, and frontend source/tree.
 HANDOFF_STATUS: ACTIVE

@@ -5,6 +5,7 @@ import {
   parsePlaygroundOrigin,
   verifyPlaygroundOrigin,
 } from '../../scripts/playground-proxy-guard.mjs';
+import '../../scripts/verify-frontend-fixture-boundary.mjs';
 
 describe('Figma frontend isolated-playground proxy guard', () => {
   const healthy = {
@@ -49,8 +50,14 @@ describe('Figma frontend isolated-playground proxy guard', () => {
   });
 
   it('keeps normal authenticated routes off fixture-backed release and supply implementations', () => {
-    const renderer = readFileSync(new URL('../../src/frontend/app/AppRouteRenderer.tsx', import.meta.url), 'utf8');
-    const overview = readFileSync(new URL('../../src/frontend/app/overview/OverviewRoute.tsx', import.meta.url), 'utf8');
+    const renderer = readFileSync(
+      new URL('../../src/frontend/app/AppRouteRenderer.tsx', import.meta.url),
+      'utf8',
+    );
+    const overview = readFileSync(
+      new URL('../../src/frontend/app/overview/OverviewRoute.tsx', import.meta.url),
+      'utf8',
+    );
 
     expect(renderer).not.toContain("import ReleaseDeskRoute from './ReleaseDeskRoute'");
     expect(renderer).toContain('<OperationalModuleRoute module="release" />');
@@ -61,5 +68,12 @@ describe('Figma frontend isolated-playground proxy guard', () => {
     expect(renderer).not.toContain('mode="procurement"');
     expect(overview).not.toContain('overviewFixtures');
     expect(overview).toContain('module="overview"');
+  });
+
+  it('keeps the deterministic fixture-boundary build gate callable from every frontend build', () => {
+    const packageJson = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+    for (const script of ['build', 'build:cloudflare', 'build:cloudflare:production']) {
+      expect(packageJson.scripts[script]).toContain('npm run verify:frontend:fixture-boundary');
+    }
   });
 });
