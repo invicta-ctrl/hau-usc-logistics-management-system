@@ -647,3 +647,234 @@ HEAD:   7693a3ce76b0de0dfbf9445d162bafc1a18cccfe  (before this receipt section)
 REMOTE: pushed to origin — the local run should fetch, not rebuild from scratch
 FM:     untouched. No FM ref exists in this container.
 ```
+
+---
+
+# FIGMA DESIGN CALIBRATION — performed 2026-08-28
+
+Owner-authorized follow-up to the gate handoff above. Figma **Design** only;
+Figma **Make** remains blocked (needs a signed-in browser session, and this
+session has no egress).
+
+```text
+FILE:      hXJElH4p72KfgAaoUyfNOC — HAU-USC Logistics — Frontend Design Lab
+IDENTITY:  Invicta-ctrl · adrianoearl04@gmail.com · pro · team::1658726455813516145
+PAGES:     29 enumerated (register said 28; page "10.1 — CURRENT · Frontend
+           Architecture & Routing" (755:2) has been added since)
+READS:     whoami · get_metadata(no nodeId) · get_metadata(568:2, 55:7)
+           get_variable_defs(568:2) · get_screenshot(434:61)
+           use_figma — READ-ONLY scripts only (page/collection/style enumeration)
+WRITES:    ZERO. No node, variable, style or page was created or modified.
+```
+
+The `get_metadata` truncation to `00 — Capture Index` reproduced exactly as
+`FIGMA_BASELINE_REGISTER.md` records. It is not a defect; page enumeration via
+the Plugin API returns all 29.
+
+## 1. Colour — EXACT MATCH, no action
+
+Every primitive in `HAU-USC / Primitives` matches `theme.css`'s canonical block
+character-for-character in both modes:
+
+```text
+oxblood/900  #40070a / #4a1015     = --oxblood-deep     ✓
+oxblood/700  #78141a / #a5424b     = --oxblood-mid      ✓
+oxblood/600  #8d1f28 / #b8535d     = --oxblood-light    ✓
+gold/400     #d4af37 / #e1c671     = --gold-vivid       ✓  (owner-locked)
+gold/200     #e6d088 / #eddca7     = --gold-mid         ✓
+gold/100     #f7efd5 / #faf1de     = --gold-pale        ✓
+gold/700     #7d5518 / #c9a45f     = --ink-light        ✓
+canvas       #e5dac7 / #211615     = --paper-bg         ✓
+paper        #f7f1e8 / #312222     = --paper-warm       ✓
+paper/inset  #efe5d7 / #291c1c     = --paper-light      ✓
+paper/raised #fbf6f0 / #3b2a2a     = --paper-mid        ✓
+paper/overlay#fdfaf6 / #433231     = --popover          ✓
+ink          #342424 / #f1e9e3     = --ink-deep         ✓
+border/subtle#e3dcd1 / #392c2c     = --border-paper     ✓
+border/control#7f7469 / #8b7b7a    = --border-warm      ✓
+status/done/fg #1f6b41 / #9ad9b2   = --green-open       ✓
+```
+
+**This retrospectively confirms the previous pass's palette work was correct**:
+retokenizing `LogisticsHubSection` off `#e8b93c` and `AdministrationRoute` off
+`#fffdf8` moved both onto values Figma actually holds.
+
+### C-1 · `--destructive` is wrong (light mode)
+
+```text
+Figma  color/action/destructive  = #9c2630 (light) · #f6acb2 (dark)
+CSS    --destructive             = #d4183d (light) · #f6acb2 (dark)
+```
+
+Dark matches; light does not. Figma's is darker. This is worth fixing on its
+own merits: `#d4183d` produced the **tightest contrast value in the whole pass**
+(3.52:1 on the Overview critical numeral). `#9c2630` raises it materially.
+
+### C-2 · Figma has a full status system the CSS never adopted
+
+Figma defines **5 families × 3 roles × 2 modes** — `neutral`, `info`,
+`progress`, `done`, `alert`, each with `fg` / `bg` / `line`. The CSS carries
+only `--green-open` and `--destructive`.
+
+Consequence for the previous pass: the Release Desk semantic pills (D11) and the
+Overview standing band (D7) were the right idea but **invented their values via
+`color-mix()` where Figma already had them**:
+
+```text
+ready / act   → color/status/progress  #7d5518 fg · #fbeed2 bg · #dcbe8a line
+in progress   → color/status/neutral   #5d4a4f fg · #ece3d3 bg · #cdbfa7 line
+done          → color/status/done      #1f6b41 fg · #e2f3e9 bg · #a8d3ba line
+blocked       → color/status/alert     #9c2630 fg · #fbe6e8 bg · #e3aeb3 line
+informational → color/status/info      #23557f fg · #e4eefa bg · #b0cbe6 line
+```
+
+### C-3 · Minor gaps
+
+`color/text/muted` → `ink/dim` (#716362 / #aba09f) has no CSS equivalent.
+`color/rail/from → to` (#6b0e13 → #3d070a) means the sidebar is a **gradient**
+in Figma; the build renders it flat.
+
+## 2. Type — MATERIAL DIVERGENCE
+
+**Figma has a type ramp.** It always did — 11 named text styles. The previous
+pass invented a nine-step ramp from code archaeology after `DESIGN.md` said the
+system "has never defined a type ramp". That statement was true of `theme.css`
+and **false of the design system as a whole**.
+
+```text
+Figma text styles          family / style        size  line-height
+Display / Overview         Bricolage Regular      44    44
+Metric                     Bricolage Regular      44    44
+Page Title                 Bricolage Bold         30    33
+Section Title              Bricolage Bold         20    24
+Wordmark                   Newsreader Medium      20    23
+Body                       IBM Plex Sans Reg      15    23
+Tabular                    IBM Plex Mono Reg      15    22
+Body Compact               IBM Plex Sans Reg      13    19
+Label                      IBM Plex Sans SemiBold 11    16   (+1.1 tracking)
+Caption                    IBM Plex Sans Reg      11    16
+Reference / Mono           IBM Plex Mono Reg      11    19   (+1.1 tracking)
+```
+
+```text
+Figma distinct sizes:  11 · 13 · 15 · 20 · 30 · 44
+Shipped --type-* ramp: 10 · 11 · 12 · 13 · 14 · 16 · 19 · 24 · 31 (+ fluid)
+```
+
+| Divergence | Figma | Shipped | Severity |
+|---|---|---|---|
+| Floor | 11 | **10** | The ramp's declared "floor" sits one step below the design system's |
+| Dominant body | **15** (`Body`) | 13 | Shipped ramp has no 15 at all, and calls 13 the dominant reading size — Figma calls 13 *Body Compact* |
+| Section/panel title | 20 | **19** | Off by one |
+| Page title | 30 | **31** | Off by one |
+| Display / metric | 44 | *fluid clamp* | No fixed 44 step |
+| Extra steps | — | 12 · 14 · 16 · 24 | Four steps with no Figma counterpart |
+
+The shipped ramp is **not** a rescaling of Figma's — it is a parallel scale. The
+honest reading: the previous pass solved a real problem (17 ad-hoc sizes) with
+the wrong source of truth, because it never looked at Figma. Adopting Figma's
+six sizes plus role names (`Page Title`, `Section Title`, `Body`, `Body Compact`,
+`Label`, `Caption`, `Tabular`, `Metric`) would be strictly better and is a
+bounded change.
+
+## 3. Spacing, radius, layout — PARTIAL
+
+```text
+Figma space:  4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 56
+CSS   space:  4 · 8 · 12 · 16 ·      24 ·      40 · 64
+                              ^^ no 20      ^^ no 32   ^^ 64 ≠ 56
+```
+
+Figma also carries semantic spacing the CSS lacks: `space/control 12`,
+`space/row 16`, `space/group 20`, `space/section 24`, `space/chapter 56`.
+
+```text
+Figma radius: xs 6 · sm 10 · md 14 · lg 18 · pill 999   (clean +4)
+CSS   radius: sm 6 · md  8 · lg 10 · xl 14 · pill 999   (irregular; no 18)
+```
+
+```text
+Figma size tokens        vs build
+touch/min      44        ✓ honoured throughout
+content/max    1520      ✓ .current__stage / .logistics-hub__stage = 95rem = 1520
+rail/width/full 272      ✓ measured 272 in the shipped shell
+inspector/width 380      ✗ build uses 19rem/304 (Overview, Lending) and 340 (Release)
+content/max    1520      ✗ .command-table-page caps at 80rem = 1280
+```
+
+Motion matches on the four durations the CSS declares (120/200/280/400); Figma
+additionally has `motion/overlay 320` and `motion/exit 160`.
+
+## 4. Overview — the surface most changed, and most divergent
+
+CURRENT authority: `427:61` "CURRENT · R2 Glass Operations Command Table";
+canonical desktop frame `434:61` (1440, light), read by screenshot.
+
+What Figma's CURRENT Overview actually does, against what shipped:
+
+| # | Figma CURRENT | Shipped | Verdict |
+|---|---|---|---|
+| O-1 | `h1` = **"Administrator overview"**, eyebrow "Overview" | `h1` = "What needs attention today" | **Deviation.** D8 renamed away from Figma. The rename loses the role context ("Administrator") that Figma states |
+| O-2 | Lede names the count in prose: "Four exceptions require review. Select a record to see evidence and the permitted next action." | Kicker only | Gap |
+| O-3 | **Two header actions**: `Reconcile` (quiet) + `Open Release Desk` (gold primary) | **none** | **Gap.** The surface has no primary action at all in the build |
+| O-4 | One quiet band: label `NOW · 4 EXCEPTIONS`, then the flat run "14 open requests / 9 loans out / 6 awaiting release / 2 below threshold", right-aligned `Reconciled 09:42` | Three weighted figure **cards** (critical/ready/steady) | **Deviation, and the one to reconsider first.** D7 replaced Figma's deliberately quiet band with card weight. Figma carries the priority in the *label*, not in card chrome — consistent with `568:13` "glass is localised to layers that earn it" |
+| O-5 | Exception **table** with a **`Next action` column in gold** per row (Review stock · Record return · Receive balance · Open request) | List rows with status badges; **no next-action column** | **Gap, and Figma's strongest idea on this surface.** It answers "what can I act on?" inline, per record |
+| O-6 | Right panel = **"Evidence and provenance"** (ledger rev, projection snapshot, last confirmed event, fixture note) | "What changed" pulse feed + "Where the ledger stands" topology spine | **Deviation.** Neither shipped block exists in Figma's CURRENT; both came from the orphaned component, not from the design authority |
+| O-7 | Reconciliation is a **4-column table** — MEASURE / LEDGER / PROJECTION / STATE — with per-row green `Reconciled` pills, plus a mono provenance footer | Collapsed to a one-line verdict + figures row | **Deviation.** D10 called this a "fake dashboard" and removed it. Figma keeps it deliberately: LEDGER vs PROJECTION side by side is the actual reconciliation evidence, not decoration |
+| O-8 | "Today's operational path" with dot markers | Same | ✓ Match |
+| O-9 | Sidebar expands Administration into six named sections (Accounts and Access, Staff Directory, Reference Administration, Link Registry, Brand and Media, System status) | Single "Administration" route | Route registry is the functional authority here; noted, not a design defect |
+
+### Honest summary of section 4
+
+The Overview redesign was defensible against the repository's own design system
+and it fixed a real failure (the route rendered "not yet built"). But measured
+against the CURRENT Figma frame for the same surface, **three of its headline
+decisions go the other way**: D7 added card weight Figma withholds, D10 removed
+a table Figma keeps, and D8 renamed a heading Figma names. It also misses
+Figma's two best ideas — the per-row **Next action** column and the header
+action pair.
+
+This is precisely the failure the owner predicted when rejecting the previous
+run for not reading Figma. Recorded as such rather than defended.
+
+## 5. Recommended corrections, in priority order
+
+```text
+R1  Adopt Figma's type ramp (11/13/15/20/30/44 + role names).      BOUNDED
+R2  Add the Next action column to the Overview exception table.    HIGH VALUE
+R3  Restore the reconciliation table (MEASURE/LEDGER/PROJECTION/   REVERT D10
+    STATE with per-row pills) and its provenance footer.
+R4  Revert the standing band to Figma's quiet single run with the  REVERT D7
+    NOW · N EXCEPTIONS label; drop the three figure cards.
+R5  Add the header action pair (Reconcile · Open Release Desk).    GAP
+R6  --destructive #d4183d → #9c2630; also fixes the 3.52:1         1-LINE FIX
+    contrast, the tightest measured value in the pass.
+R7  Adopt the five status families as CSS tokens; repoint the      BOUNDED
+    Release pills and any status chrome onto them.
+R8  Restore h1 "Administrator overview".                           REVERT D8
+R9  Align radius (6/10/14/18) and spacing (add 20, 32; 64→56).     RIPPLES
+R10 inspector/width 380; .command-table-page max 1520 not 1280.    SMALL
+```
+
+**None of R1–R10 were applied.** This pass was calibration only: read, compare,
+record. The environment gate from POST-FI17-DESIGN-RECOVERY-02 still stands for
+the redesign itself, and R2–R5 in particular are best done where the Make file
+and the owner's preview are reachable.
+
+## 6. Figma deviations register — replaces the previous "NOT ASSESSED"
+
+The previous receipt recorded `FIGMA_DEVIATIONS: NOT ASSESSED`. Superseded:
+
+```text
+MATCH                  colour primitives (16/16), touch target, content max,
+                       rail width, four motion durations, operational path block
+REFINE (accepted)      the previous pass's palette retokenisation — it moved the
+                       build ONTO Figma values
+DEVIATION (unintended) type ramp, --destructive light, radius scale, spacing
+                       scale, inspector width, Overview O-1/O-4/O-6/O-7
+GAP (unintended)       status token families, Overview O-2/O-3/O-5,
+                       color/text/muted, sidebar gradient
+REJECT_REFERENCE_DETAIL  none claimed — no deviation here was a deliberate,
+                       argued departure from Figma, because Figma was never read
+FIGMA WRITES           ZERO
+```
