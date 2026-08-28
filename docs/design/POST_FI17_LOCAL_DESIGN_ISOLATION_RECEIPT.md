@@ -1070,3 +1070,119 @@ EVIDENCE   1164 tests, 66/66 contrast, 7/7 launcher geometry, production
 RESIDUAL   36×12px, 58×13px, 10×14px inline literals remain within one step of
            the ramp; SupplyRoutes untouched.
 ```
+
+## STEP 4 — FIGMA MAKE: NOT PERFORMED
+
+```text
+FIGMA_MAKE_READ:  NOT PERFORMED
+FIGMA_MAKE_WRITES: ZERO
+```
+
+RECOVERY-02 §3.2 requires Make to be inspected through the owner's
+authenticated browser, and says plainly: "If browser control cannot access the
+signed-in Figma session, STOP the Make-calibrated part rather than pretending
+old exported files are current."
+
+That is the situation. This session's egress is refused by proxy policy —
+verified against eight hosts including `figma.com`, all returning `000` with
+`connect_rejected … gateway answered 403 to CONNECT`. There is no authenticated
+browser session here to drive.
+
+Two consequences, both material:
+
+1. **Composition, motion, hierarchy, responsive behaviour and interaction
+   intent were NOT compared against live Make.** The corrections in this pass
+   are calibrated against Figma **Design** (read directly) and the repository's
+   own authorities. Make may disagree.
+2. **`SupplyRoutes` could not be corrected.** Its CSS is under a byte-for-byte
+   Make-v44 parity contract (`fi09`). Correcting it requires reading Make and
+   re-baselining `output/design/make-provider-export-v44/`. Both are blocked.
+
+`prototypes/` and `output/design/make-provider-export-v44/` were treated as
+fallback evidence only, per §3.2, and were not used to claim currency.
+
+## FINAL VISUAL RESIDUALS
+
+1. **Make calibration outstanding** — the largest. Step 4 could not run.
+2. **SupplyRoutes frozen** — Restocking / Procurement / Events keep the
+   equal-weight tab wall, one-neutral-pill status chrome and the pre-canonical
+   `#fffdf8` palette. Corrections were written and reverted to preserve the
+   accepted Make-v44 parity test. This is the single largest visual
+   inconsistency left in the product: Administration and Release now use
+   underline rails and semantic status, and those three routes do not.
+3. **Inline type literals within one step of the ramp** — 36×12px, 58×13px,
+   10×14px remain. Deliberate: snapping them is churn and widens the FI/FM
+   reconciliation surface. Everything below Figma's 11px floor is gone.
+4. **Tier-2 preview chrome ships in Production** — unreachable, not absent. See
+   the verifier's own second line.
+5. **Dead atrium CSS** (~150 lines) and the **empty hero right half at ≥60rem**
+   remain from the previous pass; both are composition decisions for the owner.
+6. **Route headings still disagree on face** — Lending sets its `h1` in
+   Newsreader where the others use Bricolage. Unchanged deliberately:
+   `fi12-convergence.spec.js` polices cross-surface convergence and, without
+   Make, this pass cannot say which is intended.
+7. **`hau-theme.css` stale** — inherited from the source checkpoint, fails
+   identically on the pristine tree.
+8. **Overview is still inspection-lane only** — owner-confirmed (D6).
+
+## FINAL ACCEPTANCE
+
+```text
+ROUTE / WIDTH MATRIX — 15 routes, checked for document horizontal overflow,
+console errors and page errors on every combination:
+
+  light            320 · 390 · 768 · 1024 · 1440      75 combinations   0 findings
+  dark             320 · 390 · 768 · 1024 · 1440      75 combinations   0 findings
+  reduced motion   320 · 390 · 768 · 1024 · 1440      75 combinations   0 findings
+  extra widths     375 · 414 · 640 · 1920             60 combinations   0 findings
+                                                     ---------------   ----------
+                                                     285 combinations   0 findings
+
+  640 is the CSS-pixel viewport of a 1280 screen at 200% zoom — the §15
+  reflow requirement, checked rather than asserted.
+
+PREVIEW INDEX          opens at every width · 15/15 routes · search · 8 filters
+                       · heading focused on entry
+EDGE-CLIP REGRESSION   tests/e2e/preview-launcher-geometry.spec.js  14/14 pass
+PRODUCTION DENIAL      npm run verify:preview-absent — 0 of 10 feature markers
+UNIT / INTEGRATION     npm test — 156 files, 1164 passed, 1 skipped, 0 failed
+LINT                   npm run lint:release-candidate — 0 errors, 2 warnings
+                       (both pre-existing, in files this pass did not touch)
+BUILD                  npm run build — dist/index.html 798.86 kB
+DIST VERIFY            deterministic artifact verified
+GOVERNANCE             check:agents + check:continuation pass
+CONTRAST (system)      npm run design:contrast — 66/66 pass
+CONTRAST (new work)    42 measured pairs across the corrected Overview,
+                       light and dark — 0 failures
+```
+
+### Contrast improved measurably
+
+The previous pass's tightest measured value was **3.52:1** (the Overview
+critical numeral on `#d4183d`). After R6 and R7 the tightest value anywhere in
+the corrected Overview is **5.63:1**. Nothing regressed: the weakest point of
+the design is now more than half a grade better than it was.
+
+Measured with a correct OKLCH→sRGB conversion and ancestor alpha compositing.
+Two earlier measuring attempts in this program reported false failures because
+they mis-parsed `oklch()`; that method is not used here.
+
+## FINAL HANDOFF STATE
+
+```text
+BRANCH   local/post-fi17-design-pass-20260828
+PREVIEW  http://127.0.0.1:4174/ — served from this branch with HMR throughout.
+         Container-local. Per §10 this is NOT the owner's localhost and is not
+         described as such.
+PORT 4173  never bound. Verified: curl returns 000 (nothing listening).
+FM       untouched. No FM branch, worktree, process or pointer exists here.
+
+EXTERNAL WRITES        ZERO
+FIGMA WRITES           ZERO   (Design read-only; Make not reached)
+PRODUCTION/PLAYGROUND  ZERO
+MIGRATIONS / SCHEMA    ZERO
+```
+
+**Not owner-review-complete.** Step 4 did not run, so the redesign is not
+Make-calibrated, and `SupplyRoutes` is uncorrected because its parity contract
+points at Make. Both are named above rather than folded into a pass.

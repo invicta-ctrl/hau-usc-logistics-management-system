@@ -458,7 +458,11 @@ export default function AdministrationRoute({
           <h1>Authorized system controls</h1>
           <p>Review only the current authorized read-only projection without changing authority.</p>
         </div>
-        <small>{inspection ? "Sanitized fixture · not production data" : "Authenticated read-only data"}</small>
+        {/* In inspection this duplicated the sandbox band directly above it —
+            a third statement of the same fact on one screen. In a real session
+            there is no band, and this is the only thing telling the operator
+            the data posture, so it stays there. */}
+        {inspection ? null : <small>Authenticated read-only data</small>}
       </header>
       <nav className="tabs" aria-label="Administration sections" data-fi10-tabs="true" data-fi11-tabs="true">
         {administrationTabs.map((item) => (
