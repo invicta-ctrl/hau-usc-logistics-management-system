@@ -1488,8 +1488,8 @@ blocker below was resolved by fallback and recorded.
 
 ```text
 START_HEAD:  897c91158bff0c1bbceee14f1d1410e9e3cb9cd6
-END_HEAD:    (this commit)
-END_TREE:    (this commit's tree)
+END_HEAD:    9d7b6aa63f6696a5da4a1aaf2db5908faed71dde
+END_TREE:    25556a45f5ef20a08542d3e7b328b50d4ebf2b74
 ```
 
 ## AUTONOMOUS_DECISIONS
