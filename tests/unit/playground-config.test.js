@@ -44,7 +44,7 @@ function config() {
       ACCOUNT_APPLICATION_EMAIL_PROVIDER: 'disabled',
       RECOVERY_HOSTNAME: 'playground.example.workers.dev',
       ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON: '[{"id":"TEST","domains":["example.test"]}]',
-      CANDIDATE_BRANCH: 'release/v0.8.1-playground',
+      CANDIDATE_BRANCH: 'reconcile/playground-master',
       CANDIDATE_SHA: sha,
       CANDIDATE_TREE_SHA: tree,
       APPLICATION_ARTIFACT_HASH: artifact,
@@ -52,8 +52,8 @@ function config() {
   };
 }
 
-function validate(candidate = config()) {
-  return validatePlaygroundConfig({
+function validateInputs(candidate = config()) {
+  return {
     config: candidate,
     manifest,
     productionBindings: {
@@ -69,14 +69,28 @@ function validate(candidate = config()) {
     },
     expectedSha: sha,
     expectedTree: tree,
-    expectedBranch: 'release/v0.8.1-playground',
+    expectedBranch: 'reconcile/playground-master',
     expectedArtifactHash: artifact,
-  });
+  };
+}
+
+function validate(candidate = config()) {
+  return validatePlaygroundConfig(validateInputs(candidate));
 }
 
 describe('playground deployment configuration guards', () => {
-  it('accepts only the fixed isolated working resources', () => {
+  it('accepts only a Playground-targeted temporary branch with fixed isolated working resources', () => {
     expect(validate()).toEqual({ valid: true, issues: [] });
+    for (const branch of ['work/playground-ui', 'fix/playground-root', 'reconcile/playground-master']) {
+      const candidate = config();
+      candidate.vars.CANDIDATE_BRANCH = branch;
+      expect(
+        validatePlaygroundConfig({
+          ...validateInputs(candidate),
+          expectedBranch: branch,
+        }),
+      ).toEqual({ valid: true, issues: [] });
+    }
   });
 
   it('denies production D1 and R2 targets', () => {
@@ -112,7 +126,7 @@ describe('playground deployment configuration guards', () => {
       },
       expectedSha: sha,
       expectedTree: tree,
-      expectedBranch: 'release/v0.8.1-playground',
+      expectedBranch: 'reconcile/playground-master',
       expectedArtifactHash: artifact,
     });
     expect(result.valid).toBe(false);

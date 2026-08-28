@@ -17,6 +17,13 @@
 - Recorded exact branch/worktree identities, divergence, protected residue, and no-delete dispositions in the P01 reconciliation manifest.
 - P00/P01 changed no provider, D1/R2, reset, migration, deployment, Production, Google, Figma, or branch ref other than creating the authorized local reconciliation branch/worktree.
 
+### Playground Master P03 blank-root diagnosis
+
+- Reverified the live isolated Playground at mobile and desktop widths: the public root, required assets, version/readiness, React mount, console, staging identity, and D1/R2 isolation passed with zero Production crossover.
+- Confirmed a fail-closed landing reveal base state that could keep mounted content transparent if entrance animation stalled; changed the source contract to fail open while preserving the intended entrance motion and added focused regression coverage.
+- Added a privacy-safe staging/Production binding-isolation audit and aligned reconciliation-branch validation with the accepted temporary-branch policy.
+- Rebuilt the staging package and verified byte-identical hero reconstruction. No deployment, reset, migration, D1/R2/provider/business-data, Production/main, Google, or Figma mutation occurred.
+
 ### FI-13 through FI-17 immediate Playground migration
 
 - Migrated the accepted FI frontend completion plus post-FI17 Overview and hero-motion recovery into the FM branch while preserving real Worker/API, auth, D1/R2, reset, privacy, and operational behavior.

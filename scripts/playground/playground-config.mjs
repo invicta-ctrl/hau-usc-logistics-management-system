@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-const TEMPORARY_BRANCH = /^(?:release|fix|hotfix)\/v\d+\.\d+\.\d+-[a-z0-9][a-z0-9-]*$/u;
+const TEMPORARY_BRANCH = /^(?:work|fix|reconcile)\/playground-[a-z0-9][a-z0-9-]*$/u;
 const SHA = /^[0-9a-f]{40}$/u;
 const HASH = /^[0-9a-f]{64}$/u;
 

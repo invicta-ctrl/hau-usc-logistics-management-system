@@ -4,12 +4,12 @@
 
 - Repository/worktree: `D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-master-reconciliation`.
 - Branch/base: `reconcile/playground-master` from clean remote-parity `release/v0.8.3-fi12-playground@631724a5f32a49b9dcf45eec5a894aa7baf66266`.
-- Current phase: P00/P01 verified and checkpoint-ready; P03 live blank-root/deployment audit is next.
+- Current phase: P03 live blank-root/deployment audit and local fail-open repair complete; P04 Preview Index navigation audit is next.
 - Authority: accepted `PLAYGROUND-MASTER-2026-08-28`, project policy, repository functional contracts, live design-source roles, and the P01 reconciliation manifest.
-- Completed: full prompt persisted; two-branch policy and validators updated; all current refs/worktrees inventoried; selected base and preservation decisions recorded; isolated worktree established.
+- Completed: full prompt persisted; two-branch policy and validators updated; all current refs/worktrees inventoried; selected base and preservation decisions recorded; isolated worktree established; live 390/1440 root/API/assets/isolation passed; fail-closed CSS reveal mechanism confirmed and repaired locally; focused tests and staging build passed.
 - Preserved: prior deployed Playground source `9d48eaa8...`, schema 32/migration 0032/generation-3 DIRTY state; main and other worktrees; frontend `.ai-bridge/` and `.local/`; every old recovery/design/release ref.
-- External state: read-only `git fetch origin` and the exact P00/P01 branch checkpoint push only; no provider, D1/R2, reset, migration, deployment, Production, Google, or Figma mutation.
-- Next action: execute P03 fresh live browser/deployment diagnosis before product repair.
+- External state: read-only `git fetch origin`, live Playground/browser/binding inspection, and the exact P00/P01 branch checkpoint push only; no provider, D1/R2, reset, migration, deployment, Production, Google, or Figma mutation.
+- Next action: execute P04 exhaustive Preview Index, direct route, Back/Forward, Index-return, and post-reset navigation audit and repair.
 - Resume commands: read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, accepted master prompt, and `.codex/PLAYGROUND_MASTER_RECONCILIATION_MANIFEST.md`; verify Git/upstream and live Playground identity.
 - Prohibited: Production/main mutation; broad branch merge; branch deletion; history rewrite; unknown residue mutation; unbacked reset/migration; unclassified R2 deletion; Figma write.
 

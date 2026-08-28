@@ -351,13 +351,14 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 }
 
 .atrium__reveal {
-  opacity: 0;
-  transform: translateY(8px);
+  opacity: 1;
+  transform: none;
   animation: atrium-enter var(--dur-narrative) var(--ease-out) forwards;
   animation-delay: calc(var(--i, 0) * 70ms);
 }
 
 @keyframes atrium-enter {
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
 
