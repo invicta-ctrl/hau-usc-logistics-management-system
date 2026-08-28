@@ -6,7 +6,7 @@ export function AuthPlaceholderRoute({ route }: { route: AuthRoute }) {
   return (
     <div className="px-5 md:px-8 py-12 max-w-[720px] mx-auto">
       <div className="flex flex-col gap-4">
-        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", letterSpacing: "1px", textTransform: "uppercase" }}>
+        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--muted-foreground)", letterSpacing: "1px", textTransform: "uppercase" }}>
           {label}
         </p>
         <h1
@@ -23,7 +23,7 @@ export function AuthPlaceholderRoute({ route }: { route: AuthRoute }) {
         style={{ background: "var(--muted)", border: "1px dashed var(--border)", minHeight: 200 }}
         aria-label="Route placeholder"
       >
-        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-foreground)", letterSpacing: "0.9px", textTransform: "uppercase" }}>
+        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--muted-foreground)", letterSpacing: "0.9px", textTransform: "uppercase" }}>
           Route reserved · not yet built
         </p>
       </div>

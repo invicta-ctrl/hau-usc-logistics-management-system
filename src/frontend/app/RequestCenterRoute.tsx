@@ -184,7 +184,7 @@ function UrgencyBadge({ urgency }: { urgency: ReqUrgency }) {
     return (
       <span
         className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 whitespace-nowrap"
-        style={{ fontFamily: sans, fontSize: 10, fontWeight: 500, background: "rgba(212,24,61,0.08)", color: "#c8152a", border: "1px solid rgba(212,24,61,0.20)" }}
+        style={{ fontFamily: sans, fontSize: 11, fontWeight: 500, background: "rgba(212,24,61,0.08)", color: "#c8152a", border: "1px solid rgba(212,24,61,0.20)" }}
       >
         <AlertTriangle size={9} strokeWidth={2} />
         Urgent
@@ -194,7 +194,7 @@ function UrgencyBadge({ urgency }: { urgency: ReqUrgency }) {
   return (
     <span
       className="inline-flex items-center rounded-full px-2 py-0.5 whitespace-nowrap"
-      style={{ fontFamily: sans, fontSize: 10, fontWeight: 500, background: "color-mix(in oklch, var(--ink-mid) 10%, transparent)", color: "var(--ink-mid)", border: "1px solid color-mix(in oklch, var(--ink-mid) 20%, transparent)" }}
+      style={{ fontFamily: sans, fontSize: 11, fontWeight: 500, background: "color-mix(in oklch, var(--ink-mid) 10%, transparent)", color: "var(--ink-mid)", border: "1px solid color-mix(in oklch, var(--ink-mid) 20%, transparent)" }}
     >
       Escalated
     </span>
@@ -380,7 +380,7 @@ function Inspector({
               <X size={15} strokeWidth={1.5} />
             </button>
           )}
-          <span style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase" }}>
+          <span style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase" }}>
             request.record
           </span>
         </div>
@@ -388,7 +388,7 @@ function Inspector({
         {/* Identity */}
         <div className="px-5 pt-5 pb-4 shrink-0" style={{ borderBottom: `1px solid ${c.border}` }}>
           <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span style={{ fontFamily: mono, fontSize: 10, color: c.muted, letterSpacing: "0.4px" }}>{item.id}</span>
+            <span style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "0.4px" }}>{item.id}</span>
             <StatusBadge status={item.status} />
             {item.urgency && <UrgencyBadge urgency={item.urgency} />}
           </div>
@@ -403,12 +403,12 @@ function Inspector({
             {is0142 ? " · Example requester" : ""}
           </p>
           {item.routing && (
-            <p style={{ fontFamily: mono, fontSize: 10, color: c.muted, marginTop: 3, letterSpacing: "0.2px" }}>
+            <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, marginTop: 3, letterSpacing: "0.2px" }}>
               → {item.routing}
             </p>
           )}
           <div className="mt-3 inline-block rounded-[5px] px-2 py-0.5" style={{ background: dark ? "color-mix(in oklch, var(--gold-vivid) 8%, transparent)" : "#fbeed2", border: "1px solid #dcbe8a" }}>
-            <span style={{ fontFamily: mono, fontSize: 9, color: "#7d5518", letterSpacing: "0.8px", textTransform: "uppercase" }}>
+            <span style={{ fontFamily: mono, fontSize: 11, color: "#7d5518", letterSpacing: "0.8px", textTransform: "uppercase" }}>
               Design fixture · not production data
             </span>
           </div>
@@ -416,7 +416,7 @@ function Inspector({
 
         {/* Lifecycle */}
         <div className="px-5 py-4 shrink-0" style={{ borderBottom: `1px solid ${c.border}` }}>
-          <p style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 12 }}>
+          <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 12 }}>
             Lifecycle
           </p>
           {LIFECYCLE.map((step, i) => (
@@ -451,7 +451,7 @@ function Inspector({
         {/* Line items — REQ-2026-0142 */}
         {is0142 && (
           <div className="px-5 py-4 shrink-0" style={{ borderBottom: `1px solid ${c.border}` }}>
-            <p style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 10 }}>
+            <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 10 }}>
               Line items · 3 of {item.lines} shown
             </p>
             <div className="flex flex-col rounded-[8px] overflow-hidden" style={{ border: `1px solid ${c.border}` }}>
@@ -468,9 +468,9 @@ function Inspector({
                         {line.qty}
                       </span>
                       {line.avail === "available" ? (
-                        <span style={{ fontFamily: mono, fontSize: 9, color: "#1f6b41" }}>Available</span>
+                        <span style={{ fontFamily: mono, fontSize: 11, color: "#1f6b41" }}>Available</span>
                       ) : (
-                        <span style={{ fontFamily: mono, fontSize: 9, color: "#c8152a" }}>
+                        <span style={{ fontFamily: mono, fontSize: 11, color: "#c8152a" }}>
                           Short by {line.shortBy}
                         </span>
                       )}
@@ -502,11 +502,11 @@ function Inspector({
           <div className="px-5 py-4 shrink-0" style={{ borderBottom: `1px solid ${c.border}` }}>
             <div className="flex flex-col gap-4">
               <div>
-                <p style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 4 }}>Context</p>
+                <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 4 }}>Context</p>
                 <p style={{ fontFamily: sans, fontSize: 12, color: c.text, lineHeight: "18px", letterSpacing: -0.1 }}>{item.context}</p>
               </div>
               <div>
-                <p style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 4 }}>Next action</p>
+                <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 4 }}>Next action</p>
                 <p style={{ fontFamily: sans, fontSize: 12, color: c.text, lineHeight: "18px", letterSpacing: -0.1 }}>{item.nextAction}</p>
               </div>
             </div>
@@ -516,7 +516,7 @@ function Inspector({
         {/* Actions — only for in-review / submitted */}
         {isActionable && (
           <div className="px-5 py-4 shrink-0" style={{ borderBottom: `1px solid ${c.border}` }}>
-            <p style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 10 }}>
+            <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 10 }}>
               Actions
             </p>
 
@@ -533,7 +533,7 @@ function Inspector({
                 </div>
 
                 <div className="rounded-[8px] px-4 py-3" style={{ background: "color-mix(in oklch, var(--gold-vivid) 7%, transparent)", border: "1px solid color-mix(in oklch, var(--gold-vivid) 28%, transparent)" }}>
-                  <p style={{ fontFamily: mono, fontSize: 9, color: "#7d5518", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 3 }}>
+                  <p style={{ fontFamily: mono, fontSize: 11, color: "#7d5518", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 3 }}>
                     Local review only
                   </p>
                   <p style={{ fontFamily: sans, fontSize: 11, color: dark ? "color-mix(in oklch, var(--gold-cream) 70%, transparent)" : "#7d5518", lineHeight: "16px" }}>
@@ -570,7 +570,7 @@ function Inspector({
               <div className="flex flex-col gap-2">
                 {confirmedActions.size > 0 && (
                   <div className="rounded-[8px] px-4 py-3 mb-1" style={{ background: "rgba(31,107,65,0.07)", border: "1px solid rgba(31,107,65,0.22)" }}>
-                    <p style={{ fontFamily: mono, fontSize: 9, color: "#1f6b41", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 2 }}>Actioned locally only</p>
+                    <p style={{ fontFamily: mono, fontSize: 11, color: "#1f6b41", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 2 }}>Actioned locally only</p>
                     <p style={{ fontFamily: sans, fontSize: 11, color: "#1f6b41", lineHeight: "16px" }}>
                       No request, reservation, message, rejection, or service action was submitted or confirmed.
                     </p>
@@ -621,7 +621,7 @@ function Inspector({
           >
             Release Desk — separate module
           </button>
-          <p style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.5px", textAlign: "center", marginTop: 5 }}>
+          <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "0.5px", textAlign: "center", marginTop: 5 }}>
             Review cannot send a request here; it arrives when its lines reach their ready state
           </p>
         </div>
@@ -629,16 +629,16 @@ function Inspector({
         {/* Ledger provenance — REQ-2026-0142 */}
         {is0142 && (
           <div className="px-5 py-4 shrink-0">
-            <p style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 8 }}>
+            <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "0.9px", textTransform: "uppercase", marginBottom: 8 }}>
               Ledger · provenance
             </p>
             {[["Revision","4"],["Snapshot","f5fcfafc"],["Source","DESIGN FIXTURE"]].map(([k,v]) => (
               <div key={k} className="flex items-center justify-between py-1">
-                <span style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>{k}</span>
-                <span style={{ fontFamily: mono, fontSize: 10, color: c.text }}>{v}</span>
+                <span style={{ fontFamily: mono, fontSize: 11, color: c.muted }}>{k}</span>
+                <span style={{ fontFamily: mono, fontSize: 11, color: c.text }}>{v}</span>
               </div>
             ))}
-            <p style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.4px", marginTop: 10, lineHeight: "14px" }}>
+            <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "0.4px", marginTop: 10, lineHeight: "14px" }}>
               Session-local only. No data submitted; no service has confirmed any value shown here.
             </p>
           </div>
@@ -715,7 +715,7 @@ export default function RequestCenterRoute({
       {/* Heading */}
       <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
         <div>
-          <p style={{ fontFamily: mono, fontSize: 10, color: c.muted, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 4 }}>
+          <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 4 }}>
             Request Center
           </p>
           <h1 style={{ fontFamily: display, fontWeight: 700, fontSize: "clamp(22px, 3vw, 30px)", color: c.text, letterSpacing: "-0.8px", fontVariationSettings: '"opsz" 14, "wdth" 100' }}>
@@ -727,7 +727,7 @@ export default function RequestCenterRoute({
         </div>
         <span
           className="self-start mt-1 rounded-[5px] px-2 py-0.5"
-          style={{ fontFamily: mono, fontSize: 9, color: "#7d5518", background: "#fbeed2", border: "1px solid #dcbe8a", letterSpacing: "0.8px", textTransform: "uppercase", whiteSpace: "nowrap" }}
+          style={{ fontFamily: mono, fontSize: 11, color: "#7d5518", background: "#fbeed2", border: "1px solid #dcbe8a", letterSpacing: "0.8px", textTransform: "uppercase", whiteSpace: "nowrap" }}
         >
           Design fixture · not production data
         </span>
@@ -739,7 +739,7 @@ export default function RequestCenterRoute({
           {/* Queue title row */}
           <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${c.border}` }}>
             <p style={{ fontFamily: sans, fontWeight: 600, fontSize: 14, color: c.text, letterSpacing: -0.2 }}>Queue</p>
-            <span style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>
+            <span style={{ fontFamily: mono, fontSize: 11, color: c.muted }}>
               {filtered.length} of {REQUESTS.length} requests
             </span>
           </div>
@@ -798,7 +798,7 @@ export default function RequestCenterRoute({
           {/* Empty state */}
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <p style={{ fontFamily: mono, fontSize: 10, color: c.muted, letterSpacing: "0.8px", textTransform: "uppercase" }}>
+              <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "0.8px", textTransform: "uppercase" }}>
                 No requests match this filter
               </p>
               <button
@@ -833,7 +833,7 @@ export default function RequestCenterRoute({
                       <StatusBadge status={item.status} />
                     </div>
                     <div className="flex flex-wrap gap-3">
-                      <span style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>{item.id}</span>
+                      <span style={{ fontFamily: mono, fontSize: 11, color: c.muted }}>{item.id}</span>
                       <span style={{ fontFamily: sans, fontSize: 11, color: c.muted }}>{item.dept}</span>
                       <span style={{ fontFamily: sans, fontSize: 11, color: c.muted }}>{item.lines} lines</span>
                       <span style={{ fontFamily: sans, fontSize: 11, color: c.muted }}>Needed {item.needed}</span>
@@ -853,7 +853,7 @@ export default function RequestCenterRoute({
                 <thead>
                   <tr style={{ background: thBg, borderBottom: `1px solid ${c.border}` }}>
                     {["Request","Committee","Needed by","State","Urgency"].map((h) => (
-                      <th key={h} className="px-4 py-2.5 text-left" style={{ fontFamily: mono, fontWeight: 600, fontSize: 9, color: c.muted, letterSpacing: "1px", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                      <th key={h} className="px-4 py-2.5 text-left" style={{ fontFamily: mono, fontWeight: 600, fontSize: 11, color: c.muted, letterSpacing: "1px", textTransform: "uppercase", whiteSpace: "nowrap" }}>
                         {h}
                       </th>
                     ))}
@@ -884,11 +884,11 @@ export default function RequestCenterRoute({
                             <p style={{ fontFamily: sans, fontWeight: 600, fontSize: 13, color: c.text, letterSpacing: -0.15, lineHeight: "17px" }}>
                               {item.title}
                             </p>
-                            <p style={{ fontFamily: mono, fontSize: 10, color: c.muted, marginTop: 2 }}>
+                            <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, marginTop: 2 }}>
                               {item.id} · {item.dept} · {item.lines} lines
                             </p>
                             {item.routing && (
-                              <p style={{ fontFamily: mono, fontSize: 9, color: c.muted, marginTop: 1, letterSpacing: "0.2px" }}>
+                              <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, marginTop: 1, letterSpacing: "0.2px" }}>
                                 → {item.routing}
                               </p>
                             )}
@@ -906,7 +906,7 @@ export default function RequestCenterRoute({
                         <td className="px-4 py-3">
                           {item.urgency
                             ? <UrgencyBadge urgency={item.urgency} />
-                            : <span style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>—</span>
+                            : <span style={{ fontFamily: mono, fontSize: 11, color: c.muted }}>—</span>
                           }
                         </td>
                       </tr>
@@ -919,10 +919,10 @@ export default function RequestCenterRoute({
 
           {/* Table footer */}
           <div className="flex items-center gap-4 px-4 py-2" style={{ borderTop: `1px solid ${c.border}`, background: thBg }}>
-            <span style={{ fontFamily: mono, fontSize: 9, color: c.muted, letterSpacing: "0.6px", textTransform: "uppercase" }}>
+            <span style={{ fontFamily: mono, fontSize: 11, color: c.muted, letterSpacing: "0.6px", textTransform: "uppercase" }}>
               Design fixture · not production data
             </span>
-            <span style={{ fontFamily: mono, fontSize: 9, color: c.muted }}>snapshot f5fcfafc · revision 4</span>
+            <span style={{ fontFamily: mono, fontSize: 11, color: c.muted }}>snapshot f5fcfafc · revision 4</span>
           </div>
         </div>
       )}

@@ -170,7 +170,7 @@ export function StaffSignInPage({
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3 mb-2">
               <DolMark size={34} />
-              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: dark ? "#e8b93c" : "#7d5518", letterSpacing: "1px", textTransform: "uppercase" }}>
+              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: dark ? "#e8b93c" : "#7d5518", letterSpacing: "1px", textTransform: "uppercase" }}>
                 Department of Logistics
               </p>
             </div>

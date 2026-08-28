@@ -24,7 +24,7 @@ function DetailGrid({ fields }: { fields: Field[] }) {
           <p
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 10,
+              fontSize: 11,
               color: 'var(--muted-foreground)',
               letterSpacing: '0.5px',
               textTransform: 'uppercase',
@@ -79,7 +79,7 @@ function ProfileSection({
         <p
           style={{
             fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 10,
+            fontSize: 11,
             color: 'var(--muted-foreground)',
             letterSpacing: '0.4px',
             marginTop: 2,
@@ -104,7 +104,7 @@ function ProfileLoading() {
         className="mb-6"
         style={{
           fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 10,
+          fontSize: 11,
           color: 'var(--muted-foreground)',
           letterSpacing: '0.8px',
           textTransform: 'uppercase',
@@ -222,7 +222,7 @@ export function ProfileRoute({
           <p
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 10,
+              fontSize: 11,
               color: 'var(--muted-foreground)',
               letterSpacing: '0.8px',
               textTransform: 'uppercase',
@@ -327,7 +327,7 @@ export function ProfileRoute({
             <p
               style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 10,
+                fontSize: 11,
                 color: '#f6e29a',
                 letterSpacing: '0.8px',
                 textTransform: 'uppercase',
@@ -363,7 +363,7 @@ export function ProfileRoute({
               color: '#e8b93c',
               border: '1px solid rgba(232,185,60,0.35)',
               fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 10,
+              fontSize: 11,
               letterSpacing: '0.35px',
             }}
           >
@@ -375,7 +375,7 @@ export function ProfileRoute({
               color: 'rgba(250,238,203,0.72)',
               border: '1px solid rgba(242,209,92,0.18)',
               fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 10,
+              fontSize: 11,
               letterSpacing: '0.35px',
             }}
           >
@@ -413,7 +413,7 @@ export function ProfileRoute({
                 <p
                   style={{
                     fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 10,
+                    fontSize: 11,
                     color: 'var(--muted-foreground)',
                     letterSpacing: '0.5px',
                     textTransform: 'uppercase',
@@ -430,7 +430,7 @@ export function ProfileRoute({
                         className="inline-flex items-center rounded-[6px] px-2.5 py-1"
                         style={{
                           fontFamily: "'IBM Plex Mono', monospace",
-                          fontSize: 10,
+                          fontSize: 11,
                           color: dark ? '#bbf7d0' : '#1f6b41',
                           background: dark ? 'rgba(74, 154, 104, 0.2)' : 'rgba(31,107,65,0.1)',
                           border: dark ? '1px solid rgba(187,247,208,0.3)' : '1px solid rgba(31,107,65,0.22)',
@@ -457,7 +457,7 @@ export function ProfileRoute({
                 <p
                   style={{
                     fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 10,
+                    fontSize: 11,
                     color: 'var(--muted-foreground)',
                     letterSpacing: '0.5px',
                     textTransform: 'uppercase',
@@ -483,7 +483,7 @@ export function ProfileRoute({
                     className="mt-2"
                     style={{
                       fontFamily: "'IBM Plex Mono', monospace",
-                      fontSize: 10,
+                      fontSize: 11,
                       color: 'var(--muted-foreground)',
                       letterSpacing: '0.3px',
                     }}
@@ -496,7 +496,7 @@ export function ProfileRoute({
                 <p
                   style={{
                     fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 10,
+                    fontSize: 11,
                     color: 'var(--muted-foreground)',
                     letterSpacing: '0.5px',
                     textTransform: 'uppercase',
@@ -537,7 +537,7 @@ export function ProfileRoute({
                 <p
                   style={{
                     fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 10,
+                    fontSize: 11,
                     color: 'var(--muted-foreground)',
                     marginTop: 2,
                   }}
@@ -557,7 +557,7 @@ export function ProfileRoute({
                 <p
                   style={{
                     fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 9,
+                    fontSize: 11,
                     color: 'var(--muted-foreground)',
                     letterSpacing: '0.8px',
                     textTransform: 'uppercase',
@@ -581,7 +581,7 @@ export function ProfileRoute({
                 <p
                   style={{
                     fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 9,
+                    fontSize: 11,
                     color: 'var(--muted-foreground)',
                     letterSpacing: '0.8px',
                     textTransform: 'uppercase',
@@ -606,7 +606,7 @@ export function ProfileRoute({
                   <p
                     style={{
                       fontFamily: "'IBM Plex Mono', monospace",
-                      fontSize: 9,
+                      fontSize: 11,
                       color: 'var(--muted-foreground)',
                       letterSpacing: '0.8px',
                       textTransform: 'uppercase',
@@ -639,7 +639,7 @@ export function ProfileRoute({
             <p
               style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 9,
+                fontSize: 11,
                 color: 'var(--muted-foreground)',
                 letterSpacing: '1px',
                 textTransform: 'uppercase',

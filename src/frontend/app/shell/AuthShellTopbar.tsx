@@ -45,7 +45,7 @@ export function AuthShellTopbar({
         <span
           style={{
             fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 8,
+            fontSize: 11,
             color: 'rgba(250,238,203,0.62)',
             letterSpacing: '0.55px',
           }}
@@ -55,7 +55,7 @@ export function AuthShellTopbar({
         <span
           style={{
             fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 8,
+            fontSize: 11,
             color: 'rgba(250,238,203,0.46)',
             letterSpacing: '0.45px',
             textAlign: 'right',
@@ -95,7 +95,7 @@ export function AuthShellTopbar({
           className="hidden min-[360px]:block lg:hidden flex-1 truncate text-center"
           style={{
             fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 9,
+            fontSize: 11,
             color: commandForeground,
             letterSpacing: '0.35px',
             textTransform: 'uppercase',
@@ -126,7 +126,7 @@ export function AuthShellTopbar({
               className="ml-auto rounded px-1.5 py-0.5"
               style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 10,
+                fontSize: 11,
                 color: commandMuted,
                 background: commandSurface,
                 border: `1px solid ${commandBorder}`,
@@ -144,7 +144,7 @@ export function AuthShellTopbar({
               background: 'rgba(232,185,60,0.14)',
               border: '1px solid rgba(232,185,60,0.3)',
               fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 10,
+              fontSize: 11,
               color: '#e8b93c',
               letterSpacing: '0.5px',
             }}

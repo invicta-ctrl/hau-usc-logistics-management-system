@@ -137,7 +137,7 @@ export function InventoryRoute({
           <p
             style={{
               fontFamily: mono,
-              fontSize: 10,
+              fontSize: 11,
               color: c.muted,
               letterSpacing: '1px',
               textTransform: 'uppercase',
@@ -168,7 +168,7 @@ export function InventoryRoute({
               htmlFor="inv-preview-state"
               style={{
                 fontFamily: mono,
-                fontSize: 9,
+                fontSize: 11,
                 color: c.muted,
                 letterSpacing: '0.9px',
                 textTransform: 'uppercase',
@@ -355,7 +355,7 @@ export function InventoryRoute({
                     <p
                       style={{
                         fontFamily: mono,
-                        fontSize: 10,
+                        fontSize: 11,
                         color: dark ? 'rgba(232,185,60,0.6)' : '#a07828',
                         letterSpacing: '0.1px',
                         marginTop: 2,
@@ -467,7 +467,7 @@ export function InventoryRoute({
               className="rounded-[5px] px-2 py-0.5"
               style={{
                 fontFamily: mono,
-                fontSize: 9,
+                fontSize: 11,
                 color: '#7d5518',
                 background: '#fbeed2',
                 border: '1px solid #dcbe8a',
@@ -479,7 +479,7 @@ export function InventoryRoute({
                 ? 'Local preview fixture · no server read'
                 : 'Authenticated bootstrap · ledger-derived'}
             </span>
-            <span style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>{items.length} records</span>
+            <span style={{ fontFamily: mono, fontSize: 11, color: c.muted }}>{items.length} records</span>
           </div>
 
           {/* Table */}
@@ -506,7 +506,7 @@ export function InventoryRoute({
                 <p
                   style={{
                     fontFamily: mono,
-                    fontSize: 10,
+                    fontSize: 11,
                     color: c.muted,
                     letterSpacing: '0.8px',
                     textTransform: 'uppercase',
@@ -531,7 +531,7 @@ export function InventoryRoute({
                 <p
                   style={{
                     fontFamily: mono,
-                    fontSize: 10,
+                    fontSize: 11,
                     color: c.muted,
                     letterSpacing: '0.8px',
                     textTransform: 'uppercase',
@@ -586,23 +586,23 @@ export function InventoryRoute({
                     </div>
                     <dl className="grid grid-cols-2 gap-x-4 gap-y-2 my-4">
                       <div>
-                        <dt style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>AVAILABLE</dt>
+                        <dt style={{ fontFamily: mono, fontSize: 11, color: c.muted }}>AVAILABLE</dt>
                         <dd style={{ fontFamily: sans, color: c.text, margin: 0 }}>
                           {String(item.available)}
                         </dd>
                       </div>
                       <div>
-                        <dt style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>RESERVED</dt>
+                        <dt style={{ fontFamily: mono, fontSize: 11, color: c.muted }}>RESERVED</dt>
                         <dd style={{ fontFamily: sans, color: c.text, margin: 0 }}>
                           {String(item.reserved)}
                         </dd>
                       </div>
                       <div>
-                        <dt style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>ON HAND</dt>
+                        <dt style={{ fontFamily: mono, fontSize: 11, color: c.muted }}>ON HAND</dt>
                         <dd style={{ fontFamily: sans, color: c.text, margin: 0 }}>{String(item.onHand)}</dd>
                       </div>
                       <div>
-                        <dt style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>THRESHOLD</dt>
+                        <dt style={{ fontFamily: mono, fontSize: 11, color: c.muted }}>THRESHOLD</dt>
                         <dd style={{ fontFamily: sans, color: c.text, margin: 0 }}>
                           {String(item.threshold)}
                         </dd>
@@ -702,7 +702,7 @@ export function InventoryRoute({
                               >
                                 {item.name}
                               </p>
-                              <p style={{ fontFamily: mono, fontSize: 10, color: c.muted, marginTop: 2 }}>
+                              <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, marginTop: 2 }}>
                                 {item.id}
                               </p>
                             </button>
@@ -757,7 +757,7 @@ function thStyle(bg: string, c: ReturnType<typeof ap>, mono: string): CSSPropert
   return {
     fontFamily: mono,
     fontWeight: 600,
-    fontSize: 10,
+    fontSize: 11,
     color: c.muted,
     letterSpacing: '1px',
     textTransform: 'uppercase',

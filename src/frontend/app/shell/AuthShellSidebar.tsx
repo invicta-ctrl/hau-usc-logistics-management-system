@@ -50,7 +50,7 @@ export function AuthShellSidebar({
               <span
                 style={{
                   fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: 7,
+                  fontSize: 11,
                   color: '#f6e29a',
                   letterSpacing: '.8px',
                   textTransform: 'uppercase',
@@ -61,7 +61,7 @@ export function AuthShellSidebar({
               <span
                 style={{
                   fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: 700,
                   color: '#faeecb',
                   lineHeight: 1.1,
@@ -75,7 +75,7 @@ export function AuthShellSidebar({
             className="hidden xl:block"
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 8,
+              fontSize: 11,
               color: '#f6e29a',
               letterSpacing: '.7px',
               textTransform: 'uppercase',
@@ -93,7 +93,7 @@ export function AuthShellSidebar({
             className="hidden xl:block"
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 9,
+              fontSize: 11,
               color: 'rgba(250,238,203,0.38)',
               letterSpacing: '1px',
               textTransform: 'uppercase',
@@ -125,7 +125,7 @@ export function AuthShellSidebar({
             className="hidden xl:block"
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 9,
+              fontSize: 11,
               color: 'rgba(250,238,203,0.38)',
               letterSpacing: '1px',
               textTransform: 'uppercase',
@@ -157,7 +157,7 @@ export function AuthShellSidebar({
             <span
               style={{
                 fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: 600,
                 color: '#40070a',
               }}
@@ -183,7 +183,7 @@ export function AuthShellSidebar({
             <span
               style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 9,
+                fontSize: 11,
                 color: 'rgba(250,238,203,0.5)',
                 letterSpacing: '0.3px',
               }}

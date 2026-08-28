@@ -177,15 +177,15 @@ export function AccountAccessPanel({ initialMode = "apply", onClose }: { initial
         .account-access-tabs button,.account-close,.account-access-form button{min-height:42px;padding:10px 14px;border:1px solid #d1b478;border-radius:10px;color:#610b0f}
         .account-access-tabs button[aria-selected="true"],.account-primary{background:#e8b93c!important;color:#40070a!important;border-color:#d1b478!important;font-weight:650}
         .account-access-form{display:flex;flex-direction:column;gap:14px}
-        .account-access-form h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:24px;font-weight:700;letter-spacing:-.6px}
-        .account-access-form p,.account-access-form small{color:#6f5a60;font-size:12px;line-height:1.55}
+        .account-access-form h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:20px;font-weight:700;letter-spacing:-.6px}
+        .account-access-form p,.account-access-form small{color:#6f5a60;font-size:11px;line-height:1.55}
         .account-access-form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:550}
         .account-access-form input,.account-access-form select,.account-access-form textarea{min-height:44px;padding:10px 12px;border:1px solid #d1b478;border-radius:10px;background:#fff7e6;color:#241416;font:inherit}
         .account-access-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
         .account-access-form .account-check{display:grid;grid-template-columns:22px 1fr;align-items:start;font-weight:400;line-height:1.45}
         .account-access-form .account-check input{min-height:20px;width:20px;padding:0}
         .account-status-card{display:grid;gap:8px;padding:16px;border:1px solid #d1b478;border-radius:12px;background:#f7f0e2}
-        .account-status-card p{display:flex;justify-content:space-between;gap:16px;font-size:12px}.account-status-card span{color:#6f5a60}
+        .account-status-card p{display:flex;justify-content:space-between;gap:16px;font-size:11px}.account-status-card span{color:#6f5a60}
         .account-token-warning{display:block!important;color:#9c2630!important}.account-status-token{overflow-wrap:anywhere;padding:10px;border-radius:8px;background:#fffdf8}
         @media(max-width:640px){.account-access-grid{grid-template-columns:1fr}.account-access-tabs{grid-template-columns:1fr}}
       `}</style>

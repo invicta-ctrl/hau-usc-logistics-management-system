@@ -43,7 +43,7 @@ export function PublicNavbar({
             </span>
             <span className="hidden min-[415px]:inline-flex items-center gap-2 pl-3" style={{ borderLeft: "1px solid rgba(242,209,92,.28)" }}>
               <DolMark size={34} />
-              <span className="hidden md:inline" style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 10, color: "#f6e29a", lineHeight: 1.2 }}>
+              <span className="hidden md:inline" style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: "#f6e29a", lineHeight: 1.2 }}>
                 Department of<br />Logistics
               </span>
             </span>

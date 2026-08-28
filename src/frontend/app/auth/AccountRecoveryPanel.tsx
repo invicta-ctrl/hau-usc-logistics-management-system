@@ -67,8 +67,8 @@ const PANEL_CSS = `
   .account-recovery .account-primary{background:#e8b93c;color:#40070a;border-color:#d1b478;font-weight:650}
   .account-recovery .account-primary[disabled]{opacity:.55}
   .account-recovery .account-access-form{display:flex;flex-direction:column;gap:14px}
-  .account-recovery h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:24px;font-weight:700;letter-spacing:-.6px}
-  .account-recovery p,.account-recovery small{color:#6f5a60;font-size:12px;line-height:1.55}
+  .account-recovery h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:20px;font-weight:700;letter-spacing:-.6px}
+  .account-recovery p,.account-recovery small{color:#6f5a60;font-size:11px;line-height:1.55}
   .account-recovery label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:550;color:#241416}
   .account-recovery input{min-height:44px;padding:10px 12px;border:1px solid #d1b478;border-radius:10px;background:#fff7e6;color:#241416;font:inherit}
   .account-recovery input[aria-invalid="true"]{border-color:var(--destructive);border-width:2px}

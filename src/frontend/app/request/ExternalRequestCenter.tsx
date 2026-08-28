@@ -346,7 +346,7 @@ export function ExternalRequestCenter({
               <p
                 style={{
                   fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: 10,
+                  fontSize: 11,
                   letterSpacing: '1px',
                   textTransform: 'uppercase',
                   color: dark ? '#e8b93c' : '#7d5518',
@@ -463,7 +463,7 @@ export function ExternalRequestCenter({
             <p
               style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 10,
+                fontSize: 11,
                 letterSpacing: '1px',
                 textTransform: 'uppercase',
                 color: dark ? '#e8b93c' : '#7d5518',
@@ -533,7 +533,7 @@ export function ExternalRequestCenter({
                           className="rounded-full px-2 py-0.5"
                           style={{
                             fontFamily: "'IBM Plex Mono', monospace",
-                            fontSize: 10,
+                            fontSize: 11,
                             letterSpacing: '0.8px',
                             textTransform: 'uppercase',
                             background: dark ? 'rgba(232,185,60,0.18)' : '#f7f0e2',

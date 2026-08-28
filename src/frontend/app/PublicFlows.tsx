@@ -610,14 +610,14 @@ const css = `
 .mast>strong{text-align:right}.identity{display:flex;align-items:center;gap:8px}.identity img{width:38px;height:38px;object-fit:contain}
 .identity span{font-size:11px;font-weight:700}.back{justify-self:start;border:0!important;background:transparent!important}
 .notice,.pub nav,.panel,.assure{max-width:980px;margin-left:auto;margin-right:auto}
-.notice{display:flex;justify-content:center;gap:10px;padding:10px;margin-top:18px;border:1px dashed var(--line);font-size:12px;border-radius:10px}
+.notice{display:flex;justify-content:center;gap:10px;padding:10px;margin-top:18px;border:1px dashed var(--line);font-size:11px;border-radius:10px}
 .notice span{color:var(--muted)}
 .assure{display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:16px;padding:18px 22px;border-radius:14px}
-.assure b{font-size:18px}.assure p{margin:4px 0 0;color:var(--text);font-size:14px;max-width:64ch}
+.assure b{font-size:20px}.assure p{margin:4px 0 0;color:var(--text);font-size:13px;max-width:64ch}
 .assure .who{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
 .chip{padding:8px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
 .pub nav{display:grid;grid-template-columns:repeat(5,1fr);margin-top:14px;gap:6px}
-.pub nav button{font-size:12px}.pub nav .active{background:var(--ox);color:var(--onOx);border-color:var(--ox);font-weight:800}
+.pub nav button{font-size:11px}.pub nav .active{background:var(--ox);color:var(--onOx);border-color:var(--ox);font-weight:800}
 .panel{margin-top:20px;padding:clamp(22px,4vw,40px);border-radius:18px}
 .panel h1{font:700 clamp(32px,4.4vw,52px)/1.02 "Bricolage Grotesque",Georgia,serif;letter-spacing:-.03em;margin:6px 0 12px}
 .panel h2{font:700 24px/1.2 "Bricolage Grotesque",Georgia,serif;margin:0 0 6px}
@@ -625,7 +625,7 @@ const css = `
 .panel>p{color:var(--muted);max-width:70ch}
 .eye{margin:0!important;color:var(--gold)!important;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
 .muted{color:var(--muted)}
-.stateSwitch{display:flex;gap:6px;margin:18px 0 6px;flex-wrap:wrap}.stateSwitch button{font-size:12px;min-height:36px;padding:6px 12px;border-radius:999px}
+.stateSwitch{display:flex;gap:6px;margin:18px 0 6px;flex-wrap:wrap}.stateSwitch button{font-size:11px;min-height:36px;padding:6px 12px;border-radius:999px}
 .stateSwitch .active{background:var(--ox);color:var(--onOx);border-color:var(--ox)}
 .filters{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}.filters label{display:grid;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);flex:1;min-width:150px}
 .filters .grow{flex:2 1 260px}
@@ -633,15 +633,15 @@ const css = `
 .catalog li{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:14px;align-items:start;padding:14px;border:1px solid var(--hair);border-radius:14px;background:var(--surface)}
 .catalog li.sel{border-color:var(--action);border-width:2px}
 .itemThumb{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:var(--inset)}
-.ident{display:grid;gap:3px}.ident b{font-size:16px}.ident small{color:var(--muted);font-size:11px}
-.tone{display:inline-block;padding:4px 9px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;justify-self:start;font-style:normal}
+.ident{display:grid;gap:3px}.ident b{font-size:15px}.ident small{color:var(--muted);font-size:11px}
+.tone{display:inline-block;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;justify-self:start;font-style:normal}
 .tone--done{background:var(--doneB);color:var(--doneF);border:1px solid var(--doneL)}
 .tone--progress{background:var(--progB);color:var(--progF);border:1px solid var(--progL)}
 .tone--info{background:var(--infoB);color:var(--infoF);border:1px solid var(--infoL)}
 .tone--neutral{background:var(--neuB);color:var(--neuF);border:1px solid var(--neuL)}
 .stateBlock{margin-top:18px;padding:20px;border:1px solid var(--hair);border-radius:14px;background:var(--inset);display:grid;gap:8px;justify-items:start}
 .stateBlock.err{border-color:var(--alertL)}
-.stateBlock strong{font-size:18px}.stateBlock p{margin:0;color:var(--muted)}
+.stateBlock strong{font-size:20px}.stateBlock p{margin:0;color:var(--muted)}
 .catChips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .catChips button{min-height:40px;padding:8px 14px;border-radius:999px;font-size:13px}
 .catChips .allBtn{background:var(--inset);border-color:var(--line)}
@@ -661,9 +661,9 @@ fieldset{border:0;margin:22px 0 0;padding:0}legend{font:700 17px/1.3 "Bricolage 
 .choice input{width:18px;height:18px;min-height:0;flex:none;accent-color:var(--ox)}
 .choice b{display:block;font-size:15px}.choice small{color:var(--muted);font-size:11px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
-.grid label,.panel label{display:grid;gap:6px;font-size:12px;font-weight:700}
+.grid label,.panel label{display:grid;gap:6px;font-size:11px;font-weight:700}
 .grid .span2{grid-column:1/-1}
-.badge{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:var(--infoB);color:var(--infoF);border:1px solid var(--infoL);font-size:10px;font-style:normal;font-weight:700}
+.badge{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:var(--infoB);color:var(--infoF);border:1px solid var(--infoL);font-size:11px;font-style:normal;font-weight:700}
 .ack{display:flex;gap:12px;align-items:flex-start;padding:14px;margin-top:10px;background:var(--inset);border:1px solid var(--hair);border-radius:12px}
 .ack.cond{border-color:var(--infoL)}
 .ack input{width:18px;height:18px;min-height:0;flex:none;margin-top:3px;accent-color:var(--ox)}
@@ -679,9 +679,9 @@ nav .navArrow{opacity:.72}
    of those, and it is the most common tell of a generated UI. The quiet inset
    surface and a hairline carry it instead. Inherited from the previous file's
    .consequence/.gate rule; not carried forward. */
-.consequence{margin-top:14px;padding:12px 14px;background:var(--inset);border:1px solid var(--hair);color:var(--muted);font-size:12px;border-radius:10px}
+.consequence{margin-top:14px;padding:12px 14px;background:var(--inset);border:1px solid var(--hair);color:var(--muted);font-size:11px;border-radius:10px}
 .stepper{list-style:none;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:20px 0 6px;padding:0}
-.stepper li{display:flex;gap:8px;align-items:center;padding:12px;border-radius:12px;font-size:12px}
+.stepper li{display:flex;gap:8px;align-items:center;padding:12px;border-radius:12px;font-size:11px}
 .stepper li.cur{background:var(--progB);border:1px solid var(--action)}
 .stepper li.todo{color:var(--muted)}
 .mk{flex:none;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800;background:var(--inset);border:1px solid var(--line)}
@@ -694,8 +694,8 @@ nav .navArrow{opacity:.72}
 .codes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
 .codes div{padding:16px;background:var(--inset);border:1px solid var(--line);border-radius:12px}
 .codes small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
-.codes code{display:block;margin-top:8px;font-family:"IBM Plex Mono",monospace;font-size:19px}
-.warn{padding:14px;background:var(--progB);color:var(--progF);border:1px solid var(--progL);border-radius:12px;font-size:14px}
+.codes code{display:block;margin-top:8px;font-family:"IBM Plex Mono",monospace;font-size:20px}
+.warn{padding:14px;background:var(--progB);color:var(--progF);border:1px solid var(--progL);border-radius:12px;font-size:13px}
 @media(max-width:900px){.mast{grid-template-columns:1fr auto}.mast>strong{display:none}.pub nav{grid-template-columns:repeat(2,1fr)}.stepper{grid-auto-flow:row}}
 @media(max-width:640px){.pub{padding:0 12px 90px}.grid,.choices,.codes,.skeleton{grid-template-columns:1fr}
  .catalog li{grid-template-columns:60px minmax(0,1fr)}.catalog li>button{grid-column:2}

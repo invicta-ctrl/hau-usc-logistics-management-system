@@ -101,7 +101,7 @@ export function AuthenticatedShell({
               <span
                 style={{
                   fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                  fontSize: 10,
+                  fontSize: 11,
                   color: route === item.route ? '#e8b93c' : 'rgba(250,238,203,0.5)',
                   letterSpacing: -0.1,
                 }}

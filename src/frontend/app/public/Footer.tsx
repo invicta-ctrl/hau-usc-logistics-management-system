@@ -19,7 +19,7 @@ export function Footer({
                 <span style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 700, fontSize: 13, color: "#fff", letterSpacing: -0.075, lineHeight: "18px" }}>
                   University Student Council
                 </span>
-                <span style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 10, color: "#f6e29a", letterSpacing: 0.22 }}>
+                <span style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: "#f6e29a", letterSpacing: 0.22 }}>
                   Holy Angel University
                 </span>
               </div>
@@ -78,7 +78,7 @@ export function Footer({
         </div>
 
         <div className="flex flex-wrap items-center gap-4 mt-10 pt-6" style={{ borderTop: "1px solid rgba(242,209,92,0.14)" }}>
-          <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "rgba(250,238,203,0.45)", letterSpacing: "0.6px", textTransform: "uppercase" }}>
+          <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "rgba(250,238,203,0.45)", letterSpacing: "0.6px", textTransform: "uppercase" }}>
             Holy Angel University · Angeles City, Pampanga
           </p>
         </div>

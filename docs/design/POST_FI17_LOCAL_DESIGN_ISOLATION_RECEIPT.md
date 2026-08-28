@@ -878,3 +878,195 @@ REJECT_REFERENCE_DETAIL  none claimed — no deviation here was a deliberate,
                        argued departure from Figma, because Figma was never read
 FIGMA WRITES           ZERO
 ```
+
+---
+
+# POST-FI17-DESIGN-RECOVERY-02 — CORRECTION PASS
+
+Owner-directed continuation. Executed steps 1, 2, 3, 5, 6 and 8. Step 4 (Figma
+Make) could not be executed; see the blocker section.
+
+## PREVIEW FEATURE RESTORATION
+
+```text
+STATE BEFORE:  present and working — all 15 routes, search, 8 filters, focus
+               management. It did NOT reproduce as missing.
+LAUNCHER:      fully inside the viewport at 320/375/390/414/640/768.
+               It did NOT reproduce as a clipped sliver.
+```
+
+The reported symptoms still do not reproduce against this branch. What was
+found and fixed instead is a real defect of the same family:
+
+```text
+launcher:   position: fixed; inset-block-end: 1rem; z-index: 100  (16-60px band)
+mobile dock: fixed bottom-0 … z-index: 10; min-height 60          (0-60px band)
+```
+
+The launcher covered the navigation at a higher z-index. Below `lg` it now
+clears the dock, respects `env(safe-area-inset-*)` on both axes, and caps its
+width so a longer label can never reach the opposite edge.
+
+### VIEWPORT EDGE BUG — regression guard
+
+`tests/e2e/preview-launcher-geometry.spec.js`, six widths (320, 375, 390, 414,
+640, 768 — 640 is a 1280 screen at 200% zoom):
+
+```text
+left >= 0 · right <= viewport · top >= 0
+width >= 44 · height >= 44
+label not clipped by its own box (scrollWidth/scrollHeight)
+topmost at its own centre (elementFromPoint)
+keyboard focusable with a visible ring
+clears the 60px dock band
+RESULT: 7/7 pass
+```
+
+`playwright.frontend.config.js` gained an opt-in `HAU_CHROMIUM_PATH` override so
+the suite can run where the preinstalled Chromium does not match the pinned
+Playwright build. Unset by default; normal runs are unchanged.
+
+### Production-mode denial — now a real claim
+
+Before, the feature was only RUNTIME-gated (`/api/version` must report
+`playground: true`). The modules still shipped. §9 asks for absence, which is a
+stronger claim, so it is now enforced at build time and proven against output:
+
+```text
+npm run verify:preview-absent
+  -> builds --mode production, greps the emitted bundle
+  -> TIER 1 (enforced): 0 of 10 Preview Index markers present
+  -> TIER 2 (tracked):  5 of 5 per-route inspection markers still ship
+```
+
+The constant had to be **inlined at the use site** in `App.tsx`. Imported across
+a module boundary it stayed a runtime read and Rollup shook nothing — the
+verifier caught that, which is the reason it builds rather than trusting the
+reasoning.
+
+Tier 2 is stated rather than hidden: `AuthenticatedShell`, `InternalLendingHub`,
+`InternalRequestHub`, `AdministrationRoute` and the shell drawers each carry
+their own `inspection` branch. Those are production components, so their strings
+ship. They are unreachable in Production because nothing passes `inspection` —
+but "unreachable" is not "absent", and the script does not pretend otherwise.
+
+## FIGMA CORRECTIONS R1–R10 — applied as one program
+
+| # | Correction | State |
+|---|---|---|
+| R1 | Type: invented 10/11/12/13/14/16/19/24/31 replaced by Figma's 11/13/15/20/30/44, with Figma's style names, line heights and tracking. 75 declarations migrated in `index.css`. | DONE |
+| R2 | Overview per-row `Next action` column, in gold. | DONE |
+| R3 | Reconciliation restored as MEASURE / LEDGER / PROJECTION / STATE. | DONE |
+| R4 | Standing band reverted to Figma's one quiet run under `NOW · N EXCEPTIONS`. | DONE |
+| R5 | `Reconcile` + `Open Release Desk` header pair. | DONE |
+| R6 | `--destructive` `#d4183d` → `#9c2630`. | DONE |
+| R7 | Figma's five status families × three roles, light and dark. Release pills and the new `.status-pill` consume them. | DONE (Supply blocked, below) |
+| R8 | `h1` restored to "Administrator overview". | DONE |
+| R9 | Spacing gains 20 and 32, ends on 56 not 64, carries Figma's semantic roles; radius repointed to 6/10/14/18. | DONE |
+| R10 | `content/max` 1520 (was 1280), inspector 380 (was 304–340), grid margins, two missing motion durations. | DONE |
+
+### R7 — one surface could not take it
+
+`SupplyRoutes.tsx` (Restocking / Procurement / Events) carries the same three
+defects the other operational routes had: an equal-weight filled tab wall, one
+neutral chrome for every status, and the pre-canonical route-local palette. All
+three were corrected and then **reverted**, because
+`tests/unit/fi09-supply-operations.test.js` asserts byte-for-byte parity between
+that route's CSS payload and the accepted Make-v44 provider export:
+
+```text
+expect(supplyCssFrom(runtime)).toBe(cssFrom(makeV44)?.trim());
+```
+
+Changing the palette, the tabs or the pills breaks an **accepted parity
+contract** whose upstream authority is Figma Make — the one source this
+environment cannot inspect. Correcting it against a source that could not be
+read, while breaking a test that enshrines it, would have been the wrong trade.
+Reverted in full; tracked below.
+
+## HALLMARK AUDIT
+
+Audited the rendered application, not the source.
+
+```text
+SLOP FINGERPRINTS FOUND
+1. Equal-weight card walls — Administration's seven sections in a repeat(3,1fr)
+   grid of filled boxes, stranding "System status" alone on a third row.
+   Restocking/Procurement/Events repeat the pattern.        FIXED / BLOCKED
+2. Undifferentiated status chrome — Release and Supply rendered "Ready to
+   release", "Partially released", "Released", "Not delivered" and "Received"
+   in one identical neutral pill, on surfaces whose entire job is telling them
+   apart.                                                    FIXED / BLOCKED
+3. Triplicate notices — every operational route showed the same "this is a
+   fixture" fact three times: preview banner, sandbox band, floating chip. The
+   chip was the pure duplicate.                              FIXED
+4. Card chrome where the design system asks for restraint — the previous pass's
+   three weighted Overview figures, against Figma's deliberately quiet band and
+   568:13's "glass is localised to layers that earn it".     FIXED (R4)
+5. Fake-dashboard rhythm — three padded reconciliation rows each ending in an
+   identical "Reconciled" pill. Replaced by the real table.  FIXED (R3)
+6. Sub-legible type — 7px, 8px, 9px inline sizes; 45 occurrences below any
+   readable floor and below Figma's 11px.                    FIXED (distill)
+7. Route-local palettes bypassing the canonical override — AdministrationRoute
+   and SupplyRoutes both carried the superseded #fffdf8 plane. FIXED / BLOCKED
+8. Detached floating control — the launcher sitting on top of the mobile dock.  FIXED
+
+STRONG EXISTING DNA — PRESERVED
+1. Oxblood anchor, warm paper plane, gold reserved for active controls.
+2. The four-face type system (Bricolage / Newsreader / Plex Sans / Plex Mono).
+3. Semantic lines over decorative rules; G0–G4 material ladder.
+4. Purposeful asymmetry — the exception table full width, path/provenance two-up.
+5. Reduced-motion, reduced-transparency and backdrop-filter fallbacks.
+
+STRUCTURAL REDESIGN DECISIONS
+1. Overview rebuilt on Figma's CURRENT frame rather than on orphaned code.
+2. Administration and Release moved from filled tab walls to underline rails.
+3. Status became one component with five Figma-defined tones, not per-route
+   invention through color-mix().
+4. The type ramp became the design system's, not this pass's.
+
+DO-NOT-COPY REFERENCE TRAITS
+Monochrome startup minimalism; command-palette-only interaction; Material
+geometry; Jira density; Retool builder chrome; agency-portfolio hero effects.
+
+PRE-EMIT CRITIQUE
+Philosophy   5  Institutional ledger identity intact and now Figma-verified.
+Hierarchy    5  Consequence-ordered exceptions, weighted header, quiet standing.
+Execution    4  Type, status and palette on-system — but SupplyRoutes is frozen
+                by the Make-v44 parity contract, so three routes keep the old
+                chrome. Not a craft failure; a governance boundary.
+Specificity  5  Every decision traces to a Figma node id or an owner sentence.
+Restraint    5  Card chrome, duplicate notices and decorative rails removed.
+Variety      4  Landing, Overview and Inventory now differ structurally.
+                Release / Restocking / Procurement still share one queue +
+                inspector rhythm; two of the three are parity-locked.
+```
+
+## IMPECCABLE CLOSEOUT
+
+```text
+CONTEXT LOADER: run once.
+COMMAND CHOSEN: distill — single, after inspecting the Hallmark result.
+```
+
+Chosen because after the structural fixes the dominant residual was measurably
+typographic, not compositional: 78 embedded-CSS px sizes across 11 values and
+244 inline literals across 12, including 7/8/9px. `bolder` and `layout` were
+already answered by the Figma correction; `polish` would have chased detail
+while the system underneath still disagreed with itself.
+
+```text
+PRESERVED  Route semantics, all copy, focus management, aria wiring, the
+           reduced-motion and reduced-transparency fallbacks, Make-v44 parity.
+CHANGED    50 embedded-CSS sizes snapped to the Figma ramp; 98 inline sizes
+           below Figma's 11px floor raised to it; route-header clamps
+           re-anchored from 28→38px onto Figma's Page Title→Display pair.
+           Sizes already at or above 11 were deliberately left: snapping those
+           is churn and would widen the FI/FM reconciliation surface.
+DEVIATIONS Landing hero keeps a fluid step above Figma's largest text style;
+           a marketing hero is not one of the eleven app text styles.
+EVIDENCE   1164 tests, 66/66 contrast, 7/7 launcher geometry, production
+           absence verified against real output.
+RESIDUAL   36×12px, 58×13px, 10×14px inline literals remain within one step of
+           the ramp; SupplyRoutes untouched.
+```

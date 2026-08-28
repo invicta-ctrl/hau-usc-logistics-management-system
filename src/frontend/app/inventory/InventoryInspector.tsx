@@ -40,7 +40,7 @@ export function InventoryInspector({
         <p
           style={{
             fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 9,
+            fontSize: 11,
             color: c.muted,
             letterSpacing: '0.9px',
             textTransform: 'uppercase',
@@ -156,7 +156,7 @@ export function InventoryInspector({
           <span
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 9,
+              fontSize: 11,
               color: c.muted,
               letterSpacing: '0.8px',
               textTransform: 'uppercase',
@@ -171,7 +171,7 @@ export function InventoryInspector({
           <p
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 10,
+              fontSize: 11,
               color: c.muted,
               letterSpacing: '0.8px',
               textTransform: 'uppercase',
@@ -215,7 +215,7 @@ export function InventoryInspector({
             <p
               style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 9,
+                fontSize: 11,
                 color: '#7d5518',
                 letterSpacing: '0.9px',
                 textTransform: 'uppercase',
@@ -258,7 +258,7 @@ export function InventoryInspector({
                       <span
                         style={{
                           fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                          fontSize: 9,
+                          fontSize: 11,
                           color: c.muted,
                           letterSpacing: '0.9px',
                           textTransform: 'uppercase',
@@ -284,7 +284,7 @@ export function InventoryInspector({
                   <span
                     style={{
                       fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                      fontSize: 9,
+                      fontSize: 11,
                       color: c.muted,
                       letterSpacing: '0.9px',
                       textTransform: 'uppercase',
@@ -359,7 +359,7 @@ export function InventoryInspector({
             <p
               style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 9,
+                fontSize: 11,
                 color: c.muted,
                 letterSpacing: '0.7px',
                 textTransform: 'uppercase',

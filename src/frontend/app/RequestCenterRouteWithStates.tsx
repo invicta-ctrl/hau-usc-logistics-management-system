@@ -49,7 +49,7 @@ export default function RequestCenterRouteWithStates({
           htmlFor="rc-preview-state"
           style={{
             fontFamily: mono,
-            fontSize: 9,
+            fontSize: 11,
             color: c.muted,
             letterSpacing: "0.9px",
             textTransform: "uppercase",
@@ -127,7 +127,7 @@ export default function RequestCenterRouteWithStates({
             <p
               style={{
                 fontFamily: mono,
-                fontSize: 9,
+                fontSize: 11,
                 color: c.muted,
                 letterSpacing: "0.5px",
                 textTransform: "uppercase",
@@ -290,7 +290,7 @@ export default function RequestCenterRouteWithStates({
               <p
                 style={{
                   fontFamily: mono,
-                  fontSize: 10,
+                  fontSize: 11,
                   color: "#1f6b41",
                   letterSpacing: "0.4px",
                 }}

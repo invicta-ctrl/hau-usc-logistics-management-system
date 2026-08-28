@@ -296,7 +296,7 @@ function UrgencyBadge({ priority }: { priority: string }) {
       className="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5"
       style={{
         fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-        fontSize: 10,
+        fontSize: 11,
         fontWeight: 500,
         color: escalated ? '#7d5518' : '#c8152a',
         background: escalated
