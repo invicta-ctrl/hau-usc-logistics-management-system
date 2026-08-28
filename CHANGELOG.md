@@ -10,6 +10,13 @@
 
 ## Unreleased
 
+### FI-13 through FI-17 immediate Playground migration
+
+- Migrated the accepted FI frontend completion plus post-FI17 Overview and hero-motion recovery into the FM branch while preserving real Worker/API, auth, D1/R2, reset, privacy, and operational behavior.
+- Added Cloudflare-safe byte-identical hero-media chunking and the narrow CSP media allowance required for playback; final staging and production-mode packages satisfy the per-asset limit and reconstruct the accepted 36,018,711-byte media exactly.
+- Deployed exact candidate `9d48eaa8afb81734db3855b1834607e410f717fd` only to the existing Isolated Staging Playground. Live landing, hero, Overview, the nine remaining authenticated workspaces, version/readiness, schema 32, migration 0032, protected-route denial, rollback, and Production isolation passed.
+- Preserved the pre-existing generation-3 DIRTY metadata and single session/transient row without reset. No Production, new resource, schema migration, Google write, provider/email send, Figma/Make mutation, or FI-18 work occurred.
+
 ### Isolated Playground recovery and reset closeout
 
 - Deployed the repaired FI frontend only to the Isolated Staging Playground with working Overview, Inventory, Request, Lending, Release, Restocking, Procurement, Events, Administration, Profile, and public entry surfaces backed by real staging APIs.

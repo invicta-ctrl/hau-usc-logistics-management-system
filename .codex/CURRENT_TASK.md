@@ -1,13 +1,13 @@
 # Current Task — FI-13 to FI-17 Immediate Playground Migration
 
-STATUS: IN_PROGRESS
+STATUS: COMPLETE
 INTENT: migration
 MODE: execute
 TARGET: Existing FM candidate worktree and Isolated Staging Playground
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACTIVE_WRITER: SOL:FM_FI13_FI17_MIGRATION
-WRITER_LOCK: HELD
+ACTIVE_WRITER: NONE
+WRITER_LOCK: RELEASED
 ROUTE: SOLO
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-28-fi13-fi17-immediate-playground-migration-owner-amendment.md
 AUTHORITY: Earl's accepted immediate-migration amendment, project governance, exact FI source checkpoint, and live FM/Playground freeze evidence.
@@ -26,4 +26,6 @@ VERIFICATION: `git diff --check`; focused tests for changed/conflicted files; st
 
 STOP_CONDITIONS: conflicting writer; unknown tracked work that cannot be preserved; unaccepted FI source; required new migration or Production mutation; unprovable isolation or rollback; invariant-weakening conflict; unrepaired migration P0/P1.
 
-NEXT_EXACT_ACTION: Run the final release-candidate gate once, freeze the exact artifact, then perform the existing-Playground deployment preflight.
+COMPLETED_STATE: FI-00 through FI-17 plus accepted post-FI17 Overview/hero recovery is deployed to the existing Isolated Staging Playground at candidate `9d48eaa8afb81734db3855b1834607e410f717fd`; targeted live verification passed and Production remained unchanged.
+
+NEXT_EXACT_ACTION: STOP. Await a new explicit owner instruction for Production, FI-18, reset, residue cleanup, or any later work.

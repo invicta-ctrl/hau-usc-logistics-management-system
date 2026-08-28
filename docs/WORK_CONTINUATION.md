@@ -2,16 +2,17 @@
 
 ## Current resume block
 
-- Repository/worktree: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration.
-- Branch/HEAD/upstream: `frontend-design-integration`; FI-07 is independently accepted and its normal checkpoint commit/push is the only Git mutation authorized by this finalization. The pre-existing untracked `.ai-bridge/` remains excluded and preserved.
-- Current phase/stage: FI-07 Internal Lending Hub is accepted and its writer lock is released. The durable pointer is **FI-08 Release Desk intake and repository handshake only**; no FI-08 implementation packet or writer lock exists.
-- Authority: Earl's accepted R1 one-shot FI-04→FI-17 directive; R1-A2 reconciliation; accepted A3/A4 amendments; `.agents/PROJECT_POLICY.md`; and current repository/runtime/design-source truth. The existing A4 amendment record is the continuity `ACCEPTED_SPEC`; FI-08 needs its own accepted packet before implementation.
-- Completed FI-07: DOL-only Internal Lending Hub with strict bootstrap v2 projection, presentation-only capability gates, loaded-page queue and responsive inspector, existing review/handoff/return commands, governed evidence upload, deterministic request IDs, recovery/accessibility states, and local-only A4 review/issue/return demonstrations. It preserves server authority and does not alter Public Lending, backend/auth/permissions/schema/provider/deploy state.
-- Independent acceptance: Sol **ACCEPTED with no findings**; root recorded independent evidence for the same candidate. Focused FI-07 plus adapter units passed 30/30; regular authenticated browser matrix passed 30 at 320/390/768/1024/1440 with 5 intentional A4 skips; exact trusted 4173 A4 passed 5/5 with zero protected session/bootstrap/mutation/evidence traffic. Deterministic build/dist identity is SHA-256 `707A00FDF4DC4BC6EB2C2053007B21F9997A9D51ADDF65F7EE1B65CAA091F738` for both frontend artifacts.
-- External actions: The healthy 127.0.0.1:4173 supervisor was reused without restart. No Production, Playground, provider, Figma, backend, D1/R2, migration, or deployment write occurred. This finalization may only commit and push the accepted FI-07 checkpoint normally.
-- Blocker: None for FI-08 intake. FI-08 implementation is blocked until bounded contract/design/source inspection reconciles authority, an accepted packet is created, and a new canonical writer lock is acquired.
-- Resume commands: `git status --short`; `git diff --check`; read the accepted one-shot/A2/A3/A4 and `.agents/PROJECT_POLICY.md`; inspect only direct FI-08 contract/design/source dependencies; create the FI-08 accepted packet before implementation.
-- Prohibited actions: Do not touch `.ai-bridge/`; do not restart the healthy preview; do not fake a Session/capability/role; do not permit protected backend reads/mutations from preview; do not implement FI-08 or write Production, Playground, Figma, backend, D1/R2, migrations, deployment, or main until separately accepted authority exists.
+- Repository/worktree: `D:/Documents/Codex/HAU-USC Logistics/worktrees/fi00-fi12-playground-candidate`.
+- Branch/deployed candidate: `release/v0.8.3-fi12-playground`; Playground source `9d48eaa8afb81734db3855b1834607e410f717fd`, tree `fb96f80d0be29f87db10a2e6c18d85b1208d4a97`, staging index SHA-256 `20cbbf1f450b3941f3345cf1a9eecf646c0c187dc1c638ce8220adf2865fb866`.
+- Current phase/stage: FI-13 through FI-17/current-completion migration is complete; writer lock released; stop boundary reached.
+- Authority: accepted 2026-08-28 immediate FI-13 to FI-17 Playground migration amendment, project governance, exact FI source identities, and the final receipt.
+- Completed work: adopted the accepted missing frontend delta and post-FI17 Overview/hero recovery; preserved FM backend/auth/data/reset behavior; repaired the Cloudflare 25 MB asset limit with byte-identical chunk reconstruction and the required CSP media directive; deployed only to the existing isolated Playground.
+- Verification: final release gate 161/161 files and 1185/1185 tests; staging and production-mode build/artifact checks; hero byte parity; live playing hero; all ten authenticated workspaces; STAGING/readiness/schema32/migration0032; protected-route denial; rollback and Production binding isolation.
+- External actions: two existing-Playground Worker uploads, the second repairing the browser-found CSP P1; one temporary authorized Playground session created and signed out. No Production, reset, new resource, schema migration, Google write, provider/email send, or Figma/Make mutation.
+- Preserved residue: generation-3 DIRTY metadata, one session row, and transient total 1 were present at freeze and remained unchanged after smoke. Do not delete or reset them without new owner authority.
+- Blocker: none. The accepted work unit is complete.
+- Resume commands: read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, and `.codex/releases/v0.8.3/V0_8_3_FI00_FI17_PLAYGROUND_MIGRATION_RECEIPT.md`; verify Git/upstream and live provider identity before any new mutation.
+- Prohibited actions: do not deploy Production, begin FI-18, reset/repopulate the Playground, create resources, mutate Figma/Make, or normalize preserved residue without a new explicit owner instruction.
 
 ## FI-04 historical resume block
 
