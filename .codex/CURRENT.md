@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P21_PLAYGROUND_INDEX_QA_HUB_COMPLETE;P22_PERFORMANCE_BASELINE_NEXT
+PHASE: P22_PERFORMANCE_BASELINE_COMPLETE;P23_FRONTEND_PERFORMANCE_IMPROVEMENTS_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -80,6 +80,9 @@ P20_STATUS: PASS_LOCAL_IMPLEMENTATION;LIVE_UI_ACCEPTANCE_PENDING_P29_P31
 P20_AUDIT: .codex/PLAYGROUND_MASTER_P20_HTML_ACCESSIBILITY_SEMANTICS.md
 P21_STATUS: PASS_LOCAL_IMPLEMENTATION;LIVE_UI_ACCEPTANCE_PENDING_P29_P31
 P21_AUDIT: .codex/PLAYGROUND_MASTER_P21_PLAYGROUND_INDEX_QA_HUB.md
+P22_STATUS: PASS_MEASURED_LOCAL_BASELINE;BEFORE_AFTER_COMPARISON_PENDING_P23
+P22_AUDIT: .codex/PLAYGROUND_MASTER_P22_PERFORMANCE_BASELINE.md
+P22_EVIDENCE: .codex/evidence/P22_PLAYGROUND_PERFORMANCE_BASELINE.json
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P22 performance baseline. Measure current artifact bytes, route chunks, request and payload counts, LCP, interaction latency, CLS, TTFB, representative route transitions and data loads, Index search, 390 and 1440 widths, constrained CPU, and slower network profiles before optimizing.
+NEXT_EXACT_ACTION: Begin P23 frontend performance improvements. Use the P22 evidence to stop invisible hero-media fetches, introduce deployment route splitting and lazy route loading while preserving the separate offline shareable, remove safe duplicate bootstrap work, address repeated logo loading and desktop CLS where supported, then rerun the identical P22 harness for before/after evidence.
 HANDOFF_STATUS: ACTIVE

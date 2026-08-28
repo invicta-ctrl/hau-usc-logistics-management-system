@@ -11,6 +11,7 @@
     "preview:frontend:status": "node scripts/start-frontend-playground-preview.mjs status",
     "preview:frontend:restart": "node scripts/start-frontend-playground-preview.mjs restart",
     "preview:frontend:stop": "node scripts/start-frontend-playground-preview.mjs stop",
+    "performance:playground:baseline": "node scripts/measure-playground-performance.mjs",
     "build": "npm run verify:frontend:fixture-boundary && vite build --mode preview && node scripts/create-frontend-shareable.mjs",
     "build:legacy-artifacts": "node scripts/create-shareable.mjs && node scripts/create-apps-script-bundle.mjs",
     "build:cloudflare": "npm run verify:frontend:fixture-boundary && vite build --mode staging --outDir ../.wrangler/build/staging",
