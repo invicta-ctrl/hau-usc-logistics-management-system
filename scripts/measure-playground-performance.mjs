@@ -144,7 +144,7 @@ async function installApiFixtures(page) {
 
 async function installPerformanceObservers(page) {
   await page.addInitScript(() => {
-    window.__p22Metrics = { lcp: 0, cls: 0, longestEvent: 0 };
+    window.__p22Metrics = { lcp: 0, cls: 0, clsSources: [], longestEvent: 0 };
     new PerformanceObserver((list) => {
       const entries = list.getEntries();
       const latest = entries.at(-1);
@@ -152,7 +152,30 @@ async function installPerformanceObservers(page) {
     }).observe({ type: 'largest-contentful-paint', buffered: true });
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        if (!entry.hadRecentInput) window.__p22Metrics.cls += entry.value;
+        if (entry.hadRecentInput) continue;
+        window.__p22Metrics.cls += entry.value;
+        for (const source of entry.sources ?? []) {
+          const node = source.node;
+          const label = node instanceof Element
+            ? `${node.tagName.toLowerCase()}${node.id ? `#${node.id}` : ''}${[...node.classList].slice(0, 2).map((name) => `.${name}`).join('')}`
+            : 'unknown';
+          window.__p22Metrics.clsSources.push({
+            value: entry.value,
+            node: label,
+            previous: {
+              x: source.previousRect?.x ?? 0,
+              y: source.previousRect?.y ?? 0,
+              width: source.previousRect?.width ?? 0,
+              height: source.previousRect?.height ?? 0,
+            },
+            current: {
+              x: source.currentRect?.x ?? 0,
+              y: source.currentRect?.y ?? 0,
+              width: source.currentRect?.width ?? 0,
+              height: source.currentRect?.height ?? 0,
+            },
+          });
+        }
       }
     }).observe({ type: 'layout-shift', buffered: true });
     try {
@@ -215,6 +238,7 @@ async function navigationMetrics(page) {
       firstContentfulPaintMs: paint['first-contentful-paint'] ?? 0,
       lcpMs: window.__p22Metrics?.lcp ?? 0,
       cls: window.__p22Metrics?.cls ?? 0,
+      clsSources: window.__p22Metrics?.clsSources ?? [],
       longestInteractionEventMs: window.__p22Metrics?.longestEvent ?? 0,
     };
   });
@@ -254,9 +278,9 @@ async function measureBuiltProfile(browser, baseUrl, profile) {
     transferBytes: round(network.transferBytes),
     resources: network.resources,
   };
+  const timing = await navigationMetrics(page);
   const indexSearchMs = await measureIndexSearch(page);
   await page.waitForTimeout(100);
-  const timing = await navigationMetrics(page);
   await context.close();
   return {
     profile: profile.id,
@@ -266,7 +290,9 @@ async function measureBuiltProfile(browser, baseUrl, profile) {
     indexReadyMs,
     indexSearchMs,
     initialNetwork,
-    timing: Object.fromEntries(Object.entries(timing).map(([key, value]) => [key, round(value)])),
+    timing: Object.fromEntries(
+      Object.entries(timing).map(([key, value]) => [key, typeof value === 'number' ? round(value) : value]),
+    ),
     consoleErrors,
   };
 }
@@ -337,20 +363,27 @@ async function measureInspectionProfile(browser, baseUrl, profile) {
 const builtBaseUrl = argument('built-base-url', 'http://127.0.0.1:4184').replace(/\/$/, '');
 const inspectionBaseUrl = argument('inspection-base-url', 'http://127.0.0.1:4173').replace(/\/$/, '');
 const output = path.resolve(ROOT, argument('output', DEFAULT_OUTPUT));
+const phase = argument('phase', 'P22');
+const measurementClass = argument('measurement-class', 'before-optimization-local-lab');
+const requestedProfiles = new Set(argument('profiles', '').split(',').map((value) => value.trim()).filter(Boolean));
+const measuredProfiles = requestedProfiles.size > 0
+  ? PROFILES.filter((profile) => requestedProfiles.has(profile.id))
+  : PROFILES;
+if (measuredProfiles.length === 0) throw new Error('No requested performance profile matched.');
 const browser = await chromium.launch({ headless: true });
 
 try {
   const artifacts = await artifactBaseline();
   const builtProfiles = [];
   const inspectionProfiles = [];
-  for (const profile of PROFILES) {
+  for (const profile of measuredProfiles) {
     builtProfiles.push(await measureBuiltProfile(browser, builtBaseUrl, profile));
     inspectionProfiles.push(await measureInspectionProfile(browser, inspectionBaseUrl, profile));
   }
   const report = {
     schemaVersion: 1,
-    phase: 'P22',
-    measurementClass: 'before-optimization-local-lab',
+    phase,
+    measurementClass,
     measuredAt: new Date().toISOString(),
     commit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim(),
     environment: {
@@ -367,7 +400,7 @@ try {
   };
   await mkdir(path.dirname(output), { recursive: true });
   await writeFile(output, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
-  console.log(`P22 performance baseline written to ${path.relative(ROOT, output).replaceAll('\\', '/')}`);
+  console.log(`${phase} performance baseline written to ${path.relative(ROOT, output).replaceAll('\\', '/')}`);
   console.log(`Deployment HTML: ${artifacts.deployment.initialHtmlBytes} bytes (${artifacts.deployment.initialHtmlGzipBytes} gzip bytes)`);
   console.log(`Deployment route chunks: ${artifacts.deployment.routeChunkCount}`);
   console.log(`Offline shareable: ${artifacts.deterministicShareableBytes} bytes`);

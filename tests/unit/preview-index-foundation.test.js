@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { APP_ROUTES, AUTH_ROUTES } from '../../src/frontend/app/appRoutes';
 import { appRouteFromHash, appRouteHash } from '../../src/frontend/app/routeHash';
 import {
@@ -9,6 +9,7 @@ import {
 } from '../../src/frontend/preview/index/routeHash';
 import { projectPreviewIndexGate } from '../../src/frontend/preview/index/trustedGate';
 import { previewInspectionAllowed } from '../../src/frontend/preview/index/inspection';
+import { createSharedFrontendVersionLoader } from '../../src/frontend/integration/frontendVersion';
 import {
   ACCESS_REQUIREMENT,
   ACCESS_REQUIREMENT_LABELS,
@@ -42,6 +43,17 @@ const PUBLIC_ROUTES = ['landing', 'tracking', 'borrow', 'staff-signin'];
 const REQUESTER_ROUTES = ['external-request'];
 
 describe('preview index trusted gate and registry foundations', () => {
+  it('shares one trusted version request across concurrent capability consumers', async () => {
+    const requestVersion = vi.fn().mockResolvedValue({ playground: true });
+    const loadVersion = createSharedFrontendVersionLoader(requestVersion);
+
+    await expect(Promise.all([loadVersion(), loadVersion()])).resolves.toEqual([
+      { playground: true },
+      { playground: true },
+    ]);
+    expect(requestVersion).toHaveBeenCalledTimes(1);
+  });
+
   it('matches only the exact preview index hash and fails closed on variants', () => {
     expect(PREVIEW_INDEX_HASH).toBe('#/__preview/index');
     expect(isPreviewIndexHash('#/__preview/index')).toBe(true);

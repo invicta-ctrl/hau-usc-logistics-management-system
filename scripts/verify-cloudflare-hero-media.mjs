@@ -14,6 +14,10 @@ const fail = (message) => {
   throw new Error(`Cloudflare hero media verification failed: ${message}`);
 };
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+const filesUnder = (directory) => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+  const path = join(directory, entry.name);
+  return entry.isDirectory() ? filesUnder(path) : [path];
+});
 const partPattern = new RegExp(`^${HERO_BASENAME.replaceAll('.', '\\.') }\\.part(\\d+)$`);
 const partNames = readdirSync(heroBuildDirectory)
   .map((name) => ({ name, match: name.match(partPattern) }))
@@ -37,8 +41,17 @@ if (reconstructed.length !== source.length || sha256(reconstructed) !== sha256(s
 
 const index = readFileSync(indexPath, 'utf8');
 if (Buffer.byteLength(index) > MAX_ASSET_BYTES) fail('index.html exceeds the Cloudflare per-asset limit.');
+const scriptPaths = filesUnder(buildRoot).filter((path) => path.endsWith('.js'));
+const deploymentCode = [index, ...scriptPaths.map((path) => readFileSync(path, 'utf8'))].join('\n');
+for (const path of scriptPaths) {
+  const size = statSync(path).size;
+  if (size > MAX_ASSET_BYTES) fail(`${path} is ${size} bytes, above the ${MAX_ASSET_BYTES}-byte limit.`);
+}
+if (deploymentCode.includes('data:video/')) fail('deployment code embeds video data instead of emitted media parts.');
 for (const partName of partNames) {
-  if (!index.includes(`hero/${partName}`)) fail(`index.html does not reference hero/${partName}.`);
+  if (!deploymentCode.includes(`hero/${partName}`)) {
+    fail(`deployment JavaScript does not reference hero/${partName}.`);
+  }
 }
 
 console.log(
@@ -48,5 +61,6 @@ console.log(
     parts: parts.map((part) => part.length),
     sourceSha256: sha256(source),
     indexBytes: Buffer.byteLength(index),
+    emittedJavaScriptFiles: scriptPaths.length,
   }),
 );

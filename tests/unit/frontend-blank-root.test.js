@@ -11,7 +11,9 @@ describe('Playground root mount remains fail-open when motion cannot advance', (
 
     expect(html).toContain('<div id="app"></div>');
     expect(html).toContain('<script type="module" src="./frontend/main.jsx"></script>');
-    expect(main).toContain("createRoot(document.getElementById('app')).render(");
+    expect(main).toContain('if (previewGateRequested) {');
+    expect(main).toContain('await loadFrontendVersion().catch(() => undefined);');
+    expect(main).toContain('createRoot(appRoot).render(');
     expect(renderer).toContain('<LandingPage onNavigate={navigate}');
   });
 

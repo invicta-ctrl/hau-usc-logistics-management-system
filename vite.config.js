@@ -63,6 +63,29 @@ function deployArtifactMarker(mode) {
   };
 }
 
+function prioritizeDeploymentStyles(mode) {
+  if (!CLOUDFLARE_BUILD_MODES.has(mode)) return undefined;
+
+  return {
+    name: 'hau-prioritize-deployment-styles',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        const stylesheetPattern = /<link rel="stylesheet"[^>]*>/g;
+        const stylesheets = html.match(stylesheetPattern) ?? [];
+        const moduleScriptPattern = /<script type="module"[^>]*><\/script>/;
+        const moduleScript = html.match(moduleScriptPattern)?.[0];
+        if (!moduleScript || stylesheets.length === 0 || html.indexOf(stylesheets[0]) < html.indexOf(moduleScript)) {
+          return html;
+        }
+        const withoutStylesheets = html.replace(stylesheetPattern, '');
+        return withoutStylesheets.replace(moduleScriptPattern, `${stylesheets.join('\n    ')}\n    ${moduleScript}`);
+      },
+    },
+  };
+}
+
 async function playgroundProxy() {
   const configured = String(process.env.HAU_PLAYGROUND_PROXY_ORIGIN ?? '').trim();
   if (!configured) return undefined;
@@ -82,30 +105,35 @@ async function playgroundProxy() {
   return { '/api': options(), '/brand': options(), '/media': options() };
 }
 
-export default defineConfig(async ({ mode }) => ({
-  root: 'src',
-  base: './',
-  plugins: [
-    cloudflareHeroMediaChunks(mode),
-    react(),
-    tailwindcss(),
-    viteSingleFile(),
-    deployArtifactMarker(mode),
-  ].filter(Boolean),
-  server: { host: '127.0.0.1', proxy: await playgroundProxy() },
-  preview: { host: '127.0.0.1' },
-  build: {
-    outDir: '../dist',
-    emptyOutDir: true,
-    cssCodeSplit: false,
-    assetsInlineLimit: 100_000_000,
-    rollupOptions: { output: { inlineDynamicImports: true } },
-  },
-  test: {
-    environment: 'node',
-    include: ['../tests/**/*.test.js'],
-    fileParallelism: false,
-    testTimeout: 10_000,
-    coverage: { reporter: ['text', 'json-summary'] },
-  },
-}));
+export default defineConfig(async ({ mode }) => {
+  const singleFileBuild = !CLOUDFLARE_BUILD_MODES.has(mode);
+
+  return {
+    root: 'src',
+    base: './',
+    plugins: [
+      cloudflareHeroMediaChunks(mode),
+      react(),
+      tailwindcss(),
+      singleFileBuild ? viteSingleFile() : undefined,
+      prioritizeDeploymentStyles(mode),
+      deployArtifactMarker(mode),
+    ].filter(Boolean),
+    server: { host: '127.0.0.1', proxy: await playgroundProxy() },
+    preview: { host: '127.0.0.1' },
+    build: {
+      outDir: '../dist',
+      emptyOutDir: true,
+      cssCodeSplit: !singleFileBuild,
+      assetsInlineLimit: singleFileBuild ? 100_000_000 : 4096,
+      rollupOptions: singleFileBuild ? { output: { inlineDynamicImports: true } } : undefined,
+    },
+    test: {
+      environment: 'node',
+      include: ['../tests/**/*.test.js'],
+      fileParallelism: false,
+      testTimeout: 10_000,
+      coverage: { reporter: ['text', 'json-summary'] },
+    },
+  };
+});

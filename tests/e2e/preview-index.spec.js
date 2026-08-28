@@ -34,6 +34,43 @@ function installDeniedVersion(page, payload) {
   );
 }
 
+test('P23 validates once without mounting the invisible Landing route or fetching hero media', async ({
+  page,
+}) => {
+  let releaseVersion;
+  const versionHeld = new Promise((resolve) => {
+    releaseVersion = resolve;
+  });
+  let versionRequests = 0;
+  const heroRequests = [];
+  page.on('request', (request) => {
+    const pathname = new URL(request.url()).pathname;
+    if (pathname.includes('/hero/hausc-institutional-logistics-hero.mp4.part')) heroRequests.push(pathname);
+  });
+  await page.route(VERSION, async (route) => {
+    versionRequests += 1;
+    await versionHeld;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, correlationId: 'p23-e2e', playground: true }),
+    });
+  });
+  await installEmptyFeed(page);
+  await installQaStatus(page);
+
+  await page.goto('/#/__preview/index');
+  await expect(page.locator('#app')).toHaveAttribute('aria-busy', 'true');
+  await expect(page.locator('#app')).toHaveAttribute('aria-label', 'Validating Playground access');
+  expect(versionRequests).toBe(1);
+  expect(heroRequests).toEqual([]);
+
+  releaseVersion();
+  await expect(page.locator('[data-preview-index]')).toBeVisible();
+  expect(versionRequests).toBe(1);
+  expect(heroRequests).toEqual([]);
+});
+
 function installEmptyFeed(page) {
   return page.route('**/api/public/advertisements', (route) =>
     route.fulfill({

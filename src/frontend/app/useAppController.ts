@@ -5,6 +5,7 @@ import { resolvePostAuthDestination, resolveStaffHome, type DenialReason } from 
 import { useTheme } from './hooks/useTheme';
 import { scrollToRouteStart } from './shared/scrollToRouteStart';
 import { FrontendApiError, frontendBackend, type FrontendUser } from '../integration/backend';
+import { loadFrontendVersion } from '../integration/frontendVersion';
 import {
   canApproveInternalLending,
   canHandoffInternalLending,
@@ -51,8 +52,7 @@ export function useAppController() {
 
   useEffect(() => {
     let active = true;
-    void frontendBackend
-      .version()
+    void loadFrontendVersion()
       .then((version) => {
         if (active) setPlayground(version.playground);
       })

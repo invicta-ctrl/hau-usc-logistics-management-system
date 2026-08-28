@@ -7,7 +7,7 @@ import {
   type PreviewIndexBrowseState,
   type PreviewInspectionState,
 } from './inspection';
-import { frontendBackend } from '../../integration/backend';
+import { loadFrontendVersion } from '../../integration/frontendVersion';
 import {
   isPreviewIndexHash,
   PREVIEW_INDEX_HASH,
@@ -17,7 +17,8 @@ import {
 import { projectPreviewIndexGate } from './trustedGate';
 
 export function usePreviewIndex() {
-  const [allowed, setAllowed] = useState(false);
+  const [gateState, setGateState] = useState<'CHECKING' | 'ALLOWED' | 'DENIED'>('CHECKING');
+  const allowed = gateState === 'ALLOWED';
   const [indexOpen, setIndexOpen] = useState(() => isPreviewIndexHash(window.location.hash));
   const [inspection, setInspection] = useState<PreviewInspectionState>(PREVIEW_INSPECTION_OFF);
   const [browseState, setBrowseState] = useState<PreviewIndexBrowseState>({
@@ -28,19 +29,18 @@ export function usePreviewIndex() {
   const returnFocusRequestedRef = useRef(false);
 
   useEffect(() => {
-    const controller = new AbortController();
     let active = true;
-    frontendBackend
-      .version(controller.signal)
+    loadFrontendVersion()
       .then((version) => {
-        if (active) setAllowed(projectPreviewIndexGate(version).indexAllowed);
+        if (active) {
+          setGateState(projectPreviewIndexGate(version).indexAllowed ? 'ALLOWED' : 'DENIED');
+        }
       })
       .catch(() => {
-        if (active) setAllowed(false);
+        if (active) setGateState('DENIED');
       });
     return () => {
       active = false;
-      controller.abort();
     };
   }, []);
 
@@ -124,6 +124,9 @@ export function usePreviewIndex() {
 
   return {
     allowed,
+    gatePendingForRequestedRoute:
+      gateState === 'CHECKING' &&
+      (isPreviewIndexHash(window.location.hash) || previewInspectionRouteFromHash(window.location.hash) !== null),
     indexOpen,
     returnFocusRequestedRef,
     openIndex,
