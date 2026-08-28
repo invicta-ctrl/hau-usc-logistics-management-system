@@ -265,10 +265,8 @@ try {
   const staffSignIn = page.getByRole('button', { name: 'Staff sign in', exact: true }).first();
   if (await staffSignIn.isVisible({ timeout: 10_000 }).catch(() => false)) await staffSignIn.click();
   const enter = page.getByRole('button', { name: 'Enter Playground' });
-  requireCondition(
-    await enter.isVisible({ timeout: 10_000 }).catch(() => false),
-    'Playground entry available',
-  );
+  await enter.waitFor({ state: 'visible', timeout: 30_000 });
+  requireCondition(await enter.isVisible(), 'Playground entry available');
   const sessionResponsePromise = page.waitForResponse(
     (response) => new URL(response.url()).pathname === '/api/playground/session',
     { timeout: 30_000 },
