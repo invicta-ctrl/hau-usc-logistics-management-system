@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P06_NORMAL_RUNTIME_FIXTURE_AUDIT_COMPLETE;P07_CLEAN_BASELINE_NEXT
+PHASE: P07_LOCAL_BASELINE_V2_VERIFIED;P07_LIVE_RESET_AND_INSTALL_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -41,6 +41,8 @@ P05_STATUS: PASS_ACCEPTED_FI_AND_PLAYGROUND_INTEGRATION_RECONCILED
 P05_AUDIT: .codex/PLAYGROUND_MASTER_P05_FI_RECONCILIATION.md
 P06_STATUS: PASS_NORMAL_RUNTIME_BACKEND_BACKED_AND_FIXTURE_BOUNDARY_GATED
 P06_AUDIT: .codex/PLAYGROUND_MASTER_P06_FIXTURE_BOUNDARY_AUDIT.md
+P07_STATUS: LOCAL_V2_CANDIDATE_VERIFIED;LIVE_MUTATION_NOT_STARTED
+P07_CHECKPOINT: .codex/PLAYGROUND_MASTER_P07_PRE_APPLY_CHECKPOINT.md
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Execute P07: verify the current one-way privacy-filtered Playground baseline, refresh from Production read-only only if stale or incomplete, add staging-safe deterministic coverage only where required, and record baseline identity, transforms, schema, domain counts, inventory/R2 integrity, capabilities, and frontend source/tree.
+NEXT_EXACT_ACTION: Commit and push the P07 pre-apply tooling/checkpoint, reverify clean Git/upstream and fixed Playground identity, then run the accepted reset exactly once and install the locally verified additive v2 coverage overlay. Reconcile ambiguous provider results instead of repeating them.
 HANDOFF_STATUS: ACTIVE
