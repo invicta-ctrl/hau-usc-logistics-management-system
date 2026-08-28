@@ -12,31 +12,25 @@ describe('repository-hardcoded playground release governance', () => {
     expect(agents).toContain('The only editable general-policy authority is:');
   });
 
-  it('keeps recovery pointers and Production GO in the project policy', () => {
+  it('keeps the owner-approved main and Playground topology in project policy', () => {
     const policy = read('.agents/PROJECT_POLICY.md');
-    for (const branch of [
-      'main',
-      'backup/last-known-good',
-      'regression/r1',
-      'regression/r2',
-      'regression/r3',
-    ]) {
-      expect(policy).toMatch(new RegExp(`^${branch}$`, 'm'));
-    }
     expect(policy).toContain(
-      'Staging/Playground and Production are environments, not permanent Git branches.',
+      'Exactly two permanent functional branches remain after preservation gates pass',
     );
+    expect(policy).toMatch(/^main$/mu);
+    expect(policy).toMatch(/^Playground$/mu);
+    expect(policy).toContain('Legacy recovery, design, release, and work refs remain preserved');
     expect(policy).toContain('-> Earl explicit Production GO');
     expect(policy).toContain(
       "Production promotion requires Earl's explicit GO for the exact tested candidate.",
     );
   });
 
-  it('automates candidate to playground and contains no production continuation', () => {
+  it('accepts only an exact Playground-targeted temporary candidate and contains no Production continuation', () => {
     const workflow = read('.github/workflows/release-candidate.yml');
     expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).not.toMatch(/^\s+push:/mu);
-    expect(workflow).toContain('(release|fix|hotfix)/v');
+    expect(workflow).toContain('(work|fix|reconcile)/playground-');
     expect(workflow).toContain('refs/remotes/origin/${EXPECTED_BRANCH}');
     expect(workflow).toContain('deploy-playground.mjs');
     expect(workflow).toContain('Stop for Earl manual testing');

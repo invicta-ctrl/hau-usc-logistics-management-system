@@ -10,6 +10,13 @@
 
 ## Unreleased
 
+### Playground Master consolidation P00/P01
+
+- Adopted `PLAYGROUND-MASTER-2026-08-28` in full and established isolated `reconcile/playground-master` from the clean, remote-parity FI00–FI17 Playground lineage.
+- Replaced the former permanent recovery-pointer policy with permanent `main` and `Playground`, exact temporary-branch targets, isolation/sequence checks, and preservation-gated legacy retirement.
+- Recorded exact branch/worktree identities, divergence, protected residue, and no-delete dispositions in the P01 reconciliation manifest.
+- P00/P01 changed no provider, D1/R2, reset, migration, deployment, Production, Google, Figma, or branch ref other than creating the authorized local reconciliation branch/worktree.
+
 ### FI-13 through FI-17 immediate Playground migration
 
 - Migrated the accepted FI frontend completion plus post-FI17 Overview and hero-motion recovery into the FM branch while preserving real Worker/API, auth, D1/R2, reset, privacy, and operational behavior.

@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       candidate_branch:
-        description: Exact temporary release/fix/hotfix branch containing the candidate
+        description: Exact temporary work/fix/reconcile Playground branch containing the candidate
         required: true
         type: string
 
@@ -43,7 +43,7 @@ jobs:
             exit 1
           fi
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
-          [[ "$EXPECTED_BRANCH" =~ ^(release|fix|hotfix)/v[0-9]+\.[0-9]+\.[0-9]+-[a-z0-9][a-z0-9-]*$ ]]
+          [[ "$EXPECTED_BRANCH" =~ ^(work|fix|reconcile)/playground-[a-z0-9][a-z0-9-]*$ ]]
           git fetch --no-tags --depth=1 origin "refs/heads/${EXPECTED_BRANCH}:refs/remotes/origin/${EXPECTED_BRANCH}"
           test "$(git rev-parse "refs/remotes/origin/${EXPECTED_BRANCH}")" = "$EXPECTED_SHA"
           echo "sha=$EXPECTED_SHA" >> "$GITHUB_OUTPUT"

@@ -1,45 +1,39 @@
 # Git Branch Disposition
 
-Status: adopted by the Isolated Staging Playground amendment and draft PR #23.
+Status: `PLAYGROUND-MASTER-2026-08-28` adopted; preservation audit active.
 
 ## Target policy
 
-Permanent pointers are `main`, `backup/last-known-good`, `regression/r1`, `regression/r2`, and `regression/r3`. Staging/playground and production are environments, not branches. One temporary production-bound `release/`, `fix/`, or true urgent `hotfix/` branch is the default maximum.
+Exactly two permanent functional branches remain after preservation gates pass:
 
-## Verified adoption inventory
+- `main` — canonical Production source lineage.
+- `Playground` — canonical isolated Playground/demo/testing source lineage.
 
-| Branch                                       | Classification  | Evidence                                                                               | Disposition                                                                |
-| -------------------------------------------- | --------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `main`                                       | Retain          | clean, synchronized with `origin/main`; v0.8.0 deployed commit is in its lineage       | permanent accepted lineage                                                 |
-| `backup/last-known-good`                     | Retain          | created non-destructively from accepted v0.7.2                                         | immediate prior accepted production pointer                                |
-| `regression/r1`                              | Retain          | created non-destructively from accepted v0.7.1                                         | first older recovery pointer                                               |
-| `regression/r2`                              | Retain          | created non-destructively from accepted v0.7.0                                         | second older recovery pointer                                              |
-| `regression/r3`                              | Retain          | created non-destructively from the preserved canonical pre-v0.7.0 main checkpoint      | oldest retained recovery pointer                                           |
-| prior v0.8.0 release branch                  | Closed          | both PRs merged, zero unique commits, no worktree, no open PR                          | eligible for separately authorized deletion after current PR safety checks |
-| frontend design branch                       | Preserve unique | dirty worktree, untracked artifacts, four unpushed commits, substantial unique history | out of scope; never delete/move/reset in this task                         |
-| `release/v0.8.1-isolated-staging-playground` | Active writer   | branched from synchronized `main` for the accepted amendment                           | delete only after accepted closure under the permanent policy              |
+Temporary branches target exactly one permanent branch and use the owner-approved `work|fix|reconcile/playground-*` or `work|fix|hotfix/main-*` forms. Multiple temporary branches require proven isolation or explicit sequencing.
 
-No permanent staging, playground, production, prod, develop, dev, working, or next branch is introduced.
+## Current reconciliation inventory
 
-## Verified initial recovery pointers
+The exact evidence and disposition for every current local/remote branch and worktree is recorded in `.codex/PLAYGROUND_MASTER_RECONCILIATION_MANIFEST.md`. No historical or recovery ref is deletion-eligible at P00/P01.
 
-The peeled immutable source and linear ancestry were verified before the non-force remote writes:
+Current decisions:
 
-- `backup/last-known-good` <- v0.7.2 accepted production (`84eacfcdb47a3985fed48e3ba14bb413946d4410`);
-- `regression/r1` <- v0.7.1 accepted production (`e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90`);
-- `regression/r2` <- v0.7.0 accepted production (`dc98d670fdd63f649037616c5a2d51e5c62ca4ae`);
-- `regression/r3` <- preserved canonical pre-v0.7.0 checkpoint (`91a30ee2de015bce1471a2d4fd71d9325af3e936`).
+- Base `reconcile/playground-master` on clean, remote-parity `release/v0.8.3-fi12-playground` because that lineage contains the isolated Playground backend/reset tooling and accepted FI00–FI17 migration.
+- Preserve `main` unchanged; its two known governance-only working-tree files remain outside this worktree.
+- Preserve `frontend-design-integration`, its protected `.ai-bridge/` and `.local/` residue, and all unique FI history.
+- Preserve `origin/local/post-fi17-design-pass-20260828` as divergent design evidence pending selective review; do not broad-merge it.
+- Preserve `backup/last-known-good` and `regression/r1` through `regression/r3` until immutable recovery artifacts and dependency-clearing proof pass.
+- Preserve backend, v0.8.4, and former release refs until their unique history and live dependencies are classified.
 
-Pointer creation establishes the initial recovery ladder; it is not a release rotation. Future rotation happens only after a new production release passes smoke, reconciliation, and rollback-readiness checks.
+## Retirement gate
 
-## Deterministic rotation
+Before any branch ref is deleted:
 
-A rotation plan computes all destinations from the pre-rotation snapshot before any write:
+1. record exact head/tree and merge-base;
+2. classify unique commits and task-relevant paths;
+3. preserve unique history with an immutable verified artifact;
+4. clear deployment, workflow, tool, and durable-document dependencies;
+5. record the accepted disposition;
+6. pass `validateLegacyBranchRetirement`;
+7. delete only the exact authorized ref and verify it is absent.
 
-1. old `regression/r2` -> new `regression/r3`;
-2. old `regression/r1` -> new `regression/r2`;
-3. old `backup/last-known-good` -> new `regression/r1`;
-4. previous accepted production `main` -> new `backup/last-known-good`;
-5. the new accepted release remains `main`.
-
-A PR merge alone never authorizes rotation.
+No deletion is authorized by P00/P01.

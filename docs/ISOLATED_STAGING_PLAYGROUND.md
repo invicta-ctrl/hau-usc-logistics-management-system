@@ -5,7 +5,7 @@ Accepted authority: `.codex/specs/active/isolated-staging-playground-and-git-gov
 
 ## Safety contract
 
-The Isolated Staging Playground is a deployment environment, never a Git branch. Its mutable Worker, D1, and R2 resources are distinct from production. The ordinary playground Worker is bound only to its working D1 and working R2 buckets; sealed baseline R2 resources are not runtime bindings.
+The Isolated Staging Playground is the deployment mapped only from the permanent `Playground` source branch after candidate acceptance. Its mutable Worker, D1, and R2 resources are distinct from Production. The ordinary Playground Worker is bound only to its working D1 and working R2 buckets; sealed baseline R2 resources are not runtime bindings. The branch name is not trusted as a security boundary.
 
 Data flow is one way:
 
@@ -59,40 +59,25 @@ The operator sequence is:
 
 Failure leaves the prior baseline and working environment intact. No reverse synchronization exists.
 
-## Candidate and production path
+## Candidate and Production paths
 
-Every production-bound change after `v0.8.0` uses:
+Playground-bound work uses an isolated `work/playground-*`, `fix/playground-*`, or `reconcile/playground-*` branch. After exact candidate acceptance, that lineage establishes or updates permanent `Playground`. Production-bound work uses an isolated `work/main-*`, `fix/main-*`, or true urgent `hotfix/main-*` branch and still requires Earl's separate explicit Production GO.
 
 ```text
-one temporary release/fix/hotfix branch
+temporary branch
 -> focused checks
 -> exact frozen commit/tree/artifact
--> automatic playground deployment
+-> isolated Playground deployment
 -> automated acceptance
--> WAIT FOR EARL
--> Earl explicit GO for that exact candidate
--> accepted main tree/artifact equivalence
--> production preflight/backup/deploy
--> smoke and reconciliation
--> rotate recovery pointers
--> refresh playground baseline
--> delete temporary branch
+-> Earl manual testing
+-> accepted permanent target lineage
+-> retire the temporary branch after parity and preservation proof
 ```
 
-`.github/workflows/release-candidate.yml` stops after playground acceptance. It has no production job and no workflow-run continuation. Any code change invalidates Earl's approval.
+`.github/workflows/release-candidate.yml` stops after Playground acceptance. It has no Production job and no workflow-run continuation. Any code change invalidates Earl's approval.
 
-Ordinary branch pushes are WIP and do not deploy. An operator freezes a candidate by dispatching the workflow with the exact 40-character branch-tip commit and the matching temporary branch name. The workflow re-verifies that identity, runs the repository gates, and then deploys automatically to the playground.
+Ordinary branch pushes are WIP and do not deploy. An operator freezes a candidate by dispatching the workflow with the exact 40-character branch-tip commit and matching Playground-targeted temporary branch name.
 
-## Recovery-pointer rotation
+## Legacy branch preservation
 
-Rotation is deterministic and is refused until production smoke and reconciliation are accepted:
-
-```text
-old regression/r2          -> regression/r3
-old regression/r1          -> regression/r2
-old backup/last-known-good -> regression/r1
-old accepted main          -> backup/last-known-good
-new accepted release       -> main
-```
-
-`scripts/playground/branch-governance.mjs` encodes and tests this mapping. Never rotate because a PR merely merged.
+The former rotating recovery-pointer model is superseded. Existing recovery/design/release refs remain until exact head/tree, unique history, immutable recovery evidence, and live branch-name dependencies are reconciled. `scripts/playground/branch-governance.mjs` enforces the two permanent branches, exact temporary targets, concurrency isolation, and preservation-gated legacy retirement.

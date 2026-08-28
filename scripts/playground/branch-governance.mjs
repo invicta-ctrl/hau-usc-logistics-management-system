@@ -1,12 +1,8 @@
-export const PERMANENT_BRANCHES = Object.freeze([
-  'main',
-  'backup/last-known-good',
-  'regression/r1',
-  'regression/r2',
-  'regression/r3',
-]);
+export const PERMANENT_BRANCHES = Object.freeze(['main', 'Playground']);
 
-export const TEMPORARY_BRANCH_PATTERN = /^(?:release|fix|hotfix)\/v\d+\.\d+\.\d+-[a-z0-9][a-z0-9-]*$/u;
+export const TEMPORARY_BRANCH_PATTERN =
+  /^(?:(?:work|fix|reconcile)\/playground-[a-z0-9][a-z0-9-]*|(?:work|fix|hotfix)\/main-[a-z0-9][a-z0-9-]*)$/u;
+
 export const FORBIDDEN_PERMANENT_BRANCHES = new Set([
   'staging',
   'playground',
@@ -17,6 +13,11 @@ export const FORBIDDEN_PERMANENT_BRANCHES = new Set([
   'working',
   'next',
 ]);
+
+export function temporaryBranchTarget(name) {
+  if (!TEMPORARY_BRANCH_PATTERN.test(name)) return null;
+  return name.includes('/playground-') ? 'Playground' : 'main';
+}
 
 export function classifyBranch(name, { mergedOrClosed = false, dispositionedLegacy = false } = {}) {
   if (PERMANENT_BRANCHES.includes(name)) return 'PERMANENT_RETAINED';
@@ -32,28 +33,41 @@ export function validateBranchTopology(branches) {
     (branch) => classifyBranch(branch.name, branch) === 'FORBIDDEN_PERMANENT_NAME',
   );
   const unclassified = branches.filter((branch) => classifyBranch(branch.name, branch) === 'UNCLASSIFIED');
+
   for (const required of PERMANENT_BRANCHES) {
-    if (!branches.some((branch) => branch.name === required)) issues.push(`Missing permanent pointer: ${required}`);
+    if (!branches.some((branch) => branch.name === required))
+      issues.push(`Missing permanent branch: ${required}`);
   }
-  if (active.length > 1) issues.push('More than one production-bound temporary branch is active');
+
+  for (const branch of active) {
+    const expectedTarget = temporaryBranchTarget(branch.name);
+    if (branch.targetBranch !== expectedTarget) {
+      issues.push(`Temporary branch ${branch.name} must target exactly ${expectedTarget}`);
+    }
+  }
+
+  if (active.length > 1 && active.some((branch) => branch.isolatedOrSequenced !== true)) {
+    issues.push('Concurrent temporary branches require proven isolation or explicit sequencing');
+  }
   if (forbidden.length) issues.push('A forbidden permanent environment/development branch exists');
   if (unclassified.length) issues.push('An unknown branch lacks an explicit preservation disposition');
+
   return { valid: issues.length === 0, issues, activeTemporaryBranches: active.map(({ name }) => name) };
 }
 
-export function recoveryPointerRotation(current, { newAcceptedMain, productionAccepted }) {
-  if (productionAccepted !== true) {
-    throw new Error('Recovery pointer rotation is forbidden before production smoke and reconciliation acceptance.');
-  }
-  for (const key of ['main', 'backup/last-known-good', 'regression/r1', 'regression/r2']) {
-    if (!/^[0-9a-f]{40}$/u.test(current?.[key] ?? '')) throw new Error(`Current ${key} identity is invalid.`);
-  }
-  if (!/^[0-9a-f]{40}$/u.test(newAcceptedMain ?? '')) throw new Error('New accepted main identity is invalid.');
-  return Object.freeze({
-    main: newAcceptedMain,
-    'backup/last-known-good': current.main,
-    'regression/r1': current['backup/last-known-good'],
-    'regression/r2': current['regression/r1'],
-    'regression/r3': current['regression/r2'],
-  });
+export function validateLegacyBranchRetirement({
+  name,
+  head,
+  tree,
+  uniqueHistoryPreserved,
+  liveDependenciesCleared,
+  recoveryEvidenceVerified,
+}) {
+  if (PERMANENT_BRANCHES.includes(name)) throw new Error(`${name} is permanent and cannot be retired.`);
+  if (!/^[0-9a-f]{40}$/u.test(head ?? '')) throw new Error('Legacy branch head identity is invalid.');
+  if (!/^[0-9a-f]{40}$/u.test(tree ?? '')) throw new Error('Legacy branch tree identity is invalid.');
+  if (uniqueHistoryPreserved !== true) throw new Error('Unique history preservation is incomplete.');
+  if (liveDependenciesCleared !== true) throw new Error('Live branch-name dependencies remain.');
+  if (recoveryEvidenceVerified !== true) throw new Error('Recovery evidence is not verified.');
+  return Object.freeze({ name, head, tree, retirementEligible: true });
 }

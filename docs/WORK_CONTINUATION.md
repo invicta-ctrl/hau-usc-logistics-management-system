@@ -2,17 +2,16 @@
 
 ## Current resume block
 
-- Repository/worktree: `D:/Documents/Codex/HAU-USC Logistics/worktrees/fi00-fi12-playground-candidate`.
-- Branch/deployed candidate: `release/v0.8.3-fi12-playground`; Playground source `9d48eaa8afb81734db3855b1834607e410f717fd`, tree `fb96f80d0be29f87db10a2e6c18d85b1208d4a97`, staging index SHA-256 `20cbbf1f450b3941f3345cf1a9eecf646c0c187dc1c638ce8220adf2865fb866`.
-- Current phase/stage: FI-13 through FI-17/current-completion migration is complete; writer lock released; stop boundary reached.
-- Authority: accepted 2026-08-28 immediate FI-13 to FI-17 Playground migration amendment, project governance, exact FI source identities, and the final receipt.
-- Completed work: adopted the accepted missing frontend delta and post-FI17 Overview/hero recovery; preserved FM backend/auth/data/reset behavior; repaired the Cloudflare 25 MB asset limit with byte-identical chunk reconstruction and the required CSP media directive; deployed only to the existing isolated Playground.
-- Verification: final release gate 161/161 files and 1185/1185 tests; staging and production-mode build/artifact checks; hero byte parity; live playing hero; all ten authenticated workspaces; STAGING/readiness/schema32/migration0032; protected-route denial; rollback and Production binding isolation.
-- External actions: two existing-Playground Worker uploads, the second repairing the browser-found CSP P1; one temporary authorized Playground session created and signed out. No Production, reset, new resource, schema migration, Google write, provider/email send, or Figma/Make mutation.
-- Preserved residue: generation-3 DIRTY metadata, one session row, and transient total 1 were present at freeze and remained unchanged after smoke. Do not delete or reset them without new owner authority.
-- Blocker: none. The accepted work unit is complete.
-- Resume commands: read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, and `.codex/releases/v0.8.3/V0_8_3_FI00_FI17_PLAYGROUND_MIGRATION_RECEIPT.md`; verify Git/upstream and live provider identity before any new mutation.
-- Prohibited actions: do not deploy Production, begin FI-18, reset/repopulate the Playground, create resources, mutate Figma/Make, or normalize preserved residue without a new explicit owner instruction.
+- Repository/worktree: `D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-master-reconciliation`.
+- Branch/base: `reconcile/playground-master` from clean remote-parity `release/v0.8.3-fi12-playground@631724a5f32a49b9dcf45eec5a894aa7baf66266`.
+- Current phase: P00/P01 verified and checkpoint-ready; P03 live blank-root/deployment audit is next.
+- Authority: accepted `PLAYGROUND-MASTER-2026-08-28`, project policy, repository functional contracts, live design-source roles, and the P01 reconciliation manifest.
+- Completed: full prompt persisted; two-branch policy and validators updated; all current refs/worktrees inventoried; selected base and preservation decisions recorded; isolated worktree established.
+- Preserved: prior deployed Playground source `9d48eaa8...`, schema 32/migration 0032/generation-3 DIRTY state; main and other worktrees; frontend `.ai-bridge/` and `.local/`; every old recovery/design/release ref.
+- External state: read-only `git fetch origin` and the exact P00/P01 branch checkpoint push only; no provider, D1/R2, reset, migration, deployment, Production, Google, or Figma mutation.
+- Next action: execute P03 fresh live browser/deployment diagnosis before product repair.
+- Resume commands: read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, accepted master prompt, and `.codex/PLAYGROUND_MASTER_RECONCILIATION_MANIFEST.md`; verify Git/upstream and live Playground identity.
+- Prohibited: Production/main mutation; broad branch merge; branch deletion; history rewrite; unknown residue mutation; unbacked reset/migration; unclassified R2 deletion; Figma write.
 
 ## FI-04 historical resume block
 

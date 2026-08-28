@@ -2,14 +2,11 @@
 
 ## Current state
 
-The accepted FI-13 through FI-17 immediate migration is complete on `release/v0.8.3-fi12-playground`. The existing Isolated Staging Playground runs exact candidate `9d48eaa8afb81734db3855b1834607e410f717fd`, including post-FI17 Overview and hero-motion recovery, against the preserved FM Worker/API/backend implementation.
+`PLAYGROUND-MASTER-2026-08-28` is active on isolated branch `reconcile/playground-master`, based on clean remote-parity `release/v0.8.3-fi12-playground` at `631724a5f32a49b9dcf45eec5a894aa7baf66266`.
 
-- Active frontend: accepted FI-00 through FI-17/current completion under `src/frontend/` and `src/index.html`.
-- Functional authority remains the repository Worker, server, auth, domain, privacy, D1/R2, audit, reset, and provider contracts.
-- The hero source remains byte-identical to the accepted FI media and is emitted as two Cloudflare-compliant assets, then reconstructed client-side under a narrowly scoped `media-src 'self' blob:` CSP allowance.
-- Final release-candidate verification passed 161 test files and 1,185 tests; lint retained two known warnings and zero errors.
-- Live smoke passed landing, playing hero, Overview, Inventory, Internal Request Hub, Internal Lending Hub, Release, Restocking, Procurement, Events, Administration, and Profile.
-- Live identity is `STAGING`, schema `32`, migration `0032_staff_account_activity_history.sql`, ready, and protected configuration present. Production binding separation and rollback were checked before each upload.
-- The generation-3 DIRTY metadata, one session row, and transient total 1 existed before migration and remained unchanged after the signed-out smoke session. They were preserved rather than reset or normalized.
-
-No Production deployment, new resource, schema migration, reset, Google write, provider/email send, Figma/Make mutation, or FI-18 work was performed or is authorized by this completed milestone.
+- P00: the owner master prompt is persisted as the accepted amendment; project branch policy and deterministic validators now encode permanent `main` and `Playground` with preservation-gated retirement.
+- P01: branch/worktree reconciliation and base selection are complete. No branch is deletion-eligible yet.
+- P02: the isolated reconciliation branch/worktree exists and is the sole writer for this program.
+- P00/P01 verification passed; the next phase is P03 fresh live blank-root/deployment diagnosis before redesign or product repair.
+- Prior Playground runtime evidence remains historical until reverified: deployed source `9d48eaa8...`, schema 32, migration 0032, generation-3 DIRTY state.
+- Production/main, provider resources, D1/R2, migrations, reset state, Google, Figma, and branch refs remain unchanged by P00/P01.

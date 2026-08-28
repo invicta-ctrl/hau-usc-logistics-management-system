@@ -5,7 +5,7 @@ scope: hau-usc-logistics-project-extension
 extension_id: HAU-USC-LOGISTICS-PROJECT-POLICY-V1
 target_repository: invicta-ctrl/hau-usc-logistics-management-system
 universal_governance: ..\AGENTS.md
-last_reviewed: 2026-08-22
+last_reviewed: 2026-08-28
 ---
 
 # HAU-USC Logistics Project Policy Extension
@@ -143,31 +143,31 @@ infer a global Terra / Max or multi-scout exception from this extension.
 
 ## Permanent Git and recovery policy
 
-Staging/Playground and Production are environments, not permanent Git branches.
+The accepted `PLAYGROUND-MASTER-2026-08-28` amendment supersedes this project's former permanent recovery-pointer topology after its preservation gates pass.
 
-The permanent retained recovery pointers are:
+Exactly two permanent functional branches remain after preservation gates pass:
 
 ```text
 main
-backup/last-known-good
-regression/r1
-regression/r2
-regression/r3
+Playground
 ```
 
-Do not create or retain permanent `staging`, `playground`, `production`, `prod`, `develop`, `dev`, `working`, or `next` branches.
+`main` is the canonical Production source lineage. `Playground` is the canonical isolated Playground/demo/testing source lineage. Branch names are never trusted as environment or security boundaries; Worker, D1, R2, secrets, routes, and provider bindings must still be verified independently.
 
-Immutable tags, releases, verified bundles, exports, checksums, and recovery artifacts preserve deeper history.
-
-At most one Production-bound implementation branch may be active unless Earl explicitly authorizes otherwise:
+Temporary branches target exactly one permanent branch and use only these forms:
 
 ```text
-release/vX.Y.Z-<slug>
-fix/vX.Y.Z-<slug>
-hotfix/vX.Y.Z-<slug>   # true urgent Production patch only
+work/playground-<task>
+fix/playground-<task>
+reconcile/playground-<task>
+work/main-<task>
+fix/main-<task>
+hotfix/main-<task>
 ```
 
-The temporary branch is deleted only after accepted release or explicit closure and proof that no unique work remains.
+Multiple temporary branches may coexist only when their writers, worktrees, owned paths, generated artifacts, pointers, migrations, provider resources, and database state are proven isolated or explicitly sequenced. Every branch/worktree has at most one writer.
+
+Legacy recovery, design, release, and work refs remain preserved until their exact head/tree, unique work, immutable recovery evidence, and live branch-name dependencies are reconciled. A legacy ref is deleted only after the accepted manifest records its preservation location and the deterministic retirement validator passes.
 
 ## Mandatory release path after v0.8.0
 
@@ -201,21 +201,21 @@ Protected merge mechanics may create a different commit SHA on `main`. When that
 
 Never silently rebuild different source for Production.
 
-## Recovery-pointer rotation
+## Legacy-ref preservation and retirement
 
-Move recovery pointers only after the new Production release passes required smoke, reconciliation, and rollback-readiness checks.
+The former recovery-pointer rotation is retired for this project. Recovery is preserved with immutable tags, verified Git bundles, releases when used, artifact hashes and manifests, provider deployment history, D1 recovery evidence, R2 manifests/backups, and private provider records.
 
-After successful acceptance:
+Before deleting any former recovery, design, release, or work branch:
 
-```text
-previous regression/r2             -> regression/r3
-previous regression/r1             -> regression/r2
-previous backup/last-known-good     -> regression/r1
-previous accepted main              -> backup/last-known-good
-new accepted release remains        -> main
-```
+1. record its exact head and tree;
+2. classify every unique commit and task-relevant path;
+3. preserve unique history with an immutable verified recovery artifact;
+4. verify no deployment, workflow, tool, or durable document depends on the branch name;
+5. record the disposition in the accepted reconciliation manifest;
+6. pass `validateLegacyBranchRetirement`;
+7. delete only the exact accepted ref.
 
-Never rotate merely because a pull request merged.
+A branch that merely looks old is not deletion evidence.
 
 ## Environment and data-isolation rules
 

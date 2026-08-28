@@ -1,31 +1,33 @@
-# Current Task — FI-13 to FI-17 Immediate Playground Migration
+# Current Bounded Task — Playground Master Consolidation
 
-STATUS: COMPLETE
-INTENT: migration
-MODE: execute
-TARGET: Existing FM candidate worktree and Isolated Staging Playground
+STATUS: ACTIVE
+INTENT: repository maintenance + bug fix + frontend migration + feature + testing + performance + UI/UX refinement + Playground data lifecycle
+MODE: execute continuously across P00 through P34 while all gates remain green
+TARGET: `reconcile/playground-master`, permanent `Playground`, and the existing isolated Playground Worker/D1/R2
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED
+ACTIVE_WRITER: SOL_HIGH:/root
+WRITER_LOCK: ACTIVE_PLAYGROUND_MASTER_RECONCILIATION
 ROUTE: SOLO
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-28-fi13-fi17-immediate-playground-migration-owner-amendment.md
-AUTHORITY: Earl's accepted immediate-migration amendment, project governance, exact FI source checkpoint, and live FM/Playground freeze evidence.
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-28-playground-master-consolidation-operational-uiux-performance-reset.md
+AUTHORITY: Earl's current instruction and accepted PLAYGROUND-MASTER-2026-08-28 -> project governance -> repository functional contracts -> live design-source roles.
 REQUIRED_MODEL: GPT-5.6 SOL HIGH
-RISK: HIGH — exact candidate migration and isolated external deployment with no Production authority.
+RISK: HIGH
 
-OBJECTIVE: Migrate only the missing accepted FI frontend delta through FI-17 plus post-FI17 recovery into the FM branch, preserve FM's backend/data/reset contracts, deploy the exact candidate to the existing isolated Playground, verify the migration, and stop.
+OBJECTIVE: Deliver one permanent, isolated, backend-backed, resettable, operationally truthful and professionally polished Playground candidate; stop at `READY_FOR_EARL_MANUAL_ANNOTATION`.
 
-SCOPE: deterministic delta calculation; current FI frontend adoption; mixed-file conflict resolution; generated artifact rebuild; focused and final release-candidate verification; existing-Playground deployment; targeted smoke; continuity and receipt closeout.
+SCOPE: P00–P34 through READY_FOR_EARL_MANUAL_ANNOTATION under the accepted master prompt.
 
-OUT_OF_SCOPE: Production, main, new migrations/schema, data repopulation, unnecessary reset, new provider resources, Google/provider sends, Figma/Make, Hallmark, Impeccable, broad visual audit, redesign, FI-18, and mutation of the FI source worktree.
+IN_SCOPE: every named P00–P34 phase, including preservation-gated branch consolidation, Playground-only deployment/data/reset operations, supported workflow repair, themes/copy/semantics/performance, Hallmark/Impeccable, exact candidate freeze, and final Playground branch establishment.
 
-CONSTRAINTS: destination wins for FM operational/backend/data/reset behavior; source wins for newer accepted frontend behavior; preserve authorization/privacy/ledger/request/lending/inventory invariants; rebuild generated output from source; one writer; no delegation; no background continuation.
+OUT_OF_SCOPE: Production deployment or mutation; main mutation by this program; Production D1/R2/secrets/provider sends; unsupported business behavior; Figma writes; reverse synchronization; deletion before preservation proof; final Production promotion.
 
-VERIFICATION: `git diff --check`; focused tests for changed/conflicted files; staging/production-mode build and deploy-artifact verification; one final `npm run check:release-candidate`; exact candidate/rollback/isolation preflight; targeted live route smoke; schema 32/migration 0032/no-new-migration proof; zero Production/Google/provider writes.
+CONSTRAINTS: one writer in this worktree; no delegation; no background continuation; Production writes remain zero; browser success must use real Playground Worker/D1/R2 state; preserve immutable ledger/audit/custody/history; privacy-filter all Production-derived data; rebuild generated artifacts; stop before speculative migration/index work.
 
-STOP_CONDITIONS: conflicting writer; unknown tracked work that cannot be preserved; unaccepted FI source; required new migration or Production mutation; unprovable isolation or rollback; invariant-weakening conflict; unrepaired migration P0/P1.
+VERIFICATION: exact Git/tree/artifact/provider identity; branch/worktree manifest; route browser evidence; real workflow consequences; fixture exclusion; two deterministic reset cycles; privacy and authorization; measured query/performance evidence; responsive/accessibility matrices; Hallmark then Impeccable; complete diff review; durable handoff.
 
-COMPLETED_STATE: FI-00 through FI-17 plus accepted post-FI17 Overview/hero recovery is deployed to the existing Isolated Staging Playground at candidate `9d48eaa8afb81734db3855b1834607e410f717fd`; targeted live verification passed and Production remained unchanged.
+STOP_CONDITIONS: every stop condition in section 52 of the accepted master prompt, including wrong worktree, unknown owned-path dirt, conflicting writer, Production crossover, privacy/secret exposure, missing reset/migration backup, unclassified R2 deletion risk, destructive schema need, unsafe branch-history resolution, repeated bounded repair failure, or unresolved P0/P1.
 
-NEXT_EXACT_ACTION: STOP. Await a new explicit owner instruction for Production, FI-18, reset, residue cleanup, or any later work.
+COMPLETED_SO_FAR: P00 accepted prompt fidelity and governance verified; P01 inventory and base selection complete; P02 isolated branch/worktree established. Focused governance/workflow tests passed 13/13; agent, continuation, handoff, format, and diff checks passed. No provider, database, migration, reset, deployment, Production, Google, or Figma mutation occurred.
+
+NEXT_EXACT_ACTION: Execute P03: capture fresh live blank-root browser, console, network, asset, routing, and deployed-identity evidence before any redesign or product repair.
