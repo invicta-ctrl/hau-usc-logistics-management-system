@@ -1,29 +1,38 @@
-# Current Work Pointer — Playground Recovery Complete
+# Current Work Pointer — FI-13 to FI-17 Playground Migration
 
-PROGRAM: HAU-USC Logistics isolated Playground recovery
-STATUS: COMPLETE
-PHASE: FM-R11 CLOSEOUT
+PROGRAM: HAU-USC Logistics isolated Playground frontend migration
+MILESTONE: FM_FI13_FI17_IMMEDIATE_MIGRATION
+STATUS: IN_PROGRESS
+PHASE: FM-M3 COMPUTE CURRENT-FI DELTA
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fi00-fi12-playground-candidate
 BRANCH: release/v0.8.3-fi12-playground
+START_HEAD: 9ef5ba06a2f46af6081e8e901dfa718c4ddbfbc1
+START_TREE: 9d8abf4df3a266dcb660a029a1e2d5c738dccc76
 HEAD: GIT_HEAD
 UPSTREAM: origin/release/v0.8.3-fi12-playground
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED
+WORKTREE_STATE: DIRTY__CONTINUITY_AND_ACCEPTED_AMENDMENT_ONLY
+ACTIVE_WRITER: SOL:FM_FI13_FI17_MIGRATION
+WRITER_LOCK: HELD
 ROUTE: SOLO
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-28-playground-audit-frontend-repair-data-reset-owner-amendment.md
-CURRENT_CHECKPOINT: .codex/FM_R11_PLAYGROUND_DEPLOYMENT_CLOSEOUT_CHECKPOINT.md
-FINAL_RECEIPT: .codex/releases/v0.8.3/V0_8_3_PLAYGROUND_RECOVERY_RECEIPT.md
+REQUIRED_MODEL: GPT-5.6 SOL HIGH
+CURRENT_TASK: .codex/CURRENT_TASK.md
+CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-28-fi13-fi17-immediate-playground-migration-owner-amendment.md
+CURRENT_CHECKPOINT: .codex/FM_FI13_FI17_PRE_MIGRATION_FREEZE_CHECKPOINT.md
+FINAL_RECEIPT: .codex/releases/v0.8.3/V0_8_3_FI00_FI17_PLAYGROUND_MIGRATION_RECEIPT.md
 
-FM_R00_R10: PASS — adoption, provider audit, frontend repairs, design review, baseline freeze, and two consecutive reset proofs completed.
-FM_R11: PASS — exact Playground-only deployment, fresh-browser acceptance, CSP-compatible font repair, reset E2E, and final provider reconciliation completed.
-DEPLOYED_SOURCE_SHA: afd63d36e9dee9e865a0ff1fc02e3d0d0166fc4f
-DEPLOYED_SOURCE_TREE: cb168f37a98215bf26982b92efeac9b3bed90eb0
-DEPLOYED_ARTIFACT_SHA256: 8b714bd08e9a93d10a29a0126edc6dc76b9ef536746d374dc4ad3dc2b0f42ae4
-RESET_GENERATION: 3
-PLAYGROUND_STATE: CLEAN
-TRANSIENT_ROWS: 0
+FI_CONTINUITY_HEAD: 5412faebb5bab0f4e67f60ab8c613241c0c49082
+FI_CONTINUITY_TREE: 69c0fb2ee5151821eadcde57bf350fd713112c3a
+FI_PRODUCT_SOURCE: 3da03dcc78caafe144afbe02fc09197979bce0a3
+FI_PRODUCT_TREE: 4d9c6f40625fd738530e22347597ead1ce787017
+FM_PRE_MIGRATION_ROLLBACK_SOURCE: afd63d36e9dee9e865a0ff1fc02e3d0d0166fc4f
+FM_PRE_MIGRATION_ROLLBACK_TREE: cb168f37a98215bf26982b92efeac9b3bed90eb0
+FM_PRE_MIGRATION_ROLLBACK_ARTIFACT: 8b714bd08e9a93d10a29a0126edc6dc76b9ef536746d374dc4ad3dc2b0f42ae4
+SCHEMA: 32
+LATEST_MIGRATION: 0032_staff_account_activity_history.sql
+LIVE_WORKING_STATE_AT_FREEZE: DIRTY;RESET_GENERATION=3;ACTIVE_SESSIONS=1;TRANSIENT_TOTAL=1
 PRODUCTION_MUTATION: ZERO
-P0: 0
-P1: 0
 
-NEXT_ACTION: Owner decision only: continue Playground-only refinement or authorize a separate Production promotion plan. Do not promote Production from this pointer.
+BLOCKER: NONE
+NEXT_EXACT_ACTION: Integrate the post-FI17 product/test delta while preserving FM operational/backend/data behavior.
+HANDOFF_STATUS: IN_PROGRESS
