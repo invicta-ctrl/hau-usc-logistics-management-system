@@ -134,4 +134,20 @@ describe('Playground baseline coverage v2 safety contract', () => {
     expect(source).not.toContain('accountId');
     expect(source).not.toContain('password');
   });
+
+  it('keeps the P09 Events browser audit fresh, aggregate-only, and fail-closed', () => {
+    const source = readScript('audit-live-p09-events.mjs');
+
+    expect(source).toContain("serviceWorkers: 'block'");
+    expect(source).toContain("privateExisting(process.argv[2], 'Playground resource manifest')");
+    expect(source).toContain("privateNew(process.argv[3], 'P09 audit report')");
+    expect(source).toContain("hostname === 'logistics.hausc.org'");
+    expect(source).toContain("playgroundMutation: 'SESSION_ONLY'");
+    expect(source).toContain("capabilities.includes('event.manage')");
+    expect(source).toContain('unresolvedDaySeries');
+    expect(source).toContain('unresolvedActivityDays');
+    expect(source).toContain('recordShapeExposed');
+    expect(source).not.toContain('accountId');
+    expect(source).not.toContain('password');
+  });
 });

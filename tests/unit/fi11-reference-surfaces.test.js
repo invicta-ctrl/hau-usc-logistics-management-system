@@ -1,5 +1,15 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FrontendBackend } from '../../src/frontend/integration/backend.ts';
+
+const supplyRoutesSource = readFileSync(
+  new URL('../../src/frontend/app/SupplyRoutes.tsx', import.meta.url),
+  'utf8',
+);
+const appRouteRendererSource = readFileSync(
+  new URL('../../src/frontend/app/AppRouteRenderer.tsx', import.meta.url),
+  'utf8',
+);
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -27,6 +37,18 @@ const sessionPayload = {
 };
 
 describe('FI-11 governed frontend projections', () => {
+  it('keeps Events capability-gated with terminal denial, unavailable, abort, and retry states', () => {
+    expect(appRouteRendererSource).toContain(
+      "eventAllowed={session.serverCapabilities.includes('event.manage')}",
+    );
+    expect(supplyRoutesSource).toContain('if (!eventAllowed)');
+    expect(supplyRoutesSource).toContain('const abort = new AbortController()');
+    expect(supplyRoutesSource).toContain('[401, 403].includes(error.status) ? "denied" : "unavailable"');
+    expect(supplyRoutesSource).toContain('onClick={() => setReloadKey((value) => value + 1)}');
+    expect(supplyRoutesSource).toContain('Retry read-only load');
+    expect(supplyRoutesSource).toContain('inspection ? previewEventManagement : null');
+  });
+
   it('projects only approved reference, brand, event, and system fields', async () => {
     const fetchMock = vi
       .fn()
@@ -154,7 +176,9 @@ describe('FI-11 governed frontend projections', () => {
     ]);
     expect(events).toEqual({
       series: [{ name: 'Council assembly', code: 'ASSEMBLY-2026', status: 'ACTIVE' }],
-      days: [{ seriesName: 'Council assembly', name: 'Opening day', date: '2026-09-01', status: 'SCHEDULED' }],
+      days: [
+        { seriesName: 'Council assembly', name: 'Opening day', date: '2026-09-01', status: 'SCHEDULED' },
+      ],
       activities: [
         {
           name: 'Opening session',

@@ -28,18 +28,18 @@ PRIOR_LATEST_MIGRATION: 0032_staff_account_activity_history.sql
 PRIOR_LIVE_STATE: DIRTY;RESET_GENERATION=3;ACTIVE_SESSIONS=1;TRANSIENT_TOTAL=1
 PRIOR_PRODUCTION_MUTATION: ZERO
 
-COMPLETED: P00–P08 local work is complete. P08 fresh-browser reproduction established the before-repair state. Focused repairs now supplement each loaded Lending ticket with its canonical inventory projection and expose capability-gated, evidence-backed Release and Restocking commands through the existing Worker/D1 contracts. Overview, Request, and Procurement retained their truthful backend-backed behavior. Live post-repair acceptance remains sequenced after the authorized P29 deployment.
+COMPLETED: P00–P09 are complete. P08 local repairs remain pending live post-deploy acceptance at P29/P30. P09 fresh-browser Events passed without a product repair: System Owner `event.manage`, Worker authorization, HTTP 200 contract, generation-4 baseline relationships, adapter projection, terminal loading, rendering, retry wiring, privacy, and fail-closed denial are verified.
 
-VALIDATION: P07 evidence remains accepted. The P08 before-repair root/session/navigation audit passed with six authenticated HTTP 200 bootstrap v2 contracts, real nonzero data, terminated loading, inspected screenshots, and zero console/request failures. Post-repair focused Vitest passed 71 tests; the full suite passed 1204 tests across 164 files; Cloudflare build passed with 1679 transformed modules; fixture-boundary, formatting, targeted JavaScript lint, and diff checks passed. A local browser rerun was not attempted because port 8787 is owned by an unrelated preserved Astral Bridge process.
+VALIDATION: P08 evidence remains accepted. P09 fresh-browser Events returned 2 series, 3 days, 8 activities, and 2 links with zero unresolved relationships, zero Events console errors, no preview substitution, and terminal loading. Unauthenticated access returned 401 without record shape; an authenticated underprivileged service regression returns 403 before D1. Focused P09 validation passed 66 tests across 5 files plus formatting, targeted lint, and diff checks.
 
 PRESERVED: main working state; backend and v0.8.4 worktrees; frontend-design-integration `.ai-bridge/` and `.local/`; all recovery/design/release refs; prior Playground D1/R2/runtime state; canonical root AGENTS.md.
 
-EXTERNAL_ACTIONS: P07 external actions remain recorded. P08 performed the earlier read-only browser/API inspection and created one transient staging-only System Owner convenience session. D1 still has one session/transient row while working-state metadata says clean/inactive; this remains a P12 lifecycle finding. The repair step performed no Worker/D1/R2/deployment, Production, main, Google, or Figma mutation.
+EXTERNAL_ACTIONS: P07/P08 external actions remain recorded. P09 issued two staging-only System Owner convenience sessions: one preserved invalid harness attempt and one accepted fresh audit. The audit performed no event/business-data, R2, deployment, Production, main, Google, or Figma mutation. Live Playground is now correctly DIRTY/active with three sessions and transient total three; P12 owns the reset.
 
 DO_NOT_REPEAT: Do not recreate the reconciliation branch/worktree, broad-merge frontend/design branches, re-run frozen FI comparison, reuse failed v2 artifacts, repeat reset attempts A/B, or reapply the v2 overlay. Use the private v2 manifest and clean bookmark for later reset verification.
 
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P09 Events full recovery. Audit event.manage capability, UI and Worker gates, endpoint/response shape, D1 relationships, adapter, loading/retry, underprivileged denial, and reset behavior before applying any repair.
+NEXT_EXACT_ACTION: Begin P10 Administration full recovery. Audit all seven named tabs independently against their exact capabilities, backend methods, staging-only data, tab isolation, terminal states, safe denial, and reset baseline.
 RESUME_COMMANDS: Read the accepted master prompt, current chain, and reconciliation manifest; run exact Git handshake; reverify live Playground identity before any external mutation.
 PROHIBITED_ACTIONS: Production/main deployment or mutation; branch deletion; history rewrite; unknown residue mutation; Figma write; unbacked reset/migration; unverified R2 deletion.
 HANDOFF_STATUS: ACTIVE

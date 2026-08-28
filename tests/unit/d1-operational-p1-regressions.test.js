@@ -1,7 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { Miniflare } from 'miniflare';
 import { afterEach, describe, expect, it } from 'vitest';
-import { runAtomicRevisionGuardedBatch } from '../../src/server/d1/operational-service.js';
+import {
+  createD1OperationalService,
+  runAtomicRevisionGuardedBatch,
+} from '../../src/server/d1/operational-service.js';
 
 const operationalSource = readFileSync(
   new URL('../../src/server/d1/operational-service.js', import.meta.url),
@@ -58,6 +61,23 @@ async function tableCount(db, table) {
 }
 
 describe('D1 operational P1 invariants', () => {
+  it('denies the Events directory to an authenticated role without event.manage before reading D1', async () => {
+    const service = createD1OperationalService({ db: {}, schemaVersion: '32' });
+
+    await expect(
+      service.call('getEventManagement', {
+        account: {
+          id: 'ACCOUNT-REQUESTER',
+          roleId: 'REQUESTER',
+          status: 'ACTIVE',
+          committeeIds: [],
+        },
+        command: {},
+        correlationId: 'P09-UNDERPRIVILEGED-DENIAL',
+      }),
+    ).rejects.toMatchObject({ code: 'CAPABILITY_REQUIRED', status: 403 });
+  });
+
   for (const [name, conflictCode] of [
     ['canvass', 'REVISION_CONFLICT'],
     ['catalog', 'CATALOG_REVISION_CONFLICT'],
