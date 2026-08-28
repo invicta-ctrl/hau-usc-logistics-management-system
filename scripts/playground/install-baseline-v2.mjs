@@ -268,7 +268,9 @@ try {
   if (mutationAttempted && !succeeded) {
     let rollbackStatus = 'FAILED_ROLLBACK_UNVERIFIED';
     try {
-      wrangler(['d1', 'time-travel', 'restore', databaseId, '--bookmark', preApplyBookmark]);
+      wrangler(['d1', 'time-travel', 'restore', databaseId, '--bookmark', preApplyBookmark, '--json'], {
+        json: true,
+      });
       const rollbackSql = `SELECT
         (SELECT value FROM app_metadata WHERE key='playground.baseline_id') AS baseline_id,
         (SELECT value FROM app_metadata WHERE key='playground.baseline_version') AS baseline_version,

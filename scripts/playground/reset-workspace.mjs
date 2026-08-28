@@ -43,7 +43,9 @@ function sqlText(value) {
 }
 
 function sha256(value) {
-  return createHash('sha256').update(String(value ?? '')).digest('hex');
+  return createHash('sha256')
+    .update(String(value ?? ''))
+    .digest('hex');
 }
 
 export function nextResetGeneration(value) {
@@ -67,7 +69,8 @@ const TRANSIENT_COUNT_FIELDS = Object.freeze([
   'reporting_outbox',
 ]);
 
-export const RESET_VERIFICATION_SQL = "SELECT (SELECT value FROM app_metadata WHERE key='operational_schema_version') AS schema_version, (SELECT name FROM d1_migrations ORDER BY id DESC LIMIT 1) AS latest_migration, (SELECT value FROM app_metadata WHERE key='playground.working_state') AS working_state, (SELECT value FROM app_metadata WHERE key='playground.reset_generation') AS reset_generation, (SELECT COUNT(*) FROM sessions) AS sessions, (SELECT COUNT(*) FROM password_reset_tokens) AS password_reset_tokens, (SELECT COUNT(*) FROM auth_rate_limits) AS auth_rate_limits, (SELECT COUNT(*) FROM auth_rate_limit_events) AS auth_rate_limit_events, (SELECT COUNT(*) FROM email_verification_challenges) AS email_verification_challenges, (SELECT COUNT(*) FROM account_applications) AS account_applications, (SELECT COUNT(*) FROM account_application_history) AS account_application_history, (SELECT COUNT(*) FROM public_request_rate_limit_events) AS public_request_rate_limit_events, (SELECT COUNT(*) FROM public_lending_rate_limit_events) AS public_lending_rate_limit_events, (SELECT COUNT(*) FROM reporting_outbox) AS reporting_outbox, (SELECT COUNT(*) FROM pragma_foreign_key_check) AS foreign_key_violations, (SELECT COUNT(*) FROM evidence_metadata WHERE private_storage_reference IS NOT NULL AND TRIM(private_storage_reference) <> '') AS evidence_object_count, COALESCE((SELECT json_group_array(private_storage_reference) FROM (SELECT private_storage_reference FROM evidence_metadata WHERE private_storage_reference IS NOT NULL AND TRIM(private_storage_reference) <> '' ORDER BY private_storage_reference)), '[]') AS evidence_object_keys_json;";
+export const RESET_VERIFICATION_SQL =
+  "SELECT (SELECT value FROM app_metadata WHERE key='operational_schema_version') AS schema_version, (SELECT name FROM d1_migrations ORDER BY id DESC LIMIT 1) AS latest_migration, (SELECT value FROM app_metadata WHERE key='playground.working_state') AS working_state, (SELECT value FROM app_metadata WHERE key='playground.reset_generation') AS reset_generation, (SELECT COUNT(*) FROM sessions) AS sessions, (SELECT COUNT(*) FROM password_reset_tokens) AS password_reset_tokens, (SELECT COUNT(*) FROM auth_rate_limits) AS auth_rate_limits, (SELECT COUNT(*) FROM auth_rate_limit_events) AS auth_rate_limit_events, (SELECT COUNT(*) FROM email_verification_challenges) AS email_verification_challenges, (SELECT COUNT(*) FROM account_applications) AS account_applications, (SELECT COUNT(*) FROM account_application_history) AS account_application_history, (SELECT COUNT(*) FROM public_request_rate_limit_events) AS public_request_rate_limit_events, (SELECT COUNT(*) FROM public_lending_rate_limit_events) AS public_lending_rate_limit_events, (SELECT COUNT(*) FROM reporting_outbox) AS reporting_outbox, (SELECT COUNT(*) FROM pragma_foreign_key_check) AS foreign_key_violations, (SELECT COUNT(*) FROM evidence_metadata WHERE private_storage_reference IS NOT NULL AND TRIM(private_storage_reference) <> '') AS evidence_object_count, COALESCE((SELECT json_group_array(private_storage_reference) FROM (SELECT private_storage_reference FROM evidence_metadata WHERE private_storage_reference IS NOT NULL AND TRIM(private_storage_reference) <> '' ORDER BY private_storage_reference)), '[]') AS evidence_object_keys_json;";
 
 function nonNegativeInteger(value, field) {
   const parsed = Number(value);
@@ -109,7 +112,14 @@ export function validateResetVerification(row, r2, expectedGeneration) {
   ) {
     throw new Error('D1 reset verification failed.');
   }
-  return { generation, transientCounts, transientTotal, foreignKeyViolations, evidenceObjectCount, linkageMatches };
+  return {
+    generation,
+    transientCounts,
+    transientTotal,
+    foreignKeyViolations,
+    evidenceObjectCount,
+    linkageMatches,
+  };
 }
 
 async function privatePath(value, { existing }) {
@@ -164,7 +174,9 @@ async function run() {
   const before = beforeRows[0];
   if (!before) throw new Error('Reset refused: the current Playground reset state is unavailable.');
   const generation = nextResetGeneration(before.reset_generation);
-  wrangler(['d1', 'time-travel', 'restore', databaseId, '--bookmark', cleanBookmark]);
+  wrangler(['d1', 'time-travel', 'restore', databaseId, '--bookmark', cleanBookmark, '--json'], {
+    json: true,
+  });
 
   const names = manifest.resources.names;
   const token = randomBytes(32).toString('base64url');
@@ -227,15 +239,7 @@ async function run() {
   ]);
 
   const verification = wrangler(
-    [
-      'd1',
-      'execute',
-      databaseId,
-      '--remote',
-      '--command',
-      RESET_VERIFICATION_SQL,
-      '--json',
-    ],
+    ['d1', 'execute', databaseId, '--remote', '--command', RESET_VERIFICATION_SQL, '--json'],
     { json: true },
   );
   const resetVerification = validateResetVerification(d1Rows(verification)[0], resetResult, generation);
@@ -261,7 +265,9 @@ async function run() {
   await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
   console.log('Reset Workspace: PASS');
   console.log('D1 restored to the sealed playground bookmark; R2 working state reconciled to baseline.');
-  console.log('Production mutation: NONE. Private bookmarks, names, identifiers, keys, and hashes were not printed.');
+  console.log(
+    'Production mutation: NONE. Private bookmarks, names, identifiers, keys, and hashes were not printed.',
+  );
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

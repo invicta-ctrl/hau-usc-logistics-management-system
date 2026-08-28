@@ -76,7 +76,7 @@ describe('Playground baseline coverage v2 safety contract', () => {
     const source = readScript('install-baseline-v2.mjs');
 
     expect(source).toContain(
-      "wrangler(['d1', 'time-travel', 'restore', databaseId, '--bookmark', preApplyBookmark])",
+      "['d1', 'time-travel', 'restore', databaseId, '--bookmark', preApplyBookmark, '--json']",
     );
     expect(source).toContain("let rollbackStatus = 'FAILED_ROLLBACK_UNVERIFIED'");
     expect(source).toContain("rollbackStatus = 'FAILED_ROLLED_BACK'");
@@ -84,6 +84,15 @@ describe('Playground baseline coverage v2 safety contract', () => {
     expect(source).toContain('rollback?.baseline_id !== preflight?.baseline_id');
     expect(source).toContain('await rm(outputManifestPath, { force: true })');
     expect(source).toContain('rollback could not be verified.');
+  });
+
+  it('executes the accepted reset bookmark non-interactively instead of accepting the default no-op', () => {
+    const source = readScript('reset-workspace.mjs');
+
+    expect(source).toContain(
+      "['d1', 'time-travel', 'restore', databaseId, '--bookmark', cleanBookmark, '--json']",
+    );
+    expect(source).toContain('{ json: true }');
   });
 
   it('publishes a distinct clean bookmark only after live coverage and reconciliation pass', () => {
@@ -95,5 +104,19 @@ describe('Playground baseline coverage v2 safety contract', () => {
     expect(source).toContain('cleanBaselineBookmark,');
     expect(source).not.toContain('console.log(preApplyBookmark)');
     expect(source).not.toContain('console.log(cleanBaselineBookmark)');
+  });
+
+  it('keeps failed-reset reconciliation read-only and private', () => {
+    const source = readScript('inspect-live-r2-state.mjs');
+    const worker = readScript('r2-playground-readonly-fingerprint-worker.js');
+
+    expect(source).toContain('privatePath(manifestArg, { existing: true })');
+    expect(source).toContain('privatePath(reportArg, { existing: false })');
+    expect(source).toContain("playgroundMutation: 'NONE'");
+    expect(source).toContain("productionMutation: 'NONE'");
+    expect(source).toContain("wrangler(['delete', '--config', configPath, '--force'])");
+    expect(worker).toContain("request.method !== 'GET'");
+    expect(worker).not.toMatch(/\.put\s*\(/u);
+    expect(worker).not.toMatch(/\.delete\s*\(/u);
   });
 });
