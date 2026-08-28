@@ -1186,3 +1186,128 @@ MIGRATIONS / SCHEMA    ZERO
 **Not owner-review-complete.** Step 4 did not run, so the redesign is not
 Make-calibrated, and `SupplyRoutes` is uncorrected because its parity contract
 points at Make. Both are named above rather than folded into a pass.
+
+---
+
+# POST-FI17-DESIGN-RECOVERY-02 — FINAL LOCAL PASS: STOPPED AT THE ENVIRONMENT GATE
+
+```text
+STATUS: NOT EXECUTED — steps 3, 5, 6, 7, 8 blocked
+DATE:   2026-08-28 (Asia/Manila)
+FROM:   cbf4e0d
+```
+
+The owner's step 1 was an explicit gate: *"First confirm you are running on my
+local Windows machine, not a cloud/container environment."* It was checked, not
+assumed, and it fails.
+
+```text
+uname            Linux 6.18.44-fc-v22 x86_64
+hostname         vm
+OS / WINDIR      unset (no Windows environment)
+/mnt/c · /mnt/d · D:/ · /c/     none exist
+/                container_info.json, old_root present
+```
+
+Egress was **re-tested rather than carried over** from the previous turn, in
+case the policy had changed. It has not:
+
+```text
+figma.com · logistics.hausc.org · hausc.org · linear.app ·
+lawsofux.com · retool.com                      ALL 000
+proxy status: connect_rejected — "gateway answered 403 to CONNECT"
+```
+
+## What that blocks
+
+```text
+STEP 3  Figma Make via browser control          BLOCKED — no egress, no
+                                                authenticated browser session
+STEP 4  Figma Design contradiction resolution   MOOT — it is conditional on a
+                                                Make contradiction, which
+                                                cannot be raised
+STEP 5  Reference website inspection            BLOCKED — all 13 URLs refused
+STEP 6  Final Hallmark                          DEFERRED — scoped to "after
+                                                live Make reconciliation"
+STEP 7  Final Impeccable                        DEFERRED — its target is
+                                                SupplyRoutes, which is gated
+                                                on Make
+STEP 8  Final acceptance                        NOT RERUN — correctly. The
+                                                owner said to rerun only gates
+                                                this pass invalidates, and it
+                                                invalidated none.
+```
+
+Note the Figma **Design** MCP still authenticates and reads from here
+(`whoami` → Invicta-ctrl, pro) because it routes through the MCP proxy rather
+than the blocked HTTPS egress. Figma **Make** needs a signed-in browser, which
+is a different path and is unavailable. That asymmetry is why Design was
+readable in the previous pass and Make never has been.
+
+**SupplyRoutes therefore remains uncorrected**, for the same reason as before:
+`fi09` freezes it against a Make-v44 export whose upstream authority cannot be
+inspected here. Nothing about that changed this turn.
+
+## STEP 2 — Preview Index: VERIFIED, no regression
+
+The one step that did not depend on the blocked environment was run in full,
+because a regression here would waste the local run's time. Verified against
+the live `4174` runtime on `cbf4e0d`, including the interactive paths the
+geometry spec does not cover:
+
+```text
+PASS  launcher present on the live runtime
+PASS  index opens from the launcher
+PASS  all 15 routes listed
+PASS  search field present
+PASS  search narrows the list                     3 shown for "lend"
+PASS  result count announced                      "3 routes"
+PASS  clearing search restores all 15
+PASS  group filters present                       4 chips
+PASS  filter narrows the list                     14 shown
+PASS  heading focused on index entry              both entry paths
+PASS  focus returns to the launcher on Back
+PASS  index renders in dark                       15 routes, 0 overflow
+PASS  index renders with reduced motion           15 routes, 0 overflow
+PASS  index renders at 390                        15 routes, 0 overflow
+PASS  preview state control present
+PASS  every representative preview state renders  default · error · stale ·
+                                                  permission
+```
+
+One caveat recorded rather than buried: an initial run reported
+`heading focused on index entry` as FAILING. That was **the test's ordering,
+not a product defect** — it checked focus after clicking search and a filter
+chip. Re-verified in isolation on both entry paths: focus lands on
+`h1.preview-index-title` in both. No regression exists.
+
+Carried forward from `cbf4e0d`, not re-run (nothing invalidated them):
+launcher geometry 14/14, production-absence 0/10 markers, 285 route/width
+combinations with 0 findings, 1164 tests, 66/66 contrast.
+
+## Resume instructions
+
+```text
+1. cd "D:/Documents/Codex/HAU-USC Logistics"
+2. git fetch origin local/post-fi17-design-pass-20260828
+3. git worktree add "worktrees/post-fi17-local-design-pass" \
+     local/post-fi17-design-pass-20260828
+   (do NOT reuse or re-check-out the FM worktree)
+4. npm ci && run the DEV server on 4174 --strictPort. Do not touch 4173.
+5. Skip step 2 — verified above. Start at step 3.
+6. SupplyRoutes is the priority: inspect live Make, compare against
+   output/design/make-provider-export-v44/, and only then decide whether the
+   tab wall / grey status / #fffdf8 palette are current authority or a stale
+   export. The corrections are already written up in this receipt if the
+   export turns out to be stale.
+```
+
+```text
+FM WRITES                 0
+FM PROCESS INTERRUPTIONS  0
+FIGMA WRITES              0
+PRODUCTION WRITES         0
+PLAYGROUND WRITES         0
+D1 / R2 / GOOGLE WRITES   0
+PORT 4173                 never bound (curl -> 000)
+```
