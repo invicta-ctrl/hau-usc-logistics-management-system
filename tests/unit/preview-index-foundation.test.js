@@ -8,6 +8,7 @@ import {
   ACCESS_REQUIREMENT_LABELS,
   BACKEND_STATUS,
   BACKEND_STATUS_LABELS,
+  COMPLETENESS_CLASSIFICATION,
   IMPLEMENTATION_STATUS,
   IMPLEMENTATION_STATUS_LABELS,
   PREVIEW_FILTER,
@@ -159,6 +160,7 @@ describe('preview index trusted gate and registry foundations', () => {
       'backendStatus',
       'access',
       'previewMode',
+      'completeness',
     ];
     for (const entry of listPreviewRoutes()) {
       for (const field of requiredFields) {
@@ -169,6 +171,7 @@ describe('preview index trusted gate and registry foundations', () => {
       expect(BACKEND_STATUS).toContain(entry.backendStatus);
       expect(ACCESS_REQUIREMENT).toContain(entry.access);
       expect(PREVIEW_MODE).toContain(entry.previewMode);
+      expect(COMPLETENESS_CLASSIFICATION).toContain(entry.completeness);
       expect(ROUTE_GROUP).toContain(entry.group);
     }
   });
@@ -177,17 +180,20 @@ describe('preview index trusted gate and registry foundations', () => {
     const entries = listPreviewRoutes();
     const count = (predicate) => entries.filter(predicate).length;
 
-    expect(count((entry) => entry.implementationStatus === 'ACCEPTED')).toBe(14);
-    expect(count((entry) => entry.implementationStatus === 'SURFACE_PREVIEW')).toBe(1);
+    expect(count((entry) => entry.implementationStatus === 'ACCEPTED')).toBe(15);
+    expect(count((entry) => entry.implementationStatus === 'SURFACE_PREVIEW')).toBe(0);
     expect(count((entry) => entry.implementationStatus === 'IN_PROGRESS')).toBe(0);
     expect(count((entry) => entry.implementationStatus === 'NOT_STARTED')).toBe(0);
     expect(count((entry) => entry.backendStatus === 'REAL_BACKEND')).toBe(11);
-    expect(count((entry) => entry.backendStatus === 'PARTIAL')).toBe(0);
-    expect(count((entry) => entry.backendStatus === 'VISUAL_ONLY')).toBe(4);
+    expect(count((entry) => entry.backendStatus === 'PARTIAL')).toBe(1);
+    expect(count((entry) => entry.backendStatus === 'VISUAL_ONLY')).toBe(3);
     expect(count((entry) => entry.access === 'PUBLIC')).toBe(4);
     expect(count((entry) => entry.access === 'AUTHENTICATED')).toBe(11);
-    expect(count((entry) => entry.previewMode === 'REAL_MODULE')).toBe(14);
-    expect(count((entry) => entry.previewMode === 'SURFACE_PREVIEW')).toBe(1);
+    expect(count((entry) => entry.previewMode === 'REAL_MODULE')).toBe(15);
+    expect(count((entry) => entry.previewMode === 'SURFACE_PREVIEW')).toBe(0);
+    expect(count((entry) => entry.completeness === 'UNFINISHED_PLACEHOLDER')).toBe(0);
+    expect(count((entry) => entry.completeness === 'BROKEN')).toBe(0);
+    expect(count((entry) => entry.completeness === 'UNVERIFIED')).toBe(0);
 
     for (const route of PUBLIC_ROUTES) {
       expect(entries.find((entry) => entry.route === route)).toMatchObject({
@@ -208,16 +214,12 @@ describe('preview index trusted gate and registry foundations', () => {
         group: 'REQUESTER',
       });
     }
-    for (const route of AUTH_ROUTES.filter(
-      (route) => !['profile', 'inventory', 'request-center', 'lending', 'release', 'restocking', 'procurement', 'events', 'administration'].includes(route),
-    )) {
-      expect(entries.find((entry) => entry.route === route)).toMatchObject({
-        implementationStatus: 'SURFACE_PREVIEW',
-        backendStatus: 'VISUAL_ONLY',
-        access: 'AUTHENTICATED',
-        previewMode: 'SURFACE_PREVIEW',
-      });
-    }
+    expect(entries.find((entry) => entry.route === 'overview')).toMatchObject({
+      implementationStatus: 'ACCEPTED',
+      backendStatus: 'PARTIAL',
+      access: 'AUTHENTICATED',
+      previewMode: 'REAL_MODULE',
+    });
     expect(entries.find((entry) => entry.route === 'profile')).toMatchObject({
       implementationStatus: 'ACCEPTED',
       backendStatus: 'REAL_BACKEND',
@@ -270,21 +272,24 @@ describe('preview index trusted gate and registry foundations', () => {
       filterPreviewRoutes('ACCEPTED')
         .map((entry) => entry.route)
         .sort(),
-    ).toEqual([
-      ...PUBLIC_ROUTES,
-      ...REQUESTER_ROUTES,
-      'inventory',
-      'lending',
-      'profile',
-      'release',
-      'request-center',
-      'restocking',
-      'procurement',
-      'events',
-      'administration',
-    ].sort());
+    ).toEqual(
+      [
+        ...PUBLIC_ROUTES,
+        ...REQUESTER_ROUTES,
+        'inventory',
+        'overview',
+        'lending',
+        'profile',
+        'release',
+        'request-center',
+        'restocking',
+        'procurement',
+        'events',
+        'administration',
+      ].sort(),
+    );
     expect(filterPreviewRoutes('BACKEND_WIRED')).toHaveLength(11);
-    expect(filterPreviewRoutes('PREVIEW_ONLY')).toHaveLength(1);
+    expect(filterPreviewRoutes('PREVIEW_ONLY')).toHaveLength(0);
     expect(filterPreviewRoutes('IN_PROGRESS')).toEqual([]);
     expect(filterPreviewRoutes('NOT_STARTED')).toEqual([]);
     expect(filterPreviewRoutes('PUBLIC')).toHaveLength(4);

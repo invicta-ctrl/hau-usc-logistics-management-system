@@ -7,10 +7,11 @@ import { InternalLendingHub } from '../../app/lending/InternalLendingHub';
 import ReleaseDeskRoute from '../../app/ReleaseDeskRoute';
 import SupplyRoutes from '../../app/SupplyRoutes';
 import AdministrationRoute from '../../app/AdministrationRoute';
+import { OverviewRoute } from '../../app/overview/OverviewRoute';
 import { ExternalRequestCenter } from '../../app/request/ExternalRequestCenter';
 import { AuthenticatedShell } from '../../app/shell/AuthenticatedShell';
 import { LOCAL_PREVIEW_OPERATOR } from '../../app/shell/presentation';
-import { PREVIEW_PROFILE, PREVIEW_REQUESTER_PORTAL } from './previewData';
+import { LOCAL_PREVIEW_SESSION, PREVIEW_PROFILE, PREVIEW_REQUESTER_PORTAL } from './previewData';
 
 export function PreviewInspectionRoute({
   route,
@@ -32,7 +33,11 @@ export function PreviewInspectionRoute({
       <div data-preview-inspection="true" data-preview-route="external-request">
         <section
           className="mx-4 mt-4 rounded-[8px] px-4 py-3 flex flex-wrap items-center justify-between gap-3"
-          style={{ background: '#fff4d6', border: '1px solid #d1b478', color: '#40070a' }}
+          style={{
+            background: 'var(--gold-pale)',
+            border: '1px solid var(--border-warm)',
+            color: 'var(--oxblood-deep)',
+          }}
           role="note"
           aria-label="Preview inspection"
         >
@@ -73,7 +78,9 @@ export function PreviewInspectionRoute({
       inspection
       onBackToPreview={onBackToIndex}
     >
-      {authRoute === 'profile' ? (
+      {authRoute === 'overview' ? (
+        <OverviewRoute session={LOCAL_PREVIEW_SESSION} dark={dark} />
+      ) : authRoute === 'profile' ? (
         <ProfileRoute dark={dark} onToggle={onToggleTheme} previewProfile={PREVIEW_PROFILE} />
       ) : authRoute === 'inventory' ? (
         <InventoryRoute dark={dark} navigate={onOpenRoute} inspection />

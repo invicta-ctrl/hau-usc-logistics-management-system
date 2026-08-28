@@ -1,4 +1,32 @@
 import type { FrontendProfile, RequesterPortal } from '../../integration/backend';
+import type { Session } from '../../app/appTypes';
+
+/** Sanitized local session for inspection routes. It is not a backend credential. */
+export const LOCAL_PREVIEW_SESSION: Session = Object.freeze({
+  authenticated: true,
+  displayName: 'Preview Operator',
+  role: 'DOL_PREVIEW',
+  initials: 'PO',
+  capabilities: [
+    'overview',
+    'inventory',
+    'request-center',
+    'lending',
+    'release',
+    'restocking',
+    'procurement',
+    'events',
+    'administration',
+    'profile',
+  ],
+  requesterEligible: false,
+  internalOperator: true,
+  canReviewRequests: true,
+  canApproveLending: true,
+  canHandoffLending: true,
+  canReturnLending: true,
+  canUploadLendingEvidence: true,
+});
 
 /** Deterministic, local presentation data. It never calls a protected endpoint. */
 export const PREVIEW_PROFILE: FrontendProfile = Object.freeze({

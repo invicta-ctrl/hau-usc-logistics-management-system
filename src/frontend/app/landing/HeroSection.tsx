@@ -1,7 +1,8 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties } from 'react';
 
-import type { Route } from "../appTypes";
-import HeroMotion from "./HeroMotion";
+import type { Route } from '../appTypes';
+import HeroMotion from './HeroMotion';
+import heroVideoSrc from '../../assets/hero/hausc-institutional-logistics-hero.mp4';
 
 export function HeroSection({
   onNavigate,
@@ -11,29 +12,20 @@ export function HeroSection({
   onRequireExternalRequest: () => void;
 }) {
   return (
-    <section
-      id="hero"
-      aria-labelledby="hero-heading"
-      className="digital-atrium"
-    >
-      <HeroMotion />
+    <section id="hero" aria-labelledby="hero-heading" className="digital-atrium">
+      <HeroMotion videoSrc={heroVideoSrc} />
 
       <div className="atrium__stage">
-        <div
-          className="atrium__copy atrium__reveal"
-          style={{ "--i": 0 } as CSSProperties}
-        >
-          <p className="atrium__institution">
-            HAU-USC · Institutional Logistics Ledger
-          </p>
+        <div className="atrium__copy atrium__reveal" style={{ '--i': 0 } as CSSProperties}>
+          <p className="atrium__institution">HAU-USC · Institutional Logistics Ledger</p>
 
           <h1 id="hero-heading" className="atrium__title">
             Every request. Every handoff. On record.
           </h1>
 
           <p className="atrium__lede">
-            HAU-USC Logistics coordinates equipment and supply services
-            through a governed record—from first request to confirmed return.
+            HAU-USC Logistics coordinates equipment and supply services through a governed record—from first
+            request to confirmed return.
           </p>
 
           <div className="atrium__actions">
@@ -55,30 +47,19 @@ export function HeroSection({
             <button
               type="button"
               className="atrium__secondary hero-action--glass atrium__action--stacked"
-              onClick={() => onNavigate("borrow")}
+              onClick={() => onNavigate('borrow')}
             >
               Browse public lending
               <span className="atrium__action-note">No sign-in needed</span>
             </button>
           </div>
 
-          <div
-            className="atrium__secondary-paths"
-            aria-label="Other logistics paths"
-          >
-            <button
-              type="button"
-              className="atrium__text-action"
-              onClick={() => onNavigate("tracking")}
-            >
+          <div className="atrium__secondary-paths" aria-label="Other logistics paths">
+            <button type="button" className="atrium__text-action" onClick={() => onNavigate('tracking')}>
               Track lending
             </button>
 
-            <button
-              type="button"
-              className="atrium__text-action"
-              onClick={() => onNavigate("staff-signin")}
-            >
+            <button type="button" className="atrium__text-action" onClick={() => onNavigate('staff-signin')}>
               Staff sign in
             </button>
           </div>

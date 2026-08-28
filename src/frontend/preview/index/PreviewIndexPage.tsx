@@ -7,6 +7,7 @@ import { filterPreviewRoutes, groupPreviewRoutes, searchPreviewRoutes } from './
 import {
   ACCESS_REQUIREMENT_LABELS,
   BACKEND_STATUS_LABELS,
+  COMPLETENESS_CLASSIFICATION_LABELS,
   IMPLEMENTATION_STATUS_LABELS,
   PREVIEW_FILTER,
   PREVIEW_FILTER_LABELS,
@@ -53,6 +54,11 @@ function PreviewEntryRow({
           <EntryMeta label="Backend" value={BACKEND_STATUS_LABELS[entry.backendStatus]} kind="backend" />
           <EntryMeta label="Access" value={ACCESS_REQUIREMENT_LABELS[entry.access]} kind="access" />
           <EntryMeta label="Mode" value={PREVIEW_MODE_LABELS[entry.previewMode]} kind="mode" />
+          <EntryMeta
+            label="Completeness"
+            value={COMPLETENESS_CLASSIFICATION_LABELS[entry.completeness]}
+            kind="completeness"
+          />
         </dl>
       </div>
       <div className="preview-entry-actions">
