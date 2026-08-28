@@ -34,6 +34,7 @@ describe('post-FI17 Overview and hero-motion recovery', () => {
   it('bundles the owner hero media with autoplay-safe looping, poster fallback, pause/resume, and reduced-motion protection', () => {
     const hero = readSource('src/frontend/app/landing/HeroMotion.tsx');
     const section = readSource('src/frontend/app/landing/HeroSection.tsx');
+    const headers = readSource('src/public/_headers');
 
     expect(section).toContain(
       "import heroVideoSrc from '../../assets/hero/hausc-institutional-logistics-hero.mp4';",
@@ -56,6 +57,7 @@ describe('post-FI17 Overview and hero-motion recovery', () => {
     expect(hero).not.toContain('aria-pressed');
     expect(hero).toContain('prefers-reduced-motion: reduce');
     expect(hero).toContain('onError={() => {');
+    expect(headers).toMatch(/Content-Security-Policy:[^\n]*media-src 'self' blob:/u);
   });
 
   it('keeps the control truthful when initial autoplay or a resume attempt is rejected', () => {
