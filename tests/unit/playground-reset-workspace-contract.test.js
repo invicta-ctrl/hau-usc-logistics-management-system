@@ -63,6 +63,8 @@ describe('Playground reset workspace contract', () => {
       'utf8',
     );
     expect(source).toContain("'d1', 'export'");
+    expect(source).toContain("wrangler(['r2', 'bucket', 'list'])");
+    expect(source).not.toContain("['r2', 'bucket', 'list', '--json']");
     expect(source).toContain('restoreAndVerifyD1Export');
     expect(source).toContain("open(lockPath, 'wx', 0o600)");
     expect(source).toContain("state: 'ERROR'");

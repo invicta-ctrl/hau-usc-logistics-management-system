@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P12_RESET_ARCHITECTURE_VERIFIED;P12_LIVE_CYCLES_NEXT
+PHASE: P12_ATTEMPT_A_PREFLIGHT_STOP_RECONCILED;P12_CYCLE_1_RETRY_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -58,8 +58,9 @@ P10_STATUS: PASS_LOCAL_REPAIR;LIVE_POST_DEPLOY_ACCEPTANCE_PENDING_P29_P30
 P10_AUDIT: .codex/PLAYGROUND_MASTER_P10_ADMINISTRATION_RECOVERY.md
 P11_STATUS: PASS_LIVE;PRODUCTION_AND_GOOGLE_MUTATION_NONE
 P11_AUDIT: .codex/PLAYGROUND_MASTER_P11_OPERATIONAL_WORKFLOWS.md
-P12_STATUS: LOCAL_ARCHITECTURE_VERIFIED;LIVE_RESET_NOT_STARTED
+P12_STATUS: ATTEMPT_A_PREFLIGHT_STOP_RECONCILED;LIVE_RESET_NOT_STARTED
 P12_PRE_RESET_CHECKPOINT: .codex/PLAYGROUND_MASTER_P12_PRE_RESET_CHECKPOINT.md
+P12_ATTEMPT_A_RECOVERY: .codex/PLAYGROUND_MASTER_P12_RESET_ATTEMPT_A_RECOVERY.md
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Commit and push the P12 pre-reset checkpoint, reconfirm clean HEAD/upstream parity, stage a private canary, then execute two consecutive guarded reset cycles to generations 5 and 6 with distinct private reports/exports and old-session invalidation evidence.
+NEXT_EXACT_ACTION: Commit and push the P12 attempt-A recovery checkpoint, reconfirm generation 4 with 11 sessions / 20 transient rows / FK zero and lock absence, then run corrected cycle 1 once with a new private report/export basename while preserving the existing canary and failed-attempt report.
 HANDOFF_STATUS: ACTIVE

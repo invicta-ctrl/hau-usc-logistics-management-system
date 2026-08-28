@@ -235,10 +235,8 @@ async function run() {
     if ((exact?.uuid ?? exact?.id) !== databaseId) {
       throw new Error('Reset refused: fixed Playground D1 identity does not match provider inventory.');
     }
-    const r2Inventory = wrangler(['r2', 'bucket', 'list', '--json'], { json: true });
-    const buckets = Array.isArray(r2Inventory) ? r2Inventory : (r2Inventory?.buckets ?? []);
-    const bucketNames = new Set(buckets.map((entry) => entry.name));
-    if (requiredNames.slice(1).some((name) => !bucketNames.has(name))) {
+    const r2Inventory = wrangler(['r2', 'bucket', 'list']);
+    if (requiredNames.slice(1).some((name) => !r2Inventory.includes(name))) {
       throw new Error('Reset refused: fixed Playground R2 identity does not match provider inventory.');
     }
     const runtime = await verifyRuntime(hostname);
