@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P24_D1_QUERY_INDEX_AUDIT_COMPLETE;P25_THEME_PERFORMANCE_ACCESSIBILITY_NEXT
+PHASE: P25_THEME_PERFORMANCE_ACCESSIBILITY_COMPLETE;P26_HALLMARK_AUDIT_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -89,6 +89,9 @@ P23_EVIDENCE: .codex/evidence/P23_PLAYGROUND_PERFORMANCE_AFTER.json
 P24_STATUS: PASS_BOUNDED_PLAN_AUDIT;NO_INDEX_OR_MIGRATION_JUSTIFIED
 P24_AUDIT: .codex/PLAYGROUND_MASTER_P24_D1_QUERY_INDEX_AUDIT.md
 P24_EVIDENCE: .codex/evidence/P24_D1_QUERY_PLAN_AUDIT.json
+P25_STATUS: PASS_LOCAL_IMPLEMENTATION;LIVE_PLAYGROUND_ACCEPTANCE_PENDING_P29_P31
+P25_AUDIT: .codex/PLAYGROUND_MASTER_P25_THEME_PERFORMANCE_ACCESSIBILITY.md
+P25_EVIDENCE: .codex/evidence/P25_THEME_ACCESSIBILITY_AUDIT.json
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P25 Theme performance/accessibility. Verify instant theme switching without reload or heavy row-level effects, then cover six families across Light/Dark/System with the accepted semantic, responsive, contrast, focus, dialog, and glass-fallback checks.
+NEXT_EXACT_ACTION: Begin P26 Hallmark audit on the consolidated frontend. Preserve accepted hierarchy and semantics, repair only evidence-backed anti-slop findings, rebuild generated artifacts, and keep Production/Figma unchanged.
 HANDOFF_STATUS: ACTIVE

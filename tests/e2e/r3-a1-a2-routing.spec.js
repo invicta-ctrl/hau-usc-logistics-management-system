@@ -1319,6 +1319,10 @@ test('P18 Profile persists theme family separately from Light, Dark, and System 
   await expect(families.getByRole('radio')).toHaveCount(6);
   await expect(modes.getByRole('radio')).toHaveCount(3);
 
+  const beforeThemeChange = await page.evaluate(() => {
+    window.__p25ThemeSentinel = 'theme-state-survived';
+    return performance.getEntriesByType('navigation').length;
+  });
   await families.getByRole('radio', { name: 'Emerald Operations' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme-family', 'EMERALD_OPERATIONS');
   await modes.getByRole('radio', { name: 'Dark' }).click();
@@ -1335,6 +1339,14 @@ test('P18 Profile persists theme family separately from Light, Dark, and System 
       mode: localStorage.getItem('hau-usc-theme'),
     })))
     .toEqual({ family: 'EMERALD_OPERATIONS', mode: 'dark' });
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        navigationCount: performance.getEntriesByType('navigation').length,
+        sentinel: window.__p25ThemeSentinel,
+      })),
+    )
+    .toEqual({ navigationCount: beforeThemeChange, sentinel: 'theme-state-survived' });
 });
 
 test('FI-04 profile surfaces a failed profile response and retries only after the user asks', async ({

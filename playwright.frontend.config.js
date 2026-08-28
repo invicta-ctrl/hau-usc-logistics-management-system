@@ -14,6 +14,7 @@ export default defineConfig({
     'r3-a1-a2-routing.spec.js',
     'fi07-lending-hub.spec.js',
     'playground-accessibility-semantics.spec.js',
+    'playground-theme-accessibility.spec.js',
   ],
   timeout: 30_000,
   fullyParallel: false,
@@ -27,8 +28,8 @@ export default defineConfig({
     localPreviewPort === '4173'
       ? undefined
       : {
-          command: 'npm run dev -- --host 127.0.0.1 --port 4174',
-          url: 'http://127.0.0.1:4174',
+          command: `npm run dev -- --host 127.0.0.1 --port ${localPreviewPort} --strictPort`,
+          url: localPreviewUrl,
           reuseExistingServer: true,
           timeout: 30_000,
         },
