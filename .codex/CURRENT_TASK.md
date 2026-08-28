@@ -26,4 +26,4 @@ VERIFICATION: `git diff --check`; focused tests for changed/conflicted files; st
 
 STOP_CONDITIONS: conflicting writer; unknown tracked work that cannot be preserved; unaccepted FI source; required new migration or Production mutation; unprovable isolation or rollback; invariant-weakening conflict; unrepaired migration P0/P1.
 
-NEXT_EXACT_ACTION: Integrate the post-FI17 product/test delta while preserving FM operational/backend/data behavior.
+NEXT_EXACT_ACTION: Run the final release-candidate gate once, freeze the exact artifact, then perform the existing-Playground deployment preflight.

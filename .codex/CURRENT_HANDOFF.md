@@ -37,7 +37,7 @@ RESET_GENERATION: 3
 LIVE_STATE_AT_FREEZE: DIRTY; one active session; one transient row; FK0; evidence linkage count 2
 PRODUCTION_MUTATION: ZERO
 
-COMPLETED: authority adoption; canonical chain load; exact FI/FM Git freeze; upstream parity; source acceptance; deployed source/tree/artifact verification; schema/migration readiness; live D1/R2/Production isolation; rollback availability; external drift reconciliation.
+COMPLETED: authority adoption; exact FI/FM Git and live rollback freeze; deterministic post-FI17 delta calculation; current hero/Overview/Preview Index recovery integration; FM Overview/backend route preservation; generated artifact rebuild; focused tests 49/49; dist and continuity checks.
 
 VALIDATION: Git/upstream/source/tree/asset checks passed; live version/readiness/schema/migration/binding-isolation/rollback checks passed; generation-3 DIRTY state with one active session recorded without mutation.
 
@@ -45,11 +45,11 @@ EXTERNAL_ACTIONS: Read-only Cloudflare/HAUSC/D1 queries only; no upload, reset, 
 
 BLOCKER: NONE
 
-IN_PROGRESS: deterministic current-FI product/test delta adoption.
+IN_PROGRESS: final release-candidate verification and exact deployment preparation.
 
 DO_NOT_REPEAT: Do not reset or repopulate the Playground merely to recreate the prior clean receipt. Do not touch the FI source worktree, deploy Production, create resources, or rerun FI-00 to FI-12 audits.
 
-NEXT_EXACT_ACTION: Integrate the post-FI17 product/test delta while preserving FM operational/backend/data behavior.
+NEXT_EXACT_ACTION: Run the final release-candidate gate once, freeze the exact artifact, then perform the existing-Playground deployment preflight.
 RESUME_COMMANDS: Re-read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, verify `git status --short`, then compare `3da03dcc` product/test changes against the FM working tree.
 PROHIBITED_ACTIONS: Do not reset/repopulate data, touch the FI source worktree, deploy Production, create resources, run Hallmark/Impeccable/Figma, or begin FI-18.
 HANDOFF_STATUS: IN_PROGRESS
