@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P08_FRESH_BROWSER_REPRODUCTION_COMPLETE;P08_FOCUSED_REPAIRS_NEXT
+PHASE: P08_LOCAL_CORE_ROUTE_REPAIRS_COMPLETE;P09_EVENTS_RECOVERY_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -48,8 +48,9 @@ P07_CHECKPOINT: .codex/PLAYGROUND_MASTER_P07_PRE_APPLY_CHECKPOINT.md
 P07_RESET_RECOVERY: .codex/PLAYGROUND_MASTER_P07_RESET_ATTEMPT_A_RECOVERY.md
 P07_RESET_CHECKPOINT: .codex/PLAYGROUND_MASTER_P07_RESET_GENERATION_4_CHECKPOINT.md
 P07_AUDIT: .codex/PLAYGROUND_MASTER_P07_CLEAN_BASELINE_AUDIT.md
-P08_STATUS: BEFORE_REPAIR_AUDIT_COMPLETE;REPAIRS_NOT_STARTED
+P08_STATUS: PASS_LOCAL_CORE_ROUTE_REPAIRS;LIVE_DEPLOYMENT_PENDING_P29
 P08_AUDIT: .codex/PLAYGROUND_MASTER_P08_BEFORE_REPAIR_AUDIT.md
+P08_REPAIR_CHECKPOINT: .codex/PLAYGROUND_MASTER_P08_CORE_ROUTE_REPAIRS.md
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Commit and push the P08 before-repair audit tooling/checkpoint. Then map existing Request, Lending, Release, and receiving/restocking Worker endpoints and invariants; add focused regressions for linked lending inventory, full/partial/duplicate release, restock receiving/inventory movement, and truthful failure/retry states before the smallest supported repairs.
+NEXT_EXACT_ACTION: Begin P09 Events full recovery. Audit System Owner event.manage capability, UI gate, Worker auth/endpoint, response shape, D1 baseline relationships, adapter validation, terminal loading/retry behavior, underprivileged denial, and reset coverage in the accepted root-cause order before the smallest supported repair.
 HANDOFF_STATUS: ACTIVE

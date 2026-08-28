@@ -1858,6 +1858,35 @@ export function createD1OperationalService({
          ORDER BY ticket.updated_at DESC LIMIT ?${limitIndex} OFFSET ?${limitIndex + 1}`,
         [...scope.values, page.pageSize, page.offset],
       );
+      // P08: the lending ticket page and the alphabetical inventory page are
+      // independent windows. A ticket near the top of the activity queue can
+      // therefore reference an item outside the first inventory page. Project
+      // those canonical linked rows in addition to the bounded catalog page so
+      // the UI never has to invent an item name or availability value.
+      const projectedItemIds = new Set(itemRows.map((row) => row.id));
+      const linkedItemIds = [
+        ...new Set(
+          tickets
+            .flatMap((row) => [row.item_id, row.requested_item_id])
+            .filter((id) => id && !projectedItemIds.has(id)),
+        ),
+      ];
+      const linkedItemRows = linkedItemIds.length
+        ? await rows(
+            db,
+            `SELECT item.*, availability.on_hand, availability.reserved,
+               availability.available_to_promise, availability.ready_to_claim, availability.on_loan,
+               availability.overdue, availability.expected_return_at, availability.traceable_assets,
+               availability.available_assets, availability.damaged_assets, availability.maintenance_assets,
+               availability.lendable_available,
+               (SELECT GROUP_CONCAT(display_alias, '|') FROM item_aliases alias WHERE alias.item_id = item.id) AS aliases
+             FROM inventory_items item
+             JOIN lending_catalog_availability availability ON availability.item_id = item.id
+             WHERE item.id IN (${linkedItemIds.map((_, index) => `?${index + 1}`).join(', ')})
+             ORDER BY item.name, item.id`,
+            linkedItemIds,
+          )
+        : [];
       const availableAssets = await rows(
         db,
         `SELECT id, item_id, asset_tag, serial_number, condition_label, lifecycle_status
@@ -1876,7 +1905,9 @@ export function createD1OperationalService({
         scope.values,
       );
       data = {
-        inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, hideStorageLocation)),
+        inventoryItems: [...itemRows, ...linkedItemRows].map((row) =>
+          itemDto(row, protectCatalogAvailability, hideStorageLocation),
+        ),
         lendingTickets: tickets.map((row) => ({
           id: row.id,
           itemId: row.item_id,

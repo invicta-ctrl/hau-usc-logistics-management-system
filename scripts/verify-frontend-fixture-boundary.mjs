@@ -73,8 +73,10 @@ for (const expected of [
   '<OverviewRoute session={session} />',
   '<InventoryRoute dark={dark} navigate={navigate} />',
   '<InternalRequestHub dark={dark} navigate={navigate} canReviewRequests={session.canReviewRequests} />',
-  '<OperationalModuleRoute module="release" />',
-  '<OperationalModuleRoute module="restocking" />',
+  'module="release"',
+  "session.serverCapabilities.includes('fulfillment.release')",
+  'module="restocking"',
+  "session.serverCapabilities.includes('fulfillment.receive')",
   '<OperationalModuleRoute module="procurement" />',
   'mode="events"',
 ]) {
@@ -151,6 +153,18 @@ for (const protectedCall of [
   'frontendBackend.confirmLendingReturn',
 ]) {
   requireText(lendingHub, protectedCall, 'InternalLendingHub authenticated mutation path');
+}
+
+const operationalRoute = read('src/frontend/app/operations/OperationalModuleRoute.tsx');
+for (const protectedCall of [
+  'frontendBackend.uploadOperationalEvidence',
+  'frontendBackend.confirmRelease',
+  'frontendBackend.receiveRestock',
+]) {
+  requireText(operationalRoute, protectedCall, 'OperationalModuleRoute authenticated mutation path');
+}
+for (const forbidden of ['Synthetic prototype', 'Locally confirmed', 'synthetic fixture']) {
+  forbidText(operationalRoute, forbidden, 'OperationalModuleRoute normal runtime');
 }
 if ((lendingHub.match(/if \(inspection\) \{/gu) ?? []).length < 3) {
   fail('InternalLendingHub inspection-only local demonstrations are no longer explicit');

@@ -60,8 +60,10 @@ describe('Figma frontend isolated-playground proxy guard', () => {
     );
 
     expect(renderer).not.toContain("import ReleaseDeskRoute from './ReleaseDeskRoute'");
-    expect(renderer).toContain('<OperationalModuleRoute module="release" />');
-    expect(renderer).toContain('<OperationalModuleRoute module="restocking" />');
+    expect(renderer).toContain('module="release"');
+    expect(renderer).toContain("session.serverCapabilities.includes('fulfillment.release')");
+    expect(renderer).toContain('module="restocking"');
+    expect(renderer).toContain("session.serverCapabilities.includes('fulfillment.receive')");
     expect(renderer).toContain('<OperationalModuleRoute module="procurement" />');
     expect(renderer).toContain('mode="events"');
     expect(renderer).not.toContain('mode="restocking"');

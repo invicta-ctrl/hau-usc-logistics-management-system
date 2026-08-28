@@ -92,9 +92,17 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
             canUploadLendingEvidence={session.canUploadLendingEvidence}
           />
         ) : route === 'release' ? (
-          <OperationalModuleRoute module="release" />
+          <OperationalModuleRoute
+            module="release"
+            canMutate={session.serverCapabilities.includes('fulfillment.release')}
+            canUploadEvidence={session.serverCapabilities.includes('evidence.upload')}
+          />
         ) : route === 'restocking' ? (
-          <OperationalModuleRoute module="restocking" />
+          <OperationalModuleRoute
+            module="restocking"
+            canMutate={session.serverCapabilities.includes('fulfillment.receive')}
+            canUploadEvidence={session.serverCapabilities.includes('evidence.upload')}
+          />
         ) : route === 'procurement' ? (
           <OperationalModuleRoute module="procurement" />
         ) : route === 'events' ? (

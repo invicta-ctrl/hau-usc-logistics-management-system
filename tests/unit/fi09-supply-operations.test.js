@@ -15,10 +15,15 @@ const supplyCssFrom = (source) => {
 describe('FI-09 Supply operations frontend integration', () => {
   it('uses Worker/D1 routes for normal supply operations and reserves SupplyRoutes for Events', () => {
     const renderer = readSource('src/frontend/app/AppRouteRenderer.tsx');
+    const operational = readSource('src/frontend/app/operations/OperationalModuleRoute.tsx');
 
     expect(renderer).toContain("import SupplyRoutes from './SupplyRoutes';");
-    expect(renderer).toContain('<OperationalModuleRoute module="restocking" />');
+    expect(renderer).toContain('module="restocking"');
     expect(renderer).toContain('<OperationalModuleRoute module="procurement" />');
+    expect(renderer).toContain("session.serverCapabilities.includes('fulfillment.receive')");
+    expect(operational).toContain('frontendBackend.receiveRestock');
+    expect(operational).toContain('RESTOCK_RECEIPT');
+    expect(operational).toContain('Record full remaining quantity');
     expect(renderer).toContain('mode="events"');
     expect(renderer).not.toContain('mode="restocking"');
     expect(renderer).not.toContain('mode="procurement"');

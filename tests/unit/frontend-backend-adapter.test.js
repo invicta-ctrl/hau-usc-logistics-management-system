@@ -442,6 +442,84 @@ describe('Figma frontend backend adapter', () => {
     ]);
   });
 
+  it('binds release and restock operations to the existing CSRF-protected Worker commands', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        response({
+          state: 'AUTHENTICATED',
+          csrfToken: 'csrf-operations',
+          user: {
+            accountId: 'ACC-OPS',
+            displayName: 'Operations Staff',
+            authorization: {
+              active: true,
+              mappingStatus: 'MAPPED',
+              roleId: 'DOL_STAFF',
+              capabilities: ['fulfillment.release', 'fulfillment.receive', 'evidence.upload'],
+            },
+          },
+        }),
+      )
+      .mockResolvedValueOnce(response({ evidenceId: 'EVD-1', uploadStatus: 'VERIFIED', duplicate: false }))
+      .mockResolvedValueOnce(response({ releaseId: 'REL-1', status: 'PARTIAL', recipientConfirmed: true }))
+      .mockResolvedValueOnce(
+        response({
+          restockId: 'RST-1',
+          receiptId: 'RRC-1',
+          quantityReceived: 4,
+          cumulativeReceived: 4,
+          remaining: 6,
+          status: 'PARTIALLY_RECEIVED',
+        }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    const backend = new FrontendBackend();
+
+    await backend.session();
+    await expect(
+      backend.uploadOperationalEvidence({
+        evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
+        relatedEntityType: 'RELEASE_REQUEST',
+        relatedEntityId: 'REQ-1',
+        requestId: 'REQ-1',
+        originalFileName: 'release.png',
+        mimeType: 'image/png',
+        base64: 'iVBORw0KGgo=',
+        clientRequestId: 'p08-evidence-1',
+      }),
+    ).resolves.toMatchObject({ evidenceId: 'EVD-1', uploadStatus: 'VERIFIED' });
+    await expect(
+      backend.confirmRelease({
+        requestId: 'REQ-1',
+        recipientConfirmed: true,
+        recipientName: 'Recipient',
+        recipientRole: 'Custodian',
+        department: 'Department',
+        evidenceId: 'EVD-1',
+        lines: [{ requestLineId: 'LIN-1', quantity: 2 }],
+        clientRequestId: 'p08-release-1',
+      }),
+    ).resolves.toMatchObject({ releaseId: 'REL-1', status: 'PARTIAL' });
+    await expect(
+      backend.receiveRestock({
+        restockRequestId: 'RST-1',
+        quantity: 4,
+        unit: 'piece',
+        evidenceId: 'EVD-1',
+        clientRequestId: 'p08-restock-1',
+      }),
+    ).resolves.toMatchObject({ restockId: 'RST-1', receiptId: 'RRC-1', status: 'PARTIALLY_RECEIVED' });
+
+    expect(
+      fetchMock.mock.calls.slice(1).map(([path, options]) => [path, options.headers['x-csrf-token']]),
+    ).toEqual([
+      ['/api/uploadEvidence', 'csrf-operations'],
+      ['/api/confirmRelease', 'csrf-operations'],
+      ['/api/receiveRestock', 'csrf-operations'],
+    ]);
+  });
+
   it('keeps FI-06 route presentation, idempotency signatures, and request.review gating deterministic', () => {
     const request = { id: 'REQ-1', type: 'STANDARD', catalogType: 'OFFICE_INVENTORY' };
     const line = { id: 'LINE-1', itemId: 'ITM-1' };

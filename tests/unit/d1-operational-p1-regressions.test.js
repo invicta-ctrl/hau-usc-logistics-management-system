@@ -220,6 +220,15 @@ describe('D1 operational P1 invariants', () => {
     expect(approval).not.toContain('await db.batch(statements)');
   });
 
+  it('projects every canonical inventory item referenced by the loaded lending ticket page', () => {
+    const lending = between("} else if (module === 'lending')", '} else {');
+
+    expect(lending).toContain('linkedItemIds');
+    expect(lending).toContain('requested_item_id');
+    expect(lending).toContain('linkedItemRows');
+    expect(lending).toMatch(/inventoryItems:\s*\[\.\.\.itemRows, \.\.\.linkedItemRows\]/u);
+  });
+
   it('atomically refuses receiving against cancelled or concurrently changed procurement records', () => {
     const receiving = between('async function receiveEntity', 'const catalogItemSnapshot');
 

@@ -353,6 +353,25 @@ export type FrontendEvidenceReceipt = {
   correlationId: string;
 };
 
+export type FrontendReleaseReceipt = {
+  releaseId: string;
+  status: string;
+  recipientConfirmed: boolean;
+  replayed: boolean;
+  correlationId: string;
+};
+
+export type FrontendRestockReceipt = {
+  restockId: string;
+  receiptId: string;
+  quantityReceived: number;
+  cumulativeReceived: number;
+  remaining: number;
+  status: string;
+  replayed: boolean;
+  correlationId: string;
+};
+
 export type FrontendProfile = {
   displayName: string;
   legalName: string;
@@ -1107,7 +1126,9 @@ export class FrontendBackend {
         const day = dayById.get(asString(row.eventDayId));
         return {
           name: requiredString(row.name, 'event activity name'),
-          seriesName: day ? seriesById.get(day.seriesId)?.name || 'Series not reported' : 'Series not reported',
+          seriesName: day
+            ? seriesById.get(day.seriesId)?.name || 'Series not reported'
+            : 'Series not reported',
           date: day?.date || '',
           activityType: asString(row.activityType),
           status: requiredString(row.status, 'event activity status'),
@@ -1128,7 +1149,8 @@ export class FrontendBackend {
       const readiness = await this.request('/api/readiness', { method: 'GET', signal });
       return {
         technicalResponse: 'RESPONSE_RECEIVED',
-        readiness: readiness.ok === true && readiness.ready === true ? 'REPORTED_READY' : 'NOT_REPORTED_READY',
+        readiness:
+          readiness.ok === true && readiness.ready === true ? 'REPORTED_READY' : 'NOT_REPORTED_READY',
       };
     } catch (error) {
       if (error instanceof FrontendApiError && error.status === 503) {
@@ -1222,6 +1244,72 @@ export class FrontendBackend {
         hasMore: requiredBoolean(pagination.hasMore, `${module} pagination.hasMore`),
       },
       scopeRevision,
+    };
+  }
+
+  async uploadOperationalEvidence(command: {
+    evidenceType: 'RELEASE_CONFIRMATION_PHOTO' | 'RESTOCK_RECEIPT' | 'RESTOCK_INVOICE';
+    relatedEntityType: 'RELEASE_REQUEST' | 'RESTOCK';
+    relatedEntityId: string;
+    requestId?: string;
+    restockId?: string;
+    originalFileName: string;
+    mimeType: string;
+    base64: string;
+    clientRequestId: string;
+  }): Promise<FrontendEvidenceReceipt> {
+    const payload = await this.request('/api/uploadEvidence', { body: command, csrf: true });
+    const evidenceId = asString(payload.evidenceId) || asString(payload.id);
+    if (!evidenceId) incomplete('The operational evidence receipt did not include evidenceId.');
+    return {
+      evidenceId,
+      uploadStatus: requiredString(payload.uploadStatus, 'operational evidence receipt.uploadStatus'),
+      duplicate: payload.duplicate === true,
+      correlationId: asString(payload.correlationId),
+    };
+  }
+
+  async confirmRelease(command: {
+    requestId: string;
+    recipientConfirmed: true;
+    recipientName: string;
+    recipientRole: string;
+    department: string;
+    evidenceId: string;
+    lines: Array<{ requestLineId: string; quantity: number }>;
+    notes?: string;
+    clientRequestId: string;
+  }): Promise<FrontendReleaseReceipt> {
+    const payload = await this.request('/api/confirmRelease', { body: command, csrf: true });
+    return {
+      releaseId: requiredString(payload.releaseId ?? payload.id, 'release receipt.releaseId'),
+      status: requiredString(payload.status, 'release receipt.status'),
+      recipientConfirmed: requiredBoolean(payload.recipientConfirmed, 'release receipt.recipientConfirmed'),
+      replayed: payload.replayed === true,
+      correlationId: asString(payload.correlationId),
+    };
+  }
+
+  async receiveRestock(command: {
+    restockRequestId: string;
+    quantity: number;
+    unit: string;
+    evidenceId?: string;
+    invoiceStatus?: string;
+    invoiceNumber?: string;
+    notes?: string;
+    clientRequestId: string;
+  }): Promise<FrontendRestockReceipt> {
+    const payload = await this.request('/api/receiveRestock', { body: command, csrf: true });
+    return {
+      restockId: requiredString(payload.restockId, 'restock receipt.restockId'),
+      receiptId: requiredString(payload.receiptId, 'restock receipt.receiptId'),
+      quantityReceived: requiredNumber(payload.quantityReceived, 'restock receipt.quantityReceived'),
+      cumulativeReceived: requiredNumber(payload.cumulativeReceived, 'restock receipt.cumulativeReceived'),
+      remaining: requiredNumber(payload.remaining, 'restock receipt.remaining'),
+      status: requiredString(payload.status, 'restock receipt.status'),
+      replayed: payload.replayed === true,
+      correlationId: asString(payload.correlationId),
     };
   }
 

@@ -9,9 +9,15 @@ const readSource = (relativePath) => readFileSync(resolve(root, relativePath), '
 describe('FI-08 Release Desk frontend integration', () => {
   it('uses the authenticated Worker/D1 route in normal runtime and keeps the Make-v44 fixture out of it', () => {
     const renderer = readSource('src/frontend/app/AppRouteRenderer.tsx');
+    const operational = readSource('src/frontend/app/operations/OperationalModuleRoute.tsx');
 
     expect(renderer).not.toContain("import ReleaseDeskRoute from './ReleaseDeskRoute';");
-    expect(renderer).toContain('<OperationalModuleRoute module="release" />');
+    expect(renderer).toContain('module="release"');
+    expect(renderer).toContain("session.serverCapabilities.includes('fulfillment.release')");
+    expect(operational).toContain('frontendBackend.confirmRelease');
+    expect(operational).toContain('RELEASE_CONFIRMATION_PHOTO');
+    expect(operational).toContain('Record full remaining quantity');
+    expect(operational).not.toContain('Real backend · read-only');
   });
 
   it('makes the exact local A4 inspection path render the deterministic real module without a backend call', () => {
@@ -39,7 +45,7 @@ describe('FI-08 Release Desk frontend integration', () => {
       label: 'Release Desk',
       group: 'STAFF',
       description:
-      'Capability-gated Release Desk visual module. Preview inspection uses deterministic synthetic states and action simulation with no protected request or mutation.',
+        'Capability-gated Release Desk visual module. Preview inspection uses deterministic synthetic states and action simulation with no protected request or mutation.',
       implementationStatus: 'ACCEPTED',
       backendStatus: 'VISUAL_ONLY',
       access: 'AUTHENTICATED',
