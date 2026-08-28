@@ -413,3 +413,237 @@ only (D6).
 
 The branch remains TEMPORARY, LOCAL-DESIGN-ONLY and NOT PRODUCTION-BOUND. It
 must not be merged automatically; see the reconciliation note above.
+
+---
+
+# POST-FI17-DESIGN-RECOVERY-02 — ENVIRONMENT GATE HANDOFF
+
+```text
+STATUS:  STOPPED AT THE ENVIRONMENT GATE — NOT EXECUTED
+DATE:    2026-08-28 (Asia/Manila)
+REASON:  Section 0 of the directive requires the user's local machine.
+         This session is the same ephemeral cloud container as the
+         previous run. The gate fired. No redesign was performed.
+```
+
+The directive's own gate:
+
+```text
+IF environment is an ephemeral/cloud container:
+    STOP. Do not redesign. Do not claim Figma is unavailable.
+    Produce a handoff stating that the task must be resumed in LOCAL Claude Code.
+```
+
+## Environment proof
+
+```text
+hostname:            vm
+kernel:              Linux 6.18.44-fc-v22 (x86_64)
+D:/Documents/Codex/HAU-USC Logistics/     NOT PRESENT
+/mnt/d/...                                NOT PRESENT
+/mnt contains:       attach, skills, user-data   (no Windows mount)
+```
+
+## Prerequisite audit — 1 of 5 met
+
+Section 0 lists five things this pass requires. They were **tested, not
+assumed**:
+
+| # | Prerequisite | Result | Evidence |
+|---|---|---|---|
+| 1 | User's authenticated browser state | **NO** | All outbound HTTPS blocked by proxy policy; `connect_rejected … gateway answered 403 to CONNECT` |
+| 2 | Configured Figma MCP | **YES** | `whoami` → `Invicta-ctrl` / `adrianoearl04@gmail.com`, pro tier. Direct node read of `hXJElH4p72KfgAaoUyfNOC` node `568:2` returned the full CURRENT authority board |
+| 3 | Local HAU-USC worktrees | **NO** | No `D:` drive, no `/mnt/d` |
+| 4 | Live localhost preview at `127.0.0.1:4174` | **CONTAINER-LOCAL ONLY** | HTTP 200 here, but this is the container's loopback. The directive forbids calling it "the owner's localhost preview", and that instruction is honoured |
+| 5 | Comparison against the concurrent FM lane | **NO** | No FM branch, worktree, or process exists in this container |
+
+## Correction to the previous run's Figma claim
+
+The previous receipt recorded `FIGMA_MAKE_READ: NOT PERFORMED` and
+`FIGMA_DESIGN_READ: NOT PERFORMED`, attributing both to "no authenticated Figma
+access in this session". **That was wrong for Figma Design.** The connector is
+authenticated and the Design file reads correctly from this container. The
+earlier statement should have been split:
+
+```text
+FIGMA DESIGN (MCP):   AVAILABLE — was never actually attempted. Corrected here.
+FIGMA MAKE (browser): GENUINELY BLOCKED — needs a signed-in browser session and
+                      egress, neither of which exists here.
+```
+
+### Figma Design read receipt (this session)
+
+```text
+FILE:     hXJElH4p72KfgAaoUyfNOC  (HAU-USC Logistics — Frontend Design Lab)
+IDENTITY: Invicta-ctrl · adrianoearl04@gmail.com · team::1658726455813516145
+TOOLS:    whoami, get_metadata (no nodeId), get_metadata (nodeId 568:2)
+NODES:    568:2 AUTHORITY + DESIGN HANDOFF · CURRENT (full subtree metadata)
+```
+
+`get_metadata` with no `nodeId` returned only `0:1 — 00 — Capture Index`. Per
+the directive's warning **and** the repository's own recorded resolution in
+`docs/design/FIGMA_BASELINE_REGISTER.md` ("Connector truncation, resolved"),
+this was **not** treated as an empty file. The direct node read confirms the
+file is intact: 28 pages, 136 variables across 8 collections, 102 components,
+11 text styles, 9 effect styles.
+
+Authority confirmed live from the board, not from repository prose:
+
+- Canonical gold `#D4AF37` is OWNER-LOCKED (block `680:2`).
+- "Gold is scarce and marks active controls, focus and selection — not routine
+  labels. Glass is localised to layers that earn it, never a wash over the whole
+  application. Lines are semantic; decorative rules are rejected." (`568:13`)
+- Module intensity: Overview 5/5 · Public gateway 4/5 · Inventory, Request,
+  Lending 3/5 · Release Desk 2/5 · Staff and Administration 1/5. (`568:13`)
+- "Figma is the visual workbench, not the authority. A Figma frame is a design
+  target, never a runtime contract." (`568:7`)
+
+This is enough to confirm the previous pass did not contradict Figma authority,
+but **not** enough to constitute the calibration the directive asks for. Frame
+and screenshot reads across pages 11–13 (design system) and 15–90 (modules) are
+still outstanding and are cheap to do from here.
+
+## Reference websites — all blocked
+
+Every URL in sections 4, 5 and 6 was attempted. All returned `000`:
+
+```text
+logistics.hausc.org · playground.hausc.org · hausc.org · figma.com
+linear.app · lawsofux.com · nngroup.com · mobbin.com
+```
+
+Cause is the session's egress policy, not the sites. Sections 4, 5 and 6 cannot
+be executed here at all.
+
+## Section 8 — the viewport-edge defect DOES NOT REPRODUCE on this branch
+
+This is the most important finding for the owner, so it is stated precisely.
+
+Reproduction attempted at every width the directive names (320, 375, 390, 414,
+768) plus 640 (the CSS-pixel equivalent of 200% reflow), on the public landing
+and with the Preview Index open, against `local/post-fi17-design-pass-20260828`
+served at `127.0.0.1:4174`:
+
+```text
+launcher rect at every width:  134 × 44 px, fully inside the viewport
+launcher.left < 0:             false at every width
+launcher.right > viewportWidth: false at every width
+launcher.width < 44:           false  (134 wide, 44 tall — meets the target minimum)
+position:                      fixed
+inset-inline-end:              16px
+z-index:                       100
+containing-block hijack:       NONE — no ancestor carries transform, filter,
+                               backdrop-filter, perspective, will-change or
+                               contain, so `fixed` resolves against the viewport
+elementFromPoint(centre):      the launcher itself — nothing overlays it
+document horizontal overflow:  0 at every width
+full-page clipped-element scan: 0 elements extend past either viewport edge
+```
+
+**No sliver, no clipping, no off-canvas control was observed.**
+
+## Section 9 — the Preview Index is PRESENT AND WORKING on this branch
+
+Also does not reproduce as "missing or effectively unusable":
+
+```text
+route #/__preview/index at 320, 390, 640, 768:  renders, unclipped
+[data-preview-index] visible:                    true
+[data-preview-route] count:                      15   (all 15 required routes)
+search field present:                            true
+filters present:  All · Accepted · In progress · Backend-wired · Preview-only ·
+                  Not started · Public · Authenticated
+groups present:   PUBLIC · EXTERNAL REQUESTER · STAFF · ADMINISTRATION
+heading focused on entry:                        true
+```
+
+The launcher and index mount only when `/api/version` returns
+`playground: true`; that was stubbed at the browser layer for this check, the
+same way `tests/e2e/preview-index.spec.js` already does it.
+
+### What this most likely means
+
+Two owner-reported symptoms do not reproduce against this branch's source.
+The likeliest explanations, in order, all concern **what the owner's 4174 is
+actually serving**:
+
+1. Local 4174 is serving a different lane or a stale build, not
+   `local/post-fi17-design-pass-20260828`.
+2. Local 4174 is serving a **production-mode build**. The launcher and index are
+   correctly absent there — which would present exactly as "the Preview feature
+   is missing". `localPreviewInspectionAllowed()` additionally requires
+   `import.meta.env.DEV`, so a built preview also disables route inspection.
+3. The local `/api/version` is not returning `playground: true`, so the gate
+   fails closed and neither control mounts.
+
+**Decisive local check**, before any redesign work is attempted:
+
+```text
+1. In the design worktree:  git rev-parse HEAD   → expect 7693a3c (or later)
+2. Run vite in DEV mode on 4174 (not `vite preview`, which builds production).
+3. In devtools: fetch('/api/version').then(r=>r.json()).then(console.log)
+   → the `playground` field must be exactly boolean true.
+4. Then look for [data-preview-index-launcher] bottom-right.
+```
+
+If the sliver still appears after that, capture the element's
+`getBoundingClientRect()` and the computed `position` / `transform` /
+`backdrop-filter` of each ancestor — that is the data this diagnosis would need
+and could not obtain remotely.
+
+## One real defect that WAS found
+
+Not the reported clipping, but a genuine conflict the directive's section 9 asks
+about ("avoid covering mobile navigation"):
+
+```text
+launcher:            position: fixed; inset-block-end: 1rem; z-index: 100
+auth shell mobile nav: AuthenticatedShell.tsx:84
+                     "lg:hidden fixed bottom-0 left-0 right-0 z-10"
+```
+
+Below `lg`, on any authenticated route, the launcher sits 1rem from the bottom
+at `z-index: 100` directly over a bottom navigation bar at `z-index: 10`. It
+will overlap it. This was not fixed, because the gate stops work here, and it
+is left as the first item for the local run.
+
+## What was NOT done
+
+```text
+Figma Design frame/screenshot calibration (pages 11-13, 15-90)   NOT DONE
+Figma Make inspection                                            NOT DONE — blocked
+Owner/institutional reference study (section 4)                  NOT DONE — blocked
+Existing design-reference study (section 5)                      NOT DONE — blocked
+New product reference study (section 6)                          NOT DONE — blocked
+Hallmark full anti-slop audit (section 11)                        NOT DONE
+Impeccable pass (section 12)                                      NOT DONE
+Route quality redesign (section 13)                               NOT DONE
+Edge-bug fix + regression test (section 8)                        NOT DONE — no repro
+Launcher / mobile-nav overlap fix                                 NOT DONE
+```
+
+No source file was modified by this session. The only change is this receipt
+section.
+
+## Resume instructions for LOCAL Claude Code
+
+```text
+1. cd "D:/Documents/Codex/HAU-USC Logistics"
+2. git fetch origin local/post-fi17-design-pass-20260828
+3. git worktree add "worktrees/post-fi17-local-design-pass" \
+     local/post-fi17-design-pass-20260828
+   (do NOT reuse or re-check-out the FM worktree)
+4. cd worktrees/post-fi17-local-design-pass && npm ci
+5. Run the DEV server on 4174 with --strictPort. Do not touch 4173.
+6. Run the decisive check above before assuming either symptom is real.
+7. Then execute POST-FI17-DESIGN-RECOVERY-02 from section 3 onward.
+```
+
+Branch state at handoff:
+
+```text
+BRANCH: local/post-fi17-design-pass-20260828
+HEAD:   7693a3ce76b0de0dfbf9445d162bafc1a18cccfe  (before this receipt section)
+REMOTE: pushed to origin — the local run should fetch, not rebuild from scratch
+FM:     untouched. No FM ref exists in this container.
+```
