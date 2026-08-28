@@ -63,11 +63,47 @@ typography:
   mono:
     fontFamily: "'IBM Plex Mono', ui-monospace, monospace"
     letterSpacing: "0.1em"
-# Deliberately no fontSize steps: the shipped system declares font families and
-# weights but has never defined a type ramp. theme.css carries only
-# `--font-size: 16px` as a base. Recorded as real tokenization debt in
-# docs/frontend/WORKFLOW_ARCHITECTURE.md rather than papered over by declaring
-# the ad-hoc literals in use (9, 10, 11, 12, 13, 14, 15, 16, 18, 19px) as a ramp.
+# Type ramp. POST-FI17-DESIGN-ISOLATION-01 closes the tokenization debt this
+# block previously recorded ("deliberately no fontSize steps ... ad-hoc literals
+# in use"). The debt had grown past what that note described: the audit found
+# 262 inline fontSize literals across seventeen distinct values (7, 8, 9, 10, 11,
+# 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 26, 28px) plus twelve more in CSS,
+# including an 8.8px landing path marker. Seventeen sizes is not a scale.
+#
+# These nine steps are a COLLAPSE of that observed usage, not a re-scaling —
+# each step is a size the frontend already used, chosen where usage clustered.
+# They are named by role rather than t-shirt size because this system is
+# role-driven, exactly as the faces above are.
+#
+# Namespaced --type-* in theme.css: Tailwind owns --text-*, and the base layer
+# still resolves h1-h4/label/button/input through it. Redefining --text-* would
+# silently re-scale every text-* utility in the app.
+#
+# 0.625rem is a floor, not merely the smallest step. The ramp has nothing below
+# it and nothing should be added below it.
+fontSize:
+  record-xs: "0.625rem"   # 10px - mono record caps, eyebrows, plane labels
+  record-sm: "0.6875rem"  # 11px - mono meta, badges, tabular annotations
+  body-xs: "0.75rem"      # 12px - dense secondary copy
+  body-sm: "0.8125rem"    # 13px - operational body, the dominant reading size
+  body-md: "0.875rem"     # 14px - emphasis body, control labels
+  body-lg: "1rem"         # 16px - prose body, section headings
+  title-sm: "1.1875rem"   # 19px - card and panel titles
+  title-md: "1.5rem"      # 24px - inspector and sub-route titles
+  title-lg: "1.9375rem"   # 31px - route titles
+  display-sm: "clamp(2rem, 4vw, 3.6rem)"
+  display-lg: "clamp(2.55rem, 6.5vw, 5.25rem)"
+lineHeight:
+  record: "1.45"
+  tight: "1.25"
+  body: "1.55"
+  prose: "1.62"
+# Adoption is partial and deliberately so. styles/index.css - the shared design
+# system - resolves entirely through the ramp. The 262 inline literals inside
+# route components are NOT mechanically rewritten: that is churn with real
+# regression risk and it would collide with the parallel FI/FM lane. Routes
+# adopt the ramp as they are redesigned. Tracked as a residual in
+# docs/design/POST_FI17_LOCAL_DESIGN_ISOLATION_RECEIPT.md.
 # Radius scale is real, and is the computed output of theme.css:
 #   --radius: 0.625rem -> sm 6px, md 8px, lg 10px, xl 14px.
 rounded:

@@ -31,6 +31,48 @@
   --font-record: "IBM Plex Mono", ui-monospace, monospace;
   --font-wordmark: "Newsreader", Georgia, serif;
 
+  /* Type ramp — POST-FI17-DESIGN-ISOLATION-01.
+     DESIGN.md recorded the absence of a ramp as real tokenization debt: the
+     system declared faces and weights but never steps, so the frontend had
+     accumulated seventeen distinct ad-hoc sizes (7,8,9,10,11,12,13,14,15,16,
+     17,18,20,22,24,26,28px) that no rule could arbitrate. These nine steps are
+     derived from where that usage actually clustered, not invented, so
+     adopting them is a collapse rather than a re-scaling.
+
+     Named by ROLE, not t-shirt size, because this system is role-driven —
+     DESIGN.md names the faces the same way (record · body · display) and a
+     step only means something once you know which face wears it.
+
+     Namespaced --type-* on purpose. Tailwind owns --text-*, and the @layer
+     base rules below still resolve h1–h4/label/button/input through it;
+     redefining those would silently re-scale every text-* utility in the app.
+
+     Floor is 0.625rem/10px, and it is a floor: the ramp deliberately has no
+     step below it. Sub-10px type had reached 8.8px on the landing path
+     markers, which no amount of institutional convention makes legible. */
+  --type-record-xs: 0.625rem;   /* 10px — mono record caps, eyebrows, plane labels */
+  --type-record-sm: 0.6875rem;  /* 11px — mono meta, badges, tabular annotations */
+  --type-body-xs:   0.75rem;    /* 12px — dense secondary copy */
+  --type-body-sm:   0.8125rem;  /* 13px — operational body, the dominant reading size */
+  --type-body-md:   0.875rem;   /* 14px — emphasis body, control labels */
+  --type-body-lg:   1rem;       /* 16px — prose body, section headings */
+  --type-title-sm:  1.1875rem;  /* 19px — card and panel titles */
+  --type-title-md:  1.5rem;     /* 24px — inspector and sub-route titles */
+  --type-title-lg:  1.9375rem;  /* 31px — route titles */
+
+  /* Fluid display steps. Kept in the ramp so route headings stop inventing
+     their own clamp() each time; both were already in use verbatim. */
+  --type-display-sm: clamp(2rem, 4vw, 3.6rem);
+  --type-display-lg: clamp(2.55rem, 6.5vw, 5.25rem);
+
+  /* Line-height companions for the reading steps. Operational density lives
+     here: record type sets tight because it is scanned, body copy sets open
+     because it is read. */
+  --leading-record: 1.45;
+  --leading-tight: 1.25;
+  --leading-body: 1.55;
+  --leading-prose: 1.62;
+
   /* Four-point spacing and restrained motion */
   --space-2xs: 0.25rem;
   --space-xs: 0.5rem;
