@@ -225,8 +225,12 @@ try {
   const readyDeliverables = procurement.data.deliverables.filter(
     (entry) => procurementLineIds.has(entry.requestLineId) && entry.status === 'READY_TO_RELEASE',
   );
+  const readyDeliverableIds = new Set(readyDeliverables.map((entry) => entry.id));
   const preferredCanvasses = procurement.data.canvassReferences.filter(
-    (entry) => procurementLineIds.has(entry.linkedRequestLineId) && entry.preferred === true,
+    (entry) =>
+      entry.preferred === true &&
+      (readyDeliverableIds.has(entry.linkedDeliverableId) ||
+        entry.linkedLineIds?.some((lineId) => procurementLineIds.has(lineId))),
   );
   const p11EventLinks = events.links.filter((entry) =>
     String(entry.notes ?? '').includes('Synthetic Playground-only operational relationship'),
