@@ -58,7 +58,7 @@ export const PREVIEW_PROFILE: FrontendProfile = Object.freeze({
   credentialVersion: 0,
   updatedAt: 'Preview fixture — no server record',
   avatar: { available: false, initials: 'PO', fallback: 'INITIALS', url: '', updatedAt: '' },
-  appearance: { theme: 'SYSTEM' },
+  appearance: { family: 'HAU_INSTITUTIONAL', mode: 'SYSTEM' },
 });
 
 /** Same frontend shape as the real requester portal, with local fixture values only. */

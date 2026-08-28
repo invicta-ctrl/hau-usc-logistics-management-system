@@ -34,7 +34,8 @@ function mapProfile(row, committeeIds = []) {
     institutionId: row.institution_id ?? '',
     avatarAssetKey: row.avatar_asset_key ?? '',
     avatarUpdatedAt: row.avatar_updated_at ?? null,
-    appearanceTheme: row.appearance_theme ?? 'SYSTEM',
+    appearanceMode: row.appearance_mode ?? 'SYSTEM',
+    appearanceFamily: row.appearance_family ?? 'HAU_INSTITUTIONAL',
     passwordCredential: parseJson(row.password_credential_json),
     credentialVersion: Number(row.credential_version ?? 1),
     updatedAt: row.updated_at ?? '',
@@ -128,7 +129,9 @@ function profileSelect() {
     a.department_id, a.profile_department_id, a.institution_id,
     department.display_name AS department_display_name,
     COALESCE((SELECT value FROM app_metadata
-      WHERE key = 'profile.appearance.' || a.id), 'SYSTEM') AS appearance_theme
+      WHERE key = 'profile.appearance.' || a.id), 'SYSTEM') AS appearance_mode,
+    COALESCE((SELECT value FROM app_metadata
+      WHERE key = 'profile.appearance.family.' || a.id), 'HAU_INSTITUTIONAL') AS appearance_family
     FROM accounts a
     LEFT JOIN requester_departments department
       ON department.id = COALESCE(a.profile_department_id, a.department_id)
@@ -255,7 +258,7 @@ export function createD1ProfileRepository(db) {
       return repository.getProfile(id);
     },
 
-    async updateAppearance({ accountId, theme, changedAt, evidence }) {
+    async updateAppearance({ accountId, family, mode, changedAt, evidence }) {
       const id = requiredAccountId(accountId);
       await db.batch([
         db
@@ -264,7 +267,14 @@ export function createD1ProfileRepository(db) {
              VALUES (?1, ?2, ?3)
              ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
           )
-          .bind(`profile.appearance.${id}`, theme, changedAt),
+           .bind(`profile.appearance.${id}`, mode, changedAt),
+        db
+          .prepare(
+            `INSERT INTO app_metadata (key, value, updated_at)
+             VALUES (?1, ?2, ?3)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+          )
+          .bind(`profile.appearance.family.${id}`, family, changedAt),
         auditStatement(db, evidence.audit),
         idempotencyStatement(db, evidence.idempotency),
       ]);

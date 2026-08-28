@@ -1,3 +1,9 @@
+import {
+  isThemeFamily,
+  isThemeMode,
+  type AppearancePreference,
+} from '../app/theme/themeContract';
+
 type Json = Record<string, unknown>;
 
 export type FrontendUser = {
@@ -431,7 +437,7 @@ export type FrontendProfile = {
     url: string;
     updatedAt: string;
   };
-  appearance: { theme: 'LIGHT' | 'DARK' | 'SYSTEM' };
+  appearance: AppearancePreference;
 };
 
 export type PublicLendingItem = {
@@ -816,8 +822,9 @@ function projectProfile(value: unknown): FrontendProfile {
   if (typeof avatar.available !== 'boolean' || asString(avatar.fallback) !== 'INITIALS') {
     incomplete('The profile response did not match the supported avatar contract.');
   }
-  const theme = asString(appearance.theme);
-  if (!['LIGHT', 'DARK', 'SYSTEM'].includes(theme)) {
+  const family = asString(appearance.family);
+  const mode = asString(appearance.mode);
+  if (!isThemeFamily(family) || !isThemeMode(mode)) {
     incomplete('The profile response did not match the supported appearance contract.');
   }
   const avatarUrl = asString(avatar.url);
@@ -860,7 +867,7 @@ function projectProfile(value: unknown): FrontendProfile {
       url: avatar.available ? avatarUrl : '',
       updatedAt: avatar.available ? requiredString(avatar.updatedAt, 'avatar.updatedAt') : '',
     },
-    appearance: { theme: theme as 'LIGHT' | 'DARK' | 'SYSTEM' },
+    appearance: { family, mode },
   };
 }
 
@@ -956,13 +963,15 @@ export class FrontendBackend {
     return projectProfile(payload.profile);
   }
 
-  async profileAppearance(signal?: AbortSignal): Promise<'LIGHT' | 'DARK' | 'SYSTEM'> {
+  async profileAppearance(signal?: AbortSignal): Promise<AppearancePreference> {
     const payload = await this.request('/api/me/appearance', { method: 'GET', signal });
-    const theme = asString(asRecord(payload.appearance).theme);
-    if (!['LIGHT', 'DARK', 'SYSTEM'].includes(theme)) {
-      incomplete('The appearance response did not include a supported theme.');
+    const appearance = asRecord(payload.appearance);
+    const family = asString(appearance.family);
+    const mode = asString(appearance.mode);
+    if (!isThemeFamily(family) || !isThemeMode(mode)) {
+      incomplete('The appearance response did not include a supported family and mode.');
     }
-    return theme as 'LIGHT' | 'DARK' | 'SYSTEM';
+    return { family, mode };
   }
 
   async updateProfileContact(command: {
@@ -975,7 +984,8 @@ export class FrontendBackend {
   }
 
   async updateProfileAppearance(command: {
-    theme: 'LIGHT' | 'DARK' | 'SYSTEM';
+    family: AppearancePreference['family'];
+    mode: AppearancePreference['mode'];
     clientRequestId: string;
   }): Promise<FrontendProfile> {
     const payload = await this.request('/api/me/appearance', { method: 'PATCH', body: command, csrf: true });

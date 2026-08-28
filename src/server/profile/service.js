@@ -5,7 +5,15 @@ import { ApiError } from '../d1/operational-service.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 const MOBILE_PATTERN = /^\+?[0-9][0-9 ()-]{7,19}$/u;
-const APPEARANCE_THEMES = Object.freeze(['LIGHT', 'DARK', 'SYSTEM']);
+const APPEARANCE_MODES = Object.freeze(['LIGHT', 'DARK', 'SYSTEM']);
+const APPEARANCE_FAMILIES = Object.freeze([
+  'HAU_INSTITUTIONAL',
+  'ANGELITE_IVORY',
+  'MIDNIGHT_LEDGER',
+  'EMERALD_OPERATIONS',
+  'COBALT_SIGNAL',
+  'GRAPHITE_COPPER',
+]);
 const AVATAR_CONTENT_TYPES = Object.freeze({
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -181,9 +189,12 @@ function safeAccessSummary(actor, profile) {
 
 function profileDto(actor, profile, { avatarEnabled = false } = {}) {
   const avatarAvailable = avatarEnabled && Boolean(profile.avatarAssetKey);
-  const appearanceTheme = APPEARANCE_THEMES.includes(profile.appearanceTheme)
-    ? profile.appearanceTheme
+  const appearanceMode = APPEARANCE_MODES.includes(profile.appearanceMode)
+    ? profile.appearanceMode
     : 'SYSTEM';
+  const appearanceFamily = APPEARANCE_FAMILIES.includes(profile.appearanceFamily)
+    ? profile.appearanceFamily
+    : 'HAU_INSTITUTIONAL';
   return {
     displayName: profile.fullName,
     legalName: profile.fullName,
@@ -211,7 +222,7 @@ function profileDto(actor, profile, { avatarEnabled = false } = {}) {
       url: avatarAvailable ? '/api/me/avatar' : '',
       updatedAt: avatarAvailable ? (profile.avatarUpdatedAt ?? '') : '',
     },
-    appearance: { theme: appearanceTheme },
+    appearance: { family: appearanceFamily, mode: appearanceMode },
   };
 }
 
@@ -308,8 +319,11 @@ export function createProfileService({
   async function getAppearance(context = {}) {
     const actor = assertSelf(context);
     const profile = await requireProfile(repository, actor);
-    const theme = APPEARANCE_THEMES.includes(profile.appearanceTheme) ? profile.appearanceTheme : 'SYSTEM';
-    return { ok: true, appearance: { theme } };
+    const mode = APPEARANCE_MODES.includes(profile.appearanceMode) ? profile.appearanceMode : 'SYSTEM';
+    const family = APPEARANCE_FAMILIES.includes(profile.appearanceFamily)
+      ? profile.appearanceFamily
+      : 'HAU_INSTITUTIONAL';
+    return { ok: true, appearance: { family, mode } };
   }
 
   async function updateContact({ account, actor, command = {}, correlationId = '' } = {}) {
@@ -631,21 +645,29 @@ export function createProfileService({
     const replay = await mutationReplay(repository, 'PROFILE_APPEARANCE_UPDATE', currentActor, command);
     if (replay.result) return { ...replay.result, replayed: true };
     const profile = await requireProfile(repository, currentActor);
-    const theme = String(command.theme ?? '')
+    const mode = String(command.mode ?? command.theme ?? '')
       .trim()
       .toUpperCase();
-    if (!APPEARANCE_THEMES.includes(theme)) {
-      fail('PROFILE_APPEARANCE_INVALID', 'Choose Light, Dark, or System appearance.', {
-        details: { field: 'theme' },
+    const family = String(command.family ?? '')
+      .trim()
+      .toUpperCase();
+    if (!APPEARANCE_MODES.includes(mode)) {
+      fail('PROFILE_APPEARANCE_INVALID', 'Choose Light, Dark, or System mode.', {
+        details: { field: 'mode' },
+      });
+    }
+    if (!APPEARANCE_FAMILIES.includes(family)) {
+      fail('PROFILE_APPEARANCE_INVALID', 'Choose a supported theme family.', {
+        details: { field: 'family' },
       });
     }
     const changedAt = nowIso();
     const result = {
       ok: true,
-      changed: theme !== profile.appearanceTheme,
+      changed: mode !== profile.appearanceMode || family !== profile.appearanceFamily,
       replayed: false,
-      appearance: { theme },
-      profile: dto(currentActor, { ...profile, appearanceTheme: theme }),
+      appearance: { family, mode },
+      profile: dto(currentActor, { ...profile, appearanceFamily: family, appearanceMode: mode }),
     };
     const evidence = {
       audit: genericAudit({
@@ -654,9 +676,12 @@ export function createProfileService({
         changedAt,
         correlationId: String(correlationId || `PROFILE_${createId()}`),
         before: {
-          theme: APPEARANCE_THEMES.includes(profile.appearanceTheme) ? profile.appearanceTheme : 'SYSTEM',
+          family: APPEARANCE_FAMILIES.includes(profile.appearanceFamily)
+            ? profile.appearanceFamily
+            : 'HAU_INSTITUTIONAL',
+          mode: APPEARANCE_MODES.includes(profile.appearanceMode) ? profile.appearanceMode : 'SYSTEM',
         },
-        after: { theme },
+        after: { family, mode },
       }),
       idempotency: genericIdempotency({
         scope: 'PROFILE_APPEARANCE_UPDATE',
@@ -668,7 +693,8 @@ export function createProfileService({
     };
     const refreshed = await repository.updateAppearance({
       accountId: currentActor.id,
-      theme,
+      family,
+      mode,
       changedAt,
       evidence,
     });

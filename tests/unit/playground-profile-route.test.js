@@ -21,7 +21,10 @@ describe('P14 operational profile route contract', () => {
       'uploadProfileAvatar',
       'deleteProfileAvatar',
       'updateProfileAppearance',
-      "(['LIGHT', 'DARK', 'SYSTEM'] as ThemePreference[])",
+      'THEME_FAMILIES.map',
+      'THEME_MODES.map',
+      'aria-label="Theme family"',
+      'aria-label="Display mode"',
     ]) {
       expect(source).toContain(marker);
     }

@@ -35,7 +35,7 @@ export function AuthenticatedShell({
   return (
     <div
       className="min-h-screen flex"
-      style={{ background: dark ? '#1c1917' : '#fffdf8' }}
+      style={{ background: 'var(--background)' }}
       data-preview-inspection={inspection ? 'true' : undefined}
       data-preview-route={inspection ? route : undefined}
     >
@@ -64,7 +64,7 @@ export function AuthenticatedShell({
           {inspection ? (
             <section
               className="mx-4 mt-4 rounded-[8px] px-4 py-3 flex flex-wrap items-center justify-between gap-3"
-              style={{ background: '#fff4d6', border: '1px solid #d1b478', color: '#40070a' }}
+              style={{ background: 'var(--theme-warning)', border: '1px solid var(--border)', color: 'var(--theme-page)' }}
               role="note"
               aria-label="Preview inspection"
             >
@@ -82,7 +82,7 @@ export function AuthenticatedShell({
         {/* Mobile bottom dock */}
         <nav
           className="lg:hidden fixed bottom-0 left-0 right-0 z-10 flex items-center justify-around px-1 py-2"
-          style={{ background: '#40070a', borderTop: '1px solid rgba(242,209,92,0.18)', minHeight: 60 }}
+          style={{ background: 'var(--sidebar)', borderTop: '1px solid var(--sidebar-border)', minHeight: 60 }}
           aria-label="Quick navigation"
         >
           {mobileDock.map((item) => (
@@ -90,19 +90,19 @@ export function AuthenticatedShell({
               key={item.route}
               type="button"
               onClick={() => navigate(item.route)}
-              className="flex flex-col items-center gap-1 px-2 py-1 rounded-[8px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+              className="flex flex-col items-center gap-1 px-2 py-1 rounded-[8px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
               aria-current={route === item.route ? 'page' : undefined}
             >
               <item.Icon
                 size={20}
                 strokeWidth={1.5}
-                color={route === item.route ? '#e8b93c' : 'rgba(250,238,203,0.5)'}
+                color={route === item.route ? 'var(--sidebar-primary)' : 'color-mix(in oklch, var(--sidebar-foreground) 52%, transparent)'}
               />
               <span
                 style={{
                   fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
                   fontSize: 10,
-                  color: route === item.route ? '#e8b93c' : 'rgba(250,238,203,0.5)',
+                  color: route === item.route ? 'var(--sidebar-primary)' : 'color-mix(in oklch, var(--sidebar-foreground) 52%, transparent)',
                   letterSpacing: -0.1,
                 }}
               >

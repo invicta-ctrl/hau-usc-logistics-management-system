@@ -1,14 +1,20 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Camera, ShieldCheck, Trash2, User } from 'lucide-react';
-import type { ThemePreference } from '../hooks/useTheme';
+import {
+  DEFAULT_APPEARANCE,
+  THEME_FAMILIES,
+  THEME_FAMILY_LABELS,
+  THEME_MODES,
+  type AppearancePreference,
+} from '../theme/themeContract';
 import { FrontendApiError, frontendBackend, type FrontendProfile } from '../../integration/backend';
 
 type Feedback = { tone: 'success' | 'error'; message: string } | null;
 
 const fieldClass =
-  'w-full rounded-[8px] border px-3 py-2.5 text-[13px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]';
+  'w-full rounded-[8px] border px-3 py-2.5 text-[13px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]';
 const buttonClass =
-  'rounded-[8px] px-4 py-2.5 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]';
+  'rounded-[8px] px-4 py-2.5 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]';
 
 function requestId(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
@@ -99,8 +105,11 @@ function FeedbackLine({ value }: { value: Feedback }) {
       role={value.tone === 'error' ? 'alert' : 'status'}
       className="rounded-[7px] px-3 py-2 text-[12px]"
       style={{
-        background: value.tone === 'error' ? 'rgba(180,35,24,0.1)' : 'rgba(31,107,65,0.1)',
-        color: value.tone === 'error' ? 'var(--destructive)' : darkGreen,
+        background:
+          value.tone === 'error'
+            ? 'color-mix(in srgb, var(--theme-danger) 14%, var(--theme-surface))'
+            : 'color-mix(in srgb, var(--theme-success) 14%, var(--theme-surface))',
+        color: 'var(--theme-text)',
       }}
     >
       {value.message}
@@ -123,15 +132,15 @@ function ProfileLoading() {
 export function ProfileRoute({
   dark,
   previewProfile,
-  themePreference = 'SYSTEM',
-  onApplyTheme,
+  appearance = DEFAULT_APPEARANCE,
+  onApplyAppearance,
   onSessionRevoked,
 }: {
   dark: boolean;
   onToggle?: () => void;
   previewProfile?: FrontendProfile;
-  themePreference?: ThemePreference;
-  onApplyTheme?: (theme: ThemePreference) => void;
+  appearance?: AppearancePreference;
+  onApplyAppearance?: (appearance: AppearancePreference) => void;
   onSessionRevoked?: (message: string) => void;
 }) {
   const preview = Boolean(previewProfile);
@@ -183,7 +192,7 @@ export function ProfileRoute({
           email: next.verifiedEmail,
           reason: '',
         });
-        onApplyTheme?.(next.appearance.theme);
+        onApplyAppearance?.(next.appearance);
       })
       .catch((reason: unknown) => {
         if (active) setLoadError(messageFrom(reason, 'Your profile is temporarily unavailable.'));
@@ -194,7 +203,7 @@ export function ProfileRoute({
     return () => {
       active = false;
     };
-  }, [onApplyTheme, previewProfile, retryKey]);
+  }, [onApplyAppearance, previewProfile, retryKey]);
 
   const updateProfile = (next: FrontendProfile) => {
     setProfile(next);
@@ -322,21 +331,21 @@ export function ProfileRoute({
     );
   };
 
-  const changeAppearance = (theme: ThemePreference) => {
+  const changeAppearance = (preference: AppearancePreference) => {
     void run(
       'appearance',
       async () => {
         const next = await frontendBackend.updateProfileAppearance({
-          theme,
+          ...preference,
           clientRequestId: requestId('profile-appearance'),
         });
         updateProfile(next);
-        onApplyTheme?.(theme);
+        onApplyAppearance?.(preference);
         setFeedback((state) => ({
           ...state,
           appearance: {
             tone: 'success',
-            message: `${theme[0]}${theme.slice(1).toLowerCase()} appearance saved.`,
+            message: `${THEME_FAMILY_LABELS[preference.family]} · ${preference.mode[0]}${preference.mode.slice(1).toLowerCase()} saved.`,
           },
         }));
       },
@@ -647,13 +656,18 @@ export function ProfileRoute({
         </div>
 
         <div className="flex flex-col gap-6">
-          <Section title="Appearance" subtitle="Saved to your account and applied across sign-in sessions.">
-            <div className="p-5 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Theme preference">
-              {(['LIGHT', 'DARK', 'SYSTEM'] as ThemePreference[]).map((theme) => {
-                const selected = (profile.appearance.theme || themePreference) === theme;
+          <Section title="Appearance" subtitle="Theme family and display mode are saved separately to your account.">
+            <div className="px-5 pt-5">
+              <p className="text-[12px] font-semibold" style={{ color: 'var(--foreground)' }}>
+                Theme family
+              </p>
+            </div>
+            <div className="px-5 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-2" role="radiogroup" aria-label="Theme family">
+              {THEME_FAMILIES.map((family) => {
+                const selected = (profile.appearance.family || appearance.family) === family;
                 return (
                   <button
-                    key={theme}
+                    key={family}
                     type="button"
                     role="radio"
                     aria-checked={selected}
@@ -664,10 +678,44 @@ export function ProfileRoute({
                       border: '1px solid var(--border)',
                     }}
                     disabled={disabled('appearance')}
-                    onClick={() => changeAppearance(theme)}
+                    onClick={() => changeAppearance({
+                      family,
+                      mode: profile.appearance.mode || appearance.mode,
+                    })}
                   >
-                    {theme[0]}
-                    {theme.slice(1).toLowerCase()}
+                    {THEME_FAMILY_LABELS[family]}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="px-5 pt-5">
+              <p className="text-[12px] font-semibold" style={{ color: 'var(--foreground)' }}>
+                Display mode
+              </p>
+            </div>
+            <div className="px-5 pt-3 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Display mode">
+              {THEME_MODES.map((mode) => {
+                const selected = (profile.appearance.mode || appearance.mode) === mode;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    className={buttonClass}
+                    style={{
+                      background: selected ? 'var(--primary)' : 'var(--muted)',
+                      color: selected ? 'var(--primary-foreground)' : 'var(--foreground)',
+                      border: '1px solid var(--border)',
+                    }}
+                    disabled={disabled('appearance')}
+                    onClick={() => changeAppearance({
+                      family: profile.appearance.family || appearance.family,
+                      mode,
+                    })}
+                  >
+                    {mode[0]}
+                    {mode.slice(1).toLowerCase()}
                   </button>
                 );
               })}

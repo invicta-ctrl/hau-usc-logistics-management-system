@@ -31,7 +31,8 @@ function profile(overrides = {}) {
     institutionId: 'INST-1',
     avatarAssetKey: '',
     avatarUpdatedAt: null,
-    appearanceTheme: 'SYSTEM',
+    appearanceFamily: 'HAU_INSTITUTIONAL',
+    appearanceMode: 'SYSTEM',
     passwordCredential: { secret: 'CurrentPassword!123' },
     credentialVersion: 3,
     updatedAt: NOW,
@@ -92,8 +93,9 @@ class FakeProfileRepository {
     return this.getProfile(this.current.accountId);
   }
 
-  async updateAppearance({ theme, evidence }) {
-    this.current.appearanceTheme = theme;
+  async updateAppearance({ family, mode, evidence }) {
+    this.current.appearanceFamily = family;
+    this.current.appearanceMode = mode;
     this.remember(evidence);
     return this.getProfile(this.current.accountId);
   }
@@ -169,7 +171,7 @@ describe('v0.7.2 self-profile service', () => {
         username: 'synthetic.user',
         revision: NOW,
         avatar: { available: false, fallback: 'INITIALS' },
-        appearance: { theme: 'SYSTEM' },
+        appearance: { family: 'HAU_INSTITUTIONAL', mode: 'SYSTEM' },
       },
     });
     const privateDto = (await service.get({ actor: ACTOR })).profile;
@@ -310,23 +312,27 @@ describe('v0.7.2 self-profile service', () => {
     ).rejects.toMatchObject({ code: 'IDENTITY_CORRECTION_UNAVAILABLE', status: 503 });
   });
 
-  it('persists an audited three-state appearance preference', async () => {
+  it('persists an audited theme family and independent three-state mode', async () => {
     const repository = new FakeProfileRepository();
     const service = makeService(repository);
     await expect(
       service.updateAppearance({
         actor: ACTOR,
-        command: { theme: 'dark', clientRequestId: 'appearance-dark-0001' },
+        command: {
+          family: 'midnight_ledger',
+          mode: 'dark',
+          clientRequestId: 'appearance-dark-0001',
+        },
       }),
     ).resolves.toMatchObject({
       changed: true,
-      appearance: { theme: 'DARK' },
-      profile: { appearance: { theme: 'DARK' } },
+      appearance: { family: 'MIDNIGHT_LEDGER', mode: 'DARK' },
+      profile: { appearance: { family: 'MIDNIGHT_LEDGER', mode: 'DARK' } },
     });
     expect(repository.audits.at(-1)).toMatchObject({
       action: 'PROFILE_APPEARANCE_UPDATED',
-      before: { theme: 'SYSTEM' },
-      after: { theme: 'DARK' },
+      before: { family: 'HAU_INSTITUTIONAL', mode: 'SYSTEM' },
+      after: { family: 'MIDNIGHT_LEDGER', mode: 'DARK' },
     });
   });
 

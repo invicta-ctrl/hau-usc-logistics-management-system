@@ -41,8 +41,8 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
     handleSignOut,
     activationExpiresAt,
     toggleTheme,
-    themePreference,
-    setThemePreference,
+    appearance,
+    setAppearance,
     handleSessionRevoked,
   } = controller;
 
@@ -81,8 +81,8 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
           <ProfileRoute
             dark={dark}
             onToggle={toggleTheme}
-            themePreference={themePreference}
-            onApplyTheme={setThemePreference}
+            appearance={appearance}
+            onApplyAppearance={setAppearance}
             onSessionRevoked={handleSessionRevoked}
           />
         ) : route === 'overview' ? (

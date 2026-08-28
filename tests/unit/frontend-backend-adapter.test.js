@@ -54,7 +54,7 @@ function profilePayload() {
       credentialVersion: 3,
       updatedAt: '2026-08-24T00:00:00.000Z',
       avatar: { available: false, initials: 'DP', fallback: 'INITIALS', url: '', updatedAt: '' },
-      appearance: { theme: 'SYSTEM' },
+      appearance: { family: 'HAU_INSTITUTIONAL', mode: 'SYSTEM' },
     },
   };
 }
@@ -292,7 +292,7 @@ describe('Figma frontend backend adapter', () => {
           capabilities: ['view.internal', 'view.inventory'],
         }),
         avatar: { available: false, initials: 'DP', fallback: 'INITIALS', url: '', updatedAt: '' },
-        appearance: { theme: 'SYSTEM' },
+        appearance: { family: 'HAU_INSTITUTIONAL', mode: 'SYSTEM' },
       }),
     );
     expect(fetchMock).toHaveBeenCalledWith(
@@ -320,7 +320,7 @@ describe('Figma frontend backend adapter', () => {
           },
         }),
       )
-      .mockResolvedValueOnce(response({ appearance: { theme: 'DARK' } }))
+      .mockResolvedValueOnce(response({ appearance: { family: 'MIDNIGHT_LEDGER', mode: 'DARK' } }))
       .mockResolvedValueOnce(response(profilePayload()))
       .mockResolvedValueOnce(response(profilePayload()))
       .mockResolvedValueOnce(response(profilePayload()))
@@ -332,13 +332,17 @@ describe('Figma frontend backend adapter', () => {
     const backend = new FrontendBackend();
     await backend.session();
 
-    await expect(backend.profileAppearance()).resolves.toBe('DARK');
+    await expect(backend.profileAppearance()).resolves.toEqual({ family: 'MIDNIGHT_LEDGER', mode: 'DARK' });
     await backend.updateProfileContact({
       contactNumber: '+639189876543',
       expectedRevision: 'rev-1',
       clientRequestId: 'contact-0001',
     });
-    await backend.updateProfileAppearance({ theme: 'SYSTEM', clientRequestId: 'appearance-0001' });
+    await backend.updateProfileAppearance({
+      family: 'HAU_INSTITUTIONAL',
+      mode: 'SYSTEM',
+      clientRequestId: 'appearance-0001',
+    });
     await backend.uploadProfileAvatar({
       contentType: 'image/png',
       base64: 'opaque-base64',

@@ -1,21 +1,30 @@
 import { useCallback, useEffect, useState } from 'react';
+import {
+  DEFAULT_APPEARANCE,
+  isThemeFamily,
+  isThemeMode,
+  type AppearancePreference,
+} from '../theme/themeContract';
 
-export type ThemePreference = 'LIGHT' | 'DARK' | 'SYSTEM';
-
-function storedPreference(): ThemePreference {
+function storedAppearance(): AppearancePreference {
   try {
-    const stored = localStorage.getItem('hau-usc-theme')?.toUpperCase();
-    if (stored === 'LIGHT' || stored === 'DARK' || stored === 'SYSTEM') return stored;
-  } catch {}
-  return 'SYSTEM';
+    const family = localStorage.getItem('hau-usc-theme-family')?.toUpperCase();
+    const mode = localStorage.getItem('hau-usc-theme')?.toUpperCase();
+    return {
+      family: isThemeFamily(family) ? family : DEFAULT_APPEARANCE.family,
+      mode: isThemeMode(mode) ? mode : DEFAULT_APPEARANCE.mode,
+    };
+  } catch {
+    return DEFAULT_APPEARANCE;
+  }
 }
 
 export function useTheme() {
-  const [preference, setPreference] = useState<ThemePreference>(storedPreference);
+  const [appearance, setAppearance] = useState<AppearancePreference>(storedAppearance);
   const [systemDark, setSystemDark] = useState(
     () => window.matchMedia('(prefers-color-scheme: dark)').matches,
   );
-  const dark = preference === 'DARK' || (preference === 'SYSTEM' && systemDark);
+  const dark = appearance.mode === 'DARK' || (appearance.mode === 'SYSTEM' && systemDark);
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
@@ -26,13 +35,19 @@ export function useTheme() {
   }, []);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark);
+    const root = document.documentElement;
+    root.classList.toggle('dark', dark);
+    root.dataset.themeFamily = appearance.family;
     try {
-      localStorage.setItem('hau-usc-theme', preference.toLowerCase());
+      localStorage.setItem('hau-usc-theme-family', appearance.family);
+      localStorage.setItem('hau-usc-theme', appearance.mode.toLowerCase());
     } catch {}
-  }, [dark, preference]);
+  }, [appearance, dark]);
 
-  const toggle = useCallback(() => setPreference(dark ? 'LIGHT' : 'DARK'), [dark]);
+  const toggle = useCallback(
+    () => setAppearance((current) => ({ ...current, mode: dark ? 'LIGHT' : 'DARK' })),
+    [dark],
+  );
 
-  return [dark, setPreference, toggle, preference] as const;
+  return [dark, setAppearance, toggle, appearance] as const;
 }

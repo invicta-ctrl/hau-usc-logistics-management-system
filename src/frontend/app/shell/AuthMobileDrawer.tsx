@@ -84,8 +84,8 @@ export function AuthMobileDrawer({
         className="fixed left-0 top-0 bottom-0 z-50 flex flex-col"
         style={{
           width: 280,
-          background: '#40070a',
-          borderRight: '1px solid rgba(242,209,92,0.22)',
+          background: 'var(--sidebar)',
+          borderRight: '1px solid var(--sidebar-border)',
           transform: visible ? 'translateX(0)' : 'translateX(-100%)',
           transition: reducedMotion ? 'none' : 'transform 280ms cubic-bezier(0.4,0,0.2,1)',
         }}
@@ -93,7 +93,7 @@ export function AuthMobileDrawer({
         {/* Header */}
         <div
           className="flex items-center justify-between px-4 py-4"
-          style={{ borderBottom: '1px solid rgba(242,209,92,0.18)' }}
+          style={{ borderBottom: '1px solid var(--sidebar-border)' }}
         >
           <div className="flex flex-col items-start gap-1.5">
             <div className="flex items-center gap-2.5">
@@ -103,7 +103,7 @@ export function AuthMobileDrawer({
                   style={{
                     fontFamily: "'IBM Plex Mono', monospace",
                     fontSize: 8,
-                    color: '#f6e29a',
+                    color: 'var(--sidebar-primary)',
                     letterSpacing: '.8px',
                     textTransform: 'uppercase',
                   }}
@@ -115,7 +115,7 @@ export function AuthMobileDrawer({
                     fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
                     fontSize: 13,
                     fontWeight: 700,
-                    color: '#faeecb',
+                    color: 'var(--sidebar-foreground)',
                     lineHeight: 1.1,
                   }}
                 >
@@ -127,7 +127,7 @@ export function AuthMobileDrawer({
               style={{
                 fontFamily: "'IBM Plex Mono', monospace",
                 fontSize: 8,
-                color: '#f6e29a',
+                color: 'var(--sidebar-primary)',
                 letterSpacing: '.7px',
                 textTransform: 'uppercase',
               }}
@@ -138,11 +138,11 @@ export function AuthMobileDrawer({
           <button
             onClick={onClose}
             data-dialog-initial-focus
-            className="flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+            className="flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
             aria-label="Close navigation"
             style={{ width: 44, height: 44 }}
           >
-            <X size={18} color="#faeecb" />
+            <X size={18} color="var(--sidebar-foreground)" />
           </button>
         </div>
 
@@ -154,7 +154,7 @@ export function AuthMobileDrawer({
                 style={{
                   fontFamily: "'IBM Plex Mono', monospace",
                   fontSize: 9,
-                  color: 'rgba(250,238,203,0.38)',
+                  color: 'color-mix(in oklch, var(--sidebar-foreground) 42%, transparent)',
                   letterSpacing: '1px',
                   textTransform: 'uppercase',
                   paddingLeft: 12,
@@ -171,23 +171,23 @@ export function AuthMobileDrawer({
                     navigate(item.route);
                     onClose();
                   }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-[8px] w-full text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-[8px] w-full text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
                   style={{
-                    background: route === item.route ? 'rgba(232,185,60,0.12)' : 'transparent',
-                    borderLeft: route === item.route ? '2px solid #e8b93c' : '2px solid transparent',
+                    background: route === item.route ? 'var(--sidebar-accent)' : 'transparent',
+                    borderLeft: route === item.route ? '2px solid var(--sidebar-primary)' : '2px solid transparent',
                   }}
                   aria-current={route === item.route ? 'page' : undefined}
                 >
                   <item.Icon
                     size={15}
                     strokeWidth={1.6}
-                    color={route === item.route ? '#e8b93c' : 'rgba(250,238,203,0.65)'}
+                    color={route === item.route ? 'var(--sidebar-primary)' : 'color-mix(in oklch, var(--sidebar-foreground) 65%, transparent)'}
                   />
                   <span
                     style={{
                       fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
                       fontSize: 14,
-                      color: route === item.route ? '#faeecb' : 'rgba(250,238,203,0.75)',
+                      color: route === item.route ? 'var(--sidebar-foreground)' : 'color-mix(in oklch, var(--sidebar-foreground) 75%, transparent)',
                       letterSpacing: -0.15,
                     }}
                   >
@@ -201,14 +201,14 @@ export function AuthMobileDrawer({
           {administration.length > 0 && (
             <nav
               className="flex flex-col gap-0.5"
-              style={{ borderTop: '1px solid rgba(242,209,92,0.1)', paddingTop: 16 }}
+              style={{ borderTop: '1px solid var(--sidebar-border)', paddingTop: 16 }}
               aria-label="Administration"
             >
               <p
                 style={{
                   fontFamily: "'IBM Plex Mono', monospace",
                   fontSize: 9,
-                  color: 'rgba(250,238,203,0.38)',
+                  color: 'color-mix(in oklch, var(--sidebar-foreground) 42%, transparent)',
                   letterSpacing: '1px',
                   textTransform: 'uppercase',
                   paddingLeft: 12,
@@ -225,23 +225,23 @@ export function AuthMobileDrawer({
                     navigate(item.route);
                     onClose();
                   }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-[8px] w-full text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-[8px] w-full text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
                   style={{
-                    background: route === item.route ? 'rgba(232,185,60,0.12)' : 'transparent',
-                    borderLeft: route === item.route ? '2px solid #e8b93c' : '2px solid transparent',
+                    background: route === item.route ? 'var(--sidebar-accent)' : 'transparent',
+                    borderLeft: route === item.route ? '2px solid var(--sidebar-primary)' : '2px solid transparent',
                   }}
                   aria-current={route === item.route ? 'page' : undefined}
                 >
                   <item.Icon
                     size={15}
                     strokeWidth={1.6}
-                    color={route === item.route ? '#e8b93c' : 'rgba(250,238,203,0.65)'}
+                    color={route === item.route ? 'var(--sidebar-primary)' : 'color-mix(in oklch, var(--sidebar-foreground) 65%, transparent)'}
                   />
                   <span
                     style={{
                       fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
                       fontSize: 14,
-                      color: route === item.route ? '#faeecb' : 'rgba(250,238,203,0.75)',
+                      color: route === item.route ? 'var(--sidebar-foreground)' : 'color-mix(in oklch, var(--sidebar-foreground) 75%, transparent)',
                       letterSpacing: -0.15,
                     }}
                   >
@@ -256,7 +256,7 @@ export function AuthMobileDrawer({
         {/* Footer */}
         <div
           className="px-4 pb-6 pt-3 flex flex-col gap-3"
-          style={{ borderTop: '1px solid rgba(242,209,92,0.12)' }}
+          style={{ borderTop: '1px solid var(--sidebar-border)' }}
         >
           <button
             type="button"
@@ -264,13 +264,13 @@ export function AuthMobileDrawer({
               onHome();
               onClose();
             }}
-            className="flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+            className="flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
           >
             <span
               style={{
                 fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
                 fontSize: 13,
-                color: 'rgba(250,238,203,0.76)',
+                color: 'color-mix(in oklch, var(--sidebar-foreground) 76%, transparent)',
                 letterSpacing: -0.1,
               }}
             >
@@ -279,7 +279,7 @@ export function AuthMobileDrawer({
           </button>
           <div className="flex items-center justify-between">
             <span
-              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: '#f6e29a' }}
+              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: 'var(--sidebar-primary)' }}
             >
               Theme
             </span>
@@ -292,13 +292,13 @@ export function AuthMobileDrawer({
                 onBackToPreview?.();
                 onClose();
               }}
-              className="flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+              className="flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
             >
               <span
                 style={{
                   fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
                   fontSize: 13,
-                  color: 'rgba(250,238,203,0.76)',
+                  color: 'color-mix(in oklch, var(--sidebar-foreground) 76%, transparent)',
                   letterSpacing: -0.1,
                 }}
               >
@@ -312,14 +312,14 @@ export function AuthMobileDrawer({
                 onSignOut();
                 onClose();
               }}
-              className="flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+              className="flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
             >
-              <LogOut size={14} strokeWidth={1.5} color="rgba(250,238,203,0.6)" />
+              <LogOut size={14} strokeWidth={1.5} color="color-mix(in oklch, var(--sidebar-foreground) 60%, transparent)" />
               <span
                 style={{
                   fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
                   fontSize: 13,
-                  color: 'rgba(250,238,203,0.6)',
+                  color: 'color-mix(in oklch, var(--sidebar-foreground) 60%, transparent)',
                   letterSpacing: -0.1,
                 }}
               >

@@ -41,7 +41,7 @@ export function projectSession(user: FrontendUser): Session {
 }
 
 export function useAppController() {
-  const [dark, setThemePreference, toggleTheme, themePreference] = useTheme();
+  const [dark, setAppearance, toggleTheme, appearance] = useTheme();
   const [route, setRoute] = useState<Route>('landing');
   const [session, setSession] = useState<Session | null>(null);
   const [authState, setAuthState] = useState<AuthGateState>('signed-out');
@@ -66,11 +66,11 @@ export function useAppController() {
 
   const applyAuthenticatedTheme = useCallback(async () => {
     try {
-      setThemePreference(await frontendBackend.profileAppearance());
+      setAppearance(await frontendBackend.profileAppearance());
     } catch {
       // Authentication and authorization remain usable when preference retrieval is unavailable.
     }
-  }, [setThemePreference]);
+  }, [setAppearance]);
 
   /* R3-A1-A2 entry intent. `entryIntent` is what the user explicitly opened;
    * `intendedRoute` is the specific internal route behind an
@@ -379,8 +379,8 @@ export function useAppController() {
     handleSignOut,
     activationExpiresAt,
     toggleTheme,
-    themePreference,
-    setThemePreference,
+    appearance,
+    setAppearance,
     handleSessionRevoked,
   };
 }

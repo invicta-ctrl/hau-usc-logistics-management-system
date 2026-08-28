@@ -95,7 +95,10 @@ function installLogin(page, { accountId, displayName, roleId, capabilities }) {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ ok: true, appearance: { theme: 'SYSTEM' } }),
+      body: JSON.stringify({
+        ok: true,
+        appearance: { family: 'HAU_INSTITUTIONAL', mode: 'SYSTEM' },
+      }),
       }),
     ),
   ]);
@@ -133,7 +136,7 @@ function profileFixture() {
       credentialVersion: 3,
       updatedAt: '2026-08-24T00:00:00.000Z',
       avatar: { available: false, initials: 'DP', fallback: 'INITIALS', url: '', updatedAt: '' },
-      appearance: { theme: 'SYSTEM' },
+    appearance: { family: 'HAU_INSTITUTIONAL', mode: 'SYSTEM' },
     },
   };
 }
@@ -1287,6 +1290,51 @@ test('P14 profile uses authenticated identity data and exposes the accepted self
     await expect(page.getByRole('heading', { name: heading })).toBeVisible();
   }
   await expect(page.getByRole('button', { name: 'Save contact number' })).toBeVisible();
+});
+
+test('P18 Profile persists theme family separately from Light, Dark, and System mode', async ({ page }) => {
+  await installPublicFeed(page);
+  await installLogin(page, DOL_STAFF);
+  await installProfile(page);
+  const appearanceCommands = [];
+  await page.route('**/api/me/appearance', (route) => {
+    if (route.request().method() !== 'PATCH') return route.fallback();
+    const command = JSON.parse(route.request().postData() ?? '{}');
+    appearanceCommands.push(command);
+    const response = profileFixture();
+    response.profile.appearance = { family: command.family, mode: command.mode };
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(response) });
+  });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await signIn(page, 'dol.staff');
+  await page.evaluate(() => {
+    window.location.hash = '#/route/profile';
+  });
+
+  await expect(page.getByRole('heading', { name: 'DOL Profile' })).toBeVisible();
+  const families = page.getByRole('radiogroup', { name: 'Theme family' });
+  const modes = page.getByRole('radiogroup', { name: 'Display mode' });
+  await expect(families.getByRole('radio')).toHaveCount(6);
+  await expect(modes.getByRole('radio')).toHaveCount(3);
+
+  await families.getByRole('radio', { name: 'Emerald Operations' }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme-family', 'EMERALD_OPERATIONS');
+  await modes.getByRole('radio', { name: 'Dark' }).click();
+  await expect(page.locator('html')).toHaveClass(/\bdark\b/u);
+  await expect(page.locator('html')).toHaveAttribute('data-theme-family', 'EMERALD_OPERATIONS');
+  await expect.poll(() => appearanceCommands.length).toBe(2);
+  expect(appearanceCommands.map(({ family, mode }) => ({ family, mode }))).toEqual([
+    { family: 'EMERALD_OPERATIONS', mode: 'SYSTEM' },
+    { family: 'EMERALD_OPERATIONS', mode: 'DARK' },
+  ]);
+  await expect
+    .poll(() => page.evaluate(() => ({
+      family: localStorage.getItem('hau-usc-theme-family'),
+      mode: localStorage.getItem('hau-usc-theme'),
+    })))
+    .toEqual({ family: 'EMERALD_OPERATIONS', mode: 'dark' });
 });
 
 test('FI-04 profile surfaces a failed profile response and retries only after the user asks', async ({

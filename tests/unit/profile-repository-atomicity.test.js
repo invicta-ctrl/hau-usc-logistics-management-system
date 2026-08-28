@@ -302,18 +302,26 @@ describe('profile repository D1 atomicity', () => {
     const { db, repository } = await context();
     const next = await repository.updateAppearance({
       accountId: ACCOUNT_ID,
-      theme: 'DARK',
+      family: 'MIDNIGHT_LEDGER',
+      mode: 'DARK',
       changedAt: NEXT,
       evidence: evidence('PROFILE_APPEARANCE_UPDATE', 'APPEARANCE-DARK', 'PROFILE_APPEARANCE_UPDATED'),
     });
 
-    expect(next.appearanceTheme).toBe('DARK');
+    expect(next.appearanceMode).toBe('DARK');
+    expect(next.appearanceFamily).toBe('MIDNIGHT_LEDGER');
     await expect(
       db
         .prepare("SELECT value FROM app_metadata WHERE key = 'profile.appearance.' || ?1")
         .bind(ACCOUNT_ID)
         .first(),
     ).resolves.toEqual({ value: 'DARK' });
+    await expect(
+      db
+        .prepare("SELECT value FROM app_metadata WHERE key = 'profile.appearance.family.' || ?1")
+        .bind(ACCOUNT_ID)
+        .first(),
+    ).resolves.toEqual({ value: 'MIDNIGHT_LEDGER' });
     await expect(counts(db)).resolves.toMatchObject({ audits: 1, idempotency: 1 });
   });
 

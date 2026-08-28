@@ -21,32 +21,32 @@ export function AuthShellTopbar({
   onBackToPreview?: () => void;
 }) {
   const localPreview = typeof window !== 'undefined' && window.location.hostname === '127.0.0.1';
-  const commandBackground = dark ? '#40070a' : '#fffaf0';
-  const commandForeground = dark ? '#faeecb' : '#40070a';
-  const commandMuted = dark ? 'rgba(250,238,203,0.35)' : 'rgba(64,7,10,0.42)';
-  const commandSurface = dark ? 'rgba(255,255,255,0.06)' : 'rgba(64,7,10,0.04)';
-  const commandBorder = dark ? 'rgba(242,209,92,0.12)' : 'rgba(64,7,10,0.14)';
-  const navigateBackground = dark ? 'transparent' : '#40070a';
-  const navigateForeground = dark ? commandForeground : '#faeecb';
+  const commandBackground = 'var(--theme-surface-raised)';
+  const commandForeground = 'var(--theme-text)';
+  const commandMuted = 'var(--theme-text-muted)';
+  const commandSurface = 'var(--theme-surface-muted)';
+  const commandBorder = 'var(--theme-border)';
+  const navigateBackground = 'var(--sidebar)';
+  const navigateForeground = 'var(--sidebar-foreground)';
 
   return (
     <header
       className="sticky top-0 z-10"
       style={{
         background: commandBackground,
-        borderBottom: dark ? '1px solid rgba(242,209,92,0.18)' : '1px solid rgba(64,7,10,0.18)',
+        borderBottom: '1px solid var(--theme-border)',
       }}
       aria-label="Workspace command bar"
     >
       <div
         className="flex items-center justify-between gap-2 px-4 py-1"
-        style={{ background: '#40070a', borderBottom: '1px solid rgba(242,209,92,0.12)' }}
+        style={{ background: 'var(--sidebar)', borderBottom: '1px solid var(--sidebar-border)' }}
       >
         <span
           style={{
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: 8,
-            color: 'rgba(250,238,203,0.62)',
+            color: 'color-mix(in oklch, var(--sidebar-foreground) 68%, transparent)',
             letterSpacing: '0.55px',
           }}
         >
@@ -56,7 +56,7 @@ export function AuthShellTopbar({
           style={{
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: 8,
-            color: 'rgba(250,238,203,0.46)',
+            color: 'color-mix(in oklch, var(--sidebar-foreground) 54%, transparent)',
             letterSpacing: '0.45px',
             textAlign: 'right',
           }}
@@ -73,7 +73,7 @@ export function AuthShellTopbar({
         <button
           type="button"
           onClick={onOpenDrawer}
-          className="flex items-center gap-2 rounded-[8px] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c] transition-colors hover:bg-white/8"
+          className="flex items-center gap-2 rounded-[8px] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)] transition-colors hover:bg-white/8"
           style={{ minHeight: 40, background: navigateBackground }}
           aria-label="Open navigation"
           data-navigate-surface={dark ? 'dark-command' : 'light-oxblood'}
@@ -141,11 +141,11 @@ export function AuthShellTopbar({
           <span
             className="hidden sm:inline-flex items-center rounded-full px-3 py-1"
             style={{
-              background: 'rgba(232,185,60,0.14)',
-              border: '1px solid rgba(232,185,60,0.3)',
+              background: 'var(--theme-selection)',
+              border: '1px solid var(--theme-border)',
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: 10,
-              color: '#e8b93c',
+              color: 'var(--theme-text)',
               letterSpacing: '0.5px',
             }}
           >
@@ -157,16 +157,16 @@ export function AuthShellTopbar({
           <button
             type="button"
             onClick={() => navigate('profile')}
-            className="flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+            className="flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
             aria-label={`${presentation.displayName} — go to profile`}
-            style={{ width: 34, height: 34, background: '#e8b93c', flexShrink: 0 }}
+            style={{ width: 34, height: 34, background: 'var(--theme-accent)', flexShrink: 0 }}
           >
             <span
               style={{
                 fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
-                color: '#40070a',
+                color: 'var(--theme-accent-text)',
               }}
             >
               {presentation.initials}
