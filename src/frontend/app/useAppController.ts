@@ -41,7 +41,7 @@ export function projectSession(user: FrontendUser): Session {
 }
 
 export function useAppController() {
-  const [dark, setDark] = useTheme();
+  const [dark, setThemePreference, toggleTheme, themePreference] = useTheme();
   const [route, setRoute] = useState<Route>('landing');
   const [session, setSession] = useState<Session | null>(null);
   const [authState, setAuthState] = useState<AuthGateState>('signed-out');
@@ -63,6 +63,14 @@ export function useAppController() {
       active = false;
     };
   }, []);
+
+  const applyAuthenticatedTheme = useCallback(async () => {
+    try {
+      setThemePreference(await frontendBackend.profileAppearance());
+    } catch {
+      // Authentication and authorization remain usable when preference retrieval is unavailable.
+    }
+  }, [setThemePreference]);
 
   /* R3-A1-A2 entry intent. `entryIntent` is what the user explicitly opened;
    * `intendedRoute` is the specific internal route behind an
@@ -122,12 +130,13 @@ export function useAppController() {
       moveTo('staff-signin');
       void frontendBackend
         .session()
-        .then((current) => {
+        .then(async (current) => {
           if (!current) {
             setAuthState('auth-required');
             return;
           }
           const next = projectSession(current.user);
+          await applyAuthenticatedTheme();
           setSession(next);
           applyDecision(next, intent, target);
         })
@@ -140,7 +149,7 @@ export function useAppController() {
           setAuthState('service-error');
         });
     },
-    [applyDecision, moveTo, session],
+    [applyAuthenticatedTheme, applyDecision, moveTo, session],
   );
 
   /** Open the External Request Center, authenticating first if needed. */
@@ -245,6 +254,7 @@ export function useAppController() {
           return;
         }
         const next = projectSession(result.session.user);
+        await applyAuthenticatedTheme();
         setSession(next);
         setActivationExpiresAt('');
         applyDecision(next, entryIntent, intendedRoute);
@@ -258,7 +268,7 @@ export function useAppController() {
         setAuthState('service-error');
       }
     },
-    [applyDecision, entryIntent, intendedRoute],
+    [applyAuthenticatedTheme, applyDecision, entryIntent, intendedRoute],
   );
 
   const handleActivate = useCallback(
@@ -273,6 +283,7 @@ export function useAppController() {
       try {
         const activated = await frontendBackend.activateStarter(profile, password, confirmPassword);
         const next = projectSession(activated.user);
+        await applyAuthenticatedTheme();
         setSession(next);
         setActivationExpiresAt('');
         applyDecision(next, entryIntent, intendedRoute);
@@ -286,7 +297,7 @@ export function useAppController() {
         setAuthState('service-error');
       }
     },
-    [applyDecision, entryIntent, intendedRoute],
+    [applyAuthenticatedTheme, applyDecision, entryIntent, intendedRoute],
   );
 
   const handlePlaygroundSignIn = useCallback(async () => {
@@ -296,6 +307,7 @@ export function useAppController() {
     try {
       const authenticated = await frontendBackend.playgroundSession();
       const next = projectSession(authenticated.user);
+      await applyAuthenticatedTheme();
       setSession(next);
       setActivationExpiresAt('');
       applyDecision(next, entryIntent, intendedRoute);
@@ -308,7 +320,7 @@ export function useAppController() {
       );
       setAuthState('service-error');
     }
-  }, [applyDecision, entryIntent, intendedRoute]);
+  }, [applyAuthenticatedTheme, applyDecision, entryIntent, intendedRoute]);
 
   const handleSignOut = useCallback(async () => {
     try {
@@ -326,7 +338,20 @@ export function useAppController() {
     }
   }, [moveTo]);
 
-  const toggleTheme = useCallback(() => setDark((value) => !value), [setDark]);
+  const handleSessionRevoked = useCallback(
+    (message: string) => {
+      setSession(null);
+      setAuthState('auth-required');
+      setAuthError(message);
+      setEntryIntent('GENERIC_STAFF_SIGN_IN');
+      setIntendedRoute(null);
+      setDenialReason(null);
+      setRequesterMode(false);
+      setActivationExpiresAt('');
+      moveTo('staff-signin');
+    },
+    [moveTo],
+  );
 
   return {
     dark,
@@ -350,6 +375,9 @@ export function useAppController() {
     handleSignOut,
     activationExpiresAt,
     toggleTheme,
+    themePreference,
+    setThemePreference,
+    handleSessionRevoked,
   };
 }
 

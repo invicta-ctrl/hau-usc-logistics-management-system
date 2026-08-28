@@ -69,6 +69,11 @@ async function context() {
       scope TEXT PRIMARY KEY,
       revision INTEGER NOT NULL,
       updated_at TEXT NOT NULL
+     ) STRICT`,
+    `CREATE TABLE app_metadata (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT NOT NULL
     ) STRICT`,
     `CREATE TABLE audit_log (
       id TEXT PRIMARY KEY,
@@ -291,5 +296,50 @@ describe('profile repository D1 atomicity', () => {
       updated_at: NOW,
     });
     await expect(counts(db)).resolves.toMatchObject({ history: 0, sessions: 1, audits: 0, idempotency: 1 });
+  });
+
+  it('persists account appearance in reset-restored metadata with audit and idempotency evidence', async () => {
+    const { db, repository } = await context();
+    const next = await repository.updateAppearance({
+      accountId: ACCOUNT_ID,
+      theme: 'DARK',
+      changedAt: NEXT,
+      evidence: evidence('PROFILE_APPEARANCE_UPDATE', 'APPEARANCE-DARK', 'PROFILE_APPEARANCE_UPDATED'),
+    });
+
+    expect(next.appearanceTheme).toBe('DARK');
+    await expect(
+      db
+        .prepare("SELECT value FROM app_metadata WHERE key = 'profile.appearance.' || ?1")
+        .bind(ACCOUNT_ID)
+        .first(),
+    ).resolves.toEqual({ value: 'DARK' });
+    await expect(counts(db)).resolves.toMatchObject({ audits: 1, idempotency: 1 });
+  });
+
+  it('updates avatar linkage atomically and rejects a stale profile revision without evidence', async () => {
+    const { db, repository } = await context();
+    const first = await repository.updateAvatar({
+      accountId: ACCOUNT_ID,
+      expectedUpdatedAt: NOW,
+      avatarAssetKey: 'playground-redacted/profile-avatars/synthetic.png',
+      changedAt: NEXT,
+      evidence: evidence('PROFILE_AVATAR_UPLOAD', 'AVATAR-UPLOAD', 'PROFILE_AVATAR_REPLACED'),
+    });
+    expect(first).toMatchObject({
+      avatarAssetKey: 'playground-redacted/profile-avatars/synthetic.png',
+      avatarUpdatedAt: NEXT,
+      updatedAt: NEXT,
+    });
+    await expect(
+      repository.updateAvatar({
+        accountId: ACCOUNT_ID,
+        expectedUpdatedAt: NOW,
+        avatarAssetKey: '',
+        changedAt: '2026-08-03T12:02:00.000Z',
+        evidence: evidence('PROFILE_AVATAR_DELETE', 'AVATAR-STALE', 'PROFILE_AVATAR_REMOVED'),
+      }),
+    ).rejects.toMatchObject({ code: 'REVISION_CONFLICT', status: 409 });
+    await expect(counts(db)).resolves.toMatchObject({ audits: 1, idempotency: 1 });
   });
 });

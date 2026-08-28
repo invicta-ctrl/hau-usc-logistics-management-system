@@ -31,6 +31,7 @@ function profile(overrides = {}) {
     institutionId: 'INST-1',
     avatarAssetKey: '',
     avatarUpdatedAt: null,
+    appearanceTheme: 'SYSTEM',
     passwordCredential: { secret: 'CurrentPassword!123' },
     credentialVersion: 3,
     updatedAt: NOW,
@@ -86,6 +87,21 @@ class FakeProfileRepository {
   async updateContact({ expectedUpdatedAt, mobileNumber, changedAt, evidence }) {
     this.guard(expectedUpdatedAt);
     this.current.mobileNumber = mobileNumber;
+    this.current.updatedAt = changedAt;
+    this.remember(evidence);
+    return this.getProfile(this.current.accountId);
+  }
+
+  async updateAppearance({ theme, evidence }) {
+    this.current.appearanceTheme = theme;
+    this.remember(evidence);
+    return this.getProfile(this.current.accountId);
+  }
+
+  async updateAvatar({ expectedUpdatedAt, avatarAssetKey, changedAt, evidence }) {
+    this.guard(expectedUpdatedAt);
+    this.current.avatarAssetKey = avatarAssetKey;
+    this.current.avatarUpdatedAt = changedAt;
     this.current.updatedAt = changedAt;
     this.remember(evidence);
     return this.getProfile(this.current.accountId);
@@ -153,6 +169,7 @@ describe('v0.7.2 self-profile service', () => {
         username: 'synthetic.user',
         revision: NOW,
         avatar: { available: false, fallback: 'INITIALS' },
+        appearance: { theme: 'SYSTEM' },
       },
     });
     const privateDto = (await service.get({ actor: ACTOR })).profile;
@@ -293,12 +310,107 @@ describe('v0.7.2 self-profile service', () => {
     ).rejects.toMatchObject({ code: 'IDENTITY_CORRECTION_UNAVAILABLE', status: 503 });
   });
 
-  it('returns a truthful avatar-unavailable fallback', async () => {
-    const service = makeService(new FakeProfileRepository());
-    await expect(service.avatar({ actor: ACTOR })).resolves.toMatchObject({
-      ok: false,
-      available: false,
-      code: 'PROFILE_AVATAR_UNAVAILABLE',
+  it('persists an audited three-state appearance preference', async () => {
+    const repository = new FakeProfileRepository();
+    const service = makeService(repository);
+    await expect(
+      service.updateAppearance({
+        actor: ACTOR,
+        command: { theme: 'dark', clientRequestId: 'appearance-dark-0001' },
+      }),
+    ).resolves.toMatchObject({
+      changed: true,
+      appearance: { theme: 'DARK' },
+      profile: { appearance: { theme: 'DARK' } },
     });
+    expect(repository.audits.at(-1)).toMatchObject({
+      action: 'PROFILE_APPEARANCE_UPDATED',
+      before: { theme: 'SYSTEM' },
+      after: { theme: 'DARK' },
+    });
+  });
+
+  it('fails closed when profile picture storage is unavailable', async () => {
+    const service = makeService(new FakeProfileRepository());
+    await expect(service.avatar({ actor: ACTOR })).rejects.toMatchObject({
+      code: 'PROFILE_AVATAR_UNAVAILABLE',
+      status: 404,
+    });
+  });
+
+  it('validates, stores, reads, replaces, and removes Playground profile pictures without sensitive metadata', async () => {
+    const repository = new FakeProfileRepository();
+    const objects = new Map();
+    const avatarBucket = {
+      async put(key, bytes, options) {
+        objects.set(key, { bytes, options });
+      },
+      async get(key) {
+        const object = objects.get(key);
+        return object
+          ? { body: object.bytes, httpMetadata: object.options.httpMetadata, httpEtag: 'avatar-etag' }
+          : null;
+      },
+      async delete(key) {
+        objects.delete(key);
+      },
+    };
+    const service = makeService(repository, { avatarBucket });
+    const bytes = Uint8Array.from([
+      0x89,
+      0x50,
+      0x4e,
+      0x47,
+      0x0d,
+      0x0a,
+      0x1a,
+      0x0a,
+      ...Array.from({ length: 40 }, () => 0),
+    ]);
+    const base64 = btoa(String.fromCharCode(...bytes));
+
+    const uploaded = await service.uploadAvatar({
+      actor: ACTOR,
+      command: mutation({
+        contentType: 'image/png',
+        base64,
+        clientRequestId: 'avatar-upload-0001',
+      }),
+    });
+    expect(uploaded).toMatchObject({ profile: { avatar: { available: true, url: '/api/me/avatar' } } });
+    expect(objects.size).toBe(1);
+    expect([...objects.values()][0].options.customMetadata).toEqual({ purpose: 'playground-profile-avatar' });
+    expect(repository.audits.at(-1).after).toEqual({
+      avatarAvailable: true,
+      contentType: 'image/png',
+      byteSize: bytes.length,
+    });
+
+    const response = await service.avatar({ actor: ACTOR });
+    expect(response.headers.get('content-type')).toBe('image/png');
+    expect(response.headers.get('cache-control')).toBe('private, no-store');
+
+    await expect(
+      service.uploadAvatar({
+        actor: ACTOR,
+        command: {
+          expectedRevision: repository.current.updatedAt,
+          contentType: 'image/jpeg',
+          base64,
+          clientRequestId: 'avatar-invalid-0001',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'PROFILE_AVATAR_SIGNATURE_INVALID' });
+
+    await expect(
+      service.deleteAvatar({
+        actor: ACTOR,
+        command: {
+          expectedRevision: repository.current.updatedAt,
+          clientRequestId: 'avatar-delete-0001',
+        },
+      }),
+    ).resolves.toMatchObject({ profile: { avatar: { available: false } } });
+    expect(objects.size).toBe(0);
   });
 });

@@ -5,6 +5,13 @@ import { ApiError } from '../d1/operational-service.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 const MOBILE_PATTERN = /^\+?[0-9][0-9 ()-]{7,19}$/u;
+const APPEARANCE_THEMES = Object.freeze(['LIGHT', 'DARK', 'SYSTEM']);
+const AVATAR_CONTENT_TYPES = Object.freeze({
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+});
+const MAX_AVATAR_BYTES = 750_000;
 
 function fail(code, message, { status = 422, details } = {}) {
   throw new ApiError(code, message, { status, details });
@@ -172,7 +179,11 @@ function safeAccessSummary(actor, profile) {
   };
 }
 
-function profileDto(actor, profile) {
+function profileDto(actor, profile, { avatarEnabled = false } = {}) {
+  const avatarAvailable = avatarEnabled && Boolean(profile.avatarAssetKey);
+  const appearanceTheme = APPEARANCE_THEMES.includes(profile.appearanceTheme)
+    ? profile.appearanceTheme
+    : 'SYSTEM';
   return {
     displayName: profile.fullName,
     legalName: profile.fullName,
@@ -194,11 +205,44 @@ function profileDto(actor, profile) {
     credentialVersion: profile.credentialVersion,
     updatedAt: profile.updatedAt,
     avatar: {
-      available: false,
+      available: avatarAvailable,
       initials: initials(profile.fullName),
       fallback: 'INITIALS',
+      url: avatarAvailable ? '/api/me/avatar' : '',
+      updatedAt: avatarAvailable ? (profile.avatarUpdatedAt ?? '') : '',
     },
+    appearance: { theme: appearanceTheme },
   };
+}
+
+function avatarBytes(command) {
+  const contentType = String(command.contentType ?? '')
+    .trim()
+    .toLowerCase();
+  const extension = AVATAR_CONTENT_TYPES[contentType];
+  if (!extension)
+    fail('PROFILE_AVATAR_TYPE_INVALID', 'Use a JPEG, PNG, or WebP profile picture.', { status: 415 });
+  let bytes;
+  try {
+    const binary = atob(String(command.base64 ?? ''));
+    bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  } catch {
+    fail('PROFILE_AVATAR_INVALID', 'The profile picture could not be read.');
+  }
+  if (bytes.length < 32 || bytes.length > MAX_AVATAR_BYTES) {
+    fail('PROFILE_AVATAR_SIZE_INVALID', 'Profile pictures must be no larger than 750 KB.', { status: 413 });
+  }
+  const signatureMatches =
+    (contentType === 'image/jpeg' && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) ||
+    (contentType === 'image/png' &&
+      [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((value, index) => bytes[index] === value)) ||
+    (contentType === 'image/webp' &&
+      String.fromCharCode(...bytes.slice(0, 4)) === 'RIFF' &&
+      String.fromCharCode(...bytes.slice(8, 12)) === 'WEBP');
+  if (!signatureMatches) {
+    fail('PROFILE_AVATAR_SIGNATURE_INVALID', 'The file contents do not match the selected image type.');
+  }
+  return { bytes, contentType, extension };
 }
 
 function requireProfile(repository, actor) {
@@ -246,17 +290,26 @@ export function createProfileService({
   repository,
   passwordKdf,
   protectIdentityRequest,
+  avatarBucket,
   clock = Date,
   createId = () => globalThis.crypto.randomUUID(),
 } = {}) {
   if (!repository) throw new Error('Profile repository is required.');
   if (!passwordKdf) throw new Error('Profile password KDF is required.');
   const nowIso = () => new Date(clock.now()).toISOString();
+  const dto = (actor, profile) => profileDto(actor, profile, { avatarEnabled: Boolean(avatarBucket) });
 
   async function get(context = {}) {
     const actor = assertSelf(context);
     const profile = await requireProfile(repository, actor);
-    return { ok: true, profile: profileDto(actor, profile) };
+    return { ok: true, profile: dto(actor, profile) };
+  }
+
+  async function getAppearance(context = {}) {
+    const actor = assertSelf(context);
+    const profile = await requireProfile(repository, actor);
+    const theme = APPEARANCE_THEMES.includes(profile.appearanceTheme) ? profile.appearanceTheme : 'SYSTEM';
+    return { ok: true, appearance: { theme } };
   }
 
   async function updateContact({ account, actor, command = {}, correlationId = '' } = {}) {
@@ -275,7 +328,7 @@ export function createProfileService({
       updatedAt: changedAt,
       replayed: false,
     };
-    result.profile = profileDto(currentActor, { ...profile, mobileNumber, updatedAt: changedAt });
+    result.profile = dto(currentActor, { ...profile, mobileNumber, updatedAt: changedAt });
     const evidence = {
       audit: genericAudit({
         action: 'PROFILE_CONTACT_UPDATED',
@@ -305,7 +358,7 @@ export function createProfileService({
     } catch (error) {
       mapRepositoryError(error);
     }
-    if (refreshed) result.profile = profileDto(currentActor, refreshed);
+    if (refreshed) result.profile = dto(currentActor, refreshed);
     return result;
   }
 
@@ -338,7 +391,7 @@ export function createProfileService({
       updatedAt: changedAt,
       replayed: false,
     };
-    result.profile = profileDto(currentActor, { ...profile, username, updatedAt: changedAt });
+    result.profile = dto(currentActor, { ...profile, username, updatedAt: changedAt });
     const evidence = {
       audit: genericAudit({
         action: 'PROFILE_USERNAME_CHANGED',
@@ -379,7 +432,7 @@ export function createProfileService({
       }
       throw error;
     }
-    if (refreshed) result.profile = profileDto(currentActor, refreshed);
+    if (refreshed) result.profile = dto(currentActor, refreshed);
     return result;
   }
 
@@ -424,7 +477,7 @@ export function createProfileService({
       updatedAt: changedAt,
       replayed: false,
     };
-    result.profile = profileDto(currentActor, {
+    result.profile = dto(currentActor, {
       ...profile,
       credentialVersion: result.credentialVersion,
       passwordCredential: null,
@@ -461,7 +514,7 @@ export function createProfileService({
     } catch (error) {
       mapRepositoryError(error);
     }
-    if (refreshed) result.profile = profileDto(currentActor, refreshed);
+    if (refreshed) result.profile = dto(currentActor, refreshed);
     return result;
   }
 
@@ -573,19 +626,227 @@ export function createProfileService({
     return result;
   }
 
-  async function avatar(context = {}) {
-    assertSelf(context);
-    return {
-      ok: false,
-      available: false,
-      code: 'PROFILE_AVATAR_UNAVAILABLE',
-      message: 'Avatar storage is unavailable; initials remain the truthful fallback.',
+  async function updateAppearance({ account, actor, command = {}, correlationId = '' } = {}) {
+    const currentActor = assertSelf({ account, actor });
+    const replay = await mutationReplay(repository, 'PROFILE_APPEARANCE_UPDATE', currentActor, command);
+    if (replay.result) return { ...replay.result, replayed: true };
+    const profile = await requireProfile(repository, currentActor);
+    const theme = String(command.theme ?? '')
+      .trim()
+      .toUpperCase();
+    if (!APPEARANCE_THEMES.includes(theme)) {
+      fail('PROFILE_APPEARANCE_INVALID', 'Choose Light, Dark, or System appearance.', {
+        details: { field: 'theme' },
+      });
+    }
+    const changedAt = nowIso();
+    const result = {
+      ok: true,
+      changed: theme !== profile.appearanceTheme,
+      replayed: false,
+      appearance: { theme },
+      profile: dto(currentActor, { ...profile, appearanceTheme: theme }),
     };
+    const evidence = {
+      audit: genericAudit({
+        action: 'PROFILE_APPEARANCE_UPDATED',
+        actor: currentActor,
+        changedAt,
+        correlationId: String(correlationId || `PROFILE_${createId()}`),
+        before: {
+          theme: APPEARANCE_THEMES.includes(profile.appearanceTheme) ? profile.appearanceTheme : 'SYSTEM',
+        },
+        after: { theme },
+      }),
+      idempotency: genericIdempotency({
+        scope: 'PROFILE_APPEARANCE_UPDATE',
+        replay,
+        actor: currentActor,
+        result,
+        changedAt,
+      }),
+    };
+    const refreshed = await repository.updateAppearance({
+      accountId: currentActor.id,
+      theme,
+      changedAt,
+      evidence,
+    });
+    if (refreshed) result.profile = dto(currentActor, refreshed);
+    return result;
+  }
+
+  function requireAvatarBucket() {
+    if (
+      !avatarBucket ||
+      typeof avatarBucket.get !== 'function' ||
+      typeof avatarBucket.put !== 'function' ||
+      typeof avatarBucket.delete !== 'function'
+    ) {
+      fail('PROFILE_AVATAR_UNAVAILABLE', 'Profile picture storage is unavailable in this environment.', {
+        status: 404,
+      });
+    }
+    return avatarBucket;
+  }
+
+  async function avatar(context = {}) {
+    const currentActor = assertSelf(context);
+    const bucket = requireAvatarBucket();
+    const profile = await requireProfile(repository, currentActor);
+    if (!profile.avatarAssetKey)
+      fail('PROFILE_AVATAR_NOT_FOUND', 'No profile picture is available.', { status: 404 });
+    const object = await bucket.get(profile.avatarAssetKey);
+    if (!object) fail('PROFILE_AVATAR_NOT_FOUND', 'No profile picture is available.', { status: 404 });
+    const contentType = String(object.httpMetadata?.contentType ?? '').toLowerCase();
+    if (!AVATAR_CONTENT_TYPES[contentType]) {
+      fail('PROFILE_AVATAR_INVALID', 'The stored profile picture is unavailable.', { status: 404 });
+    }
+    const headers = new Headers({
+      'cache-control': 'private, no-store',
+      'content-type': contentType,
+      'content-security-policy': "default-src 'none'",
+      'x-content-type-options': 'nosniff',
+    });
+    if (object.httpEtag) headers.set('etag', object.httpEtag);
+    return new Response(object.body, { headers });
+  }
+
+  async function uploadAvatar({ account, actor, command = {}, correlationId = '' } = {}) {
+    const currentActor = assertSelf({ account, actor });
+    const bucket = requireAvatarBucket();
+    const replay = await mutationReplay(repository, 'PROFILE_AVATAR_UPLOAD', currentActor, command);
+    if (replay.result) return { ...replay.result, replayed: true };
+    const profile = await requireProfile(repository, currentActor);
+    const expectedUpdatedAt = expectedRevision(command, profile);
+    const media = avatarBytes(command);
+    const objectKey = `playground-redacted/profile-avatars/${createId()}.${media.extension}`;
+    const changedAt = nextTimestamp(clock, profile.updatedAt);
+    const result = {
+      ok: true,
+      changed: true,
+      replayed: false,
+      cleanupPending: false,
+      profile: dto(currentActor, {
+        ...profile,
+        avatarAssetKey: objectKey,
+        avatarUpdatedAt: changedAt,
+        updatedAt: changedAt,
+      }),
+    };
+    const evidence = {
+      audit: genericAudit({
+        action: 'PROFILE_AVATAR_REPLACED',
+        actor: currentActor,
+        changedAt,
+        correlationId: String(correlationId || `PROFILE_${createId()}`),
+        before: { avatarAvailable: Boolean(profile.avatarAssetKey) },
+        after: { avatarAvailable: true, contentType: media.contentType, byteSize: media.bytes.length },
+      }),
+      idempotency: genericIdempotency({
+        scope: 'PROFILE_AVATAR_UPLOAD',
+        replay,
+        actor: currentActor,
+        result,
+        changedAt,
+      }),
+    };
+    await bucket.put(objectKey, media.bytes, {
+      httpMetadata: { contentType: media.contentType },
+      customMetadata: { purpose: 'playground-profile-avatar' },
+    });
+    let refreshed;
+    try {
+      refreshed = await repository.updateAvatar({
+        accountId: currentActor.id,
+        expectedUpdatedAt,
+        avatarAssetKey: objectKey,
+        changedAt,
+        evidence,
+      });
+    } catch (error) {
+      try {
+        await bucket.delete(objectKey);
+      } catch {
+        // Preserve the authoritative D1 error; reset reconciliation remains the fallback cleanup.
+      }
+      mapRepositoryError(error);
+    }
+    if (profile.avatarAssetKey && profile.avatarAssetKey !== objectKey) {
+      try {
+        await bucket.delete(profile.avatarAssetKey);
+      } catch {
+        result.cleanupPending = true;
+      }
+    }
+    if (refreshed) result.profile = dto(currentActor, refreshed);
+    return result;
+  }
+
+  async function deleteAvatar({ account, actor, command = {}, correlationId = '' } = {}) {
+    const currentActor = assertSelf({ account, actor });
+    const bucket = requireAvatarBucket();
+    const replay = await mutationReplay(repository, 'PROFILE_AVATAR_DELETE', currentActor, command);
+    if (replay.result) return { ...replay.result, replayed: true };
+    const profile = await requireProfile(repository, currentActor);
+    const expectedUpdatedAt = expectedRevision(command, profile);
+    const changedAt = nextTimestamp(clock, profile.updatedAt);
+    const result = {
+      ok: true,
+      changed: Boolean(profile.avatarAssetKey),
+      replayed: false,
+      cleanupPending: false,
+      profile: dto(currentActor, {
+        ...profile,
+        avatarAssetKey: '',
+        avatarUpdatedAt: changedAt,
+        updatedAt: changedAt,
+      }),
+    };
+    const evidence = {
+      audit: genericAudit({
+        action: 'PROFILE_AVATAR_REMOVED',
+        actor: currentActor,
+        changedAt,
+        correlationId: String(correlationId || `PROFILE_${createId()}`),
+        before: { avatarAvailable: Boolean(profile.avatarAssetKey) },
+        after: { avatarAvailable: false },
+      }),
+      idempotency: genericIdempotency({
+        scope: 'PROFILE_AVATAR_DELETE',
+        replay,
+        actor: currentActor,
+        result,
+        changedAt,
+      }),
+    };
+    let refreshed;
+    try {
+      refreshed = await repository.updateAvatar({
+        accountId: currentActor.id,
+        expectedUpdatedAt,
+        avatarAssetKey: '',
+        changedAt,
+        evidence,
+      });
+    } catch (error) {
+      mapRepositoryError(error);
+    }
+    if (profile.avatarAssetKey) {
+      try {
+        await bucket.delete(profile.avatarAssetKey);
+      } catch {
+        result.cleanupPending = true;
+      }
+    }
+    if (refreshed) result.profile = dto(currentActor, refreshed);
+    return result;
   }
 
   return Object.freeze({
     get,
     getProfile: get,
+    getAppearance,
     updateContact,
     update: updateContact,
     changeUsername,
@@ -594,8 +855,9 @@ export function createProfileService({
     passwordChange: changePassword,
     requestIdentityCorrection,
     identityCorrectionRequest: requestIdentityCorrection,
+    updateAppearance,
     avatar,
-    uploadAvatar: avatar,
-    deleteAvatar: avatar,
+    uploadAvatar,
+    deleteAvatar,
   });
 }

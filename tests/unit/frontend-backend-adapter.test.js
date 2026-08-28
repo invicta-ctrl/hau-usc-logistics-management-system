@@ -53,7 +53,8 @@ function profilePayload() {
       revision: '2026-08-24T00:00:00.000Z',
       credentialVersion: 3,
       updatedAt: '2026-08-24T00:00:00.000Z',
-      avatar: { available: false, initials: 'DP', fallback: 'INITIALS' },
+      avatar: { available: false, initials: 'DP', fallback: 'INITIALS', url: '', updatedAt: '' },
+      appearance: { theme: 'SYSTEM' },
     },
   };
 }
@@ -290,13 +291,101 @@ describe('Figma frontend backend adapter', () => {
           roleLabel: 'DOL Staff',
           capabilities: ['view.internal', 'view.inventory'],
         }),
-        avatar: { available: false, initials: 'DP', fallback: 'INITIALS' },
+        avatar: { available: false, initials: 'DP', fallback: 'INITIALS', url: '', updatedAt: '' },
+        appearance: { theme: 'SYSTEM' },
       }),
     );
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/me/profile',
       expect.objectContaining({ method: 'GET', credentials: 'include' }),
     );
+  });
+
+  it('uses CSRF-protected profile mutation routes and narrowly projects their results', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        response({
+          state: 'AUTHENTICATED',
+          csrfToken: 'csrf-profile',
+          user: {
+            accountId: 'ACCOUNT-PROFILE',
+            displayName: 'DOL Profile',
+            authorization: {
+              active: true,
+              mappingStatus: 'MAPPED',
+              roleId: 'DOL_STAFF',
+              capabilities: ['view.internal'],
+            },
+          },
+        }),
+      )
+      .mockResolvedValueOnce(response({ appearance: { theme: 'DARK' } }))
+      .mockResolvedValueOnce(response(profilePayload()))
+      .mockResolvedValueOnce(response(profilePayload()))
+      .mockResolvedValueOnce(response(profilePayload()))
+      .mockResolvedValueOnce(response(profilePayload()))
+      .mockResolvedValueOnce(response({ username: 'new.user', sessionsRevoked: true }))
+      .mockResolvedValueOnce(response({ credentialVersion: 4, sessionsRevoked: true }))
+      .mockResolvedValueOnce(response({ correction: { state: 'PENDING' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    const backend = new FrontendBackend();
+    await backend.session();
+
+    await expect(backend.profileAppearance()).resolves.toBe('DARK');
+    await backend.updateProfileContact({
+      contactNumber: '+639189876543',
+      expectedRevision: 'rev-1',
+      clientRequestId: 'contact-0001',
+    });
+    await backend.updateProfileAppearance({ theme: 'SYSTEM', clientRequestId: 'appearance-0001' });
+    await backend.uploadProfileAvatar({
+      contentType: 'image/png',
+      base64: 'opaque-base64',
+      expectedRevision: 'rev-1',
+      clientRequestId: 'avatar-0001',
+    });
+    await backend.deleteProfileAvatar({ expectedRevision: 'rev-2', clientRequestId: 'avatar-delete-0001' });
+    await expect(
+      backend.changeProfileUsername({
+        username: 'new.user',
+        currentPassword: 'current-secret',
+        expectedRevision: 'rev-2',
+        clientRequestId: 'username-0001',
+      }),
+    ).resolves.toEqual({ username: 'new.user', sessionsRevoked: true });
+    await expect(
+      backend.changeProfilePassword({
+        currentPassword: 'current-secret',
+        newPassword: 'new-secret',
+        confirmPassword: 'new-secret',
+        expectedRevision: 'rev-2',
+        clientRequestId: 'password-0001',
+      }),
+    ).resolves.toEqual({ credentialVersion: 4, sessionsRevoked: true });
+    await expect(
+      backend.requestProfileIdentityCorrection({
+        legalName: 'Corrected Name',
+        contactNumber: '+639189876543',
+        email: 'corrected@example.test',
+        reason: 'Correction requested',
+        clientRequestId: 'correction-0001',
+      }),
+    ).resolves.toEqual({ state: 'PENDING' });
+
+    const mutationCalls = fetchMock.mock.calls.slice(2);
+    expect(mutationCalls.map(([path]) => path)).toEqual([
+      '/api/me/profile',
+      '/api/me/appearance',
+      '/api/me/avatar',
+      '/api/me/avatar',
+      '/api/me/username/change',
+      '/api/me/password/change',
+      '/api/me/identity-correction-request',
+    ]);
+    for (const [, init] of mutationCalls) {
+      expect(init.headers['x-csrf-token']).toBe('csrf-profile');
+    }
   });
 
   it('fails closed for incomplete and failed profile responses', async () => {

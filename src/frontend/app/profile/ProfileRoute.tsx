@@ -1,64 +1,31 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { User } from 'lucide-react';
-import { ThemeToggle } from '../brand/ThemeToggle';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { Camera, ShieldCheck, Trash2, User } from 'lucide-react';
+import type { ThemePreference } from '../hooks/useTheme';
 import { FrontendApiError, frontendBackend, type FrontendProfile } from '../../integration/backend';
 
-type Field = { label: string; value: string };
+type Feedback = { tone: 'success' | 'error'; message: string } | null;
 
-function unavailable(value: string) {
-  return value || 'Not available';
+const fieldClass =
+  'w-full rounded-[8px] border px-3 py-2.5 text-[13px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]';
+const buttonClass =
+  'rounded-[8px] px-4 py-2.5 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]';
+
+function requestId(prefix: string) {
+  return `${prefix}-${crypto.randomUUID()}`;
 }
 
-function DetailGrid({ fields }: { fields: Field[] }) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2">
-      {fields.map((field, index) => (
-        <div
-          key={field.label}
-          className="px-5 py-4"
-          style={{
-            borderTop: index >= 2 ? '1px solid var(--border)' : 'none',
-            borderLeft: index % 2 === 1 ? '1px solid var(--border)' : 'none',
-          }}
-        >
-          <p
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 10,
-              color: 'var(--muted-foreground)',
-              letterSpacing: '0.5px',
-              textTransform: 'uppercase',
-              marginBottom: 4,
-            }}
-          >
-            {field.label}
-          </p>
-          <p
-            style={{
-              fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-              fontSize: 13,
-              color: 'var(--foreground)',
-              letterSpacing: -0.15,
-              overflowWrap: 'anywhere',
-            }}
-          >
-            {unavailable(field.value)}
-          </p>
-        </div>
-      ))}
-    </div>
-  );
+function messageFrom(reason: unknown, fallback: string) {
+  return reason instanceof FrontendApiError ? reason.message : fallback;
 }
 
-function ProfileSection({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  children: ReactNode;
-}) {
+async function fileBase64(file: File) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+function Section({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
     <section
       className="rounded-[12px] overflow-hidden"
@@ -68,21 +35,20 @@ function ProfileSection({
         <h2
           style={{
             fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-            fontWeight: 600,
-            fontSize: 14,
+            fontWeight: 650,
+            fontSize: 15,
             color: 'var(--foreground)',
-            letterSpacing: -0.2,
           }}
         >
           {title}
         </h2>
         <p
+          className="mt-1"
           style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 10,
+            fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+            fontSize: 12,
+            lineHeight: '18px',
             color: 'var(--muted-foreground)',
-            letterSpacing: '0.4px',
-            marginTop: 2,
           }}
         >
           {subtitle}
@@ -93,64 +59,62 @@ function ProfileSection({
   );
 }
 
+function ReadOnlyGrid({ fields }: { fields: Array<{ label: string; value: string }> }) {
+  return (
+    <dl className="grid grid-cols-1 sm:grid-cols-2">
+      {fields.map((field) => (
+        <div key={field.label} className="px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+          <dt
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 9,
+              letterSpacing: '0.7px',
+              textTransform: 'uppercase',
+              color: 'var(--muted-foreground)',
+            }}
+          >
+            {field.label}
+          </dt>
+          <dd
+            className="mt-1"
+            style={{
+              fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+              fontSize: 13,
+              overflowWrap: 'anywhere',
+              color: 'var(--foreground)',
+            }}
+          >
+            {field.value || 'Not available'}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function FeedbackLine({ value }: { value: Feedback }) {
+  if (!value) return null;
+  return (
+    <p
+      role={value.tone === 'error' ? 'alert' : 'status'}
+      className="rounded-[7px] px-3 py-2 text-[12px]"
+      style={{
+        background: value.tone === 'error' ? 'rgba(180,35,24,0.1)' : 'rgba(31,107,65,0.1)',
+        color: value.tone === 'error' ? 'var(--destructive)' : darkGreen,
+      }}
+    >
+      {value.message}
+    </p>
+  );
+}
+
+const darkGreen = '#1f6b41';
+
 function ProfileLoading() {
   return (
-    <div
-      className="max-w-[1180px] mx-auto px-5 md:px-8 py-8"
-      aria-busy="true"
-      aria-label="Loading account profile"
-    >
-      <p
-        className="mb-6"
-        style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 10,
-          color: 'var(--muted-foreground)',
-          letterSpacing: '0.8px',
-          textTransform: 'uppercase',
-        }}
-      >
-        Account / Profile
-      </p>
-      <div
-        className="rounded-[14px] p-6 flex items-center gap-5"
-        style={{ background: '#40070a', border: '1px solid rgba(242,209,92,0.22)' }}
-      >
-        <div
-          className="rounded-full animate-pulse"
-          style={{ width: 72, height: 72, background: 'rgba(232,185,60,0.24)' }}
-        />
-        <div className="flex flex-col gap-3 w-full max-w-[340px]">
-          <div
-            className="rounded animate-pulse"
-            style={{ height: 20, background: 'rgba(250,238,203,0.18)' }}
-          />
-          <div
-            className="rounded animate-pulse"
-            style={{ height: 12, width: '68%', background: 'rgba(250,238,203,0.12)' }}
-          />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        {[0, 1].map((card) => (
-          <div
-            key={card}
-            className="rounded-[12px] p-5 animate-pulse"
-            style={{ minHeight: 188, background: 'var(--card)', border: '1px solid var(--border)' }}
-          />
-        ))}
-      </div>
-      <p
-        className="mt-5"
-        role="status"
-        style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 11,
-          color: 'var(--muted-foreground)',
-          letterSpacing: '0.4px',
-        }}
-      >
-        Loading account profile…
+    <div className="max-w-[1080px] mx-auto px-5 md:px-8 py-10" aria-busy="true">
+      <p role="status" style={{ color: 'var(--muted-foreground)' }}>
+        Loading your profile…
       </p>
     </div>
   );
@@ -158,545 +122,645 @@ function ProfileLoading() {
 
 export function ProfileRoute({
   dark,
-  onToggle,
   previewProfile,
+  themePreference = 'SYSTEM',
+  onApplyTheme,
+  onSessionRevoked,
 }: {
   dark: boolean;
-  onToggle: () => void;
+  onToggle?: () => void;
   previewProfile?: FrontendProfile;
+  themePreference?: ThemePreference;
+  onApplyTheme?: (theme: ThemePreference) => void;
+  onSessionRevoked?: (message: string) => void;
 }) {
+  const preview = Boolean(previewProfile);
   const [profile, setProfile] = useState<FrontendProfile | null>(previewProfile ?? null);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!previewProfile);
+  const [loadError, setLoadError] = useState('');
   const [retryKey, setRetryKey] = useState(0);
-  const requestRef = useRef<{ retryKey: number; promise: Promise<FrontendProfile> } | null>(null);
+  const [busy, setBusy] = useState('');
+  const [contact, setContact] = useState(previewProfile?.contactNumber ?? '');
+  const [username, setUsername] = useState(previewProfile?.username ?? '');
+  const [usernamePassword, setUsernamePassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [feedback, setFeedback] = useState<Record<string, Feedback>>({});
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const [correction, setCorrection] = useState({
+    legalName: previewProfile?.legalName ?? '',
+    contactNumber: previewProfile?.contactNumber ?? '',
+    email: previewProfile?.verifiedEmail ?? '',
+    reason: '',
+  });
+  const uploadRef = useRef<HTMLInputElement>(null);
+  const profileRequestRef = useRef<{ retryKey: number; promise: Promise<FrontendProfile> } | null>(null);
 
   useEffect(() => {
     if (previewProfile) {
       setProfile(previewProfile);
-      setError(null);
       setLoading(false);
+      setLoadError('');
       return;
     }
     let active = true;
     setLoading(true);
-    setError(null);
-    setProfile(null);
-
-    if (!requestRef.current || requestRef.current.retryKey !== retryKey) {
-      requestRef.current = { retryKey, promise: frontendBackend.profile() };
+    setLoadError('');
+    if (!profileRequestRef.current || profileRequestRef.current.retryKey !== retryKey) {
+      profileRequestRef.current = { retryKey, promise: frontendBackend.profile() };
     }
-
-    void requestRef.current.promise
+    void profileRequestRef.current.promise
       .then((next) => {
-        if (active) setProfile(next);
+        if (!active) return;
+        setProfile(next);
+        setAvatarFailed(false);
+        setContact(next.contactNumber);
+        setUsername(next.username);
+        setCorrection({
+          legalName: next.legalName,
+          contactNumber: next.contactNumber,
+          email: next.verifiedEmail,
+          reason: '',
+        });
+        onApplyTheme?.(next.appearance.theme);
       })
       .catch((reason: unknown) => {
-        if (active) {
-          setError(
-            reason instanceof FrontendApiError
-              ? reason.message
-              : 'The account profile is temporarily unavailable.',
-          );
-        }
+        if (active) setLoadError(messageFrom(reason, 'Your profile is temporarily unavailable.'));
       })
       .finally(() => {
         if (active) setLoading(false);
       });
-
     return () => {
       active = false;
     };
-  }, [previewProfile, retryKey]);
+  }, [onApplyTheme, previewProfile, retryKey]);
+
+  const updateProfile = (next: FrontendProfile) => {
+    setProfile(next);
+    setAvatarFailed(false);
+    setContact(next.contactNumber);
+    setUsername(next.username);
+  };
+
+  const run = async (key: string, action: () => Promise<void>, fallback: string) => {
+    if (preview) return;
+    setBusy(key);
+    setFeedback((state) => ({ ...state, [key]: null }));
+    try {
+      await action();
+    } catch (reason) {
+      setFeedback((state) => ({
+        ...state,
+        [key]: { tone: 'error', message: messageFrom(reason, fallback) },
+      }));
+    } finally {
+      setBusy('');
+    }
+  };
 
   if (loading) return <ProfileLoading />;
-
-  if (error || !profile) {
+  if (loadError || !profile) {
     return (
-      <div className="max-w-[760px] mx-auto px-5 md:px-8 py-12">
-        <section
-          className="rounded-[12px] p-6"
-          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
-          aria-labelledby="profile-unavailable-heading"
-        >
-          <p
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 10,
-              color: 'var(--muted-foreground)',
-              letterSpacing: '0.8px',
-              textTransform: 'uppercase',
-            }}
-          >
-            Account / Profile
-          </p>
-          <h1
-            id="profile-unavailable-heading"
-            className="mt-3"
-            style={{
-              fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
-              fontWeight: 700,
-              fontSize: 'clamp(24px, 3vw, 32px)',
-              color: 'var(--foreground)',
-              letterSpacing: '-0.8px',
-            }}
-          >
-            Profile unavailable
-          </h1>
-          <p
-            role="alert"
-            className="mt-3"
-            style={{
-              fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-              fontSize: 14,
-              color: 'var(--muted-foreground)',
-              lineHeight: '22px',
-            }}
-          >
-            {error ?? 'The account profile response was incomplete.'}
-          </p>
-          <button
-            type="button"
-            onClick={() => setRetryKey((value) => value + 1)}
-            disabled={Boolean(previewProfile)}
-            className="mt-6 rounded-[8px] px-4 py-2 text-[13px] font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
-            style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
-          >
-            {previewProfile ? 'Preview data only' : 'Retry profile'}
-          </button>
-        </section>
+      <div className="max-w-[720px] mx-auto px-5 md:px-8 py-12">
+        <div role="alert">
+          <Section title="Profile unavailable" subtitle={loadError || 'The profile response was incomplete.'}>
+            <div className="p-5">
+              <button
+                type="button"
+                className={buttonClass}
+                style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
+                onClick={() => setRetryKey((value) => value + 1)}
+              >
+                Retry profile
+              </button>
+            </div>
+          </Section>
+        </div>
       </div>
     );
   }
 
-  const personalFields: Field[] = [
-    { label: 'Display name', value: profile.displayName },
-    { label: 'Legal name', value: profile.legalName },
-    { label: 'Verified email', value: profile.verifiedEmail || 'Not verified' },
-    { label: 'Username', value: profile.username },
-    { label: 'Contact number', value: profile.contactNumber },
-    { label: 'Account code', value: profile.accountCode },
-  ];
-  const affiliationFields: Field[] = [
-    { label: 'Institution', value: profile.affiliation.institutionId },
-    {
-      label: 'Department',
-      value: profile.affiliation.departmentDisplayName || profile.affiliation.departmentId,
-    },
-    { label: 'Course', value: profile.affiliation.courseId },
-    { label: 'Year level', value: profile.affiliation.yearLevel },
-  ];
+  const avatarSource =
+    profile.avatar.available && !avatarFailed
+      ? `${profile.avatar.url}?v=${encodeURIComponent(profile.avatar.updatedAt)}`
+      : '';
+
+  const submitContact = (event: FormEvent) => {
+    event.preventDefault();
+    void run(
+      'contact',
+      async () => {
+        const next = await frontendBackend.updateProfileContact({
+          contactNumber: contact,
+          expectedRevision: profile.revision,
+          clientRequestId: requestId('profile-contact'),
+        });
+        updateProfile(next);
+        setFeedback((state) => ({
+          ...state,
+          contact: { tone: 'success', message: 'Contact number updated.' },
+        }));
+      },
+      'The contact number could not be updated.',
+    );
+  };
+
+  const submitUsername = (event: FormEvent) => {
+    event.preventDefault();
+    void run(
+      'username',
+      async () => {
+        const result = await frontendBackend.changeProfileUsername({
+          username,
+          currentPassword: usernamePassword,
+          expectedRevision: profile.revision,
+          clientRequestId: requestId('profile-username'),
+        });
+        if (!result.sessionsRevoked) throw new Error('Session revocation was not confirmed.');
+        onSessionRevoked?.(`Username changed to ${result.username}. Sign in again to continue.`);
+      },
+      'The username could not be changed.',
+    );
+  };
+
+  const submitPassword = (event: FormEvent) => {
+    event.preventDefault();
+    void run(
+      'password',
+      async () => {
+        const result = await frontendBackend.changeProfilePassword({
+          currentPassword,
+          newPassword,
+          confirmPassword,
+          expectedRevision: profile.revision,
+          clientRequestId: requestId('profile-password'),
+        });
+        if (!result.sessionsRevoked) throw new Error('Session revocation was not confirmed.');
+        onSessionRevoked?.('Password changed successfully. Sign in again with your new password.');
+      },
+      'The password could not be changed.',
+    );
+  };
+
+  const submitCorrection = (event: FormEvent) => {
+    event.preventDefault();
+    void run(
+      'correction',
+      async () => {
+        const result = await frontendBackend.requestProfileIdentityCorrection({
+          ...correction,
+          clientRequestId: requestId('profile-correction'),
+        });
+        setCorrection((value) => ({ ...value, reason: '' }));
+        setFeedback((state) => ({
+          ...state,
+          correction: { tone: 'success', message: `Correction request submitted · ${result.state}` },
+        }));
+      },
+      'The correction request could not be submitted.',
+    );
+  };
+
+  const changeAppearance = (theme: ThemePreference) => {
+    void run(
+      'appearance',
+      async () => {
+        const next = await frontendBackend.updateProfileAppearance({
+          theme,
+          clientRequestId: requestId('profile-appearance'),
+        });
+        updateProfile(next);
+        onApplyTheme?.(theme);
+        setFeedback((state) => ({
+          ...state,
+          appearance: {
+            tone: 'success',
+            message: `${theme[0]}${theme.slice(1).toLowerCase()} appearance saved.`,
+          },
+        }));
+      },
+      'The appearance preference could not be saved.',
+    );
+  };
+
+  const uploadAvatar = (file: File | undefined) => {
+    if (!file) return;
+    void run(
+      'avatar',
+      async () => {
+        if (file.size > 750_000) throw new Error('Profile pictures must be no larger than 750 KB.');
+        const next = await frontendBackend.uploadProfileAvatar({
+          contentType: file.type,
+          base64: await fileBase64(file),
+          expectedRevision: profile.revision,
+          clientRequestId: requestId('profile-avatar'),
+        });
+        updateProfile(next);
+        setFeedback((state) => ({
+          ...state,
+          avatar: { tone: 'success', message: 'Profile picture updated.' },
+        }));
+        if (uploadRef.current) uploadRef.current.value = '';
+      },
+      'The profile picture could not be uploaded.',
+    );
+  };
+
+  const removeAvatar = () => {
+    void run(
+      'avatar',
+      async () => {
+        const next = await frontendBackend.deleteProfileAvatar({
+          expectedRevision: profile.revision,
+          clientRequestId: requestId('profile-avatar-remove'),
+        });
+        updateProfile(next);
+        setFeedback((state) => ({
+          ...state,
+          avatar: { tone: 'success', message: 'Profile picture removed.' },
+        }));
+      },
+      'The profile picture could not be removed.',
+    );
+  };
+
+  const disabled = (key: string) => preview || Boolean(busy && busy !== key) || busy === key;
+  const inputStyle = {
+    background: 'var(--background)',
+    borderColor: 'var(--border)',
+    color: 'var(--foreground)',
+  };
 
   return (
-    <div className="max-w-[1180px] mx-auto px-5 md:px-8 py-8 pb-10">
-      <nav aria-label="Breadcrumb" className="mb-6">
-        <ol
-          className="flex items-center gap-2"
-          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: 'var(--muted-foreground)' }}
-        >
-          <li>Account</li>
-          <li aria-hidden="true">/</li>
-          <li style={{ color: 'var(--foreground)' }}>Profile</li>
-        </ol>
+    <div className="max-w-[1080px] mx-auto px-5 md:px-8 py-8 pb-12">
+      <nav
+        aria-label="Breadcrumb"
+        className="mb-5"
+        style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: 'var(--muted-foreground)' }}
+      >
+        Account / Profile
       </nav>
 
       <section
-        className="rounded-[14px] overflow-hidden mb-6"
+        className="rounded-[14px] px-5 sm:px-6 py-6 mb-6"
         style={{ background: '#40070a', border: '1px solid rgba(242,209,92,0.22)' }}
         aria-labelledby="profile-heading"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5 px-5 sm:px-6 py-6">
-          <div
-            className="flex items-center justify-center rounded-full shrink-0"
-            style={{ width: 72, height: 72, background: '#e8b93c' }}
-            aria-label="Initials avatar"
-            role="img"
-          >
-            <span
-              style={{
-                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                fontSize: 24,
-                fontWeight: 700,
-                color: '#40070a',
-              }}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+          <div className="relative shrink-0">
+            <div
+              className="rounded-full overflow-hidden flex items-center justify-center"
+              style={{ width: 88, height: 88, background: '#e8b93c' }}
+              role="img"
+              aria-label={
+                profile.avatar.available ? 'Profile picture' : `Initials ${profile.avatar.initials}`
+              }
             >
-              {profile.avatar.initials}
-            </span>
+              {avatarSource ? (
+                <img
+                  src={avatarSource}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={() => setAvatarFailed(true)}
+                />
+              ) : (
+                <span style={{ fontSize: 26, fontWeight: 750, color: '#40070a' }}>
+                  {profile.avatar.initials}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col gap-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <p
               style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 10,
+                fontSize: 9,
                 color: '#f6e29a',
-                letterSpacing: '0.8px',
+                letterSpacing: '0.9px',
                 textTransform: 'uppercase',
               }}
             >
-              account.profile
+              Authenticated profile
             </p>
             <h1
               id="profile-heading"
+              className="mt-1"
               style={{
                 fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
-                fontWeight: 700,
-                fontSize: 'clamp(22px, 3vw, 30px)',
+                fontWeight: 750,
+                fontSize: 'clamp(24px, 3vw, 32px)',
                 color: '#fff',
-                letterSpacing: '-0.7px',
                 overflowWrap: 'anywhere',
               }}
             >
               {profile.displayName}
             </h1>
-            <p
-              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 13, color: '#f6e29a' }}
-            >
-              {profile.accessSummary.roleLabel} · Server-decided access scope
+            <p className="mt-1" style={{ fontSize: 13, color: '#f6e29a' }}>
+              {profile.accessSummary.roleLabel}
             </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <label
+                className={`${buttonClass} inline-flex items-center gap-2 cursor-pointer`}
+                style={{ background: '#e8b93c', color: '#40070a' }}
+              >
+                <Camera size={15} /> {profile.avatar.available ? 'Replace picture' : 'Upload picture'}
+                <input
+                  ref={uploadRef}
+                  className="sr-only"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={disabled('avatar')}
+                  onChange={(event) => uploadAvatar(event.target.files?.[0])}
+                />
+              </label>
+              {profile.avatar.available && (
+                <button
+                  type="button"
+                  className={`${buttonClass} inline-flex items-center gap-2`}
+                  style={{ border: '1px solid rgba(255,255,255,0.35)', color: '#fff' }}
+                  disabled={disabled('avatar')}
+                  onClick={removeAvatar}
+                >
+                  <Trash2 size={15} /> Remove
+                </button>
+              )}
+            </div>
+            <div className="mt-3">
+              <FeedbackLine value={feedback.avatar} />
+            </div>
           </div>
-        </div>
-        <div className="flex flex-wrap gap-2 px-5 sm:px-6 pb-5">
-          <span
-            className="inline-flex items-center rounded-full px-3 py-1"
-            style={{
-              background: 'rgba(232,185,60,0.2)',
-              color: '#e8b93c',
-              border: '1px solid rgba(232,185,60,0.35)',
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 10,
-              letterSpacing: '0.35px',
-            }}
-          >
-            {profile.roleId}
-          </span>
-          <span
-            className="inline-flex items-center rounded-full px-3 py-1"
-            style={{
-              color: 'rgba(250,238,203,0.72)',
-              border: '1px solid rgba(242,209,92,0.18)',
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 10,
-              letterSpacing: '0.35px',
-            }}
-          >
-            {profile.accessSummary.scopeMode || 'Assigned scope'}
-          </span>
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_292px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="flex flex-col gap-6">
-          <ProfileSection
-            title="Personal information"
-            subtitle={
-              previewProfile
-                ? 'Preview fixture · no authenticated profile read'
-                : 'Read-only · sourced from the authenticated profile contract'
-            }
-          >
-            <DetailGrid fields={personalFields} />
-          </ProfileSection>
+          <Section title="Identity" subtitle="Institution-controlled details are read-only.">
+            <ReadOnlyGrid
+              fields={[
+                { label: 'Legal name', value: profile.legalName },
+                { label: 'Verified email', value: profile.verifiedEmail || 'Not verified' },
+                { label: 'Institution', value: profile.affiliation.institutionId },
+                {
+                  label: 'Department / assignment',
+                  value: profile.affiliation.departmentDisplayName || profile.affiliation.departmentId,
+                },
+                { label: 'Official role / position', value: profile.accessSummary.roleLabel },
+                { label: 'Authorization scope', value: profile.accessSummary.scopeMode || 'Assigned scope' },
+              ]}
+            />
+            <details className="px-5 py-4">
+              <summary
+                className="cursor-pointer text-[13px] font-semibold"
+                style={{ color: 'var(--foreground)' }}
+              >
+                Legal name or identity details are incorrect
+              </summary>
+              <form className="mt-4 grid gap-3" onSubmit={submitCorrection}>
+                <input
+                  className={fieldClass}
+                  style={inputStyle}
+                  aria-label="Proposed legal name"
+                  value={correction.legalName}
+                  onChange={(event) =>
+                    setCorrection((value) => ({ ...value, legalName: event.target.value }))
+                  }
+                  disabled={preview}
+                  required
+                />
+                <input
+                  className={fieldClass}
+                  style={inputStyle}
+                  aria-label="Proposed contact number"
+                  value={correction.contactNumber}
+                  onChange={(event) =>
+                    setCorrection((value) => ({ ...value, contactNumber: event.target.value }))
+                  }
+                  disabled={preview}
+                  required
+                />
+                <input
+                  className={fieldClass}
+                  style={inputStyle}
+                  aria-label="Proposed email"
+                  type="email"
+                  value={correction.email}
+                  onChange={(event) => setCorrection((value) => ({ ...value, email: event.target.value }))}
+                  disabled={preview}
+                  required
+                />
+                <textarea
+                  className={fieldClass}
+                  style={inputStyle}
+                  aria-label="Correction reason"
+                  rows={3}
+                  maxLength={500}
+                  value={correction.reason}
+                  onChange={(event) => setCorrection((value) => ({ ...value, reason: event.target.value }))}
+                  disabled={preview}
+                  required
+                />
+                <FeedbackLine value={feedback.correction} />
+                <button
+                  className={buttonClass}
+                  style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
+                  disabled={disabled('correction')}
+                >
+                  {busy === 'correction' ? 'Submitting…' : 'Submit correction request'}
+                </button>
+              </form>
+            </details>
+          </Section>
 
-          <ProfileSection
-            title="University Student Council information"
-            subtitle="Read-only affiliation from the authenticated profile contract"
+          <Section
+            title="Account"
+            subtitle="Your username is unique and changing it signs out active sessions."
           >
-            <DetailGrid fields={affiliationFields} />
-          </ProfileSection>
+            <form className="p-5 grid gap-3" onSubmit={submitUsername}>
+              <label className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+                Username
+              </label>
+              <input
+                className={fieldClass}
+                style={inputStyle}
+                autoComplete="username"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                disabled={preview}
+                required
+              />
+              <label className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+                Current password
+              </label>
+              <input
+                className={fieldClass}
+                style={inputStyle}
+                type="password"
+                autoComplete="current-password"
+                value={usernamePassword}
+                onChange={(event) => setUsernamePassword(event.target.value)}
+                disabled={preview}
+                required
+              />
+              <FeedbackLine value={feedback.username} />
+              <button
+                className={buttonClass}
+                style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
+                disabled={disabled('username')}
+              >
+                {busy === 'username' ? 'Changing…' : 'Change username'}
+              </button>
+            </form>
+            <ReadOnlyGrid
+              fields={[
+                { label: 'Account code', value: profile.accountCode },
+                { label: 'Authorization grants', value: profile.accessSummary.capabilities.join(', ') },
+              ]}
+            />
+          </Section>
 
-          <ProfileSection
-            title="Account and access"
-            subtitle="Capabilities and workspaces are server-projected; this page does not change them."
-          >
-            <div className="px-5 py-4 flex flex-col gap-5">
-              <div>
-                <p
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 10,
-                    color: 'var(--muted-foreground)',
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase',
-                    marginBottom: 8,
-                  }}
-                >
-                  Capabilities
-                </p>
-                {profile.accessSummary.capabilities.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {profile.accessSummary.capabilities.map((capability) => (
-                      <span
-                        key={capability}
-                        className="inline-flex items-center rounded-[6px] px-2.5 py-1"
-                        style={{
-                          fontFamily: "'IBM Plex Mono', monospace",
-                          fontSize: 10,
-                          color: dark ? '#bbf7d0' : '#1f6b41',
-                          background: dark ? 'rgba(74, 154, 104, 0.2)' : 'rgba(31,107,65,0.1)',
-                          border: dark ? '1px solid rgba(187,247,208,0.3)' : '1px solid rgba(31,107,65,0.22)',
-                          letterSpacing: '0.3px',
-                        }}
-                      >
-                        {capability}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p
-                    style={{
-                      fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                      fontSize: 13,
-                      color: 'var(--muted-foreground)',
-                    }}
-                  >
-                    No server-projected capabilities are available.
-                  </p>
-                )}
-              </div>
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-                <p
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 10,
-                    color: 'var(--muted-foreground)',
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase',
-                    marginBottom: 4,
-                  }}
-                >
-                  Workspace scope
-                </p>
-                <p
-                  style={{
-                    fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                    fontSize: 13,
-                    color: 'var(--foreground)',
-                    overflowWrap: 'anywhere',
-                  }}
-                >
-                  {profile.accessSummary.workspaceIds.length > 0
-                    ? profile.accessSummary.workspaceIds.join(', ')
-                    : 'No workspace assignments are available.'}
-                </p>
-                {profile.accessSummary.defaultWorkspaceId && (
-                  <p
-                    className="mt-2"
-                    style={{
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      fontSize: 10,
-                      color: 'var(--muted-foreground)',
-                      letterSpacing: '0.3px',
-                    }}
-                  >
-                    Default workspace: {profile.accessSummary.defaultWorkspaceId}
-                  </p>
-                )}
-              </div>
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-                <p
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 10,
-                    color: 'var(--muted-foreground)',
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase',
-                    marginBottom: 4,
-                  }}
-                >
-                  Credential version
-                </p>
-                <p
-                  style={{
-                    fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                    fontSize: 13,
-                    color: 'var(--foreground)',
-                  }}
-                >
-                  {profile.credentialVersion}
-                </p>
-              </div>
-            </div>
-          </ProfileSection>
-
-          <ProfileSection
-            title="Preferences"
-            subtitle="Theme is local to this browser; profile fields remain read-only."
-          >
-            <div className="px-5 py-4 flex items-center justify-between gap-4">
-              <div>
-                <p
-                  style={{
-                    fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: 'var(--foreground)',
-                  }}
-                >
-                  Theme
-                </p>
-                <p
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 10,
-                    color: 'var(--muted-foreground)',
-                    marginTop: 2,
-                  }}
-                >
-                  {dark ? 'Dark' : 'Light'} · persists in this browser
-                </p>
-              </div>
-              <ThemeToggle dark={dark} onToggle={onToggle} small />
-            </div>
-          </ProfileSection>
+          <Section title="Contact" subtitle="Keep a current contact number for operational coordination.">
+            <form className="p-5 grid gap-3" onSubmit={submitContact}>
+              <label className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+                Contact number
+              </label>
+              <input
+                className={fieldClass}
+                style={inputStyle}
+                type="tel"
+                autoComplete="tel"
+                value={contact}
+                onChange={(event) => setContact(event.target.value)}
+                disabled={preview}
+                required
+              />
+              <FeedbackLine value={feedback.contact} />
+              <button
+                className={buttonClass}
+                style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
+                disabled={disabled('contact')}
+              >
+                {busy === 'contact' ? 'Saving…' : 'Save contact number'}
+              </button>
+            </form>
+          </Section>
         </div>
 
-        <aside className="flex flex-col gap-4">
-          <ProfileSection title="Account record" subtitle="Current contract evidence">
-            <div className="px-4 py-4 flex flex-col gap-4">
-              <div>
-                <p
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 9,
-                    color: 'var(--muted-foreground)',
-                    letterSpacing: '0.8px',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Updated at
-                </p>
-                <p
-                  className="mt-1"
-                  style={{
-                    fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                    fontSize: 12,
-                    color: 'var(--foreground)',
-                    overflowWrap: 'anywhere',
-                  }}
-                >
-                  {profile.updatedAt}
-                </p>
-              </div>
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
-                <p
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 9,
-                    color: 'var(--muted-foreground)',
-                    letterSpacing: '0.8px',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Revision
-                </p>
-                <p
-                  className="mt-1"
-                  style={{
-                    fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                    fontSize: 12,
-                    color: 'var(--foreground)',
-                    overflowWrap: 'anywhere',
-                  }}
-                >
-                  {profile.revision}
-                </p>
-              </div>
-              {profile.committeeIds.length > 0 && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
-                  <p
+        <div className="flex flex-col gap-6">
+          <Section title="Appearance" subtitle="Saved to your account and applied across sign-in sessions.">
+            <div className="p-5 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Theme preference">
+              {(['LIGHT', 'DARK', 'SYSTEM'] as ThemePreference[]).map((theme) => {
+                const selected = (profile.appearance.theme || themePreference) === theme;
+                return (
+                  <button
+                    key={theme}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    className={buttonClass}
                     style={{
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      fontSize: 9,
-                      color: 'var(--muted-foreground)',
-                      letterSpacing: '0.8px',
-                      textTransform: 'uppercase',
+                      background: selected ? 'var(--primary)' : 'var(--muted)',
+                      color: selected ? 'var(--primary-foreground)' : 'var(--foreground)',
+                      border: '1px solid var(--border)',
                     }}
+                    disabled={disabled('appearance')}
+                    onClick={() => changeAppearance(theme)}
                   >
-                    Committee scope
-                  </p>
-                  <p
-                    className="mt-1"
-                    style={{
-                      fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                      fontSize: 12,
-                      color: 'var(--foreground)',
-                      overflowWrap: 'anywhere',
-                    }}
-                  >
-                    {profile.committeeIds.join(', ')}
-                  </p>
-                </div>
-              )}
+                    {theme[0]}
+                    {theme.slice(1).toLowerCase()}
+                  </button>
+                );
+              })}
             </div>
-          </ProfileSection>
+            <div className="px-5 pb-5">
+              <FeedbackLine value={feedback.appearance} />
+            </div>
+          </Section>
+
+          <Section
+            title="Security & Activity"
+            subtitle="Change your password and review account security state."
+          >
+            <div
+              className="px-5 py-4 flex items-start gap-3"
+              style={{ borderBottom: '1px solid var(--border)' }}
+            >
+              <ShieldCheck size={20} style={{ color: dark ? '#bbf7d0' : darkGreen }} />
+              <div>
+                <p className="text-[13px] font-semibold" style={{ color: 'var(--foreground)' }}>
+                  Credential version {profile.credentialVersion}
+                </p>
+                <p className="mt-1 text-[11px]" style={{ color: 'var(--muted-foreground)' }}>
+                  Profile record updated {profile.updatedAt}
+                </p>
+              </div>
+            </div>
+            <form className="p-5 grid gap-3" onSubmit={submitPassword}>
+              <label className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+                Current password
+              </label>
+              <input
+                className={fieldClass}
+                style={inputStyle}
+                type="password"
+                autoComplete="current-password"
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                disabled={preview}
+                required
+              />
+              <label className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+                New password
+              </label>
+              <input
+                className={fieldClass}
+                style={inputStyle}
+                type="password"
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                disabled={preview}
+                required
+              />
+              <label className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+                Confirm new password
+              </label>
+              <input
+                className={fieldClass}
+                style={inputStyle}
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                disabled={preview}
+                required
+              />
+              <p className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>
+                Use 12–128 characters and include at least three of: uppercase, lowercase, number, or symbol.
+              </p>
+              <FeedbackLine value={feedback.password} />
+              <button
+                className={buttonClass}
+                style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
+                disabled={disabled('password')}
+              >
+                {busy === 'password' ? 'Changing…' : 'Change password'}
+              </button>
+            </form>
+          </Section>
 
           <section
-            className="rounded-[12px] px-4 py-4 flex flex-col gap-3"
+            className="rounded-[12px] p-5 flex items-start gap-3"
             style={{ background: 'var(--muted)', border: '1px solid var(--border)' }}
             role="note"
-            aria-label="Portrait and biography unavailable"
           >
-            <p
-              style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 9,
-                color: 'var(--muted-foreground)',
-                letterSpacing: '1px',
-                textTransform: 'uppercase',
-              }}
-            >
-              Contract-gated
-            </p>
-            <p
-              style={{
-                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                fontSize: 12,
-                color: 'var(--muted-foreground)',
-                lineHeight: '18px',
-              }}
-            >
-              Portrait and biography are not available from the current profile contract. Initials are used as
-              the supported fallback.
-            </p>
-            <div
-              className="rounded-[8px] flex items-center justify-center"
-              style={{ height: 72, background: 'var(--border)', border: '1px dashed var(--border)' }}
-              aria-hidden="true"
-            >
-              <User size={20} strokeWidth={1} color="var(--muted-foreground)" />
-            </div>
-          </section>
-
-          <section
-            className="rounded-[12px] px-4 py-4"
-            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
-            aria-labelledby="activity-heading"
-          >
-            <h2
-              id="activity-heading"
-              style={{
-                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                fontWeight: 600,
-                fontSize: 13,
-                color: 'var(--foreground)',
-              }}
-            >
-              Account activity
-            </h2>
-            <p
-              className="mt-2"
-              style={{
-                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                fontSize: 12,
-                color: 'var(--muted-foreground)',
-                lineHeight: '18px',
-              }}
-            >
-              Activity history is unavailable because the current profile API does not provide an activity
-              endpoint.
+            <User size={20} style={{ color: 'var(--muted-foreground)' }} />
+            <p className="text-[12px] leading-5" style={{ color: 'var(--muted-foreground)' }}>
+              A Playground reset restores the demo credential, profile picture, contact number, username, and
+              appearance baseline.
             </p>
           </section>
-        </aside>
+        </div>
       </div>
     </div>
   );

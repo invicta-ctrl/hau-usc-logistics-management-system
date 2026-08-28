@@ -34,6 +34,7 @@ function mapProfile(row, committeeIds = []) {
     institutionId: row.institution_id ?? '',
     avatarAssetKey: row.avatar_asset_key ?? '',
     avatarUpdatedAt: row.avatar_updated_at ?? null,
+    appearanceTheme: row.appearance_theme ?? 'SYSTEM',
     passwordCredential: parseJson(row.password_credential_json),
     credentialVersion: Number(row.credential_version ?? 1),
     updatedAt: row.updated_at ?? '',
@@ -125,7 +126,9 @@ function profileSelect() {
     a.profile_year_level, a.avatar_asset_key, a.avatar_updated_at,
     a.password_credential_json, a.credential_version, a.updated_at,
     a.department_id, a.profile_department_id, a.institution_id,
-    department.display_name AS department_display_name
+    department.display_name AS department_display_name,
+    COALESCE((SELECT value FROM app_metadata
+      WHERE key = 'profile.appearance.' || a.id), 'SYSTEM') AS appearance_theme
     FROM accounts a
     LEFT JOIN requester_departments department
       ON department.id = COALESCE(a.profile_department_id, a.department_id)
@@ -247,6 +250,38 @@ export function createD1ProfileRepository(db) {
              WHERE id = ?3 AND status = 'ACTIVE' AND updated_at = ?4`,
           )
           .bind(mobileNumber, changedAt, id, expectedUpdatedAt),
+        [auditStatement(db, evidence.audit), idempotencyStatement(db, evidence.idempotency)],
+      );
+      return repository.getProfile(id);
+    },
+
+    async updateAppearance({ accountId, theme, changedAt, evidence }) {
+      const id = requiredAccountId(accountId);
+      await db.batch([
+        db
+          .prepare(
+            `INSERT INTO app_metadata (key, value, updated_at)
+             VALUES (?1, ?2, ?3)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+          )
+          .bind(`profile.appearance.${id}`, theme, changedAt),
+        auditStatement(db, evidence.audit),
+        idempotencyStatement(db, evidence.idempotency),
+      ]);
+      return repository.getProfile(id);
+    },
+
+    async updateAvatar({ accountId, expectedUpdatedAt, avatarAssetKey, changedAt, evidence }) {
+      const id = requiredAccountId(accountId);
+      await runAtomicProfileMutation(
+        db,
+        db
+          .prepare(
+            `UPDATE accounts
+             SET avatar_asset_key = ?1, avatar_updated_at = ?2, updated_at = ?2
+             WHERE id = ?3 AND status = 'ACTIVE' AND updated_at = ?4`,
+          )
+          .bind(avatarAssetKey || null, changedAt, id, expectedUpdatedAt),
         [auditStatement(db, evidence.audit), idempotencyStatement(db, evidence.idempotency)],
       );
       return repository.getProfile(id);

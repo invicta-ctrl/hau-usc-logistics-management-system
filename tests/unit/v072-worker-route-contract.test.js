@@ -32,6 +32,7 @@ describe('v0.7.2 Worker route integration contract', () => {
 
     for (const marker of [
       '/api/me/profile',
+      '/api/me/appearance',
       '/api/me/username/change',
       '/api/me/password/change',
       '/api/me/identity-correction-request',

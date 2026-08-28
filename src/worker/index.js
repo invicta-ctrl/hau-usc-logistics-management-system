@@ -372,6 +372,7 @@ function services(env) {
     repository: createD1ProfileRepository(env.DB),
     passwordKdf,
     protectIdentityRequest: (value, context) => rosterCrypto.encrypt({ context, request: value }),
+    avatarBucket: isPlaygroundRuntime(env) ? env.EVIDENCE_ASSETS : null,
   });
   const operationalHealth = createOperationalHealthService({
     db: env.DB,
@@ -771,6 +772,23 @@ async function handleApi(request, env, requestId, executionContext) {
           : await profile.updateContact({ ...context, command: await body(request) });
       return json({ ...result, correlationId: requestId });
     }
+    if (url.pathname === '/api/me/appearance' && ['GET', 'PATCH'].includes(request.method)) {
+      const authorized = await authorizeSession(request, auth, { mutation: request.method === 'PATCH' });
+      if (request.method === 'GET') {
+        return json({
+          ...(await profile.getAppearance({ account: authorized.account })),
+          correlationId: requestId,
+        });
+      }
+      return json({
+        ...(await profile.updateAppearance({
+          account: authorized.account,
+          command: await body(request),
+          correlationId: requestId,
+        })),
+        correlationId: requestId,
+      });
+    }
     if (url.pathname === '/api/me/username/change' && request.method === 'POST') {
       const authorized = await authorizeSession(request, auth, { mutation: true });
       return json({
@@ -804,10 +822,18 @@ async function handleApi(request, env, requestId, executionContext) {
         correlationId: requestId,
       });
     }
-    if (url.pathname === '/api/me/avatar' && ['POST', 'DELETE'].includes(request.method)) {
-      const authorized = await authorizeSession(request, auth, { mutation: true });
+    if (url.pathname === '/api/me/avatar' && ['GET', 'POST', 'DELETE'].includes(request.method)) {
+      const authorized = await authorizeSession(request, auth, { mutation: request.method !== 'GET' });
+      if (request.method === 'GET') return profile.avatar({ account: authorized.account });
+      const context = {
+        account: authorized.account,
+        command: await body(request),
+        correlationId: requestId,
+      };
       return json({
-        ...(await profile.avatar({ account: authorized.account })),
+        ...(request.method === 'POST'
+          ? await profile.uploadAvatar(context)
+          : await profile.deleteAvatar(context)),
         correlationId: requestId,
       });
     }

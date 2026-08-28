@@ -75,21 +75,30 @@ function installSignedOutSession(page) {
 /** Signs the browser in as a projected account. `capabilities` are the raw
  *  server-derived strings the Worker itself authorizes against. */
 function installLogin(page, { accountId, displayName, roleId, capabilities }) {
-  return page.route('**/api/auth/login', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        state: 'AUTHENTICATED',
-        csrfToken: `csrf-${accountId}`,
-        user: {
-          accountId,
-          displayName,
-          authorization: { active: true, mappingStatus: 'MAPPED', roleId, capabilities },
-        },
+  return Promise.all([
+    page.route('**/api/auth/login', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          state: 'AUTHENTICATED',
+          csrfToken: `csrf-${accountId}`,
+          user: {
+            accountId,
+            displayName,
+            authorization: { active: true, mappingStatus: 'MAPPED', roleId, capabilities },
+          },
+        }),
       }),
-    }),
-  );
+    ),
+    page.route('**/api/me/appearance', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, appearance: { theme: 'SYSTEM' } }),
+      }),
+    ),
+  ]);
 }
 
 function profileFixture() {
@@ -123,7 +132,8 @@ function profileFixture() {
       revision: '2026-08-24T00:00:00.000Z',
       credentialVersion: 3,
       updatedAt: '2026-08-24T00:00:00.000Z',
-      avatar: { available: false, initials: 'DP', fallback: 'INITIALS' },
+      avatar: { available: false, initials: 'DP', fallback: 'INITIALS', url: '', updatedAt: '' },
+      appearance: { theme: 'SYSTEM' },
     },
   };
 }
@@ -1256,7 +1266,7 @@ test('AUTH-01 generic zero-capability sign-in remains denied even though Profile
   await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toHaveCount(0);
 });
 
-test('FI-04 profile uses loading, read-only contract data, and retryable truthful errors', async ({
+test('P14 profile uses authenticated identity data and exposes the accepted self-service controls', async ({
   page,
 }) => {
   await installPublicFeed(page);
@@ -1266,17 +1276,17 @@ test('FI-04 profile uses loading, read-only contract data, and retryable truthfu
   await page.goto('/');
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
-  await page.getByRole('button', { name: /go to profile/u }).click();
+  await page.evaluate(() => {
+    window.location.hash = '#/route/profile';
+  });
 
-  await expect(page.getByRole('status')).toContainText('Loading account profile');
+  await expect(page.getByRole('status')).toContainText('Loading your profile');
   await expect(page.getByRole('heading', { name: 'DOL Profile' })).toBeVisible();
   await expect(page.getByText('Department of Logistics Profile')).toBeVisible();
-  await expect(
-    page.getByText(
-      'Activity history is unavailable because the current profile API does not provide an activity endpoint.',
-    ),
-  ).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Save' })).toHaveCount(0);
+  for (const heading of ['Identity', 'Account', 'Contact', 'Appearance', 'Security & Activity']) {
+    await expect(page.getByRole('heading', { name: heading })).toBeVisible();
+  }
+  await expect(page.getByRole('button', { name: 'Save contact number' })).toBeVisible();
 });
 
 test('FI-04 profile surfaces a failed profile response and retries only after the user asks', async ({
@@ -1304,7 +1314,9 @@ test('FI-04 profile surfaces a failed profile response and retries only after th
   await page.goto('/');
   await page.getByRole('button', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
-  await page.getByRole('button', { name: /go to profile/u }).click();
+  await page.evaluate(() => {
+    window.location.hash = '#/route/profile';
+  });
   await expect(page.getByRole('alert')).toContainText('Profile temporarily unavailable.');
   await page.getByRole('button', { name: 'Retry profile' }).click();
   await expect(page.getByRole('heading', { name: 'DOL Profile' })).toBeVisible();

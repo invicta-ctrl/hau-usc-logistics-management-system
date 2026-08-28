@@ -425,10 +425,13 @@ export type FrontendProfile = {
   credentialVersion: number;
   updatedAt: string;
   avatar: {
-    available: false;
+    available: boolean;
     initials: string;
     fallback: 'INITIALS';
+    url: string;
+    updatedAt: string;
   };
+  appearance: { theme: 'LIGHT' | 'DARK' | 'SYSTEM' };
 };
 
 export type PublicLendingItem = {
@@ -787,6 +790,7 @@ function projectProfile(value: unknown): FrontendProfile {
   const affiliation = asRecord(profile.affiliation);
   const accessSummary = asRecord(profile.accessSummary);
   const avatar = asRecord(profile.avatar);
+  const appearance = asRecord(profile.appearance);
   const credentialVersion = profile.credentialVersion;
 
   if (
@@ -809,8 +813,16 @@ function projectProfile(value: unknown): FrontendProfile {
   if (typeof credentialVersion !== 'number' || !Number.isFinite(credentialVersion)) {
     incomplete('The profile response did not include credentialVersion.');
   }
-  if (avatar.available !== false || asString(avatar.fallback) !== 'INITIALS') {
+  if (typeof avatar.available !== 'boolean' || asString(avatar.fallback) !== 'INITIALS') {
     incomplete('The profile response did not match the supported avatar contract.');
+  }
+  const theme = asString(appearance.theme);
+  if (!['LIGHT', 'DARK', 'SYSTEM'].includes(theme)) {
+    incomplete('The profile response did not match the supported appearance contract.');
+  }
+  const avatarUrl = asString(avatar.url);
+  if (avatar.available && avatarUrl !== '/api/me/avatar') {
+    incomplete('The profile response included an unsupported avatar location.');
   }
 
   return {
@@ -842,10 +854,13 @@ function projectProfile(value: unknown): FrontendProfile {
     credentialVersion,
     updatedAt: requiredString(profile.updatedAt, 'updatedAt'),
     avatar: {
-      available: false,
+      available: avatar.available,
       initials: requiredString(avatar.initials, 'avatar.initials'),
       fallback: 'INITIALS',
+      url: avatar.available ? avatarUrl : '',
+      updatedAt: avatar.available ? requiredString(avatar.updatedAt, 'avatar.updatedAt') : '',
     },
+    appearance: { theme: theme as 'LIGHT' | 'DARK' | 'SYSTEM' },
   };
 }
 
@@ -939,6 +954,92 @@ export class FrontendBackend {
   async profile(signal?: AbortSignal): Promise<FrontendProfile> {
     const payload = await this.request('/api/me/profile', { method: 'GET', signal });
     return projectProfile(payload.profile);
+  }
+
+  async profileAppearance(signal?: AbortSignal): Promise<'LIGHT' | 'DARK' | 'SYSTEM'> {
+    const payload = await this.request('/api/me/appearance', { method: 'GET', signal });
+    const theme = asString(asRecord(payload.appearance).theme);
+    if (!['LIGHT', 'DARK', 'SYSTEM'].includes(theme)) {
+      incomplete('The appearance response did not include a supported theme.');
+    }
+    return theme as 'LIGHT' | 'DARK' | 'SYSTEM';
+  }
+
+  async updateProfileContact(command: {
+    contactNumber: string;
+    expectedRevision: string;
+    clientRequestId: string;
+  }): Promise<FrontendProfile> {
+    const payload = await this.request('/api/me/profile', { method: 'PATCH', body: command, csrf: true });
+    return projectProfile(payload.profile);
+  }
+
+  async updateProfileAppearance(command: {
+    theme: 'LIGHT' | 'DARK' | 'SYSTEM';
+    clientRequestId: string;
+  }): Promise<FrontendProfile> {
+    const payload = await this.request('/api/me/appearance', { method: 'PATCH', body: command, csrf: true });
+    return projectProfile(payload.profile);
+  }
+
+  async uploadProfileAvatar(command: {
+    contentType: string;
+    base64: string;
+    expectedRevision: string;
+    clientRequestId: string;
+  }): Promise<FrontendProfile> {
+    const payload = await this.request('/api/me/avatar', { method: 'POST', body: command, csrf: true });
+    return projectProfile(payload.profile);
+  }
+
+  async deleteProfileAvatar(command: {
+    expectedRevision: string;
+    clientRequestId: string;
+  }): Promise<FrontendProfile> {
+    const payload = await this.request('/api/me/avatar', { method: 'DELETE', body: command, csrf: true });
+    return projectProfile(payload.profile);
+  }
+
+  async changeProfileUsername(command: {
+    username: string;
+    currentPassword: string;
+    expectedRevision: string;
+    clientRequestId: string;
+  }): Promise<{ username: string; sessionsRevoked: boolean }> {
+    const payload = await this.request('/api/me/username/change', { body: command, csrf: true });
+    return {
+      username: requiredString(payload.username, 'username change.username'),
+      sessionsRevoked: payload.sessionsRevoked === true,
+    };
+  }
+
+  async changeProfilePassword(command: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+    expectedRevision: string;
+    clientRequestId: string;
+  }): Promise<{ credentialVersion: number; sessionsRevoked: boolean }> {
+    const payload = await this.request('/api/me/password/change', { body: command, csrf: true });
+    const credentialVersion = payload.credentialVersion;
+    if (typeof credentialVersion !== 'number' || !Number.isFinite(credentialVersion)) {
+      incomplete('The password change response did not include credentialVersion.');
+    }
+    return { credentialVersion, sessionsRevoked: payload.sessionsRevoked === true };
+  }
+
+  async requestProfileIdentityCorrection(command: {
+    legalName: string;
+    contactNumber: string;
+    email: string;
+    reason: string;
+    clientRequestId: string;
+  }): Promise<{ state: string }> {
+    const payload = await this.request('/api/me/identity-correction-request', {
+      body: command,
+      csrf: true,
+    });
+    return { state: requiredString(asRecord(payload.correction).state, 'identity correction.state') };
   }
 
   async version(signal?: AbortSignal): Promise<FrontendVersion> {

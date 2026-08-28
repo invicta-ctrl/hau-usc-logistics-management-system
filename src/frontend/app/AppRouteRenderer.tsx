@@ -41,6 +41,9 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
     handleSignOut,
     activationExpiresAt,
     toggleTheme,
+    themePreference,
+    setThemePreference,
+    handleSessionRevoked,
   } = controller;
 
   /* Context B — External Request Center. Only reachable with a session; the
@@ -75,7 +78,13 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
         onToggle={toggleTheme}
       >
         {route === 'profile' ? (
-          <ProfileRoute dark={dark} onToggle={toggleTheme} />
+          <ProfileRoute
+            dark={dark}
+            onToggle={toggleTheme}
+            themePreference={themePreference}
+            onApplyTheme={setThemePreference}
+            onSessionRevoked={handleSessionRevoked}
+          />
         ) : route === 'overview' ? (
           <OverviewRoute session={session} />
         ) : route === 'inventory' ? (

@@ -52,12 +52,13 @@ export const PREVIEW_PROFILE: FrontendProfile = Object.freeze({
     capabilities: ['PREVIEW_PRESENTATION_ONLY'],
     workspaceIds: ['LOCAL-4173'],
     defaultWorkspaceId: 'LOCAL-4173',
-  scopeMode: 'Preview inspection presentation',
+    scopeMode: 'Preview inspection presentation',
   },
   revision: 'preview-fixture-v1',
   credentialVersion: 0,
   updatedAt: 'Preview fixture — no server record',
-  avatar: { available: false, initials: 'PO', fallback: 'INITIALS' },
+  avatar: { available: false, initials: 'PO', fallback: 'INITIALS', url: '', updatedAt: '' },
+  appearance: { theme: 'SYSTEM' },
 });
 
 /** Same frontend shape as the real requester portal, with local fixture values only. */
@@ -87,7 +88,7 @@ export const PREVIEW_REQUESTER_PORTAL: RequesterPortal = Object.freeze({
       event: 'Preview event',
       subEvent: '',
       department: 'USC-PREVIEW',
-    purpose: 'Deterministic Preview inspection fixture',
+      purpose: 'Deterministic Preview inspection fixture',
       status: 'FOR_REVIEW',
       createdAt: 'Preview fixture',
       updatedAt: 'Preview fixture',
