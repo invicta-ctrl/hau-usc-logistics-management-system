@@ -1,4 +1,5 @@
 import type { NavItem } from './navConfig';
+import { appRouteHash } from '../routeHash';
 
 export function SidebarNavItem({
   item,
@@ -10,9 +11,12 @@ export function SidebarNavItem({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <a
+      href={appRouteHash(item.route)}
+      onClick={(event) => {
+        event.preventDefault();
+        onClick();
+      }}
       className="flex items-center justify-center px-2 py-[7px] rounded-[8px] w-full text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)] xl:justify-start xl:gap-2.5 xl:px-3"
       style={{
         background: active ? 'var(--sidebar-accent)' : 'transparent',
@@ -35,6 +39,6 @@ export function SidebarNavItem({
       >
         {item.label}
       </span>
-    </button>
+    </a>
   );
 }

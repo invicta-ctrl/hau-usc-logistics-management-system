@@ -306,10 +306,10 @@ export default function LendingHubRoute({
                   <table>
                     <thead>
                       <tr>
-                        <th>Loan</th>
-                        <th>Timing</th>
-                        <th>Evidence</th>
-                        <th>State</th>
+                        <th scope="col">Loan</th>
+                        <th scope="col">Timing</th>
+                        <th scope="col">Evidence</th>
+                        <th scope="col">State</th>
                       </tr>
                     </thead>
                     <tbody>

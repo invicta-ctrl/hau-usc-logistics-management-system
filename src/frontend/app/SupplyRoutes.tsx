@@ -393,11 +393,11 @@ function Restocking({
           <table>
             <thead>
               <tr>
-                <th>Request</th>
-                <th>Reason</th>
-                <th>Requested</th>
-                <th>Received</th>
-                <th>State</th>
+                <th scope="col">Request</th>
+                <th scope="col">Reason</th>
+                <th scope="col">Requested</th>
+                <th scope="col">Received</th>
+                <th scope="col">State</th>
               </tr>
             </thead>
             <tbody>
@@ -541,11 +541,11 @@ function Procurement({
           <table>
             <thead>
               <tr>
-                <th>Procurement</th>
-                <th>Quotes</th>
-                <th>Supplier</th>
-                <th>Stage</th>
-                <th>State</th>
+                <th scope="col">Procurement</th>
+                <th scope="col">Quotes</th>
+                <th scope="col">Supplier</th>
+                <th scope="col">Stage</th>
+                <th scope="col">State</th>
               </tr>
             </thead>
             <tbody>
@@ -639,11 +639,11 @@ function Procurement({
           <table>
             <thead>
               <tr>
-                <th>Deliverable</th>
-                <th>Relationship</th>
-                <th>Due</th>
-                <th>Received</th>
-                <th>State</th>
+                <th scope="col">Deliverable</th>
+                <th scope="col">Relationship</th>
+                <th scope="col">Due</th>
+                <th scope="col">Received</th>
+                <th scope="col">State</th>
               </tr>
             </thead>
             <tbody>
@@ -841,7 +841,7 @@ function ManagedEventsRoute({
           </div>
           <table>
             <thead>
-              <tr><th>Series</th><th>Display code</th><th>State</th></tr>
+              <tr><th scope="col">Series</th><th scope="col">Display code</th><th scope="col">State</th></tr>
             </thead>
             <tbody>
               {data.series.map((series) => (
@@ -871,7 +871,7 @@ function ManagedEventsRoute({
           </div>
           <table>
             <thead>
-              <tr><th>Series</th><th>Day</th><th>Date</th><th>State</th></tr>
+              <tr><th scope="col">Series</th><th scope="col">Day</th><th scope="col">Date</th><th scope="col">State</th></tr>
             </thead>
             <tbody>
               {data.days.map((day) => (
@@ -899,7 +899,7 @@ function ManagedEventsRoute({
           </div>
           <table>
             <thead>
-              <tr><th>Activity</th><th>Series</th><th>Type</th><th>Timing</th><th>State</th></tr>
+              <tr><th scope="col">Activity</th><th scope="col">Series</th><th scope="col">Type</th><th scope="col">Timing</th><th scope="col">State</th></tr>
             </thead>
             <tbody>
               {data.activities.map((activity) => (

@@ -367,7 +367,7 @@ const HERO_HEADING = 'Logistics services and records';
 
 async function openPublicLending(page) {
   await page.goto('/');
-  await page.getByRole('button', { name: /^Browse public lending/u }).click();
+  await page.getByRole('link', { name: /^Browse public lending/u }).click();
   await expect(page.getByRole('heading', { name: 'Lending Center', exact: true })).toBeVisible();
 }
 
@@ -399,12 +399,12 @@ async function workspaceSurface(page, testInfo) {
 
 async function openInternalRequestHub(page, testInfo, { waitForQueue = true } = {}) {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await (
     await workspaceSurface(page, testInfo)
   )
-    .getByRole('button', { name: 'Internal Request Hub' })
+    .getByRole('link', { name: 'Internal Request Hub' })
     .click();
   if (waitForQueue) await expect(page.getByRole('heading', { name: 'Request review queue' })).toBeVisible();
 }
@@ -477,7 +477,7 @@ test('REQ-01 starting a logistics request while signed out reaches Staff Sign In
 
   await page.goto('/');
   await page
-    .getByRole('button', { name: /^Start a logistics request/u })
+    .getByRole('link', { name: /^Start a logistics request/u })
     .first()
     .click();
 
@@ -495,7 +495,7 @@ test('REQ-02 external intent survives auth and REQ-03 an eligible non-DOL accoun
 
   await page.goto('/');
   await page
-    .getByRole('button', { name: /^Start a logistics request/u })
+    .getByRole('link', { name: /^Start a logistics request/u })
     .first()
     .click();
   // The gateway names the destination the user actually asked for.
@@ -519,7 +519,7 @@ test('REQ-04 DOL staff entering through external intent stay in requester mode a
 
   await page.goto('/');
   await page
-    .getByRole('button', { name: /^Start a logistics request/u })
+    .getByRole('link', { name: /^Start a logistics request/u })
     .first()
     .click();
   await signIn(page, 'dol.staff');
@@ -539,7 +539,7 @@ test('REQ-05 an ineligible identity cannot reach the External Request Center and
 
   await page.goto('/');
   await page
-    .getByRole('button', { name: /^Start a logistics request/u })
+    .getByRole('link', { name: /^Start a logistics request/u })
     .first()
     .click();
   await signIn(page, 'student.account');
@@ -548,7 +548,7 @@ test('REQ-05 an ineligible identity cannot reach the External Request Center and
   await expect(page.getByRole('heading', { name: 'External Request Center', level: 1 })).toHaveCount(0);
   // Truthful denial: no enumeration, and a way out.
   await expect(page.getByText(/Public Lending remains open to you/u)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Home', exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Home', exact: true }).first()).toBeVisible();
 });
 
 test('REQ-06 submission goes to the authenticated portal contract and carries no browser-supplied requester identity', async ({
@@ -592,7 +592,7 @@ test('REQ-06 submission goes to the authenticated portal contract and carries no
 
   await page.goto('/');
   await page
-    .getByRole('button', { name: /^Start a logistics request/u })
+    .getByRole('link', { name: /^Start a logistics request/u })
     .first()
     .click();
   await signIn(page, 'usc.officer');
@@ -644,7 +644,7 @@ test('AUTH-01 generic staff sign-in sends a DOL account to its capability-approp
   await installInventoryBootstrap(page);
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
 
   await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
@@ -667,21 +667,21 @@ test('AUTH-01 generic staff sign-in sends a DOL account to its capability-approp
   }
   const surface = await workspaceSurface(page, testInfo);
   const operations = surface.getByRole('navigation', { name: 'Operations' });
-  await expect(operations.getByRole('button', { name: 'Overview' })).toBeVisible();
+  await expect(operations.getByRole('link', { name: 'Overview' })).toBeVisible();
   // Only the server-projected capability routes appear. The older gateway must
   // not remain mounted once the FI-04 shell owns the resolved route.
-  await expect(operations.getByRole('button', { name: 'Release' })).toHaveCount(0);
+  await expect(operations.getByRole('link', { name: 'Release' })).toHaveCount(0);
   const administration = surface.getByRole('navigation', { name: 'Administration' });
   // Profile is already part of the authenticated server projection; that alone
   // may keep the group visible. The privileged Administration route must not.
-  await expect(administration.getByRole('button', { name: 'Profile' })).toBeVisible();
-  await expect(administration.getByRole('button', { name: 'Administration' })).toHaveCount(0);
+  await expect(administration.getByRole('link', { name: 'Profile' })).toBeVisible();
+  await expect(administration.getByRole('link', { name: 'Administration' })).toHaveCount(0);
   await expect(page.getByText('Access authorized')).toHaveCount(0);
   await expect(page.getByText('Not available for this account')).toHaveCount(0);
 
-  await operations.getByRole('button', { name: 'Inventory' }).click();
+  await operations.getByRole('link', { name: 'Inventory' }).click();
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible();
-  await expect(page.getByText('Authenticated bootstrap · ledger-derived')).toBeVisible();
+  await expect(page.getByText('Current authorized inventory records')).toBeVisible();
   await expect(page.getByText('Authoritative folding chair')).toBeVisible();
   await expect(page.getByText('This workspace route is reserved and has not yet been built.')).toHaveCount(0);
 });
@@ -1164,15 +1164,15 @@ test('FI-05 Inventory uses the authenticated bootstrap, restores inspector focus
   await installInventoryBootstrap(page);
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
-  await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Inventory' }).click();
+  await (await workspaceSurface(page, testInfo)).getByRole('link', { name: 'Inventory' }).click();
   const opener = usesMobileInventoryLayout(testInfo)
     ? page.getByRole('button', { name: 'Open item record' })
     : page.getByRole('button', { name: /Authoritative folding chair/u });
   await expect(opener).toBeVisible();
   await opener.click();
-  await expect(page.getByRole('dialog')).toContainText('Authenticated bootstrap · ledger-derived');
+  await expect(page.getByRole('dialog')).toContainText('Current authorized inventory records');
   const closeInspector = usesMobileInventoryLayout(testInfo)
     ? page.getByRole('button', { name: 'Back to inventory' })
     : page.getByRole('button', { name: 'Close inspector' });
@@ -1196,9 +1196,9 @@ test('FI-05 Inventory fails closed to the access-limited state when the bootstra
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
-  await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Inventory' }).click();
+  await (await workspaceSurface(page, testInfo)).getByRole('link', { name: 'Inventory' }).click();
   await expect(page.getByText('Access limited')).toBeVisible();
   await expect(page.getByText('This view is not available for your current session.')).toBeVisible();
 });
@@ -1219,9 +1219,9 @@ test('FI-05 Inventory reports a genuinely empty authorized bootstrap without imp
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
-  await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Inventory' }).click();
+  await (await workspaceSurface(page, testInfo)).getByRole('link', { name: 'Inventory' }).click();
   await expect(page.getByText('No inventory records are available in this authorized scope')).toBeVisible();
   await expect(page.getByText('No records match this filter')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Clear filter' })).toHaveCount(0);
@@ -1235,9 +1235,9 @@ test('FI-05 Inventory retains the last authoritative projection and labels it st
   await installInventoryBootstrap(page);
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
-  await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Inventory' }).click();
+  await (await workspaceSurface(page, testInfo)).getByRole('link', { name: 'Inventory' }).click();
   await expect(page.getByText('Authoritative folding chair')).toBeVisible();
   await page.unroute('**/api/bootstrap/inventory');
   await page.route('**/api/bootstrap/inventory', (route) =>
@@ -1259,7 +1259,7 @@ test('AUTH-01 generic zero-capability sign-in remains denied even though Profile
   await installLogin(page, INELIGIBLE);
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'student.account');
 
   // This uses the real `projectSession()` path: Profile remains a direct
@@ -1277,7 +1277,7 @@ test('P14 profile uses authenticated identity data and exposes the accepted self
   await installProfile(page, { delay: 200 });
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await page.evaluate(() => {
     window.location.hash = '#/route/profile';
@@ -1307,7 +1307,7 @@ test('P18 Profile persists theme family separately from Light, Dark, and System 
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await page.evaluate(() => {
     window.location.hash = '#/route/profile';
@@ -1360,7 +1360,7 @@ test('FI-04 profile surfaces a failed profile response and retries only after th
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await page.evaluate(() => {
     window.location.hash = '#/route/profile';
@@ -1383,14 +1383,14 @@ test('FI-04 Home preserves the DOL session while Sign out is the only shell acti
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
-  await (await workspaceSurface(page, testInfo)).getByRole('button', { name: 'Home', exact: true }).click();
+  await (await workspaceSurface(page, testInfo)).getByRole('link', { name: 'Home', exact: true }).click();
   await expect(page.getByRole('heading', { name: HERO_HEADING })).toBeVisible();
   expect(logouts).toBe(0);
 
   await page
-    .getByRole('button', { name: /^Start a logistics request/u })
+    .getByRole('link', { name: /^Start a logistics request/u })
     .first()
     .click();
   await expect(page.getByRole('heading', { name: 'External Request Center', level: 1 })).toBeVisible();
@@ -1413,7 +1413,7 @@ test('FI-04 mobile workspace drawer traps focus and restores its opener', async 
   await installLogin(page, DOL_STAFF);
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
 
   const opener = page.getByRole('button', { name: 'Open navigation' });
@@ -1440,7 +1440,7 @@ test('AUTH-02 generic staff sign-in sends an eligible non-DOL account to the Ext
   await installLogin(page, NON_DOL_REQUESTER);
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'usc.officer');
 
   await expect(page.getByRole('heading', { name: 'External Request Center', level: 1 })).toBeVisible();
@@ -1453,7 +1453,7 @@ test('AUTH-03 and AUTH-04 the activation and password-reset paths are reachable 
 }) => {
   await installPublicFeed(page);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
 
   await expect(page.getByRole('button', { name: 'No password yet? Activate account' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Forgot password?' })).toBeVisible();
@@ -1486,7 +1486,7 @@ test('AUTH-05 the verification step enforces 8 digits and never enumerates accou
   );
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await page.getByRole('button', { name: 'Forgot password?' }).click();
   await page.getByLabel('Registered identifier or email').fill('someone@example.test');
   await page.getByRole('button', { name: 'Send verification code' }).click();
@@ -1529,13 +1529,13 @@ test('HOME-01 and HOME-02 Home returns to the landing surface from Public Lendin
   await installLendingCatalog(page);
   await openPublicLending(page);
 
-  await page.locator('.mast').getByRole('button', { name: 'Home', exact: true }).click();
+  await page.locator('.mast').getByRole('link', { name: 'Home', exact: true }).click();
   await expect(page.getByRole('heading', { name: HERO_HEADING })).toBeVisible();
 
-  await page.getByRole('button', { name: /^Browse public lending/u }).click();
+  await page.getByRole('link', { name: /^Browse public lending/u }).click();
   await page
     .getByRole('navigation', { name: 'Public lending navigation' })
-    .getByRole('button', { name: 'Home', exact: true })
+    .getByRole('link', { name: 'Home', exact: true })
     .click();
   await expect(page.getByRole('heading', { name: HERO_HEADING })).toBeVisible();
 });
@@ -1551,17 +1551,17 @@ test('HOME-03 and AUTH-06 Home preserves the session — Home is not sign-out', 
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'usc.officer');
   await expect(page.getByRole('heading', { name: 'External Request Center', level: 1 })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Home', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Home', exact: true }).first().click();
   await expect(page.getByRole('heading', { name: HERO_HEADING })).toBeVisible();
   expect(logouts).toBe(0);
 
   // Still authenticated: re-entering the request intent does not re-prompt for credentials.
   await page
-    .getByRole('button', { name: /^Start a logistics request/u })
+    .getByRole('link', { name: /^Start a logistics request/u })
     .first()
     .click();
   await expect(page.getByRole('heading', { name: 'External Request Center', level: 1 })).toBeVisible();
@@ -1584,7 +1584,7 @@ test('CTX-02 every public surface states the staff gate before the user commits'
   if (testInfo.project.name === 'frontend-320' || testInfo.project.name === 'frontend-390') {
     await page.getByRole('button', { name: 'Open navigation menu' }).click();
     const drawer = page.getByRole('dialog', { name: 'Navigation menu' });
-    await drawer.getByRole('button', { name: 'Start a logistics request', exact: true }).click();
+  await drawer.getByRole('link', { name: 'Start a logistics request', exact: true }).click();
     await expect(page.getByRole('heading', { name: /Sign in/u }).first()).toBeVisible();
   }
 });

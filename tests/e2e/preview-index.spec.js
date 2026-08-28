@@ -248,8 +248,8 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or prot
 
   await page.goto('/#/__preview/index');
   await page.locator('[data-preview-route="overview"] [data-action="open-preview"]').click();
-  await expect(page.getByRole('heading', { name: 'Glass operations command table' })).toBeVisible();
-  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Operations overview' })).toBeVisible();
+  await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
 
   await page.locator('[data-preview-search]').fill('inventory');
   await page.locator('[data-preview-route="inventory"] [data-action="open-preview"]').click();
@@ -259,7 +259,7 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or prot
   await expect(page.getByText('PLAYGROUND INSPECTION', { exact: false })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
+  await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
   await expect(page.locator('[data-preview-index]')).toBeVisible();
   await expect(page.locator('[data-preview-search]')).toHaveValue('inventory');
   await page.locator('[data-preview-search]').fill('');
@@ -267,7 +267,7 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or prot
   await expect(page.locator('[data-preview-inspection="true"][data-preview-route="profile"]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Preview Operator' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
+  await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
   await page.locator('[data-preview-route="release"] [data-action="open-preview"]').click();
   await expect(
     page.locator('[data-preview-inspection="true"][data-preview-route="release"]'),
@@ -275,7 +275,7 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or prot
   await expect(page.getByRole('heading', { name: 'Confirm physical release' })).toBeVisible();
   await expect(page.getByText('Sample data · Actions unavailable')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
+  await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
   await page.locator('[data-preview-route="external-request"] [data-action="open-preview"]').click();
   await expect(
     page.locator('[data-preview-inspection="true"][data-preview-route="external-request"]'),
@@ -350,7 +350,7 @@ test('P04 opens every Playground Index entry with direct, Back, Forward, Index-r
     await expectWorkspace(entry);
 
     if (entry.action === 'open-preview') {
-      await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
+      await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
       await expect(page.locator('[data-preview-index]')).toBeVisible();
     }
   }
@@ -544,7 +544,7 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   await previewState.selectOption('Locally confirmed');
   await expect(restocking.getByRole('heading', { name: 'Local fixture updated' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
+  await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
   await page.locator('[data-preview-route="procurement"] [data-action="open-preview"]').click();
   await expect(
     page.locator('[data-preview-inspection="true"][data-preview-route="procurement"]'),
@@ -618,7 +618,7 @@ test('FI-10 renders the bounded Administration inspection safely at every accept
   await page.goto('/#/__preview/index');
   for (const width of [320, 390, 768, 1024, 1440]) {
     if (width !== 320) {
-  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
+  await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
       await expect(page.locator('[data-preview-index]')).toBeVisible();
     }
     await page.setViewportSize({ width, height: 1000 });

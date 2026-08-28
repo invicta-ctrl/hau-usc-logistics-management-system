@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 
 import type { Route } from '../appTypes';
+import { appRouteHash } from '../routeHash';
 import HeroMotion from './HeroMotion';
 import heroVideoSrc from '../../assets/hero/hausc-institutional-logistics-hero.mp4';
 
@@ -33,34 +34,40 @@ export function HeroSection({
                 sign-in first and carries the EXTERNAL_REQUEST_CENTER intent
                 through it. The label says so, rather than letting a student
                 discover the gate only after committing to the flow. */}
-            <button
-              type="button"
+            <a
+              href={appRouteHash('staff-signin')}
               className="atrium__primary atrium__action--stacked"
               aria-label="Start a logistics request. Staff sign-in required for USC staff and officers."
-              onClick={onRequireExternalRequest}
+              onClick={(event) => {
+                event.preventDefault();
+                onRequireExternalRequest();
+              }}
             >
               Start a logistics request
               <span className="atrium__action-note">USC staff sign-in required</span>
-            </button>
+            </a>
 
-            <button
-              type="button"
+            <a
+              href={appRouteHash('borrow')}
               className="atrium__secondary hero-action--glass atrium__action--stacked"
-              onClick={() => onNavigate('borrow')}
+              onClick={(event) => {
+                event.preventDefault();
+                onNavigate('borrow');
+              }}
             >
               Browse public lending
               <span className="atrium__action-note">No sign-in needed</span>
-            </button>
+            </a>
           </div>
 
           <div className="atrium__secondary-paths" aria-label="Other logistics paths">
-            <button type="button" className="atrium__text-action" onClick={() => onNavigate('tracking')}>
+            <a href={appRouteHash('tracking')} className="atrium__text-action" onClick={(event) => { event.preventDefault(); onNavigate('tracking'); }}>
               Track lending
-            </button>
+            </a>
 
-            <button type="button" className="atrium__text-action" onClick={() => onNavigate('staff-signin')}>
+            <a href={appRouteHash('staff-signin')} className="atrium__text-action" onClick={(event) => { event.preventDefault(); onNavigate('staff-signin'); }}>
               Staff sign in
-            </button>
+            </a>
           </div>
         </div>
       </div>

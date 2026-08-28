@@ -1,5 +1,6 @@
 import type { Route } from "../appTypes";
 import { DolMark } from "../brand/BrandMarks";
+import { appRouteHash } from "../routeHash";
 import { LEDGER_STEPS } from "./landingData";
 
 export function LogisticsHubSection({
@@ -11,17 +12,21 @@ export function LogisticsHubSection({
 }) {
   /* R3-A1-A2 three-context tiles. Each `sub` states the real access rule for
      that path, so nobody discovers a sign-in wall only after committing. */
-  const actionTiles: { label: string; sub: string; key: string; onSelect: () => void; primary: boolean }[] = [
+  const actionTiles: { label: string; sub: string; key: Route; href: string; onSelect: () => void; primary: boolean }[] = [
     { label: "Start a request",  key: "external-request",
+      href: appRouteHash("staff-signin"),
       sub: "Supplies, event materials, venue and activity support for your USC office. Staff sign-in required.",
       onSelect: onRequireExternalRequest, primary: true },
     { label: "Browse equipment", key: "borrow",
+      href: appRouteHash("borrow"),
       sub: "See reusable items and ask to borrow. No account needed.",
       onSelect: () => onNavigate("borrow"), primary: false },
     { label: "Track lending",    key: "tracking",
+      href: appRouteHash("tracking"),
       sub: "Use your reference and private code. No account needed.",
       onSelect: () => onNavigate("tracking"), primary: false },
     { label: "Staff sign in",    key: "staff-signin",
+      href: appRouteHash("staff-signin"),
       sub: "Open the workspaces authorized for your account.",
       onSelect: () => onNavigate("staff-signin"), primary: false },
   ];
@@ -64,9 +69,13 @@ export function LogisticsHubSection({
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
               {actionTiles.map((tile) => (
-                <button
+                <a
                   key={tile.key}
-                  onClick={tile.onSelect}
+                  href={tile.href}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    tile.onSelect();
+                  }}
                   className="flex flex-col gap-1 rounded-[14px] px-5 py-[17px] text-left transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
                   style={{ background: tile.primary ? "#e8b93c" : "rgba(255,253,248,0.05)", border: tile.primary ? "1px solid #f2d15c" : "1px solid rgba(242,209,92,0.26)" }}
                 >
@@ -76,7 +85,7 @@ export function LogisticsHubSection({
                   <span style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: tile.primary ? "#610b0f" : "rgba(250,238,203,0.72)", letterSpacing: -0.15, lineHeight: "16.5px", fontVariationSettings: '"wdth" 100' }}>
                     {tile.sub}
                   </span>
-                </button>
+                </a>
               ))}
             </div>
           </div>

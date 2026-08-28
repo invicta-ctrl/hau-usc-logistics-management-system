@@ -586,10 +586,11 @@ export function ProfileRoute({
             subtitle="Your username is unique and changing it signs out active sessions."
           >
             <form className="p-5 grid gap-3" onSubmit={submitUsername}>
-              <label className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+              <label htmlFor="profile-username" className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
                 Username
               </label>
               <input
+                id="profile-username"
                 className={fieldClass}
                 style={inputStyle}
                 autoComplete="username"
@@ -598,10 +599,11 @@ export function ProfileRoute({
                 disabled={preview}
                 required
               />
-              <label className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+              <label htmlFor="profile-username-password" className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
                 Current password
               </label>
               <input
+                id="profile-username-password"
                 className={fieldClass}
                 style={inputStyle}
                 type="password"
@@ -630,10 +632,11 @@ export function ProfileRoute({
 
           <Section title="Contact" subtitle="Keep a current contact number for operational coordination.">
             <form className="p-5 grid gap-3" onSubmit={submitContact}>
-              <label className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+              <label htmlFor="profile-contact-number" className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
                 Contact number
               </label>
               <input
+                id="profile-contact-number"
                 className={fieldClass}
                 style={inputStyle}
                 type="tel"
@@ -744,10 +747,11 @@ export function ProfileRoute({
               </div>
             </div>
             <form className="p-5 grid gap-3" onSubmit={submitPassword}>
-              <label className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+              <label htmlFor="profile-current-password" className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
                 Current password
               </label>
               <input
+                id="profile-current-password"
                 className={fieldClass}
                 style={inputStyle}
                 type="password"
@@ -757,10 +761,11 @@ export function ProfileRoute({
                 disabled={preview}
                 required
               />
-              <label className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+              <label htmlFor="profile-new-password" className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
                 New password
               </label>
               <input
+                id="profile-new-password"
                 className={fieldClass}
                 style={inputStyle}
                 type="password"
@@ -770,10 +775,11 @@ export function ProfileRoute({
                 disabled={preview}
                 required
               />
-              <label className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+              <label htmlFor="profile-confirm-password" className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
                 Confirm new password
               </label>
               <input
+                id="profile-confirm-password"
                 className={fieldClass}
                 style={inputStyle}
                 type="password"

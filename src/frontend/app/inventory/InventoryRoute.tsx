@@ -421,6 +421,7 @@ export function InventoryRoute({
               />
               <input
                 type="search"
+                aria-label="Search inventory"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by item name, ID, or category…"
@@ -631,6 +632,7 @@ export function InventoryRoute({
                         (h) => (
                           <th
                             key={h}
+                            scope="col"
                             style={{
                               ...thStyle(thBg, c, mono),
                               textAlign:

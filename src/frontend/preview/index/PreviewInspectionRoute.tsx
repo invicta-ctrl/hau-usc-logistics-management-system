@@ -44,9 +44,9 @@ export function PreviewInspectionRoute({
           <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '0.35px' }}>
             PLAYGROUND INSPECTION · Sample data · Actions are unavailable.
           </p>
-          <button type="button" className="preview-action" onClick={onBackToIndex}>
+          <a href="#/__preview/index" className="preview-action" onClick={(event) => { event.preventDefault(); onBackToIndex(); }}>
             Back to Playground Index
-          </button>
+          </a>
         </section>
         <ExternalRequestCenter
           presentation={{ displayName: 'Preview Requester', internalOperator: false }}

@@ -5,6 +5,7 @@ import { DolMark } from '../brand/BrandMarks';
 import { ThemeToggle } from '../brand/ThemeToggle';
 import { useDialogFocusTrap } from '../hooks/useDialogFocusTrap';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { appRouteHash } from '../routeHash';
 import { NAV_ADMINISTRATION, NAV_OPERATIONS, visibleNavigationItems } from './navConfig';
 import type { ShellPresentation } from './presentation';
 
@@ -164,10 +165,11 @@ export function AuthMobileDrawer({
                 Operations
               </p>
               {operations.map((item) => (
-                <button
+                <a
                   key={item.route}
-                  type="button"
-                  onClick={() => {
+                  href={appRouteHash(item.route)}
+                  onClick={(event) => {
+                    event.preventDefault();
                     navigate(item.route);
                     onClose();
                   }}
@@ -193,7 +195,7 @@ export function AuthMobileDrawer({
                   >
                     {item.label}
                   </span>
-                </button>
+                </a>
               ))}
             </nav>
           )}
@@ -218,10 +220,11 @@ export function AuthMobileDrawer({
                 Administration
               </p>
               {administration.map((item) => (
-                <button
+                <a
                   key={item.route}
-                  type="button"
-                  onClick={() => {
+                  href={appRouteHash(item.route)}
+                  onClick={(event) => {
+                    event.preventDefault();
                     navigate(item.route);
                     onClose();
                   }}
@@ -247,7 +250,7 @@ export function AuthMobileDrawer({
                   >
                     {item.label}
                   </span>
-                </button>
+                </a>
               ))}
             </nav>
           )}
@@ -258,9 +261,10 @@ export function AuthMobileDrawer({
           className="px-4 pb-6 pt-3 flex flex-col gap-3"
           style={{ borderTop: '1px solid var(--sidebar-border)' }}
         >
-          <button
-            type="button"
-            onClick={() => {
+          <a
+            href="/"
+            onClick={(event) => {
+              event.preventDefault();
               onHome();
               onClose();
             }}
@@ -276,7 +280,7 @@ export function AuthMobileDrawer({
             >
               Home
             </span>
-          </button>
+          </a>
           <div className="flex items-center justify-between">
             <span
               style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: 'var(--sidebar-primary)' }}
@@ -286,9 +290,10 @@ export function AuthMobileDrawer({
             <ThemeToggle dark={dark} onToggle={onToggle} small />
           </div>
           {inspection ? (
-            <button
-              type="button"
-              onClick={() => {
+            <a
+              href="#/__preview/index"
+              onClick={(event) => {
+                event.preventDefault();
                 onBackToPreview?.();
                 onClose();
               }}
@@ -304,7 +309,7 @@ export function AuthMobileDrawer({
               >
                 Back to Playground Index
               </span>
-            </button>
+            </a>
           ) : (
             <button
               type="button"

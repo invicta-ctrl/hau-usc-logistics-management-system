@@ -853,7 +853,7 @@ export default function RequestCenterRoute({
                 <thead>
                   <tr style={{ background: thBg, borderBottom: `1px solid ${c.border}` }}>
                     {["Request","Committee","Needed by","State","Urgency"].map((h) => (
-                      <th key={h} className="px-4 py-2.5 text-left" style={{ fontFamily: mono, fontWeight: 600, fontSize: 9, color: c.muted, letterSpacing: "1px", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                      <th scope="col" key={h} className="px-4 py-2.5 text-left" style={{ fontFamily: mono, fontWeight: 600, fontSize: 9, color: c.muted, letterSpacing: "1px", textTransform: "uppercase", whiteSpace: "nowrap" }}>
                         {h}
                       </th>
                     ))}

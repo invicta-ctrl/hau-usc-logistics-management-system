@@ -192,7 +192,7 @@ test('FVR-001 confirms sign-in mounts the operational shell without fixture-only
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await page.getByLabel('Identifier').fill('confirmed.staff');
   await page.getByLabel('Password', { exact: true }).fill('service-verified-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
@@ -246,7 +246,7 @@ test('FVR-001 completes the server-owned starter activation lifecycle', async ({
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await page.getByLabel('Identifier').fill('starter.staff');
   await page.getByLabel('Password', { exact: true }).fill('temporary-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
@@ -317,7 +317,7 @@ test('FVR-001 preserves keyboard focus, theme behavior, and 200 percent reflow',
     expect(overflow).toBeLessThanOrEqual(1);
   }
 
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   const password = page.getByLabel('Password', { exact: true });
   const passwordToggle = page.locator('button[aria-controls="signin-pw"]');
   await password.fill('PreservedPassword1!');
@@ -354,7 +354,7 @@ test('FVR-001 public lending submits only through the real adapter and shows the
     });
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Browse equipment' }).click();
+  await page.getByRole('link', { name: 'Browse equipment' }).click();
   await page.getByLabel('Search').fill('chair');
   await page.getByRole('button', { name: 'Request item' }).click();
   await page.getByLabel('Angelite Student').check();
@@ -410,10 +410,10 @@ test('FVR-001 public tracking projects only server-confirmed state', async ({ pa
   );
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Browse equipment' }).click();
+  await page.getByRole('link', { name: 'Browse equipment' }).click();
   await page
     .getByRole('navigation', { name: 'Public lending navigation' })
-    .getByRole('button', { name: 'Track lending', exact: true })
+    .getByRole('link', { name: 'Track lending', exact: true })
     .click();
   await page.getByLabel('Request or Submission ID').fill('REQ-CONFIRMED');
   await page.getByLabel('Private tracking code').fill('private-request-code');
@@ -492,7 +492,7 @@ test('FVR-001 account application preserves 8-digit verification and private sta
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Staff sign in' }).first().click();
+  await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await page.getByRole('button', { name: 'Apply for staff access' }).click();
   await page.getByLabel('Approved email address').fill('applicant@example.edu.ph');
   await page.getByRole('button', { name: 'Send verification code' }).click();

@@ -1,5 +1,6 @@
 import { Menu, Search } from 'lucide-react';
 import type { Route } from '../appTypes';
+import { appRouteHash } from '../routeHash';
 import { ThemeToggle } from '../brand/ThemeToggle';
 import type { ShellPresentation } from './presentation';
 
@@ -154,9 +155,12 @@ export function AuthShellTopbar({
           <div className="hidden lg:block" data-theme-control>
             <ThemeToggle dark={dark} onToggle={onToggle} small />
           </div>
-          <button
-            type="button"
-            onClick={() => navigate('profile')}
+          <a
+            href={appRouteHash('profile')}
+            onClick={(event) => {
+              event.preventDefault();
+              navigate('profile');
+            }}
             className="flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
             aria-label={`${presentation.displayName} — go to profile`}
             style={{ width: 34, height: 34, background: 'var(--theme-accent)', flexShrink: 0 }}
@@ -171,7 +175,7 @@ export function AuthShellTopbar({
             >
               {presentation.initials}
             </span>
-          </button>
+          </a>
         </div>
       </div>
     </header>

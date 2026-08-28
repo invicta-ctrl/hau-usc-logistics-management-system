@@ -1,5 +1,6 @@
 import type { Route } from "../appTypes";
 import { UscMark } from "../brand/BrandMarks";
+import { appRouteHash } from "../routeHash";
 
 export function Footer({
   onNavigate,
@@ -53,27 +54,39 @@ export function Footer({
             <p className="text-[10px] tracking-[1px] uppercase" style={{ fontFamily: "'IBM Plex Mono', monospace", color: "#c8992f" }}>
               Access
             </p>
-            <button
-              onClick={() => onNavigate("external-request")}
+            <a
+              href={appRouteHash("external-request")}
+              onClick={(event) => {
+                event.preventDefault();
+                onNavigate("external-request");
+              }}
               className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
               style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", background: "#e8b93c", color: "#40070a", minHeight: 40, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
             >
               Start a logistics request
-            </button>
-            <button
-              onClick={onHome}
+            </a>
+            <a
+              href="/"
+              onClick={(event) => {
+                event.preventDefault();
+                onHome();
+              }}
               className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
               style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 40, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
             >
               Home
-            </button>
-            <button
-              onClick={() => onNavigate("staff-signin")}
+            </a>
+            <a
+              href={appRouteHash("staff-signin")}
+              onClick={(event) => {
+                event.preventDefault();
+                onNavigate("staff-signin");
+              }}
               className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
               style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 40, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
             >
               Staff sign in
-            </button>
+            </a>
           </div>
         </div>
 

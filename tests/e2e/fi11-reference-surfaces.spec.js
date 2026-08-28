@@ -79,7 +79,7 @@ test('FI-11 exposes truthful sanitized Event and Administration inspection surfa
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth))
     .toBeLessThanOrEqual(1);
-  await page.getByRole('button', { name: 'Back to Playground Index' }).first().click();
+  await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
 
   await page.locator('[data-preview-route="administration"] [data-action="open-preview"]').click();
   const administration = page.locator('[data-fi11-administration="true"]');

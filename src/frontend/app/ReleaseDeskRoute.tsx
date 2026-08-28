@@ -227,10 +227,10 @@ export default function ReleaseDeskRoute({
       <table>
         <thead>
           <tr>
-            <th>Request</th>
-            <th>Ready</th>
-            <th>Released</th>
-            <th>State</th>
+            <th scope="col">Request</th>
+            <th scope="col">Ready</th>
+            <th scope="col">Released</th>
+            <th scope="col">State</th>
           </tr>
         </thead>
         <tbody>

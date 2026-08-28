@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import type { AuthRoute, Route } from '../appTypes';
+import { appRouteHash } from '../routeHash';
 import { AuthMobileDrawer } from './AuthMobileDrawer';
 import { AuthShellSidebar } from './AuthShellSidebar';
 import { AuthShellTopbar } from './AuthShellTopbar';
@@ -71,9 +72,9 @@ export function AuthenticatedShell({
               <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '0.35px' }}>
                 PLAYGROUND INSPECTION · Sample data · Actions are unavailable.
               </p>
-              <button type="button" className="preview-action" onClick={onBackToPreview}>
+              <a href="#/__preview/index" className="preview-action" onClick={(event) => { event.preventDefault(); onBackToPreview?.(); }}>
                 Back to Playground Index
-              </button>
+              </a>
             </section>
           ) : null}
           {children}
@@ -86,10 +87,13 @@ export function AuthenticatedShell({
           aria-label="Quick navigation"
         >
           {mobileDock.map((item) => (
-            <button
+            <a
               key={item.route}
-              type="button"
-              onClick={() => navigate(item.route)}
+              href={appRouteHash(item.route)}
+              onClick={(event) => {
+                event.preventDefault();
+                navigate(item.route);
+              }}
               className="flex flex-col items-center gap-1 px-2 py-1 rounded-[8px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
               aria-current={route === item.route ? 'page' : undefined}
             >
@@ -108,7 +112,7 @@ export function AuthenticatedShell({
               >
                 {item.label}
               </span>
-            </button>
+            </a>
           ))}
         </nav>
       </div>

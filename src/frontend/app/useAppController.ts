@@ -330,6 +330,7 @@ export function useAppController() {
     try {
       await frontendBackend.logout();
     } finally {
+      if (window.location.hash) window.location.hash = '';
       setSession(null);
       setAuthState('signed-out');
       setAuthError(null);

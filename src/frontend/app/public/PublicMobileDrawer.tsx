@@ -4,6 +4,7 @@ import type { Route } from '../appTypes';
 import { UscMark } from '../brand/BrandMarks';
 import { ThemeToggle } from '../brand/ThemeToggle';
 import { useDialogFocusTrap } from '../hooks/useDialogFocusTrap';
+import { appRouteHash } from '../routeHash';
 import { NAV_LINKS } from './publicNavConfig';
 
 export function PublicMobileDrawer({
@@ -115,8 +116,10 @@ export function PublicMobileDrawer({
           className="mt-auto flex flex-col gap-3 px-5 pb-8 pt-4 border-t"
           style={{ borderColor: 'rgba(242,209,92,0.18)' }}
         >
-          <button
-            onClick={() => {
+          <a
+            href={appRouteHash('external-request')}
+            onClick={(event) => {
+              event.preventDefault();
               onClose();
               onNavigate('external-request');
             }}
@@ -130,9 +133,11 @@ export function PublicMobileDrawer({
             }}
           >
             Start a logistics request
-          </button>
-          <button
-            onClick={() => {
+          </a>
+          <a
+            href="/"
+            onClick={(event) => {
+              event.preventDefault();
               onClose();
               onHome();
             }}
@@ -145,9 +150,11 @@ export function PublicMobileDrawer({
             }}
           >
             Home
-          </button>
-          <button
-            onClick={() => {
+          </a>
+          <a
+            href={appRouteHash('staff-signin')}
+            onClick={(event) => {
+              event.preventDefault();
               onClose();
               onNavigate('staff-signin');
             }}
@@ -160,7 +167,7 @@ export function PublicMobileDrawer({
             }}
           >
             Staff sign in
-          </button>
+          </a>
           <div className="flex items-center justify-between pt-1">
             <span
               style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: '#f6e29a', fontSize: 11 }}

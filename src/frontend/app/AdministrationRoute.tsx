@@ -578,10 +578,10 @@ function Fi10Panel({
               <table>
                 <thead>
                   <tr>
-                    <th>Account</th>
-                    <th>Access ID</th>
-                    <th>Role</th>
-                    <th>State</th>
+                    <th scope="col">Account</th>
+                    <th scope="col">Access ID</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">State</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -672,11 +672,11 @@ function Fi10Panel({
               <table>
                 <thead>
                   <tr>
-                    <th>Person</th>
-                    <th>Access identity</th>
-                    <th>Link state</th>
-                    <th>Assignment summary</th>
-                    <th>Activity</th>
+                    <th scope="col">Person</th>
+                    <th scope="col">Access identity</th>
+                    <th scope="col">Link state</th>
+                    <th scope="col">Assignment summary</th>
+                    <th scope="col">Activity</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -796,11 +796,11 @@ function Fi10Panel({
           <table>
             <thead>
               <tr>
-                <th>Occurred</th>
-                <th>Event</th>
-                <th>Action</th>
-                <th>State transition</th>
-                <th>Effective window</th>
+                <th scope="col">Occurred</th>
+                <th scope="col">Event</th>
+                <th scope="col">Action</th>
+                <th scope="col">State transition</th>
+                <th scope="col">Effective window</th>
               </tr>
             </thead>
             <tbody>
@@ -951,7 +951,7 @@ function Fi11Panel({
           <>
             <table>
               <thead>
-                <tr><th>Label</th><th>Destination</th><th>Audience</th><th>State</th><th>Verification</th></tr>
+                <tr><th scope="col">Label</th><th scope="col">Destination</th><th scope="col">Audience</th><th scope="col">State</th><th scope="col">Verification</th></tr>
               </thead>
               <tbody>
                 {links.map((link, index) => (
@@ -996,7 +996,7 @@ function Fi11Panel({
         ) : (
           <>
             <table>
-              <thead><tr><th>Slot</th><th>Public path</th><th>Publication state</th><th>Published</th></tr></thead>
+              <thead><tr><th scope="col">Slot</th><th scope="col">Public path</th><th scope="col">Publication state</th><th scope="col">Published</th></tr></thead>
               <tbody>
                 {brandSlots.map((slot, index) => (
                   <tr key={`${slot.label}-${index}`}>
@@ -1305,10 +1305,10 @@ function Panel({
           <table>
             <thead>
               <tr>
-                <th>Account</th>
-                <th>Scope</th>
-                <th>State</th>
-                <th>Version</th>
+                <th scope="col">Account</th>
+                <th scope="col">Scope</th>
+                <th scope="col">State</th>
+                <th scope="col">Version</th>
               </tr>
             </thead>
             <tbody>
@@ -1430,11 +1430,11 @@ function Panel({
           <table>
             <thead>
               <tr>
-                <th>Person</th>
-                <th>Area</th>
-                <th>Role</th>
-                <th>State</th>
-                <th>Contact</th>
+                <th scope="col">Person</th>
+                <th scope="col">Area</th>
+                <th scope="col">Role</th>
+                <th scope="col">State</th>
+                <th scope="col">Contact</th>
               </tr>
             </thead>
             <tbody>
@@ -1549,10 +1549,10 @@ function Panel({
         <table>
           <thead>
             <tr>
-              <th>Dependency</th>
-              <th>State</th>
-              <th>Source</th>
-              <th>Last verified</th>
+              <th scope="col">Dependency</th>
+              <th scope="col">State</th>
+              <th scope="col">Source</th>
+              <th scope="col">Last verified</th>
             </tr>
           </thead>
           <tbody>
@@ -1647,10 +1647,10 @@ function Panel({
       <table>
         <thead>
           <tr>
-            <th>Time</th>
-            <th>Event</th>
-            <th>Record</th>
-            <th>Evidence</th>
+            <th scope="col">Time</th>
+            <th scope="col">Event</th>
+            <th scope="col">Record</th>
+            <th scope="col">Evidence</th>
           </tr>
         </thead>
         <tbody>
@@ -1719,7 +1719,7 @@ function BrandMedia() {
         <b>Current sample assets</b>
       </div>
       <table className="asset-table">
-        <thead><tr><th>Image</th><th>Asset</th><th>Production state</th><th>Inspection use</th></tr></thead>
+        <thead><tr><th scope="col">Image</th><th scope="col">Asset</th><th scope="col">Production state</th><th scope="col">Inspection use</th></tr></thead>
         <tbody>{brandAssets.map(([src, name, state, use]) => (
           <tr key={name}>
             <td><img className="asset-preview" src={src} alt="" /></td>

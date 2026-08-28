@@ -1522,10 +1522,10 @@ export function InternalLendingHub({
                   <table className="w-full min-w-[630px] border-collapse text-left text-sm">
                     <thead className="bg-black/[.035] text-[10px] uppercase tracking-[.07em] text-[var(--ink-mid)]">
                       <tr>
-                        <th className="p-3">Lending ticket</th>
-                        <th className="p-3">Borrower / custody</th>
-                        <th className="p-3">Timing</th>
-                        <th className="p-3">Lifecycle</th>
+                        <th scope="col" className="p-3">Lending ticket</th>
+                        <th scope="col" className="p-3">Borrower / custody</th>
+                        <th scope="col" className="p-3">Timing</th>
+                        <th scope="col" className="p-3">Lifecycle</th>
                       </tr>
                     </thead>
                     <tbody>

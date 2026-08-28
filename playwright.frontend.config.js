@@ -13,6 +13,7 @@ export default defineConfig({
     'fi12-convergence.spec.js',
     'r3-a1-a2-routing.spec.js',
     'fi07-lending-hub.spec.js',
+    'playground-accessibility-semantics.spec.js',
   ],
   timeout: 30_000,
   fullyParallel: false,

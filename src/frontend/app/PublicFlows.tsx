@@ -39,6 +39,7 @@ import {
   type PublicSubmissionReceipt,
   type PublicTrackingResult,
 } from "../integration/backend";
+import { appRouteHash } from "./routeHash";
 
 type Route = "tracking" | "borrow";
 type View = "Lending Center" | "Track lending" | "Lending policy";
@@ -265,18 +266,18 @@ export default function PublicFlows({
           from here — logistics requests are context B and require a session, so
           offering them as a public tab would be a false access promise. */}
       <nav aria-label="Public lending navigation">
-        <button type="button" className="home" onClick={onBack}>
+        <a href="/" className="home" onClick={(event) => { event.preventDefault(); onBack(); }}>
           <span className="navArrow" aria-hidden="true">← </span>Home
-        </button>
+        </a>
         {(["Lending Center", "Track lending", "Lending policy"] as View[]).map((next) => (
           <button type="button" key={next} className={view === next ? "active" : ""}
             onClick={() => { setView(next); setLendReceipt(null); setTrackingResult(null); setAlert(""); }}>
             {next}
           </button>
         ))}
-        <button type="button" className="leave" onClick={() => onNavigate("staff-signin")}>
+        <a href={appRouteHash("staff-signin")} className="leave" onClick={(event) => { event.preventDefault(); onNavigate("staff-signin"); }}>
           Staff sign in<span className="navArrow" aria-hidden="true"> →</span>
-        </button>
+        </a>
       </nav>
 
       {/* ==================== LENDING CENTER ==================== */}

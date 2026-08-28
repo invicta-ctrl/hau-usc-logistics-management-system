@@ -32,9 +32,12 @@ export function AuthShellSidebar({
       aria-label="Workspace navigation"
     >
       {/* Brand */}
-      <button
-        type="button"
-        onClick={onHome}
+      <a
+        href="/"
+        onClick={(event) => {
+          event.preventDefault();
+          onHome();
+        }}
         className="flex items-center justify-center px-2 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[var(--sidebar-ring)] xl:items-start xl:justify-start xl:px-4"
         style={{ borderBottom: '1px solid var(--sidebar-border)' }}
         aria-label="Home"
@@ -84,7 +87,7 @@ export function AuthShellSidebar({
             Institutional logistics ledger
           </span>
         </div>
-      </button>
+      </a>
 
       {/* Operations */}
       {operations.length > 0 && (
@@ -214,9 +217,12 @@ export function AuthShellSidebar({
             </span>
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={onBackToPreview}
+          <a
+            href="#/__preview/index"
+            onClick={(event) => {
+              event.preventDefault();
+              onBackToPreview?.();
+            }}
             className="flex items-center justify-center px-2 py-2 w-full rounded-[8px] text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)] xl:justify-start xl:gap-2 xl:px-3"
             aria-label="Back to Playground Index"
           >
@@ -230,7 +236,7 @@ export function AuthShellSidebar({
             >
               Playground Index
             </span>
-          </button>
+          </a>
         )}
       </div>
     </aside>
