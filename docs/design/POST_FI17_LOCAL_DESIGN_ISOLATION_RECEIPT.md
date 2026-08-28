@@ -93,7 +93,8 @@ PROTECTED_FM_ARTIFACT_PATHS: dist/, .wrangler/, playground-report/, test-results
                                                                 FM copies NOT PRESENT
 PROTECTED_FM_POINTER_FILES: .codex/CURRENT.md, .codex/CURRENT_TASK.md,
                             .codex/CURRENT_HANDOFF.md           READ ONLY, NOT WRITTEN
-PROTECTED_SHARED_RESOURCES: origin remote                        NOT PUSHED
+PROTECTED_SHARED_RESOURCES: origin remote                        ONLY THE NEW DESIGN
+                                                                BRANCH PUSHED (see below)
 ```
 
 ### Verification
@@ -338,7 +339,10 @@ MIGRATIONS:        ZERO
 FM_WRITES:         ZERO
 MAIN_WRITES:       ZERO
 FIGMA_WRITES:      ZERO
-PUSHES:            ZERO — no push was made; see NEXT_ACTION
+PUSHES:            ONE — `local/post-fi17-design-pass-20260828` only,
+                   on Earl's explicit authorization, because the container
+                   holding it is ephemeral. It is a new ref: not FM, not main,
+                   not `frontend-design-integration`. No existing pointer moved.
 ```
 
 No provider credential was used, requested, or required. The design preview ran
@@ -395,8 +399,17 @@ during inspection exactly as `tests/e2e/preview-index.spec.js` already does.
    This lane must NOT be merged automatically.
 ```
 
-**This branch was not pushed.** The directive forbids pushing without separate
-authorization. Note that the container holding it is ephemeral, so the work is
-lost when the session ends unless Earl authorizes a push of
-`local/post-fi17-design-pass-20260828` — which is neither FM, nor main, nor
-`frontend-design-integration`.
+**This branch was pushed, once, on Earl's explicit authorization during the
+session.** The directive's default is not to push; that default was overridden
+deliberately because this pass ran in an ephemeral container and the six
+commits would otherwise have been destroyed when it was reclaimed.
+
+What was pushed is a **new ref only** — `local/post-fi17-design-pass-20260828`.
+No existing branch pointer moved. `frontend-design-integration` was not
+written, `release/v0.8.3-frontend-design-integration` was not written, `main`
+was not written, and no FM ref exists in this container to write to. Earl also
+confirmed during the session that Overview stays mounted in the inspection lane
+only (D6).
+
+The branch remains TEMPORARY, LOCAL-DESIGN-ONLY and NOT PRODUCTION-BOUND. It
+must not be merged automatically; see the reconciliation note above.
