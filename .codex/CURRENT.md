@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P25_THEME_PERFORMANCE_ACCESSIBILITY_COMPLETE;P26_HALLMARK_AUDIT_NEXT
+PHASE: P26_HALLMARK_AUDIT_COMPLETE;P27_IMPECCABLE_AUDIT_AND_REPAIR_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -92,6 +92,9 @@ P24_EVIDENCE: .codex/evidence/P24_D1_QUERY_PLAN_AUDIT.json
 P25_STATUS: PASS_LOCAL_IMPLEMENTATION;LIVE_PLAYGROUND_ACCEPTANCE_PENDING_P29_P31
 P25_AUDIT: .codex/PLAYGROUND_MASTER_P25_THEME_PERFORMANCE_ACCESSIBILITY.md
 P25_EVIDENCE: .codex/evidence/P25_THEME_ACCESSIBILITY_AUDIT.json
+P26_STATUS: AUDIT_COMPLETE;TARGET_NOT_MET;FOUR_MAJOR_AND_TWO_MINOR_FINDINGS_ASSIGNED_P27
+P26_AUDIT: .codex/PLAYGROUND_MASTER_P26_HALLMARK_AUDIT.md
+P26_EVIDENCE: .codex/evidence/P26_HALLMARK_LANDING_1440.png;.codex/evidence/P26_HALLMARK_LANDING_390.png;.codex/evidence/P26_HALLMARK_BORROW_1440.png
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P26 Hallmark audit on the consolidated frontend. Preserve accepted hierarchy and semantics, repair only evidence-backed anti-slop findings, rebuild generated artifacts, and keep Production/Figma unchanged.
+NEXT_EXACT_ACTION: Begin P27 Impeccable audit and one bounded repair pass. Close the P26 brand fallback, duplicate navigation/error-state, semantic-token, micro-label, and numeric-typography findings without changing functional contracts or external state.
 HANDOFF_STATUS: ACTIVE
