@@ -625,7 +625,7 @@ export function InventoryRoute({
           ) : (
             <div className="rounded-[12px] overflow-hidden" style={{ border: `1px solid ${c.border}` }}>
               <div className="overflow-x-auto">
-                <table className="w-full" style={{ borderCollapse: 'collapse', minWidth: 680 }}>
+                <table className="w-full tabular-nums" style={{ borderCollapse: 'collapse', minWidth: 680 }}>
                   <thead>
                     <tr style={{ background: thBg, borderBottom: `1px solid ${c.border}` }}>
                       {['Item', 'Category', 'On hand', 'Reserved', 'Available', 'Threshold', 'Lending'].map(

@@ -1519,7 +1519,7 @@ export function InternalLendingHub({
             ) : (
               <>
                 <div className="mt-4 hidden w-full overflow-auto rounded-lg border border-[var(--border-paper)] md:block">
-                  <table className="w-full min-w-[630px] border-collapse text-left text-sm">
+                  <table className="w-full min-w-[630px] border-collapse text-left text-sm tabular-nums">
                     <thead className="bg-black/[.035] text-[10px] uppercase tracking-[.07em] text-[var(--ink-mid)]">
                       <tr>
                         <th scope="col" className="p-3">Lending ticket</th>
@@ -1796,7 +1796,7 @@ export function InternalLendingHub({
                   </p>
                 )}
               </section>
-              <section className="mt-4 border-l-4 border-[#c8992f] bg-amber-500/10 p-3 text-xs leading-5">
+              <section className="mt-4 border border-[var(--theme-accent)] bg-amber-500/10 p-3 text-xs leading-5">
                 <strong className="font-mono text-[10px] uppercase tracking-[.06em]">
                   Unavailable actions
                 </strong>

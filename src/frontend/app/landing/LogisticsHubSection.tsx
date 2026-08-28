@@ -32,20 +32,14 @@ export function LogisticsHubSection({
   ];
 
   return (
-    <section id="logistics" aria-labelledby="logistics-heading" className="w-full" style={{ background: "#40070a" }}>
+    <section id="logistics" aria-labelledby="logistics-heading" className="landing-hub w-full">
       <div className="max-w-[1520px] mx-auto px-5 md:px-8 py-14">
-        <div className="pb-5 mb-8" style={{ borderBottom: "1px solid rgba(242,209,92,0.2)" }}>
-          <p className="text-[10px] tracking-[1px] uppercase mb-3" style={{ fontFamily: "'IBM Plex Mono', monospace", color: "#e8b93c" }}>
-            Open now
-          </p>
+        <div className="landing-hub__heading pb-5 mb-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2
-              id="logistics-heading"
-              style={{ fontFamily: "'Bricolage Grotesque', system-ui, sans-serif", fontWeight: 700, fontSize: "clamp(28px, 4vw, 38px)", color: "#ffffff", letterSpacing: "-1.064px", lineHeight: "41.04px", fontVariationSettings: '"opsz" 14, "wdth" 100' }}
-            >
+            <h2 id="logistics-heading">
               The Logistics hub
             </h2>
-            <p style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: "#f6e29a", letterSpacing: -0.15, fontVariationSettings: '"wdth" 100' }}>
+            <p className="landing-hub__availability">
               Public equipment lending is available without sign-in.
             </p>
           </div>
@@ -56,15 +50,15 @@ export function LogisticsHubSection({
             <div className="flex items-center gap-4">
               <DolMark size={42} />
               <div className="flex flex-col">
-                <span style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 700, fontSize: 20, color: "#fff", letterSpacing: -0.15, lineHeight: "24px" }}>
+                <span className="landing-hub__wordmark">
                   Department of Logistics
                 </span>
-                <span style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: "#f6e29a", letterSpacing: -0.15, fontVariationSettings: '"wdth" 100' }}>
+                <span className="landing-hub__org">
                   University Student Council
                 </span>
               </div>
             </div>
-            <p style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 13, color: "#faeecb", letterSpacing: -0.15, lineHeight: "21.45px", maxWidth: 406, fontVariationSettings: '"wdth" 100' }}>
+            <p className="landing-hub__summary">
               Equipment and supplies for council activities. Ask for what an activity needs, borrow reusable items with an agreed return date, and see where your request stands.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
@@ -76,13 +70,12 @@ export function LogisticsHubSection({
                     event.preventDefault();
                     tile.onSelect();
                   }}
-                  className="flex flex-col gap-1 rounded-[14px] px-5 py-[17px] text-left transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
-                  style={{ background: tile.primary ? "#e8b93c" : "rgba(255,253,248,0.05)", border: tile.primary ? "1px solid #f2d15c" : "1px solid rgba(242,209,92,0.26)" }}
+                  className={`landing-hub__action ${tile.primary ? "landing-hub__action--primary" : "landing-hub__action--secondary"} flex flex-col gap-1 rounded-[14px] px-5 py-[17px] text-left transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
                 >
-                  <span style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontWeight: 500, fontSize: 13, color: tile.primary ? "#40070a" : "#ffffff", letterSpacing: -0.15, fontVariationSettings: '"wdth" 100' }}>
+                  <span className="landing-hub__action-label">
                     {tile.label}
                   </span>
-                  <span style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: tile.primary ? "#610b0f" : "rgba(250,238,203,0.72)", letterSpacing: -0.15, lineHeight: "16.5px", fontVariationSettings: '"wdth" 100' }}>
+                  <span className="landing-hub__action-copy">
                     {tile.sub}
                   </span>
                 </a>
@@ -92,20 +85,19 @@ export function LogisticsHubSection({
 
           <div className="flex flex-col">
             <ol aria-label="Logistics request lifecycle" className="flex flex-col">
-              {LEDGER_STEPS.map((step, i) => (
+              {LEDGER_STEPS.map((step) => (
                 <li
                   key={step.num}
-                  className="grid py-3"
-                  style={{ gridTemplateColumns: "26px 1fr", columnGap: 16, borderTop: i > 0 ? "1px solid rgba(242,209,92,0.16)" : "none" }}
+                  className="landing-hub__ledger-row grid py-3"
                 >
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "rgba(250,238,203,0.72)", letterSpacing: -0.15, lineHeight: "16.5px", paddingTop: 2 }}>
+                  <span className="landing-hub__ledger-number">
                     {step.num}
                   </span>
                   <div>
-                    <p style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontWeight: 500, fontSize: 13, color: "#ffffff", letterSpacing: -0.15, lineHeight: "19.5px", fontVariationSettings: '"wdth" 100' }}>
+                    <p className="landing-hub__ledger-label">
                       {step.label}
                     </p>
-                    <p style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: "rgba(250,238,203,0.72)", letterSpacing: -0.15, lineHeight: "16.5px", fontVariationSettings: '"wdth" 100' }}>
+                    <p className="landing-hub__ledger-copy">
                       {step.body}
                     </p>
                   </div>

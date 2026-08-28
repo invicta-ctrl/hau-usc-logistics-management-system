@@ -144,6 +144,11 @@ test('FVR-001 Current preserves intentional empty and request-error states', asy
         'There are no published announcements right now. Please check back for the next council update.',
       ),
   ).toBeVisible();
+  await expect(
+    page.getByText(
+      'There are no published announcements right now. Please check back for the next council update.',
+    ),
+  ).toHaveCount(1);
 
   await page.unroute('**/api/public/advertisements');
   await installPublicFeed(page, 'error');
@@ -153,6 +158,20 @@ test('FVR-001 Current preserves intentional empty and request-error states', asy
       .getByRole('article')
       .getByText('Current announcements are temporarily unavailable. Please try again shortly.'),
   ).toBeVisible();
+  await expect(
+    page.getByText('Current announcements are temporarily unavailable. Please try again shortly.'),
+  ).toHaveCount(1);
+});
+
+test('FVR-001 preserves institutional identity when the governed USC asset route is unavailable', async ({
+  page,
+}) => {
+  await installPublicFeed(page, 'empty');
+  await page.route('**/brand/usc-logo', (route) => route.fulfill({ status: 404, body: '' }));
+  await page.goto('/');
+
+  await expect(page.locator('.brand-mark__fallback').first()).toHaveText('USC');
+  await expect(page.locator('img[src="/brand/usc-logo"]')).toHaveCount(0);
 });
 
 /* The R3 public-access regression guards that lived here are superseded by

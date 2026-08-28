@@ -1311,7 +1311,7 @@ export function InternalRequestHub({
                   })}
                 </div>
                 <div className="hidden overflow-x-auto md:block">
-                  <table className="w-full" style={{ borderCollapse: 'collapse', minWidth: 690 }}>
+                  <table className="w-full tabular-nums" style={{ borderCollapse: 'collapse', minWidth: 690 }}>
                     <thead>
                       <tr style={{ background: colors.inset, borderBottom: `1px solid ${colors.border}` }}>
                         {['Request', 'Committee', 'Needed by', 'State', 'Urgency'].map((heading) => (

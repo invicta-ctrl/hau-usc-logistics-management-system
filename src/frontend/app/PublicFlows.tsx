@@ -31,7 +31,8 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { uscLogo, dolLogo, defaultItemImage } from "../../ProductionAssets";
+import { dolLogo, defaultItemImage } from "../../ProductionAssets";
+import { UscMark } from "./brand/BrandMarks";
 import {
   FrontendApiError,
   frontendBackend,
@@ -234,9 +235,8 @@ export default function PublicFlows({
       <div className="sr-only" role="alert" aria-live="assertive">{alert}</div>
 
       <header className="mast">
-        <button type="button" onClick={onBack} className="back"><span className="navArrow" aria-hidden="true">← </span>Home</button>
         <div className="identity">
-          <img src={uscLogo} alt="USC" />
+          <UscMark size={38} />
           <img src={dolLogo} alt="Department of Logistics" />
           <span>University Student Council<br />Holy Angel University</span>
         </div>
@@ -284,7 +284,6 @@ export default function PublicFlows({
       {view === "Lending Center" && (
         <>
           <section className="panel glass">
-            <p className="eye">Public lending · no sign-in</p>
             <h1>Lending Center</h1>
             <p>Browse the borrower-safe catalog before providing personal information.
                Every request starts For Review.</p>
@@ -401,7 +400,6 @@ export default function PublicFlows({
 
           {!lendReceipt ? (
             <form className="panel glass" onSubmit={submitLending}>
-              <p className="eye">Step 2</p>
               <h2>New borrowing request</h2>
 
               <div className="selBox">
@@ -511,7 +509,6 @@ export default function PublicFlows({
       {/* ==================== TRACKING ==================== */}
       {view === "Track lending" && (
         <section className="panel glass">
-          <p className="eye">Private tracking</p>
           <h1>Track lending</h1>
           <p>Use only the identifier and private tracking code shown once after submission. This lookup does not
              display requester or borrower identity, contact details, reviewer identity, internal notes, or stock levels.</p>
@@ -539,7 +536,6 @@ export default function PublicFlows({
       {/* ==================== POLICY ==================== */}
       {view === "Lending policy" && (
         <section className="panel glass">
-          <p className="eye">Policy</p>
           <h1>How lending records are handled</h1>
           <h2>Public access</h2>
           <p>The Lending Center is public. No account, sign-in, activation, or approval is needed to browse
@@ -562,7 +558,6 @@ export default function PublicFlows({
 function Receipt({ kind, receipt, onClose }: { kind: string; receipt: PublicSubmissionReceipt; onClose: () => void }) {
   return (
     <section className="panel receipt glass" role="status" aria-live="polite">
-      <p className="eye">{kind} submitted</p>
       <h2>Save your private tracking details</h2>
       <div className="codes">
         <div><small>{kind === "Request" ? "Request ID" : "Submission ID"}</small><code>{receipt.id}</code></div>
@@ -578,12 +573,12 @@ function Receipt({ kind, receipt, onClose }: { kind: string; receipt: PublicSubm
 }
 
 const css = `
-.pub{--paper:#e9e0d0;--surface:var(--paper-warm);--inset:var(--paper-light);--muted:var(--ink-mid);--text:var(--ink-deep);--line:#d8cbb6;--hair:#e6dcc9;--ox:#610b0f;--gold:#7d5518;--action:var(--gold-vivid);--onAction:#40070a;
+.pub{--paper:var(--theme-page,var(--paper-bg));--surface:var(--theme-surface,var(--paper-warm));--inset:var(--theme-surface-muted,var(--paper-light));--muted:var(--theme-text-muted,var(--ink-mid));--text:var(--theme-text,var(--ink-deep));--line:var(--theme-border,var(--border-warm));--hair:var(--theme-border,var(--border-paper));--ox:var(--theme-primary,var(--oxblood-mid));--gold:var(--theme-accent,var(--ink-light));--action:var(--theme-accent,var(--gold-vivid));--onAction:var(--theme-accent-text,var(--oxblood-deep));
  --doneF:#1f6b41;--doneB:#e2f3e9;--doneL:#a8d3ba;--progF:#7d5518;--progB:#fbeed2;--progL:#dcbe8a;--infoF:#23557f;--infoB:#e4eefa;--infoL:#b0cbe6;--alertF:#9c2630;--alertB:#fbe6e8;--alertL:#e3aeb3;--neuF:#5d4a4f;--neuB:#ece3d3;--neuL:#cdbfa7;
  --onOx:var(--gold-cream);--glassHi:rgba(255,255,255,.34);--glassShadow:rgba(26,5,8,.14);
  --g2:rgba(255,251,242,.34);--edge:rgba(255,255,255,.62);--fA:rgba(97,11,15,.30);--fD:color-mix(in oklch, var(--gold-vivid) 26%, transparent);--fH:color-mix(in oklch, var(--paper-warm) 55%, transparent);--rule:rgba(97,11,15,.07);
  position:relative;min-height:100vh;padding:0 20px 80px;background:var(--paper);color:var(--text);font-family:"IBM Plex Sans",Inter,Arial,sans-serif}
-.pub.dark{--paper:#100b0c;--surface:#1f1719;--inset:#281d20;--muted:#b3a0a4;--text:#f7efe6;--line:#3d2e31;--hair:#2c2124;--ox:#a5424b;--gold:#c9a45f;--action:#eed08a;--onAction:#40070a;
+.pub.dark{--paper:var(--theme-page);--surface:var(--theme-surface);--inset:var(--theme-surface-muted);--muted:var(--theme-text-muted);--text:var(--theme-text);--line:var(--theme-border);--hair:var(--theme-border);--ox:var(--theme-primary);--gold:var(--theme-accent);--action:var(--theme-accent);--onAction:var(--theme-accent-text);
  --doneF:#9ad9b2;--doneB:rgba(45,112,72,.28);--doneL:rgba(154,217,178,.36);--progF:#eecb92;--progB:rgba(150,103,30,.28);--progL:rgba(238,203,146,.38);--infoF:#a8cbf0;--infoB:rgba(58,104,158,.26);--infoL:rgba(168,203,240,.38);--alertF:#f6acb2;--alertB:rgba(166,52,60,.3);--alertL:rgba(246,172,178,.36);--neuF:#cbb9bc;--neuB:rgba(255,255,255,.07);--neuL:rgba(255,255,255,.18);
  --onOx:var(--gold-cream);--glassHi:rgba(255,250,235,.22);--glassShadow:rgba(0,0,0,.34);
  --g2:rgba(107,26,38,.30);--edge:rgba(255,240,199,.34);--fA:rgba(165,66,75,.34);--fD:rgba(238,208,138,.16);--fH:rgba(120,20,26,.40);--rule:rgba(247,236,217,.05)}
@@ -607,9 +602,9 @@ const css = `
 .pub button:focus-visible,.pub input:focus-visible,.pub select:focus-visible,.pub textarea:focus-visible{outline:3px solid var(--action);outline-offset:2px}
 .pub button:disabled{opacity:.45;cursor:not-allowed}
 .primary{background:var(--action)!important;color:var(--onAction)!important;border-color:var(--action)!important;font-weight:700;min-height:48px}
-.mast{max-width:1180px;margin:auto;min-height:82px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;border-bottom:1px solid var(--line)}
+.mast{max-width:1180px;margin:auto;min-height:82px;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:18px;border-bottom:1px solid var(--line)}
 .mast>strong{text-align:right}.identity{display:flex;align-items:center;gap:8px}.identity img{width:38px;height:38px;object-fit:contain}
-.identity span{font-size:11px;font-weight:700}.back{justify-self:start;border:0!important;background:transparent!important}
+.identity span{font-size:11px;font-weight:700}
 .notice,.pub nav,.panel,.assure{max-width:980px;margin-left:auto;margin-right:auto}
 .notice{display:flex;justify-content:center;gap:10px;padding:10px;margin-top:18px;border:1px dashed var(--line);font-size:12px;border-radius:10px}
 .notice span{color:var(--muted)}
@@ -619,12 +614,11 @@ const css = `
 .chip{padding:8px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
 .pub nav{display:grid;grid-template-columns:repeat(5,1fr);margin-top:14px;gap:6px}
 .pub nav button{font-size:12px}.pub nav .active{background:var(--ox);color:var(--onOx);border-color:var(--ox);font-weight:800}
-.panel{margin-top:20px;padding:clamp(22px,4vw,40px);border-radius:18px}
-.panel h1{font:700 clamp(32px,4.4vw,52px)/1.02 "Bricolage Grotesque",Georgia,serif;letter-spacing:-.03em;margin:6px 0 12px}
+.panel{margin-top:20px;padding:clamp(22px,4vw,40px);border-radius:14px}
+.panel h1{font:700 clamp(32px,4.4vw,52px)/1.02 "Bricolage Grotesque",Georgia,serif;letter-spacing:-.03em;margin:0 0 12px}
 .panel h2{font:700 24px/1.2 "Bricolage Grotesque",Georgia,serif;margin:0 0 6px}
 .panel h3{font:700 17px/1.3 "Bricolage Grotesque",Georgia,serif;margin:24px 0 8px}
 .panel>p{color:var(--muted);max-width:70ch}
-.eye{margin:0!important;color:var(--gold)!important;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
 .muted{color:var(--muted)}
 .stateSwitch{display:flex;gap:6px;margin:18px 0 6px;flex-wrap:wrap}.stateSwitch button{font-size:12px;min-height:36px;padding:6px 12px;border-radius:999px}
 .stateSwitch .active{background:var(--ox);color:var(--onOx);border-color:var(--ox)}
@@ -657,7 +651,7 @@ const css = `
 .qty{display:grid;gap:4px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)}.qty input{width:90px}
 fieldset{border:0;margin:22px 0 0;padding:0}legend{font:700 17px/1.3 "Bricolage Grotesque",Georgia,serif;padding:0 0 10px}
 .choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.choice{display:flex;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer}
+.choice{display:flex;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer}
 .choice.on{background:var(--progB);border-color:var(--action);border-width:2px}
 .choice input{width:18px;height:18px;min-height:0;flex:none;accent-color:var(--ox)}
 .choice b{display:block;font-size:15px}.choice small{color:var(--muted);font-size:11px}
@@ -665,7 +659,7 @@ fieldset{border:0;margin:22px 0 0;padding:0}legend{font:700 17px/1.3 "Bricolage 
 .grid label,.panel label{display:grid;gap:6px;font-size:12px;font-weight:700}
 .grid .span2{grid-column:1/-1}
 .badge{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:var(--infoB);color:var(--infoF);border:1px solid var(--infoL);font-size:10px;font-style:normal;font-weight:700}
-.ack{display:flex;gap:12px;align-items:flex-start;padding:14px;margin-top:10px;background:var(--inset);border:1px solid var(--hair);border-radius:12px}
+.ack{display:flex;gap:12px;align-items:flex-start;padding:14px;margin-top:10px;background:var(--inset);border:1px solid var(--hair);border-radius:10px}
 .ack.cond{border-color:var(--infoL)}
 .ack input{width:18px;height:18px;min-height:0;flex:none;margin-top:3px;accent-color:var(--ox)}
 .ack b{display:block;font-size:15px}.ack small{color:var(--muted);font-size:13px}
@@ -682,22 +676,22 @@ nav .navArrow{opacity:.72}
    .consequence/.gate rule; not carried forward. */
 .consequence{margin-top:14px;padding:12px 14px;background:var(--inset);border:1px solid var(--hair);color:var(--muted);font-size:12px;border-radius:10px}
 .stepper{list-style:none;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:20px 0 6px;padding:0}
-.stepper li{display:flex;gap:8px;align-items:center;padding:12px;border-radius:12px;font-size:12px}
+.stepper li{display:flex;gap:8px;align-items:center;padding:12px;border-radius:10px;font-size:12px}
 .stepper li.cur{background:var(--progB);border:1px solid var(--action)}
 .stepper li.todo{color:var(--muted)}
 .mk{flex:none;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800;background:var(--inset);border:1px solid var(--line)}
 .stepper li.done .mk{background:var(--doneB);color:var(--doneF);border-color:var(--doneL)}
 .stepper li.cur .mk{background:var(--ox);color:var(--onOx);border-color:var(--ox)}
-.summary{display:flex;gap:16px;align-items:center;padding:14px 16px;margin-top:12px;background:var(--inset);border:1px solid var(--hair);border-radius:12px}
+.summary{display:flex;gap:16px;align-items:center;padding:14px 16px;margin-top:12px;background:var(--inset);border:1px solid var(--hair);border-radius:10px}
 .summary>span{flex:1}.summary small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 .stepNav{display:flex;justify-content:space-between;gap:12px;margin-top:22px}
 .receipt{border:2px solid var(--doneL)}
 .codes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
-.codes div{padding:16px;background:var(--inset);border:1px solid var(--line);border-radius:12px}
+.codes div{padding:16px;background:var(--inset);border:1px solid var(--line);border-radius:10px}
 .codes small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 .codes code{display:block;margin-top:8px;font-family:"IBM Plex Mono",monospace;font-size:19px}
-.warn{padding:14px;background:var(--progB);color:var(--progF);border:1px solid var(--progL);border-radius:12px;font-size:14px}
-@media(max-width:900px){.mast{grid-template-columns:1fr auto}.mast>strong{display:none}.pub nav{grid-template-columns:repeat(2,1fr)}.stepper{grid-auto-flow:row}}
+.warn{padding:14px;background:var(--progB);color:var(--progF);border:1px solid var(--progL);border-radius:10px;font-size:14px}
+@media(max-width:900px){.mast{grid-template-columns:1fr}.mast>strong{display:none}.pub nav{grid-template-columns:repeat(2,1fr)}.stepper{grid-auto-flow:row}}
 @media(max-width:640px){.pub{padding:0 12px 90px}.grid,.choices,.codes,.skeleton{grid-template-columns:1fr}
  .catalog li{grid-template-columns:60px minmax(0,1fr)}.catalog li>button{grid-column:2}
  .assure .who{margin-left:0}.panel{padding:20px 16px}.pub nav{grid-template-columns:1fr}}

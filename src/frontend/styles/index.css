@@ -9,6 +9,239 @@ html,body,#root{max-width:100%;overflow-x:clip}
 button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipulation}
 #main-content{min-width:0}
 
+.brand-mark__fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--theme-accent, var(--gold-mid));
+  background: var(--theme-nav, var(--oxblood-deep));
+  color: var(--theme-nav-text, var(--gold-cream));
+  font-family: var(--font-record);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.landing-current {
+  background: var(--theme-surface, var(--paper-warm));
+  color: var(--theme-text, var(--ink-deep));
+}
+
+.landing-section-heading {
+  border-bottom: 1px solid var(--theme-border, var(--border-paper));
+}
+
+.landing-section-heading h2,
+.landing-hub__heading h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.375rem);
+  font-weight: 700;
+  letter-spacing: -0.028em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.landing-current__media {
+  min-height: 13.75rem;
+  border: 1px solid var(--theme-accent, var(--border-warm));
+  background: var(--theme-nav, var(--oxblood-deep));
+}
+
+.landing-current__media-state {
+  max-width: 52ch;
+  color: var(--theme-nav-text, var(--paper-warm));
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.landing-current__detail,
+.landing-current__state {
+  border: 1px solid var(--theme-border, var(--border-paper));
+  background: var(--theme-surface-raised, var(--paper-warm));
+}
+
+.landing-current__detail h3,
+.landing-current__state h3 {
+  margin: 0;
+  color: var(--theme-text, var(--ink-deep));
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.landing-current__detail p,
+.landing-current__state p {
+  max-width: 70ch;
+  color: var(--theme-text-muted, var(--ink-mid));
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.landing-current__action {
+  min-height: 44px;
+  align-items: center;
+  color: var(--theme-accent, var(--ink-light));
+  font-family: var(--font-record);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.landing-current__action:focus-visible {
+  outline-color: var(--theme-focus, var(--gold-vivid));
+}
+
+.landing-hub {
+  background: var(--theme-nav, var(--oxblood-deep));
+  color: var(--theme-nav-text, var(--gold-cream));
+}
+
+.landing-hub__heading {
+  border-bottom: 1px solid color-mix(in oklch, var(--theme-accent, var(--gold-mid)) 36%, transparent);
+}
+
+.landing-hub__heading h2,
+.landing-hub__wordmark,
+.landing-hub__ledger-label {
+  color: var(--theme-nav-text, #fff);
+}
+
+.landing-hub__availability,
+.landing-hub__org,
+.landing-hub__summary,
+.landing-hub__ledger-number,
+.landing-hub__ledger-copy {
+  color: color-mix(in oklch, var(--theme-nav-text, var(--gold-cream)) 78%, transparent);
+}
+
+.landing-hub__availability,
+.landing-hub__org,
+.landing-hub__summary,
+.landing-hub__action,
+.landing-hub__ledger-label,
+.landing-hub__ledger-copy {
+  font-family: var(--font-body);
+}
+
+.landing-hub__availability,
+.landing-hub__org {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.landing-hub__wordmark {
+  font-family: var(--font-wordmark);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.landing-hub__summary {
+  max-width: 31.25rem;
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+.landing-hub__action {
+  border: 1px solid color-mix(in oklch, var(--theme-accent, var(--gold-mid)) 48%, transparent);
+}
+
+.landing-hub__action:focus-visible {
+  outline-color: var(--theme-focus, var(--gold-vivid));
+}
+
+.landing-hub__action--primary {
+  border-color: var(--theme-accent, var(--gold-mid));
+  background: var(--theme-accent, var(--gold-vivid));
+  color: var(--theme-accent-text, var(--oxblood-deep));
+}
+
+.landing-hub__action--secondary {
+  background: color-mix(in oklch, var(--theme-nav-text, var(--paper-warm)) 6%, transparent);
+  color: var(--theme-nav-text, #fff);
+}
+
+.landing-hub__action-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.landing-hub__action-copy {
+  color: inherit;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  opacity: 0.78;
+}
+
+.landing-hub__ledger-row {
+  grid-template-columns: 1.625rem minmax(0, 1fr);
+  column-gap: 1rem;
+}
+
+.landing-hub__ledger-row + .landing-hub__ledger-row {
+  border-top: 1px solid color-mix(in oklch, var(--theme-accent, var(--gold-mid)) 28%, transparent);
+}
+
+.landing-hub__ledger-number {
+  padding-top: 0.125rem;
+  font-family: var(--font-record);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+
+.landing-hub__ledger-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.landing-hub__ledger-copy {
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* Legacy route-local aliases remain as compatibility fallbacks, but the active
+   operational palette is the P18 semantic theme contract. */
+.adm,
+.lend,
+.rel,
+.sup {
+  --bg: var(--theme-page) !important;
+  --m1: var(--theme-surface) !important;
+  --m2: var(--theme-surface-muted) !important;
+  --m3: var(--theme-selection) !important;
+  --text: var(--theme-text) !important;
+  --muted: var(--theme-text-muted) !important;
+  --line: var(--theme-border) !important;
+  --ox: var(--theme-primary) !important;
+  --gold: var(--theme-accent) !important;
+}
+
+.adm table,
+.lend table,
+.rel table,
+.sup table {
+  font-variant-numeric: tabular-nums;
+}
+
+.adm .gate,
+.lend .gate,
+.lend .stale,
+.rel .gate,
+.rel .stale,
+.sup .stale {
+  border: 1px solid var(--gold) !important;
+}
+
 /* Shared material roles */
 .material-g1,
 .material-g2,

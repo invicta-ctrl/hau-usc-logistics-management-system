@@ -1,4 +1,21 @@
+import { useState } from "react";
+
 import { combinedLockup, dolLogo, uscLogo } from "../../../ProductionAssets";
+
+function GovernedBrandImage({ src, fallback }: { src: string; fallback: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) return <span className="brand-mark__fallback">{fallback}</span>;
+
+  return (
+    <img
+      src={src}
+      alt=""
+      onError={() => setFailed(true)}
+      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+    />
+  );
+}
 
 export function UscMark({ size = 46 }: { size?: number }) {
   return (
@@ -7,7 +24,7 @@ export function UscMark({ size = 46 }: { size?: number }) {
       style={{ width: size, height: size }}
       aria-hidden="true"
     >
-      <img src={uscLogo} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+      <GovernedBrandImage src={uscLogo} fallback="USC" />
     </span>
   );
 }
@@ -19,7 +36,7 @@ export function DolMark({ size = 42 }: { size?: number }) {
       style={{ width: size, height: size }}
       aria-hidden="true"
     >
-      <img src={dolLogo} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+      <GovernedBrandImage src={dolLogo} fallback="DOL" />
     </span>
   );
 }
