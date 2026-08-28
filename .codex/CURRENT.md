@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P07_CLEAN_OPERATIONAL_BASELINE_COMPLETE;P08_CORE_ROUTE_BUG_REPAIRS_NEXT
+PHASE: P08_FRESH_BROWSER_REPRODUCTION_COMPLETE;P08_FOCUSED_REPAIRS_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -29,6 +29,7 @@ PLAYGROUND_SCHEMA: 32
 PLAYGROUND_LATEST_MIGRATION: 0032_staff_account_activity_history.sql
 PLAYGROUND_RESET_GENERATION_AT_PRIOR_FREEZE: 3
 PLAYGROUND_CURRENT_RESET_GENERATION: 4
+PLAYGROUND_CURRENT_SESSION_STATE: WORKING_STATE_METADATA_CLEAN;ACTIVE_SESSIONS=1;TRANSIENT_TOTAL=1;P12_LIFECYCLE_FINDING_RECORDED
 PRODUCTION_MUTATION: ZERO
 
 P00_STATUS: PASS_ACCEPTED_PROMPT_FIDELITY_AND_GOVERNANCE_VERIFIED
@@ -47,6 +48,8 @@ P07_CHECKPOINT: .codex/PLAYGROUND_MASTER_P07_PRE_APPLY_CHECKPOINT.md
 P07_RESET_RECOVERY: .codex/PLAYGROUND_MASTER_P07_RESET_ATTEMPT_A_RECOVERY.md
 P07_RESET_CHECKPOINT: .codex/PLAYGROUND_MASTER_P07_RESET_GENERATION_4_CHECKPOINT.md
 P07_AUDIT: .codex/PLAYGROUND_MASTER_P07_CLEAN_BASELINE_AUDIT.md
+P08_STATUS: BEFORE_REPAIR_AUDIT_COMPLETE;REPAIRS_NOT_STARTED
+P08_AUDIT: .codex/PLAYGROUND_MASTER_P08_BEFORE_REPAIR_AUDIT.md
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Execute P08. From a fresh browser against the clean generation-4 Playground, reproduce the owner-observed Overview, Internal Request Hub, Internal Lending Hub, Release, Restocking, and Procurement defects before repair; add focused regression coverage first where practical and preserve real Worker/D1 behavior and truthful unsupported states.
+NEXT_EXACT_ACTION: Commit and push the P08 before-repair audit tooling/checkpoint. Then map existing Request, Lending, Release, and receiving/restocking Worker endpoints and invariants; add focused regressions for linked lending inventory, full/partial/duplicate release, restock receiving/inventory movement, and truthful failure/retry states before the smallest supported repairs.
 HANDOFF_STATUS: ACTIVE

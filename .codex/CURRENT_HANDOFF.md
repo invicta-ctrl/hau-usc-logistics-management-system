@@ -28,18 +28,18 @@ PRIOR_LATEST_MIGRATION: 0032_staff_account_activity_history.sql
 PRIOR_LIVE_STATE: DIRTY;RESET_GENERATION=3;ACTIVE_SESSIONS=1;TRANSIENT_TOTAL=1
 PRIOR_PRODUCTION_MUTATION: ZERO
 
-COMPLETED: P00–P07 are complete. P07 preserved v1, derived and locally verified staging-safe v2 coverage without a new Production read, reconciled and repaired failed reset attempt A, completed corrected generation-4 reset, and installed `PGBL-20260828-COVERAGE-V2`. Live D1 is clean with transient zero, schema 32/migration 0032, foreign keys and D1-to-R2 linkage passing; required operational coverage and 20/20 inventory reconciliation pass; R2 parity/exceptions and role capabilities are recorded. Production and schema mutation are none. Reset and overlay install are no-repeat actions.
+COMPLETED: P00–P07 are complete. P08 before-repair reproduction used a fresh manifest-bound Playground browser session. All six real bootstrap v2 routes load without stuck loading or browser/network errors. Overview and Procurement are pass candidates; Request needs mutation/failure-state proof; Lending cannot resolve canonical item/availability for any ticket; Release and Restocking are read-only despite their required supported consequences. No P08 repair has started.
 
-VALIDATION: P06 frontend evidence remains accepted. P07 local aggregate audit, candidate integrity/FK checks, fresh-v1 overlay verification, full Playground suite (11 files/44 tests), generation-4 reset report, independent live inspection, v2 postflight, private live export restore, and 20/20 inventory reconciliation pass. Private v2 manifest/report/export hashes are recorded in the P07 audit.
+VALIDATION: P07 evidence remains accepted. P08 root/session/navigation pass; Overview/Request/Lending/Release/Restocking/Procurement each return HTTP 200 authenticated bootstrap v2 contracts and real nonzero data; loading terminates; six screenshots were inspected; console errors and failed requests are zero. The custom hostname's Access gate was preserved and not bypassed.
 
 PRESERVED: main working state; backend and v0.8.4 worktrees; frontend-design-integration `.ai-bridge/` and `.local/`; all recovery/design/release refs; prior Playground D1/R2/runtime state; canonical root AGENTS.md.
 
-EXTERNAL_ACTIONS: Attempt A failed and was reconciled. Attempt B restored fixed Playground D1/R2 to sealed v1 and advanced generation to 4. The additive v2 overlay then populated only the fixed Playground D1 and captured a distinct clean bookmark. Temporary reset/inspection Workers were removed. No schema, migration, Production, main, Google, or Figma mutation occurred.
+EXTERNAL_ACTIONS: P07 external actions remain recorded. P08 performed read-only browser/API inspection and created one transient staging-only System Owner convenience session. D1 now has one session/transient row while working-state metadata still says clean/inactive; this is preserved as a P12 lifecycle finding. No other P08 Worker/D1/R2/deployment, Production, main, Google, or Figma mutation occurred.
 
 DO_NOT_REPEAT: Do not recreate the reconciliation branch/worktree, broad-merge frontend/design branches, re-run frozen FI comparison, reuse failed v2 artifacts, repeat reset attempts A/B, or reapply the v2 overlay. Use the private v2 manifest and clean bookmark for later reset verification.
 
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Execute P08 from a fresh browser against clean generation 4. Reproduce and regression-gate Overview, Request, Lending, Release, Restocking, and Procurement owner-observed defects before repair; keep every normal route backend-backed and every unsupported operation truthful.
+NEXT_EXACT_ACTION: Commit and push the P08 before-repair checkpoint, then regression-gate and repair linked lending inventory plus supported Release/Restocking consequences; verify Request retry/mutation and preserve Overview/Procurement pass behavior.
 RESUME_COMMANDS: Read the accepted master prompt, current chain, and reconciliation manifest; run exact Git handshake; reverify live Playground identity before any external mutation.
 PROHIBITED_ACTIONS: Production/main deployment or mutation; branch deletion; history rewrite; unknown residue mutation; Figma write; unbacked reset/migration; unverified R2 deletion.
 HANDOFF_STATUS: ACTIVE
