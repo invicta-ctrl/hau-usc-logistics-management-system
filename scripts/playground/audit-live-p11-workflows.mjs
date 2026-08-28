@@ -198,7 +198,7 @@ async function submitPublicRequest({ marker, itemId, quantity, event }) {
     await api('/api/public/request', {
       method: 'POST',
       body: {
-        clientRequestId: retryKey(`public-request-${marker}`),
+        clientRequestId: retryKey('public-request'),
         requesterName: 'Playground P11 Synthetic Requester',
         organization: 'HAU-USC Logistics Playground',
         requesterType: 'HAU office / department',
