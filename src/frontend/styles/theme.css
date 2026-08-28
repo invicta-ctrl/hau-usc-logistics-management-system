@@ -61,6 +61,11 @@
   --glass-blur-soft: blur(10px) saturate(112%);
   --glass-blur-raised: blur(16px) saturate(118%);
 
+  /* Solid operational content planes. Glass is reserved for functional layers. */
+  --content-surface: var(--paper-warm);
+  --content-surface-muted: var(--paper-light);
+  --content-surface-raised: var(--paper-mid);
+
   /* Digital Atrium material roles stay distinct from semantic status. */
   --atrium-g0: var(--oxblood-deep);
   --atrium-g1: color-mix(in oklch, var(--oxblood-mid) 66%, transparent);
@@ -164,6 +169,9 @@
   --glass-highlight: color-mix(in oklch, var(--paper-warm) 14%, transparent);
   --glass-shadow-soft: 0 12px 28px color-mix(in oklch, #120b0b 54%, transparent);
   --glass-shadow-raised: 0 20px 48px color-mix(in oklch, #120b0b 68%, transparent);
+  --content-surface: #242120;
+  --content-surface-muted: #2d2927;
+  --content-surface-raised: #37312e;
 }
 
 @theme inline {

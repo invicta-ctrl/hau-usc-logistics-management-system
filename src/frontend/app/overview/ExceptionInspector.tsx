@@ -36,7 +36,7 @@ export function ExceptionInspector({
         role={modal ? "dialog" : "complementary"}
         aria-modal={modal || undefined}
         aria-labelledby="inspector-title"
-        className="command-inspector material-g3"
+        className="command-inspector"
         tabIndex={-1}
       >
         <div className="command-inspector__head">

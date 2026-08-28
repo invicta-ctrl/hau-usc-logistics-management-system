@@ -28,18 +28,18 @@ PRIOR_LATEST_MIGRATION: 0032_staff_account_activity_history.sql
 PRIOR_LIVE_STATE: DIRTY;RESET_GENERATION=3;ACTIVE_SESSIONS=1;TRANSIENT_TOTAL=1
 PRIOR_PRODUCTION_MUTATION: ZERO
 
-COMPLETED: P00–P16 are complete at their assigned gates. P12 completed two live guarded reset cycles and left generation 6 CLEAN. P13 implemented the Playground-only Administration reset center. P14 rebuilt Profile as an authenticated operational surface. P15 recorded the bounded current-primary-source UI/UX decision note. P16 audited the exact candidate against the accepted anti-AI-slop avoid/prefer lists and assigned only confirmed corrections to P17–P23.
+COMPLETED: P00–P17 are complete at their assigned gates. P12 completed two live guarded reset cycles and left generation 6 CLEAN. P13 implemented the Playground-only Administration reset center. P14 rebuilt Profile as an authenticated operational surface. P15 recorded the bounded current-primary-source UI/UX decision note. P16 audited the exact candidate. P17 established solid semantic planes for dense operational content, retained only functional glass with opaque fallbacks, removed the decorative command background, and repaired stale post-auth route hashes.
 
-VALIDATION: P12 live evidence remains accepted. P14 passes 53 focused tests across 6 files, the full 166-file / 1229-test suite, 10 targeted Profile Playwright cases across the five configured viewport projects, the 1679-module frontend build, release-candidate lint with zero errors, targeted formatting, generated-artifact rebuild, and diff checks. Repository-wide lint remains blocked only by pre-existing browser-global errors in the excluded public-portals-r3 prototype.
+VALIDATION: P12 live evidence remains accepted. P17 passes 22 focused tests across 4 files, the full 167-file / 1232-test suite, 15 targeted Playwright cases across the five configured frontend viewport projects, the 1679-module frontend build, release-candidate lint with zero errors and 2 pre-existing warnings, generated-artifact rebuild, and exact-port cleanup. Repository-wide lint remains blocked only by pre-existing browser-global errors in the excluded public-portals-r3 prototype.
 
 PRESERVED: main working state; backend and v0.8.4 worktrees; frontend-design-integration `.ai-bridge/` and `.local/`; all recovery/design/release refs; prior Playground D1/R2/runtime state; canonical root AGENTS.md.
 
-EXTERNAL_ACTIONS: P07–P12 external actions remain recorded in their checkpoints. P13–P15 made no deployment, D1, R2, Production, main, Google, or Figma mutation. P15 used public primary documentation only. The deployed Playground source remains `ca28bde`; the live state remains generation 6 CLEAN with zero sessions/transient rows.
+EXTERNAL_ACTIONS: P07–P12 external actions remain recorded in their checkpoints. P13–P17 made no deployment, D1, R2, Production, main, Google, or Figma mutation. P15 used public primary documentation only. The deployed Playground source remains `ca28bde`; the live state remains generation 6 CLEAN with zero sessions/transient rows.
 
 DO_NOT_REPEAT: Do not recreate the reconciliation branch/worktree, broad-merge frontend/design branches, re-run frozen FI comparison, reuse failed v2 artifacts, repeat reset attempts A/B, or reapply the v2 overlay. Use the private v2 manifest and clean bookmark for later reset verification.
 
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P17 Restrained glass architecture and map each translucent surface to an accepted functional layer before changing shared styles.
+NEXT_EXACT_ACTION: Begin P18 Six-theme system and define the full semantic palette contract before wiring Profile selection and persistence.
 RESUME_COMMANDS: Read the accepted master prompt, current chain, and reconciliation manifest; run exact Git handshake; reverify live Playground identity before any external mutation.
 PROHIBITED_ACTIONS: Production/main deployment or mutation; branch deletion; history rewrite; unknown residue mutation; Figma write; unbacked reset/migration; unverified R2 deletion.
 HANDOFF_STATUS: ACTIVE

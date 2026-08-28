@@ -24,6 +24,12 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .material-g3 { background: var(--g3-raised); box-shadow: var(--glass-shadow-raised), inset 0 1px 0 var(--glass-highlight); backdrop-filter: var(--glass-blur-raised); -webkit-backdrop-filter: var(--glass-blur-raised); }
 .material-g4 { background: var(--g4-focus); border-color: var(--glass-border-strong); box-shadow: var(--glass-shadow-raised), inset 0 1px 0 var(--glass-highlight); backdrop-filter: var(--glass-blur-raised); -webkit-backdrop-filter: var(--glass-blur-raised); }
 
+.content-surface {
+  border: 1px solid var(--border);
+  background: var(--content-surface-raised);
+  box-shadow: 0 12px 28px color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+
 /* Digital Atrium — one integrated identity, service, and ledger composition. */
 /* The radial wash at 82% 18% was a decorative halo with no depicted light
    source — the standard tell of generated UI — and it sat exactly where the
@@ -437,10 +443,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   padding: clamp(1.25rem, 4vw, 2.5rem);
   color: var(--foreground);
   font-family: var(--font-body);
-  background-image:
-    radial-gradient(circle at 92% 8%, color-mix(in oklch, var(--gold-vivid) 8%, transparent), transparent 24%),
-    linear-gradient(90deg, transparent 0 95%, color-mix(in oklch, var(--border) 28%, transparent) 95% 96%, transparent 96%);
-  background-size: auto, 72px 72px;
+  background: var(--background);
 }
 
 .command-table-header {
@@ -548,12 +551,9 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 
 .command-ledger-list {
   overflow: clip;
-  border: 1px solid var(--glass-border-soft);
+  border: 1px solid var(--border);
   border-radius: 0.875rem;
-  background: var(--g2-operational);
-  box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-highlight);
-  backdrop-filter: var(--glass-blur-soft);
-  -webkit-backdrop-filter: var(--glass-blur-soft);
+  background: var(--content-surface);
 }
 
 .command-row {
@@ -565,7 +565,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   gap: var(--space-sm);
   align-items: start;
   border: 0;
-  border-block-start: 1px solid var(--glass-border-soft);
+  border-block-start: 1px solid var(--border);
   color: var(--foreground);
   background: transparent;
   text-align: start;
@@ -581,7 +581,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   position: relative;
   z-index: var(--z-raised);
   transform: translateX(2px);
-  background: var(--g3-raised);
+  background: var(--content-surface-raised);
   box-shadow: inset 3px 0 0 var(--gold-vivid);
 }
 
@@ -615,12 +615,9 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .command-pulse-list,
 .command-topology-list,
 .command-recon-list {
-  border: 1px solid var(--glass-border-soft);
+  border: 1px solid var(--border);
   border-radius: 0.875rem;
-  background: var(--g1-soft);
-  box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-highlight);
-  backdrop-filter: var(--glass-blur-soft);
-  -webkit-backdrop-filter: var(--glass-blur-soft);
+  background: var(--content-surface);
 }
 
 .command-path-step {
@@ -632,7 +629,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   gap: var(--space-sm);
   align-items: start;
   border: 0;
-  border-block-start: 1px solid var(--glass-border-soft);
+  border-block-start: 1px solid var(--border);
   color: var(--foreground);
   background: transparent;
   text-align: start;
@@ -642,8 +639,8 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 }
 
 .command-path-list li:first-child .command-path-step { border-block-start: 0; }
-.command-path-step[aria-pressed="true"] { background: var(--g3-raised); }
-.command-path-step__marker { width: 0.75rem; height: 0.75rem; margin-block-start: 0.2rem; border: 1px solid var(--glass-border-strong); border-radius: 50%; background: var(--g1-soft); }
+.command-path-step[aria-pressed="true"] { background: var(--content-surface-raised); }
+.command-path-step__marker { width: 0.75rem; height: 0.75rem; margin-block-start: 0.2rem; border: 1px solid var(--glass-border-strong); border-radius: 50%; background: var(--content-surface-muted); }
 .command-path-step[aria-pressed="true"] .command-path-step__marker { background: var(--gold-vivid); }
 .command-path-step strong { display: block; font-size: 0.8125rem; line-height: 1.35; }
 .command-path-step span { display: block; margin-block-start: 0.2rem; color: var(--muted-foreground); font-family: var(--font-record); font-size: 0.6875rem; line-height: 1.4; }
@@ -651,7 +648,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .command-pulse-list li,
 .command-recon-row {
   padding: var(--space-sm) var(--space-md);
-  border-block-start: 1px solid var(--glass-border-soft);
+  border-block-start: 1px solid var(--border);
 }
 
 .command-pulse-list li:first-child,
@@ -671,7 +668,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .command-topology-node {
   min-width: 0;
   padding: var(--space-sm);
-  border: 1px solid var(--glass-border-soft);
+  border: 1px solid var(--border);
   border-radius: 0.65rem;
   background: transparent;
   transition:
@@ -682,10 +679,8 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .command-topology-node.is-active {
   transform: translateY(-2px);
   border-color: var(--glass-border-strong);
-  background: var(--g4-focus);
+  background: var(--content-surface-raised);
   box-shadow: inset 0 1px 0 var(--glass-highlight);
-  backdrop-filter: var(--glass-blur-soft);
-  -webkit-backdrop-filter: var(--glass-blur-soft);
 }
 
 .command-topology-node span { display: block; color: var(--muted-foreground); font-family: var(--font-record); font-size: 0.625rem; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -837,9 +832,17 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
     z-index: var(--z-raised);
     max-height: calc(100dvh - 3rem);
     border-radius: 1rem;
+    background: var(--content-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     animation: command-inspector-enter var(--dur-surface) var(--ease-out) both;
   }
-  .command-inspector__head { position: static; }
+  .command-inspector__head {
+    position: static;
+    background: var(--content-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 @keyframes command-inspector-enter { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
@@ -854,9 +857,15 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   .command-pulse-list,
   .command-topology-list,
   .command-recon-list,
-  .command-inspector {
+  .command-inspector,
+  .command-inspector__head {
     background: var(--paper-warm);
   }
+
+  .public-nav--glass { background: var(--oxblood-deep); }
+  .nav-glass,
+  .hero-action--glass,
+  .atrium__secondary { background: var(--oxblood-mid); }
 
   .dark .material-g1,
   .dark .material-g2,
@@ -867,7 +876,8 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   .dark .command-pulse-list,
   .dark .command-topology-list,
   .dark .command-recon-list,
-  .dark .command-inspector {
+  .dark .command-inspector,
+  .dark .command-inspector__head {
     background: #2d2927;
   }
 
@@ -889,7 +899,12 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   .command-pulse-list,
   .command-topology-list,
   .command-recon-list,
-  .command-inspector {
+  .command-inspector,
+  .command-inspector__head,
+  .public-nav--glass,
+  .nav-glass,
+  .hero-action--glass,
+  .atrium__secondary {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
@@ -903,9 +918,15 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   .command-pulse-list,
   .command-topology-list,
   .command-recon-list,
-  .command-inspector {
+  .command-inspector,
+  .command-inspector__head {
     background: var(--paper-warm) !important;
   }
+
+  .public-nav--glass { background: var(--oxblood-deep) !important; }
+  .nav-glass,
+  .hero-action--glass,
+  .atrium__secondary { background: var(--oxblood-mid) !important; }
 
   .dark .material-g1,
   .dark .material-g2,
@@ -916,7 +937,8 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   .dark .command-pulse-list,
   .dark .command-topology-list,
   .dark .command-recon-list,
-  .dark .command-inspector {
+  .dark .command-inspector,
+  .dark .command-inspector__head {
     background: #2d2927 !important;
   }
 

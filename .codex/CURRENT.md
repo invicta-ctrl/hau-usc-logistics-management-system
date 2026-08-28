@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P16_ANTI_AI_SLOP_AUDIT_COMPLETE;P17_RESTRAINED_GLASS_NEXT
+PHASE: P17_RESTRAINED_GLASS_COMPLETE;P18_SIX_THEME_SYSTEM_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: reconcile/playground-master
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -70,6 +70,8 @@ P15_STATUS: PASS_CURRENT_PRIMARY_SOURCE_RESEARCH
 P15_AUDIT: .codex/PLAYGROUND_MASTER_P15_UIUX_RESEARCH.md
 P16_STATUS: PASS_BOUNDED_AUDIT;CORRECTIONS_ASSIGNED_P17_P23
 P16_AUDIT: .codex/PLAYGROUND_MASTER_P16_ANTI_AI_SLOP_AUDIT.md
+P17_STATUS: PASS_LOCAL_IMPLEMENTATION;LIVE_UI_ACCEPTANCE_PENDING_P29_P31
+P17_AUDIT: .codex/PLAYGROUND_MASTER_P17_RESTRAINED_GLASS.md
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Begin P17 Restrained glass architecture. Map every current blurred/translucent surface to an accepted functional layer, convert dense operational content to solid semantic surfaces, preserve opaque/reduced-transparency fallbacks, and verify that no essential meaning depends on transparency.
+NEXT_EXACT_ACTION: Begin P18 Six-theme system. Define six named semantic token families with independently designed Light and Dark palettes, keep Light/Dark/System separate from theme selection, persist both in reset-restored Profile state, and verify all required semantic roles.
 HANDOFF_STATUS: ACTIVE

@@ -157,7 +157,7 @@ export function StaffSignInPage({
       >
         <div
           aria-busy={busy}
-          className={`material-g3 w-full ${accessMode || recoveryMode ? "max-w-[760px]" : "max-w-[420px]"} flex flex-col gap-8 rounded-[18px] p-6 md:p-8`}
+          className={`content-surface w-full ${accessMode || recoveryMode ? "max-w-[760px]" : "max-w-[420px]"} flex flex-col gap-8 rounded-[18px] p-6 md:p-8`}
           style={{
             color: c.text,
           }}

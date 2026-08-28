@@ -104,6 +104,10 @@ export function useAppController() {
       setDenialReason(null);
       setRequesterMode(decision.requesterMode);
       setAuthState('authorized');
+      // The identity gateway may own the current hash during a generic sign-in.
+      // Replace it with the authorized destination before the hash-sync effect
+      // observes the new session, otherwise it can replay the stale gateway URL.
+      window.history.replaceState(null, '', appRouteHash(decision.route));
       moveTo(decision.route);
     },
     [moveTo],
