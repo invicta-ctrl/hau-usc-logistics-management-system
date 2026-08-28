@@ -39,13 +39,18 @@ describe('post-FI17 Overview and hero-motion recovery', () => {
       "import heroVideoSrc from '../../assets/hero/hausc-institutional-logistics-hero.mp4';",
     );
     expect(section).toContain('<HeroMotion videoSrc={heroVideoSrc} />');
-    expect(hero).toContain('autoPlay={motionAllowed && !playback.pausedByUser && !playback.playbackBlocked}');
+    expect(hero).toMatch(
+      /autoPlay=\{Boolean\([\s\S]*resolvedVideoSrc && motionAllowed && !playback\.pausedByUser && !playback\.playbackBlocked/,
+    );
     expect(hero).toContain('muted');
     expect(hero).toContain('loop');
     expect(hero).toContain('playsInline');
     expect(hero).toContain('preload="metadata"');
     expect(hero).toContain("setAttribute('fetchpriority', 'high')");
     expect(hero).toContain('poster={heroPoster}');
+    expect(hero).toContain("URL.createObjectURL(new Blob(chunks, { type: 'video/mp4' }))");
+    expect(hero).toContain('URL.revokeObjectURL(objectUrl)');
+    expect(hero).toMatch(/if \(!motionAllowed\)[\s\S]*setResolvedVideoSrc\(undefined\)/);
     expect(hero).toContain("'Pause hero motion'");
     expect(hero).toContain("'Resume hero motion'");
     expect(hero).not.toContain('aria-pressed');

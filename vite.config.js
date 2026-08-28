@@ -2,10 +2,42 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
+import { readFileSync } from 'node:fs';
 import { parsePlaygroundOrigin, verifyPlaygroundOrigin } from './scripts/playground-proxy-guard.mjs';
 
 const CLOUDFLARE_BUILD_MODES = new Set(['staging', 'production']);
 const DEPLOY_ARTIFACT_MARKER_NAME = 'hau-deploy-target';
+const HERO_MEDIA_SUFFIX = '/frontend/assets/hero/hausc-institutional-logistics-hero.mp4';
+const HERO_MEDIA_CHUNK_BYTES = 20_000_000;
+
+function cloudflareHeroMediaChunks(mode) {
+  if (!CLOUDFLARE_BUILD_MODES.has(mode)) return undefined;
+
+  return {
+    name: 'hau-cloudflare-hero-media-chunks',
+    enforce: 'pre',
+    load(id) {
+      const normalizedId = id.replaceAll('\\', '/').split('?', 1)[0];
+      if (!normalizedId.endsWith(HERO_MEDIA_SUFFIX)) return undefined;
+
+      const media = readFileSync(normalizedId);
+      const references = [];
+      for (let offset = 0, index = 0; offset < media.length; offset += HERO_MEDIA_CHUNK_BYTES, index += 1) {
+        references.push(
+          this.emitFile({
+            type: 'asset',
+            fileName: `hero/hausc-institutional-logistics-hero.mp4.part${index}`,
+            source: media.subarray(offset, Math.min(offset + HERO_MEDIA_CHUNK_BYTES, media.length)),
+          }),
+        );
+      }
+
+      return `export default [${references
+        .map((reference) => `import.meta.ROLLUP_FILE_URL_${reference}`)
+        .join(',')}];`;
+    },
+  };
+}
 
 function deployArtifactMarker(mode) {
   const normalizedMode = String(mode ?? '')
@@ -53,7 +85,13 @@ async function playgroundProxy() {
 export default defineConfig(async ({ mode }) => ({
   root: 'src',
   base: './',
-  plugins: [react(), tailwindcss(), viteSingleFile(), deployArtifactMarker(mode)].filter(Boolean),
+  plugins: [
+    cloudflareHeroMediaChunks(mode),
+    react(),
+    tailwindcss(),
+    viteSingleFile(),
+    deployArtifactMarker(mode),
+  ].filter(Boolean),
   server: { host: '127.0.0.1', proxy: await playgroundProxy() },
   preview: { host: '127.0.0.1' },
   build: {
