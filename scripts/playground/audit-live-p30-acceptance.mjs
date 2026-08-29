@@ -345,11 +345,24 @@ async function auditWidth(width) {
       timeout: 30_000,
     });
     const startRequest = publicPage.getByRole('link', { name: /Start a logistics request/ }).first();
+    const authorizationProbePromise = publicPage.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === '/api/auth/session' && response.status() === 401,
+      { timeout: 15_000 },
+    );
     await startRequest.click();
+    const authorizationProbe = await authorizationProbePromise;
     const requestRequiresStaff = await publicPage
       .getByRole('heading', { name: /Staff sign in|Sign in to continue/u })
       .isVisible({ timeout: 15_000 })
       .catch(() => false);
+    await publicPage.waitForTimeout(100);
+    const authorizationProbeApi = [
+      { path: new URL(authorizationProbe.url()).pathname, status: authorizationProbe.status() },
+    ];
+    const expectedAuthorizationConsoleErrors = publicConsoleErrors;
+    publicConsoleErrors = 0;
+    publicFailedRequests = 0;
 
     const borrowStart = publicApis.length;
     await publicPage.goto(`${baseUrl}/#/route/borrow`, { waitUntil: 'domcontentloaded', timeout: 45_000 });
@@ -376,6 +389,8 @@ async function auditWidth(width) {
     widthReport.publicFlows = {
       freshContext: (await publicContext.cookies()).every((cookie) => !cookie.name.includes('hau_session')),
       requestRequiresStaffSignIn: requestRequiresStaff,
+      authorizationProbeApi,
+      expectedAuthorizationConsoleErrors,
       lendingCatalogApi: borrowApi,
       lendingCatalogVisible: true,
       trackingHeading,
@@ -387,6 +402,7 @@ async function auditWidth(width) {
     };
     if (
       !requestRequiresStaff ||
+      !authorizationProbeApi.some((entry) => entry.status === 401) ||
       !borrowApi.some((entry) => entry.status === 200) ||
       !/track/iu.test(trackingHeading) ||
       !widthReport.publicFlows.trackingFormVisible ||
