@@ -262,7 +262,10 @@ async function releaseEvidence(requestId, label) {
 try {
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 });
   await page.waitForTimeout(1_000);
-  const staffSignIn = page.getByRole('button', { name: 'Staff sign in', exact: true }).first();
+  const staffSignIn = page
+    .getByRole('link', { name: 'Staff sign in', exact: true })
+    .or(page.getByRole('button', { name: 'Staff sign in', exact: true }))
+    .first();
   if (await staffSignIn.isVisible({ timeout: 10_000 }).catch(() => false)) await staffSignIn.click();
   const enter = page.getByRole('button', { name: 'Enter Playground' });
   await enter.waitFor({ state: 'visible', timeout: 30_000 });
