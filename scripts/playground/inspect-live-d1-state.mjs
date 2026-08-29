@@ -20,14 +20,20 @@ function wrangler(args, { json = false } = {}) {
     windowsHide: true,
   });
   if (result.status !== 0) {
-    const diagnostic = `${String(result.stderr ?? '')}\n${String(result.stdout ?? '')}`
-      .replaceAll(String(manifest?.d1?.databaseId ?? ''), '[redacted-d1]')
-      .replaceAll(String(manifest?.resources?.names?.d1Working ?? ''), '[redacted-d1-name]')
-      .replace(/[0-9a-f]{32}/giu, '[redacted-provider-id]')
-      .replace(/\s+/gu, ' ')
-      .trim()
-      .slice(0, 1000);
-    throw new Error(`Playground D1 inspection failed (${args[0]}): ${diagnostic || 'no diagnostic'}`);
+    const failure = `${String(result.stderr ?? '')}\n${String(result.stdout ?? '')}`;
+    const category =
+      /authentication error|unauthorized|forbidden|\b401\b|\b403\b|code:\s*10000/iu.test(failure)
+        ? 'AUTHORIZATION'
+        : /LIKE or GLOB pattern too complex/iu.test(failure)
+          ? 'SQLITE_PATTERN_COMPLEX'
+          : /rate limit|too many requests|\b429\b/iu.test(failure)
+            ? 'RATE_LIMITED'
+            : /network|fetch failed|ECONN|ETIMEDOUT|timeout/iu.test(failure)
+              ? 'NETWORK'
+              : /internal server|service unavailable|\b500\b|\b502\b|\b503\b|\b504\b/iu.test(failure)
+                ? 'PROVIDER_UNAVAILABLE'
+                : 'UNCLASSIFIED';
+    throw new Error(`Playground D1 inspection failed (${args[0]}:${category}).`);
   }
   return json ? JSON.parse(result.stdout) : result.stdout;
 }

@@ -1,13 +1,13 @@
 # Current Bounded Task — Playground Master Consolidation
 
-STATUS: ACTIVE
+STATUS: READY_FOR_EARL_MANUAL_ANNOTATION
 INTENT: repository maintenance + bug fix + frontend migration + feature + testing + performance + UI/UX refinement + Playground data lifecycle
 MODE: execute continuously across P00 through P34 while all gates remain green
 TARGET: `reconcile/playground-master`, permanent `Playground`, and the existing isolated Playground Worker/D1/R2
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACTIVE_WRITER: SOL_HIGH:/root
-WRITER_LOCK: ACTIVE_PLAYGROUND_MASTER_RECONCILIATION
+ACTIVE_WRITER: NONE
+WRITER_LOCK: RELEASED_AT_FINAL_CANDIDATE_FREEZE
 ROUTE: SOLO
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-28-playground-master-consolidation-operational-uiux-performance-reset.md
 AUTHORITY: Earl's current instruction and accepted PLAYGROUND-MASTER-2026-08-28 -> project governance -> repository functional contracts -> live design-source roles.
@@ -32,4 +32,4 @@ COMPLETED_SO_FAR: P00–P31 are complete at their assigned audit gates. P12 prov
 
 P30_COMPLETION_ADDENDUM: P30 found and repaired one same-session public Borrow-to-Tracking route-state defect, added a two-width regression test, passed 1,243 tests and the 1,683-module staging build, guardedly redeployed exact source `ab35689` / tree `23caaf4` only to Playground, and passed the complete fresh-context authenticated/public matrix at 390 and 1440. Its five session/transient rows remain truthfully DIRTY for P31.
 
-NEXT_EXACT_ACTION: Execute P34 compact operator documentation, preserve only the required durable guides and exact final receipt, update the three current pointers, verify final branch/live identity, and stop at `READY_FOR_EARL_MANUAL_ANNOTATION`.
+NEXT_EXACT_ACTION: Earl manually annotates the frozen candidate. No autonomous continuation is authorized; any later code, provider, data, branch, Figma, or Production action requires a new explicit owner instruction.

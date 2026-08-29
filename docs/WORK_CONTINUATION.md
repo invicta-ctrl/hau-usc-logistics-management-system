@@ -4,16 +4,16 @@
 
 - **Repository/worktree:** `D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-master-reconciliation`.
 - **Branch/HEAD/upstream:** permanent `Playground` / `GIT_HEAD` / `origin/Playground`; historical base is preserved by `archive/p33-fi12-playground-20260829`.
-- **Current phase/stage:** P33 complete; P34 compact documentation and final candidate freeze is the only active step.
+- **Current phase/stage:** P34 complete; `READY_FOR_EARL_MANUAL_ANNOTATION`.
 - **Accepted scope:** `PLAYGROUND-MASTER-2026-08-28` P00–P34 through `READY_FOR_EARL_MANUAL_ANNOTATION`; Production and `main` mutation excluded.
 - **Completed work:** P00–P33 passed, including isolated deployment, full route acceptance, two live reset cycles, permanent `Playground`, and preservation-gated branch retirement.
 - **Files changed by purpose:** P34 updates only durable Playground architecture/reset/baseline, theme, language, branch-governance, residual, receipt, and current-pointer documentation plus the stale design-tracker claims list.
-- **Tests verified at current SHA:** P34 must pass governance, design-tracker consistency, Playground unit contracts, full Vitest, staging build, diff check, live public probes, and privacy-safe live D1 inspection before final freeze.
+- **Tests verified at current SHA:** lint passed with zero errors/two unchanged warnings; full Vitest 169 files/1,245 tests; Playground contracts 11 files/54 tests; staging build 1,683 modules; design tracker, governance, fixture boundary, and diff checks passed. Final provider re-probe was authorization-blocked; last accepted generation-8 CLEAN evidence remains time-bounded in the final receipt.
 - **Generated artifacts:** accepted deployed runtime remains source `ab356898...`, tree `23caaf4...`, staging entry SHA-256 `3bfa8b83...`; P34 documentation does not redeploy or replace it.
 - **External actions:** P29–P31 Playground-only deploy/reset actions and P32–P33 Git ref changes are recorded in their receipts; Production, `main`, Google, email, schedules, and Figma remain untouched.
 - **Rollback:** deployed runtime rollback and reset recovery remain private and verified; retired branch heads are recoverable through exact remote `archive/p33-*` tags.
-- **Blocker:** none.
-- **Next three actions:** finish P34 documents; run final deterministic/live verification; push permanent `Playground` and stop at `READY_FOR_EARL_MANUAL_ANNOTATION`.
+- **Blocker:** none for manual annotation; future provider commands require supported Cloudflare reauthentication.
+- **Next three actions:** Earl opens the frozen candidate; records manual annotations; supplies a new explicit instruction before any later change.
 - **Resume commands:** read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, the accepted prompt, and the final candidate receipt; verify Git/upstream and live Playground identity.
 - **Prohibited actions:** Production/main mutation; deployment; new business-data mutation; reset repetition; branch deletion; history rewrite; detached-worktree cleanup; Figma write; work after the manual-annotation freeze without new owner authority.
 
