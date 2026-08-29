@@ -21,7 +21,26 @@ function wrangler(args, { json = false } = {}) {
     maxBuffer: 16 * 1024 * 1024,
     windowsHide: true,
   });
-  if (result.status !== 0) throw new Error(`Playground reset provider command failed (${args[0]}).`);
+  if (result.status !== 0) {
+    const failure = String(result.stderr ?? result.stdout ?? '');
+    const category =
+      /bookmark.{0,80}expired|expired.{0,80}bookmark/iu.test(failure)
+        ? 'BOOKMARK_EXPIRED'
+        : /bookmark.{0,80}(?:invalid|unavailable|not found)|(?:invalid|unavailable|not found).{0,80}bookmark/iu.test(
+              failure,
+            )
+          ? 'BOOKMARK_INVALID_OR_UNAVAILABLE'
+          : /rate limit|too many requests|\b429\b/iu.test(failure)
+            ? 'RATE_LIMITED'
+            : /authentication|unauthorized|forbidden|permission|\b401\b|\b403\b/iu.test(failure)
+              ? 'AUTHORIZATION'
+              : /network|fetch failed|ECONN|ETIMEDOUT|timeout/iu.test(failure)
+                ? 'NETWORK'
+                : /internal server|service unavailable|\b500\b|\b502\b|\b503\b|\b504\b/iu.test(failure)
+                  ? 'PROVIDER_UNAVAILABLE'
+                  : 'UNCLASSIFIED';
+    throw new Error(`Playground reset provider command failed (${args[0]}:${category}).`);
+  }
   return json ? JSON.parse(result.stdout) : result.stdout;
 }
 
