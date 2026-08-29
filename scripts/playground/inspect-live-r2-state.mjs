@@ -106,6 +106,8 @@ try {
         candidate.workingBrand,
         candidate.baselineEvidence,
         candidate.workingEvidence,
+        candidate.baselineGovernedEvidence,
+        candidate.workingGovernedEvidence,
       ].every(validFingerprint)
     ) {
       fingerprint = candidate;
@@ -131,6 +133,14 @@ const result = {
     baseline: fingerprint.baselineEvidence,
     working: fingerprint.workingEvidence,
     parity: fingerprint.baselineEvidence.hash === fingerprint.workingEvidence.hash ? 'PASS' : 'DIFFERENT',
+  },
+  governedEvidence: {
+    baseline: fingerprint.baselineGovernedEvidence,
+    working: fingerprint.workingGovernedEvidence,
+    parity:
+      fingerprint.baselineGovernedEvidence.hash === fingerprint.workingGovernedEvidence.hash
+        ? 'PASS'
+        : 'DIFFERENT',
   },
   playgroundMutation: 'NONE',
   productionMutation: 'NONE',

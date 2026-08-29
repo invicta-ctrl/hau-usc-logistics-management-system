@@ -62,6 +62,7 @@ const sql = `SELECT
   (SELECT value FROM app_metadata WHERE key='playground.reset_generation') AS reset_generation,
   (SELECT value FROM app_metadata WHERE key='playground.last_reset_receipt') AS last_reset_receipt,
   (SELECT COUNT(*) FROM sessions) AS sessions,
+  (SELECT COUNT(*) FROM evidence_metadata WHERE private_storage_reference IS NOT NULL AND TRIM(private_storage_reference) <> '') AS evidence_object_count,
   (SELECT COUNT(*) FROM sessions) + (SELECT COUNT(*) FROM password_reset_tokens) +
     (SELECT COUNT(*) FROM auth_rate_limits) + (SELECT COUNT(*) FROM auth_rate_limit_events) +
     (SELECT COUNT(*) FROM email_verification_challenges) + (SELECT COUNT(*) FROM account_applications) +
@@ -156,6 +157,7 @@ process.stdout.write(
     workingState: JSON.parse(String(row.working_state ?? '{}')),
     resetGeneration: Number(row.reset_generation ?? 0),
     sessions: Number(row.sessions ?? 0),
+    evidenceObjectCount: Number(row.evidence_object_count ?? 0),
     transientTotal: Number(row.transient_total ?? 0),
     foreignKeyViolations: Number(row.foreign_key_violations ?? 0),
     reversibleBookmarkAvailable: hasBookmark(timeTravel),

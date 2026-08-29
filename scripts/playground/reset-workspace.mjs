@@ -223,19 +223,20 @@ export function validateResetVerification(row, r2, expectedGeneration) {
     evidenceObjectCount === evidenceKeys.length &&
     evidenceObjectCount === Number(r2Evidence?.count) &&
     sha256(JSON.stringify(evidenceKeys)) === String(r2Evidence?.keyHash ?? '');
-  if (
-    String(row.schema_version) !== '32' ||
-    String(row.latest_migration) !== '0032_staff_account_activity_history.sql' ||
-    workingState.state !== 'CLEAN' ||
-    workingState.activeTestSession !== false ||
-    Number(workingState.resetGeneration) !== expectedGeneration ||
-    generation !== expectedGeneration ||
-    transientTotal !== 0 ||
-    foreignKeyViolations !== 0 ||
-    !linkageMatches
-  ) {
-    throw new Error('D1 reset verification failed.');
-  }
+  const failures = [
+    [String(row.schema_version) === '32', 'SCHEMA'],
+    [String(row.latest_migration) === '0032_staff_account_activity_history.sql', 'MIGRATION'],
+    [workingState.state === 'CLEAN', 'WORKING_STATE'],
+    [workingState.activeTestSession === false, 'ACTIVE_SESSION_MARKER'],
+    [Number(workingState.resetGeneration) === expectedGeneration, 'WORKING_GENERATION'],
+    [generation === expectedGeneration, 'GENERATION'],
+    [transientTotal === 0, 'TRANSIENT_ROWS'],
+    [foreignKeyViolations === 0, 'FOREIGN_KEYS'],
+    [linkageMatches, 'D1_R2_EVIDENCE_LINKAGE'],
+  ]
+    .filter(([passed]) => !passed)
+    .map(([, label]) => label);
+  if (failures.length) throw new Error(`D1 reset verification failed (${failures.join(',')}).`);
   return {
     generation,
     transientCounts,

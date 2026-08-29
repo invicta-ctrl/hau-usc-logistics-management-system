@@ -20,7 +20,7 @@ async function authorized(request, expected) {
   return bytesEqual(new Uint8Array(left), new Uint8Array(right));
 }
 
-async function fingerprint(bucket) {
+async function fingerprint(bucket, accept = () => true) {
   const objects = [];
   let cursor;
   do {
@@ -29,13 +29,19 @@ async function fingerprint(bucket) {
     cursor = page.truncated ? page.cursor : undefined;
   } while (cursor);
   const entries = objects
+    .filter(accept)
     .sort((left, right) => left.key.localeCompare(right.key))
     .map((object) => ({ key: object.key, size: object.size, etag: object.etag }));
   const hash = await crypto.subtle.digest('SHA-256', encoder.encode(JSON.stringify(entries)));
+  const keyHash = await crypto.subtle.digest(
+    'SHA-256',
+    encoder.encode(JSON.stringify(entries.map(({ key }) => key))),
+  );
   return {
     count: entries.length,
     bytes: entries.reduce((total, entry) => total + Number(entry.size ?? 0), 0),
     hash: [...new Uint8Array(hash)].map((value) => value.toString(16).padStart(2, '0')).join(''),
+    keyHash: [...new Uint8Array(keyHash)].map((value) => value.toString(16).padStart(2, '0')).join(''),
   };
 }
 
@@ -50,11 +56,21 @@ export default {
       return new Response('Not found', { status: 404 });
     }
     if (!(await authorized(request, env.READ_TOKEN))) return new Response('Forbidden', { status: 403 });
-    const [baselineBrand, workingBrand, baselineEvidence, workingEvidence] = await Promise.all([
+    const governedEvidence = (object) => object.key.startsWith('playground-redacted/');
+    const [
+      baselineBrand,
+      workingBrand,
+      baselineEvidence,
+      workingEvidence,
+      baselineGovernedEvidence,
+      workingGovernedEvidence,
+    ] = await Promise.all([
       fingerprint(env.BASELINE_BRAND),
       fingerprint(env.WORKING_BRAND),
       fingerprint(env.BASELINE_EVIDENCE),
       fingerprint(env.WORKING_EVIDENCE),
+      fingerprint(env.BASELINE_EVIDENCE, governedEvidence),
+      fingerprint(env.WORKING_EVIDENCE, governedEvidence),
     ]);
     return Response.json({
       status: 'PASS',
@@ -62,6 +78,8 @@ export default {
       workingBrand,
       baselineEvidence,
       workingEvidence,
+      baselineGovernedEvidence,
+      workingGovernedEvidence,
       playgroundMutation: 'NONE',
       productionMutation: 'NONE',
     });
