@@ -19,7 +19,16 @@ function wrangler(args, { json = false } = {}) {
     maxBuffer: 16 * 1024 * 1024,
     windowsHide: true,
   });
-  if (result.status !== 0) throw new Error(`Playground D1 inspection failed (${args[0]}).`);
+  if (result.status !== 0) {
+    const diagnostic = `${String(result.stderr ?? '')}\n${String(result.stdout ?? '')}`
+      .replaceAll(String(manifest?.d1?.databaseId ?? ''), '[redacted-d1]')
+      .replaceAll(String(manifest?.resources?.names?.d1Working ?? ''), '[redacted-d1-name]')
+      .replace(/[0-9a-f]{32}/giu, '[redacted-provider-id]')
+      .replace(/\s+/gu, ' ')
+      .trim()
+      .slice(0, 1000);
+    throw new Error(`Playground D1 inspection failed (${args[0]}): ${diagnostic || 'no diagnostic'}`);
+  }
   return json ? JSON.parse(result.stdout) : result.stdout;
 }
 
@@ -63,6 +72,7 @@ const sql = `SELECT
   (SELECT value FROM app_metadata WHERE key='playground.last_reset_receipt') AS last_reset_receipt,
   (SELECT COUNT(*) FROM sessions) AS sessions,
   (SELECT COUNT(*) FROM evidence_metadata WHERE private_storage_reference IS NOT NULL AND TRIM(private_storage_reference) <> '') AS evidence_object_count,
+  (SELECT COUNT(*) FROM evidence_metadata WHERE substr(private_storage_reference, 1, 20) = 'playground-redacted/' AND length(private_storage_reference) = 44 AND substr(private_storage_reference, 21) NOT GLOB '*[^0-9a-f]*') AS privacy_safe_evidence_object_count,
   (SELECT COUNT(*) FROM sessions) + (SELECT COUNT(*) FROM password_reset_tokens) +
     (SELECT COUNT(*) FROM auth_rate_limits) + (SELECT COUNT(*) FROM auth_rate_limit_events) +
     (SELECT COUNT(*) FROM email_verification_challenges) + (SELECT COUNT(*) FROM account_applications) +
@@ -158,6 +168,7 @@ process.stdout.write(
     resetGeneration: Number(row.reset_generation ?? 0),
     sessions: Number(row.sessions ?? 0),
     evidenceObjectCount: Number(row.evidence_object_count ?? 0),
+    privacySafeEvidenceObjectCount: Number(row.privacy_safe_evidence_object_count ?? 0),
     transientTotal: Number(row.transient_total ?? 0),
     foreignKeyViolations: Number(row.foreign_key_violations ?? 0),
     reversibleBookmarkAvailable: hasBookmark(timeTravel),

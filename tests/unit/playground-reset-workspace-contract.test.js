@@ -47,11 +47,10 @@ function verificationRow(overrides = {}) {
 
 function r2Result(keys = ['evidence/redacted-a.json', 'evidence/redacted-b.json']) {
   return {
-    working: {
-      evidence: {
-        count: keys.length,
-        keyHash: hash(JSON.stringify(keys)),
-      },
+    d1Evidence: {
+      count: keys.length,
+      keyHash: hash(JSON.stringify(keys)),
+      allPresent: true,
     },
   };
 }
