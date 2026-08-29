@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { restoreAndVerifyD1Export } from '../d1/verify-d1-export.mjs';
+import { dumpDatabaseReplacement } from './baseline-data.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const wranglerBin = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
@@ -219,7 +220,11 @@ async function privatePath(value, { existing }) {
 }
 
 async function run() {
-  const [manifestArg, reportArg] = process.argv.slice(2);
+  const [manifestArg, reportArg, ...options] = process.argv.slice(2);
+  const sealedBaselineSql = options.includes('--sealed-baseline-sql');
+  if (options.some((option) => option !== '--sealed-baseline-sql')) {
+    throw new Error('Reset refused: unsupported reset option.');
+  }
   const manifestPath = await privatePath(manifestArg, { existing: true });
   const reportPath = await privatePath(reportArg, { existing: false });
   const exportPath = await privatePath(
@@ -242,6 +247,7 @@ async function run() {
   let preResetExportSha256 = '';
   let generation = 0;
   let before;
+  let d1RestoreMode = sealedBaselineSql ? 'SEALED_BASELINE_SQL' : 'TIME_TRAVEL_BOOKMARK';
   try {
     lock = await open(lockPath, 'wx', 0o600);
     await lock.writeFile(
@@ -290,10 +296,39 @@ async function run() {
     });
     preResetExportSha256 = sha256(await readFile(exportPath));
 
-    phase = 'D1_RESTORE';
-    wrangler(['d1', 'time-travel', 'restore', databaseId, '--bookmark', cleanBookmark, '--json'], {
-      json: true,
-    });
+    phase = sealedBaselineSql ? 'D1_SEALED_BASELINE_RECOVERY' : 'D1_RESTORE';
+    if (sealedBaselineSql) {
+      const expectedBaselineSha256 = String(manifest.d1?.baselineSqlSha256 ?? '').toLowerCase();
+      if (!/^[0-9a-f]{64}$/u.test(expectedBaselineSha256)) {
+        throw new Error('Reset refused: sealed baseline SQL digest is unavailable.');
+      }
+      const baselineSqlPath = path.join(workspace, 'sealed-clean-baseline.sql');
+      wrangler([
+        'r2',
+        'object',
+        'get',
+        `${names.r2BaselineEvidence}/control/d1-clean-baseline.sql`,
+        '--remote',
+        '--file',
+        baselineSqlPath,
+      ]);
+      const baselineSql = await readFile(baselineSqlPath);
+      if (sha256(baselineSql) !== expectedBaselineSha256) {
+        throw new Error('Reset refused: sealed baseline SQL digest does not match the manifest.');
+      }
+      const baselineDatabasePath = path.join(workspace, 'sealed-clean-baseline.sqlite');
+      await restoreAndVerifyD1Export(baselineSqlPath, baselineDatabasePath, {
+        expectedSchema: '32',
+        expectedMigration: '0032_staff_account_activity_history.sql',
+      });
+      const replacementPath = path.join(workspace, 'sealed-clean-baseline-replacement.sql');
+      await writeFile(replacementPath, dumpDatabaseReplacement(baselineDatabasePath), { flag: 'wx' });
+      wrangler(['d1', 'execute', databaseId, '--remote', '--file', replacementPath, '--yes']);
+    } else {
+      wrangler(['d1', 'time-travel', 'restore', databaseId, '--bookmark', cleanBookmark, '--json'], {
+        json: true,
+      });
+    }
 
     const resettingAt = new Date().toISOString();
     const resettingState = JSON.stringify({
@@ -418,6 +453,7 @@ async function run() {
       generation: { before: generation - 1, after: generation },
       oldSessionsInvalidated,
       d1: {
+        restoreMode: d1RestoreMode,
         schemaVersion: '32',
         latestMigration: '0032_staff_account_activity_history.sql',
         foreignKeys: 'PASS',
@@ -465,6 +501,7 @@ async function run() {
             failedAt: new Date().toISOString(),
             phase,
             target: 'PLAYGROUND',
+            d1RestoreMode,
             productionMutation: 'NONE',
             googleMutation: 'NONE',
             preResetRecoveryBookmark: preResetBookmark || null,

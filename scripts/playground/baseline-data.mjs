@@ -492,3 +492,45 @@ export function dumpDatabase(databasePath) {
     database.close();
   }
 }
+
+export function dumpDatabaseReplacement(databasePath) {
+  const database = new DatabaseSync(databasePath, { readOnly: true });
+  try {
+    const definitions = tableDefinitions(database);
+    const tables = dependencyOrderedTables(database, definitions);
+    const derived = Object.fromEntries(
+      ['index', 'trigger', 'view'].map((type) => [
+        type,
+        database
+          .prepare(
+            `SELECT name, sql FROM sqlite_master WHERE type = ? AND sql IS NOT NULL ORDER BY name`,
+          )
+          .all(type),
+      ]),
+    );
+    const lines = ['PRAGMA defer_foreign_keys=TRUE;'];
+    for (const type of ['trigger', 'view', 'index']) {
+      for (const { name } of derived[type]) {
+        lines.push(`DROP ${type.toUpperCase()} IF EXISTS ${quoteIdentifier(name)};`);
+      }
+    }
+    for (const table of [...tables].reverse()) {
+      lines.push(`DELETE FROM ${quoteIdentifier(table)};`);
+    }
+    for (const table of tables) {
+      const { columns, rows } = orderedRows(database, table);
+      const names = columns.map((column) => column.name);
+      for (const row of rows) {
+        lines.push(
+          `INSERT INTO ${quoteIdentifier(table)} (${names.map(quoteIdentifier).join(', ')}) VALUES (${names.map((name) => sqlLiteral(row[name])).join(', ')});`,
+        );
+      }
+    }
+    for (const type of ['index', 'trigger', 'view']) {
+      for (const { sql } of derived[type]) lines.push(`${sql};`);
+    }
+    return `${lines.join('\n')}\n`;
+  } finally {
+    database.close();
+  }
+}

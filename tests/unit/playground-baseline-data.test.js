@@ -1,6 +1,11 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 import { describe, expect, it } from 'vitest';
 import {
   derivedCatalogAlias,
+  dumpDatabaseReplacement,
   isSyntheticStagingAccount,
   PARITY_EXCEPTIONS,
   sanitizeProductionRow,
@@ -8,6 +13,41 @@ import {
 } from '../../scripts/playground/baseline-data.mjs';
 
 describe('playground production-derived baseline privacy', () => {
+  it('builds a data-only replacement that clears mutations and reinstalls governed derived schema', () => {
+    const workspace = mkdtempSync(path.join(tmpdir(), 'playground-replacement-test-'));
+    const baselinePath = path.join(workspace, 'baseline.sqlite');
+    const workingPath = path.join(workspace, 'working.sqlite');
+    const schema = `
+      PRAGMA foreign_keys=ON;
+      CREATE TABLE parent (id TEXT PRIMARY KEY, label TEXT NOT NULL);
+      CREATE TABLE child (id TEXT PRIMARY KEY, parent_id TEXT NOT NULL REFERENCES parent(id));
+      CREATE INDEX child_parent_idx ON child(parent_id);
+      CREATE TRIGGER child_immutable BEFORE DELETE ON child BEGIN SELECT RAISE(ABORT, 'immutable'); END;
+      CREATE VIEW child_labels AS SELECT child.id, parent.label FROM child JOIN parent ON parent.id=child.parent_id;
+    `;
+    const baseline = new DatabaseSync(baselinePath);
+    const working = new DatabaseSync(workingPath);
+    try {
+      baseline.exec(schema);
+      baseline.exec("INSERT INTO parent VALUES ('BASE', 'Baseline'); INSERT INTO child VALUES ('CHILD', 'BASE');");
+      working.exec(schema);
+      working.exec("INSERT INTO parent VALUES ('MUTATED', 'Mutation'); INSERT INTO child VALUES ('OTHER', 'MUTATED');");
+
+      working.exec(dumpDatabaseReplacement(baselinePath));
+
+      expect(working.prepare('SELECT * FROM parent').all()).toEqual([{ id: 'BASE', label: 'Baseline' }]);
+      expect(working.prepare('SELECT * FROM child').all()).toEqual([{ id: 'CHILD', parent_id: 'BASE' }]);
+      expect(working.prepare('SELECT * FROM child_labels').all()).toEqual([
+        { id: 'CHILD', label: 'Baseline' },
+      ]);
+      expect(() => working.exec("DELETE FROM child WHERE id='CHILD'")).toThrow(/immutable/u);
+    } finally {
+      baseline.close();
+      working.close();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
   it('removes production credentials and locks pseudonymized accounts', () => {
     const result = sanitizeProductionRow('accounts', {
       id: 'ACCOUNT-1',

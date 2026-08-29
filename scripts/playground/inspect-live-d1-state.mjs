@@ -41,6 +41,7 @@ const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
 const databaseId = manifest.d1?.databaseId;
 const databaseName = manifest.resources?.names?.d1Working;
 const sealedBookmark = manifest.d1?.cleanBaselineBookmark;
+const sealedBookmarkCapturedAt = String(manifest.d1?.cleanBaselineBookmarkCapturedAt ?? '');
 if (manifest.status !== 'READY' || !databaseId || !databaseName) {
   throw new Error('Private Playground manifest is not ready.');
 }
@@ -69,6 +70,31 @@ const row = d1Rows(
 )[0];
 if (!row) throw new Error('Playground D1 inspection returned no row.');
 const timeTravel = wrangler(['d1', 'time-travel', 'info', databaseId, '--json'], { json: true });
+let sealedTimestampResolvable = false;
+if (sealedBookmarkCapturedAt) {
+  const timestampInfo = spawnSync(
+    process.execPath,
+    [
+      wranglerBin,
+      'd1',
+      'time-travel',
+      'info',
+      databaseId,
+      '--timestamp',
+      sealedBookmarkCapturedAt,
+      '--json',
+    ],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      maxBuffer: 16 * 1024 * 1024,
+      windowsHide: true,
+    },
+  );
+  if (timestampInfo.status === 0) {
+    sealedTimestampResolvable = hasBookmark(JSON.parse(timestampInfo.stdout));
+  }
+}
 
 process.stdout.write(
   `${JSON.stringify({
@@ -87,6 +113,7 @@ process.stdout.write(
     sealedBookmarkPresent: typeof sealedBookmark === 'string' && sealedBookmark.length >= 8,
     sealedBookmarkType: typeof sealedBookmark,
     sealedBookmarkLength: typeof sealedBookmark === 'string' ? sealedBookmark.length : 0,
-    sealedBookmarkCapturedAt: String(manifest.d1?.cleanBaselineBookmarkCapturedAt ?? ''),
+    sealedBookmarkCapturedAt,
+    sealedTimestampResolvable,
   })}\n`,
 );
