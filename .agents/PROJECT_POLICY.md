@@ -121,9 +121,10 @@ infer a global Terra / Max or multi-scout exception from this extension.
   repositories or worktrees with separate locks, owned paths, and no race on a current
   pointer, migration, release file, generated artifact, provider resource, database
   state, or incomplete dependency. Every repository or worktree has at most one writer.
-- `frontend-design-integration` remains lock-protected. A current accepted task must
-  name any implementation lane; this extension neither grants a writer nor changes its
-  existing lock, active accepted FI scope, pointer, or generated artifacts.
+- The historical frontend-design worktree and its `.ai-bridge/` / `.local/` residue
+  remain protected even after branch retirement and detachment at the P33 archive tag.
+  A current accepted task must name any implementation lane; this extension neither
+  grants a writer nor changes preserved files, historical scope, or generated artifacts.
 - DeepSeek is forbidden as writer, scout, reviewer, and fallback. Credentials and
   historical proof may remain inactive and must not be exposed or deleted.
 - Production, provider, database, migration, Google, and external-data writes still

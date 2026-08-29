@@ -20,10 +20,10 @@ Current decisions:
 - `Playground` is the canonical isolated Playground/demo/testing source lineage. It was established from the accepted `reconcile/playground-master` lineage only after P31 candidate acceptance and proof that no prior local or remote `Playground` ref existed.
 - Retire `reconcile/playground-master` only after `Playground` remote parity is proven; its complete history is then preserved by `Playground`.
 - Preserve `main` unchanged; its two known governance-only working-tree files remain outside this worktree.
-- Preserve `frontend-design-integration`, its protected `.ai-bridge/` and `.local/` residue, and all unique FI history.
-- Preserve `origin/local/post-fi17-design-pass-20260828` as divergent design evidence pending selective review; do not broad-merge it.
-- Preserve `backup/last-known-good` and `regression/r1` through `regression/r3` until immutable recovery artifacts and dependency-clearing proof pass.
-- Preserve backend, v0.8.4, and former release refs until their unique history and live dependencies are classified.
+- Preserve retired frontend design history at `archive/p33-frontend-design-integration-20260829` and divergent post-FI17 design history at `archive/p33-post-fi17-design-pass-20260829`; do not broad-merge either lineage.
+- Preserve the former rotating recovery pointers at `archive/p33-backup-last-known-good-20260829` and `archive/p33-regression-r1-20260829` through `archive/p33-regression-r3-20260829`.
+- Preserve former backend, v0.8.3 FI12/frontend-design, and v0.8.4 histories at their exact `archive/p33-*` tags recorded in the P33 checkpoint.
+- Preserve detached completed worktree contents in place, including frontend `.ai-bridge/` and `.local/` residue and governance-only dirty files. Branch retirement never authorizes cleaning or removing those worktrees.
 
 ## Retirement gate
 

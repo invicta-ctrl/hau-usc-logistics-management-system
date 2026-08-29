@@ -3,12 +3,12 @@ schema_version: 1
 status: active
 scope: hau-usc-logistics-frontend
 authority: canonical
-branch: frontend-design-integration
+branch: Playground
 visual_authority: live-figma-make-rP9W9MQlZkyQrUx38TVsFS
 design_documentation_authority: live-figma-design-hXJElH4p72KfgAaoUyfNOC-current-lane
 functional_authority: repository-server-worker-auth-contracts
 accepted_amendment: .codex/specs/accepted/2026-08-23-r3-a1-a2-owner-routing-identity-three-context.md
-last_reviewed: 2026-08-24
+last_reviewed: 2026-08-29
 # Machine-readable palette. Generated from scripts/design/theme-source.mjs, the
 # canonical token source, and emitted into src/frontend/styles/theme.css. This
 # block exists so tooling can tell a real design-system addition from drift; it

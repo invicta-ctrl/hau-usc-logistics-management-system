@@ -1,10 +1,10 @@
 # HAU-USC Logistics — frontend routing and control contract
 
 Status: current authority
-Scope: `src/frontend/` on `frontend-design-integration`
+Scope: `src/frontend/` on permanent `Playground`; historical design lineage is preserved by `archive/p33-frontend-design-integration-20260829`
 Accepted amendment: `.codex/specs/accepted/2026-08-23-r3-a1-a2-owner-routing-identity-three-context.md` (R3-A1-A2)
 Authority: Earl instruction → accepted R3-A1-A2 amendment → accepted backend/API/auth contracts (functional truth) → this document (frontend control ownership)
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-29
 
 `WORKFLOW_ARCHITECTURE.md` explains the business flow. **This document explains
 exactly what each control does**, so the branch can be read and implemented

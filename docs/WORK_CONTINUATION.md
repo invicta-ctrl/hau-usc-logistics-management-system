@@ -13,10 +13,10 @@
 - Resume commands: read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, accepted master prompt, and `.codex/PLAYGROUND_MASTER_RECONCILIATION_MANIFEST.md`; verify Git/upstream and live Playground identity.
 - Prohibited: Production/main mutation; broad branch merge; deletion without exact P33 preservation proof; history rewrite; unknown residue mutation; unbacked reset/migration; unclassified R2 deletion; Figma write.
 
-## FI-04 historical resume block
+## FI-04 archived historical block
 
 - **Repository/worktree:** `D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration`.
-- **Branch/HEAD/upstream:** `frontend-design-integration`; Git HEAD and upstream `origin/frontend-design-integration` are `01ba9eb05d224dc8a56f5257f1cd06e261590d4e`; ahead/behind is `0/0`; the FI-04 logical diff is intentionally uncommitted and the preexisting untracked `.ai-bridge/` remains preserved.
+- **Archive/worktree:** committed branch history is preserved by `archive/p33-frontend-design-integration-20260829`; the completed worktree is detached at its exact archived head, and its preexisting `.ai-bridge/` / `.local/` residue remains untouched.
 - **Current phase/stage:** Bounded FI-04 Authenticated Shell is Sol-accepted and checkpoint-ready; writer lock is released; the authorized checkpoint must stop before FI-05 implementation.
 - **Accepted scope:** R1 one-shot program, R1-A2 reconciliation, accepted A3 persistent local-live-preview gate, F2 frozen Design/Make record, and only the FI-04 shell/profile/focus slice in `.codex/specs/accepted/2026-08-24-fi04-fi17-r1-a3-persistent-local-live-preview-4173-visual-fix-gate.md`.
 - **Completed work:** Authorized AuthRoutes mount the server-capability-filtered shell; Profile is strict read-only GET `/api/me/profile`; FI-05+ routes are truthful placeholders; zero-capability generic home stays denied; responsive 76px/272px rails and light/dark command bands align to verified nodes; mobile/public drawer focus behavior is repaired; focused tests/artifacts/visual evidence are complete; Sol accepted the complete FI-04 diff after the four-file Prettier repair left artifact identity unchanged.

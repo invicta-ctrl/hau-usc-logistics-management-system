@@ -1,11 +1,11 @@
 # HAU-USC Logistics — frontend workflow architecture
 
 Status: current authority
-Scope: `src/frontend/` on `frontend-design-integration`
+Scope: `src/frontend/` on permanent `Playground`; historical design lineage is preserved by `archive/p33-frontend-design-integration-20260829`
 Authority: `DESIGN.md` (design) → repository server/Worker/auth contracts (functional) → this document (frontend workflow ownership)
 Accepted amendment: `.codex/specs/accepted/2026-08-23-r3-a1-a2-owner-routing-identity-three-context.md` (R3-A1-A2)
 Companion: `docs/frontend/ROUTING.md` — what each individual control does
-Last reviewed: 2026-08-23 (R3-A1-A2 three-context reconciliation)
+Last reviewed: 2026-08-29 (P33 permanent-branch consolidation; R3-A1-A2 contract preserved)
 
 This document records **who each frontend surface is for and what it is allowed
 to do**. It does not define product policy; where it describes access rules it is
