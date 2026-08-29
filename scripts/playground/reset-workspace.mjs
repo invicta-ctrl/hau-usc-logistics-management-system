@@ -267,16 +267,25 @@ async function run() {
   const [manifestArg, reportArg, ...options] = process.argv.slice(2);
   let sealedBaselineSql = false;
   let baselineDatabaseArg = '';
+  let cleanTimestamp = '';
   for (let index = 0; index < options.length; index += 1) {
     if (options[index] === '--sealed-baseline-sql') sealedBaselineSql = true;
     else if (options[index] === '--baseline-database' && options[index + 1]) {
       baselineDatabaseArg = options[index + 1];
       index += 1;
+    } else if (options[index] === '--clean-timestamp' && options[index + 1]) {
+      cleanTimestamp = options[index + 1];
+      index += 1;
     } else {
       throw new Error('Reset refused: unsupported reset option.');
     }
   }
-  if (sealedBaselineSql && baselineDatabaseArg) throw new Error('Reset refused: choose one baseline recovery source.');
+  if ([sealedBaselineSql, Boolean(baselineDatabaseArg), Boolean(cleanTimestamp)].filter(Boolean).length > 1) {
+    throw new Error('Reset refused: choose one baseline recovery source.');
+  }
+  if (cleanTimestamp && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u.test(cleanTimestamp)) {
+    throw new Error('Reset refused: clean timestamp must be exact UTC RFC3339.');
+  }
   const manifestPath = await privatePath(manifestArg, { existing: true });
   const reportPath = await privatePath(reportArg, { existing: false });
   const privateBaselineDatabasePath = baselineDatabaseArg
@@ -292,7 +301,7 @@ async function run() {
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   const { hostname, names, requiredNames } = validatePlaygroundResetTarget(manifest);
   const databaseId = manifest.d1?.databaseId;
-  const cleanBookmark = manifest.d1?.cleanBaselineBookmark;
+  let cleanBookmark = manifest.d1?.cleanBaselineBookmark;
   const lockPath = path.join(path.dirname(manifestPath), 'playground-reset.lock');
   let lock;
   let workspace;
@@ -306,7 +315,9 @@ async function run() {
     ? 'PRIVATE_VERIFIED_BASELINE_DATABASE'
     : sealedBaselineSql
       ? 'SEALED_BASELINE_SQL'
-      : 'TIME_TRAVEL_BOOKMARK';
+      : cleanTimestamp
+        ? 'VERIFIED_CLEAN_TIMESTAMP_BOOKMARK'
+        : 'TIME_TRAVEL_BOOKMARK';
   try {
     lock = await open(lockPath, 'wx', 0o600);
     await lock.writeFile(
@@ -324,6 +335,16 @@ async function run() {
       throw new Error('Reset refused: fixed Playground R2 identity does not match provider inventory.');
     }
     const runtime = await verifyRuntime(hostname);
+    if (cleanTimestamp) {
+      const cleanInfo = wrangler(
+        ['d1', 'time-travel', 'info', databaseId, '--timestamp', cleanTimestamp, '--json'],
+        { json: true },
+      );
+      cleanBookmark = bookmarkFrom(cleanInfo);
+      if (!cleanBookmark) {
+        throw new Error('Reset refused: verified clean timestamp did not resolve to a bookmark.');
+      }
+    }
     targetVerified = true;
 
     phase = 'RECOVERY_CAPTURE';

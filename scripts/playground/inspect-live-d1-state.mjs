@@ -32,6 +32,8 @@ function hasBookmark(value) {
 }
 
 const manifestArg = process.argv[2];
+const operatorTimestampIndex = process.argv.indexOf('--timestamp');
+const operatorTimestamp = operatorTimestampIndex >= 0 ? process.argv[operatorTimestampIndex + 1] : '';
 if (!path.isAbsolute(manifestArg ?? '')) throw new Error('Manifest path must be absolute.');
 const manifestPath = await realpath(manifestArg);
 if (inside(repoRoot, manifestPath) || !(await stat(manifestPath)).isFile()) {
@@ -58,6 +60,7 @@ const sql = `SELECT
   (SELECT value FROM app_metadata WHERE key='playground.baseline_version') AS baseline_version,
   (SELECT value FROM app_metadata WHERE key='playground.working_state') AS working_state,
   (SELECT value FROM app_metadata WHERE key='playground.reset_generation') AS reset_generation,
+  (SELECT value FROM app_metadata WHERE key='playground.last_reset_receipt') AS last_reset_receipt,
   (SELECT COUNT(*) FROM sessions) AS sessions,
   (SELECT COUNT(*) FROM sessions) + (SELECT COUNT(*) FROM password_reset_tokens) +
     (SELECT COUNT(*) FROM auth_rate_limits) + (SELECT COUNT(*) FROM auth_rate_limit_events) +
@@ -95,6 +98,52 @@ if (sealedBookmarkCapturedAt) {
     sealedTimestampResolvable = hasBookmark(JSON.parse(timestampInfo.stdout));
   }
 }
+const lastResetReceipt = JSON.parse(String(row.last_reset_receipt ?? '{}'));
+let lastResetTimestampResolvable = false;
+if (
+  lastResetReceipt.status === 'PASS' &&
+  Number(lastResetReceipt.generation) === Number(row.reset_generation) &&
+  typeof lastResetReceipt.completedAt === 'string'
+) {
+  const receiptTimestampInfo = spawnSync(
+    process.execPath,
+    [
+      wranglerBin,
+      'd1',
+      'time-travel',
+      'info',
+      databaseId,
+      '--timestamp',
+      lastResetReceipt.completedAt,
+      '--json',
+    ],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      maxBuffer: 16 * 1024 * 1024,
+      windowsHide: true,
+    },
+  );
+  if (receiptTimestampInfo.status === 0) {
+    lastResetTimestampResolvable = hasBookmark(JSON.parse(receiptTimestampInfo.stdout));
+  }
+}
+let operatorTimestampResolvable = false;
+if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u.test(operatorTimestamp)) {
+  const operatorTimestampInfo = spawnSync(
+    process.execPath,
+    [wranglerBin, 'd1', 'time-travel', 'info', databaseId, '--timestamp', operatorTimestamp, '--json'],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      maxBuffer: 16 * 1024 * 1024,
+      windowsHide: true,
+    },
+  );
+  if (operatorTimestampInfo.status === 0) {
+    operatorTimestampResolvable = hasBookmark(JSON.parse(operatorTimestampInfo.stdout));
+  }
+}
 
 process.stdout.write(
   `${JSON.stringify({
@@ -115,5 +164,13 @@ process.stdout.write(
     sealedBookmarkLength: typeof sealedBookmark === 'string' ? sealedBookmark.length : 0,
     sealedBookmarkCapturedAt,
     sealedTimestampResolvable,
+    lastResetReceipt: {
+      status: String(lastResetReceipt.status ?? ''),
+      generation: Number(lastResetReceipt.generation ?? 0),
+      completedAt: String(lastResetReceipt.completedAt ?? ''),
+    },
+    lastResetTimestampResolvable,
+    operatorTimestamp: operatorTimestamp || null,
+    operatorTimestampResolvable,
   })}\n`,
 );
