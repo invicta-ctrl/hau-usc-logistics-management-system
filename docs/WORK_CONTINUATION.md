@@ -2,16 +2,20 @@
 
 ## Current resume block
 
-- Repository/worktree: `D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-master-reconciliation`.
-- Branch/upstream: permanent `Playground` / `origin/Playground`; historical base was `release/v0.8.3-fi12-playground@631724a5f32a49b9dcf45eec5a894aa7baf66266`.
-- Current phase: P31 live reset acceptance complete; P32 permanent-branch establishment and documentation targeting complete; P33 preservation-gated historical-ref retirement is next.
-- Authority: accepted `PLAYGROUND-MASTER-2026-08-28`, project policy, repository functional contracts, live design-source roles, and the P01 reconciliation manifest.
-- Completed: P00–P31 accepted authority, preservation, implementation, UI/UX, performance, accessibility, exact-candidate deployment, fresh-browser acceptance, and two independent live mutation/reset cycles. P32 created permanent `Playground` from that lineage after confirming no prior ref existed and retargeted operational documentation.
-- Preserved: deployed Playground source `ab356898...` / tree `23caaf4...`; live schema 32/migration 0032/baseline v2/generation-8 CLEAN state; `main` and other worktrees; frontend `.ai-bridge/` and `.local/`; every historical/recovery/design/release ref pending P33 classification.
-- External state: isolated Playground Worker/D1/R2 changes are recorded in P29–P31 checkpoints. Production, `main`, Google, email, schedules, and Figma remain untouched. Git branch establishment affects only `Playground` and the accepted temporary reconciliation ref.
-- Next action: execute P33 per-ref inventory, immutable preservation, dependency clearing, exact deletion, and absence verification until only permanent `main` and `Playground` plus any proven active task refs remain.
-- Resume commands: read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, accepted master prompt, and `.codex/PLAYGROUND_MASTER_RECONCILIATION_MANIFEST.md`; verify Git/upstream and live Playground identity.
-- Prohibited: Production/main mutation; broad branch merge; deletion without exact P33 preservation proof; history rewrite; unknown residue mutation; unbacked reset/migration; unclassified R2 deletion; Figma write.
+- **Repository/worktree:** `D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-master-reconciliation`.
+- **Branch/HEAD/upstream:** permanent `Playground` / `GIT_HEAD` / `origin/Playground`; historical base is preserved by `archive/p33-fi12-playground-20260829`.
+- **Current phase/stage:** P33 complete; P34 compact documentation and final candidate freeze is the only active step.
+- **Accepted scope:** `PLAYGROUND-MASTER-2026-08-28` P00–P34 through `READY_FOR_EARL_MANUAL_ANNOTATION`; Production and `main` mutation excluded.
+- **Completed work:** P00–P33 passed, including isolated deployment, full route acceptance, two live reset cycles, permanent `Playground`, and preservation-gated branch retirement.
+- **Files changed by purpose:** P34 updates only durable Playground architecture/reset/baseline, theme, language, branch-governance, residual, receipt, and current-pointer documentation plus the stale design-tracker claims list.
+- **Tests verified at current SHA:** P34 must pass governance, design-tracker consistency, Playground unit contracts, full Vitest, staging build, diff check, live public probes, and privacy-safe live D1 inspection before final freeze.
+- **Generated artifacts:** accepted deployed runtime remains source `ab356898...`, tree `23caaf4...`, staging entry SHA-256 `3bfa8b83...`; P34 documentation does not redeploy or replace it.
+- **External actions:** P29–P31 Playground-only deploy/reset actions and P32–P33 Git ref changes are recorded in their receipts; Production, `main`, Google, email, schedules, and Figma remain untouched.
+- **Rollback:** deployed runtime rollback and reset recovery remain private and verified; retired branch heads are recoverable through exact remote `archive/p33-*` tags.
+- **Blocker:** none.
+- **Next three actions:** finish P34 documents; run final deterministic/live verification; push permanent `Playground` and stop at `READY_FOR_EARL_MANUAL_ANNOTATION`.
+- **Resume commands:** read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, the accepted prompt, and the final candidate receipt; verify Git/upstream and live Playground identity.
+- **Prohibited actions:** Production/main mutation; deployment; new business-data mutation; reset repetition; branch deletion; history rewrite; detached-worktree cleanup; Figma write; work after the manual-annotation freeze without new owner authority.
 
 ## FI-04 archived historical block
 

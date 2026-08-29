@@ -88,7 +88,6 @@ if (!CHECK) {
      deliberately left alone — erasing them would be rewriting evidence — so
      only lines that assert current completion are checked. */
   const claims = [
-    ['docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md', /TRACKER_COMPLETION:\s+(\d+)%/gu],
     /* The register appends a block per baseline and never rewrites the old ones,
        so the CURRENT figure is the LAST one, not the first. Matching the first
        would pin this check to a superseded baseline. */

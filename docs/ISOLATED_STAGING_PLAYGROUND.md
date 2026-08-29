@@ -1,7 +1,20 @@
 # Isolated Staging Playground
 
-Status: active release architecture after `v0.8.0`
-Accepted authority: `.codex/specs/active/isolated-staging-playground-and-git-governance.md`
+Status: active permanent Playground architecture
+Accepted authority: `.codex/specs/accepted/2026-08-28-playground-master-consolidation-operational-uiux-performance-reset.md`
+
+## Current accepted baseline and candidate
+
+| Identity | Accepted value |
+| --- | --- |
+| Permanent source branch | `Playground` |
+| Deployed runtime source/tree | `ab356898651317b1441ece72dcc95a9139b9fa21` / `23caaf499f961dbe450f99946d78324d49172c22` |
+| Staging entry artifact SHA-256 | `3bfa8b83a9bc06d1066cffa9f5467aa34f44e812ec83b3ecf5bba7349d934e0b` |
+| Baseline | `PGBL-20260828-COVERAGE-V2` / version `2` |
+| Schema/latest migration | `32` / `0032_staff_account_activity_history.sql` |
+| Accepted reset state | generation `8`, `CLEAN`, zero sessions/transient rows/foreign-key violations |
+
+The deployed runtime source is intentionally older than the permanent branch tip because P31–P34 add operator tooling, evidence, branch governance, and final documentation without changing the accepted frontend/Worker runtime artifact.
 
 ## Safety contract
 
@@ -36,7 +49,7 @@ The private console shows safe short candidate, production, baseline, schema, D1
 1. Owner enters `RESET PLAYGROUND` in the private playground console.
 2. The server proves the runtime is `STAGING + PLAYGROUND_MODE + ISOLATED_STAGING_PLAYGROUND` and records a fixed-target operator request.
 3. The operator runs `scripts/playground/reset-workspace.mjs` with the private resource manifest and a new private report path.
-4. The tool proves the manifest D1 matches the authenticated provider inventory, captures a reversible pre-reset bookmark, restores the sealed playground bookmark, reconciles working brand R2 from sealed brand baseline, and clears playground-only working evidence.
+4. The tool proves the manifest D1 matches the authenticated provider inventory, captures a reversible pre-reset bookmark, and restores an operator-verified clean source: the current resolvable PASS receipt timestamp or a separately verified private schema-32 coverage-v2 baseline. The legacy sealed manifest bookmark must be probed and rejected when unavailable. The tool then reconciles working brand/evidence R2 from sealed baselines.
 5. Schema, migration, foreign keys, reset-probe absence, R2 count/content identity, metadata, zero transient rows, and approved redacted-evidence linkage are reverified.
 
 The browser never supplies a database ID or bucket name. The reset Worker has no production binding and is removed immediately after reconciliation.
@@ -80,4 +93,4 @@ Ordinary branch pushes are WIP and do not deploy. An operator freezes a candidat
 
 ## Legacy branch preservation
 
-The former rotating recovery-pointer model is superseded. Existing recovery/design/release refs remain until exact head/tree, unique history, immutable recovery evidence, and live branch-name dependencies are reconciled. `scripts/playground/branch-governance.mjs` enforces the two permanent branches, exact temporary targets, concurrency isolation, and preservation-gated legacy retirement.
+The former rotating recovery-pointer model is retired. P33 preserved every retired backend, design, recovery, regression, and release head at a verified remote annotated `archive/p33-*` tag before deleting its branch ref. Only `main` and `Playground` remain as local and remote branch heads. Detached completed worktrees and their preexisting dirty files remain preserved in place. `scripts/playground/branch-governance.mjs` enforces the two permanent branches, exact temporary targets, concurrency isolation, and preservation-gated retirement.
