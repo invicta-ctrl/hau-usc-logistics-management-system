@@ -62,6 +62,24 @@ function expectedEvidenceKeys(value) {
   return [...new Set(parsed)].sort();
 }
 
+async function repairBaselineEvidencePlaceholders(bucket, keys, enabled) {
+  if (!enabled) return 0;
+  let repaired = 0;
+  const body = JSON.stringify({
+    playgroundRedacted: true,
+    classification: 'PRIVATE_EVIDENCE_EXCLUDED',
+  });
+  for (const key of keys) {
+    if (await bucket.head(key)) continue;
+    await bucket.put(key, body, {
+      httpMetadata: { contentType: 'application/json' },
+      customMetadata: { classification: 'PRIVATE_EVIDENCE_EXCLUDED' },
+    });
+    repaired += 1;
+  }
+  return repaired;
+}
+
 async function resetBucket(
   baseline,
   working,
@@ -131,6 +149,11 @@ export default {
     }
     const d1EvidenceKeys = expectedEvidenceKeys(env.EXPECTED_EVIDENCE_KEYS_JSON);
     const d1EvidenceKeySet = new Set(d1EvidenceKeys);
+    const baselineEvidencePlaceholdersRepaired = await repairBaselineEvidencePlaceholders(
+      env.BASELINE_EVIDENCE,
+      d1EvidenceKeys,
+      String(env.ALLOW_BASELINE_PLACEHOLDER_REPAIR ?? '').toLowerCase() === 'true',
+    );
     const redactedEvidence = (object) => object.key.startsWith('playground-redacted/');
     const before = {
       brand: await manifest(env.WORKING_BRAND),
@@ -177,6 +200,7 @@ export default {
       baseline: { brand: baselineBrand, evidence: baselineEvidence },
       working: { brand: workingBrand, evidence: workingEvidence },
       d1Evidence: { ...d1Evidence, allPresent: d1EvidenceAllPresent },
+      baselineEvidencePlaceholdersRepaired,
       changes: { brand, evidence },
       preservedUnclassified: {
         brand: brand.preservedUnclassified,

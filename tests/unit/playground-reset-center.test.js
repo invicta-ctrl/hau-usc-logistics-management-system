@@ -40,5 +40,7 @@ describe('P13 Playground Reset Center contract', () => {
     expect(resetSource).toContain('r2?.d1Evidence');
     expect(r2ResetSource).toContain('d1EvidenceAllPresent');
     expect(r2ResetSource).toContain('allPresent: d1EvidenceAllPresent');
+    expect(resetSource).toContain('--repair-missing-evidence-placeholders');
+    expect(r2ResetSource).toContain('baselineEvidencePlaceholdersRepaired');
   });
 });

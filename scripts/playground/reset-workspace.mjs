@@ -270,6 +270,7 @@ async function run() {
   let sealedBaselineSql = false;
   let baselineDatabaseArg = '';
   let cleanTimestamp = '';
+  let repairEvidencePlaceholders = false;
   for (let index = 0; index < options.length; index += 1) {
     if (options[index] === '--sealed-baseline-sql') sealedBaselineSql = true;
     else if (options[index] === '--baseline-database' && options[index + 1]) {
@@ -278,6 +279,8 @@ async function run() {
     } else if (options[index] === '--clean-timestamp' && options[index + 1]) {
       cleanTimestamp = options[index + 1];
       index += 1;
+    } else if (options[index] === '--repair-missing-evidence-placeholders') {
+      repairEvidencePlaceholders = true;
     } else {
       throw new Error('Reset refused: unsupported reset option.');
     }
@@ -449,6 +452,9 @@ async function run() {
         { json: true },
       ),
     ).map((row) => String(row.private_storage_reference));
+    if (expectedEvidenceKeys.some((key) => !/^playground-redacted\/[0-9a-f]{24}$/u.test(key))) {
+      throw new Error('Reset refused: D1 evidence reference is not a privacy-safe Playground key.');
+    }
     const token = randomBytes(32).toString('base64url');
     const configPath = path.join(path.dirname(reportPath), `r2-reset-${Date.now()}.private.jsonc`);
     const config = {
@@ -466,6 +472,7 @@ async function run() {
       vars: {
         RESET_TOKEN: token,
         EXPECTED_EVIDENCE_KEYS_JSON: JSON.stringify(expectedEvidenceKeys),
+        ALLOW_BASELINE_PLACEHOLDER_REPAIR: repairEvidencePlaceholders ? 'true' : 'false',
       },
     };
     await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
