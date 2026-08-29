@@ -459,6 +459,23 @@ test('LEND-02 the Public Lending Hub exposes no Request Center tab', async ({ pa
   await expect(nav.getByRole('link', { name: 'Staff sign in', exact: true })).toBeVisible();
 });
 
+test('LEND-02A hash navigation remounts the correct public lending view', async ({ page }) => {
+  await installPublicFeed(page);
+  await installLendingCatalog(page);
+  await openPublicLending(page);
+
+  await page.evaluate(() => {
+    window.location.hash = '#/route/tracking';
+  });
+  await expect(page.getByRole('heading', { name: 'Track lending', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Request or Submission ID')).toBeVisible();
+
+  await page.evaluate(() => {
+    window.location.hash = '#/route/borrow';
+  });
+  await expect(page.getByRole('heading', { name: 'Lending Center', exact: true })).toBeVisible();
+});
+
 test('LEND-03 no public-request or public-front-door copy survives on the lending hub', async ({ page }) => {
   await installPublicFeed(page);
   await installLendingCatalog(page);

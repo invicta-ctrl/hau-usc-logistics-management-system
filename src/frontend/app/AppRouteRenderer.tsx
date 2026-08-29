@@ -163,7 +163,13 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
       <PublicNavbar dark={dark} onToggle={toggleTheme} onNavigate={navigate} onHome={goHome} />
 
       {route !== 'landing' ? (
-        <PublicFlows route={route as PublicSubRoute} onBack={goHome} dark={dark} onNavigate={navigate} />
+        <PublicFlows
+          key={route}
+          route={route as PublicSubRoute}
+          onBack={goHome}
+          dark={dark}
+          onNavigate={navigate}
+        />
       ) : (
         <LandingPage onNavigate={navigate} onRequireExternalRequest={requireExternalRequest} />
       )}
