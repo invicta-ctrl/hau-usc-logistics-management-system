@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { mkdtemp, open, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { restoreAndVerifyD1Export } from '../d1/verify-d1-export.mjs';
@@ -68,6 +69,49 @@ function sha256(value) {
   return createHash('sha256')
     .update(value ?? '')
     .digest('hex');
+}
+
+function validatePrivateBaselineDatabase(databasePath) {
+  const database = new DatabaseSync(databasePath, { readOnly: true });
+  try {
+    const row = database
+      .prepare(
+        `SELECT
+          (SELECT value FROM app_metadata WHERE key='operational_schema_version') AS schema_version,
+          (SELECT name FROM d1_migrations ORDER BY id DESC LIMIT 1) AS latest_migration,
+          (SELECT value FROM app_metadata WHERE key='playground.baseline_id') AS baseline_id,
+          (SELECT value FROM app_metadata WHERE key='playground.baseline_version') AS baseline_version,
+          (SELECT value FROM app_metadata WHERE key='playground.working_state') AS working_state,
+          (SELECT COUNT(*) FROM sessions) + (SELECT COUNT(*) FROM password_reset_tokens) +
+            (SELECT COUNT(*) FROM auth_rate_limits) + (SELECT COUNT(*) FROM auth_rate_limit_events) +
+            (SELECT COUNT(*) FROM email_verification_challenges) + (SELECT COUNT(*) FROM account_applications) +
+            (SELECT COUNT(*) FROM account_application_history) +
+            (SELECT COUNT(*) FROM public_request_rate_limit_events) +
+            (SELECT COUNT(*) FROM public_lending_rate_limit_events) +
+            (SELECT COUNT(*) FROM reporting_outbox) AS transient_total`,
+      )
+      .get();
+    const workingState = JSON.parse(String(row?.working_state ?? '{}'));
+    const integrityOk =
+      String(database.prepare('PRAGMA integrity_check').get()?.integrity_check ?? '').toLowerCase() === 'ok';
+    const foreignKeyViolations = database.prepare('PRAGMA foreign_key_check').all().length;
+    if (
+      String(row?.schema_version) !== '32' ||
+      String(row?.latest_migration) !== '0032_staff_account_activity_history.sql' ||
+      String(row?.baseline_id) !== 'PGBL-20260828-COVERAGE-V2' ||
+      Number(row?.baseline_version) !== 2 ||
+      workingState.state !== 'CLEAN' ||
+      workingState.activeTestSession !== false ||
+      Number(row?.transient_total) !== 0 ||
+      !integrityOk ||
+      foreignKeyViolations !== 0
+    ) {
+      throw new Error('Reset refused: private coverage baseline database verification failed.');
+    }
+    return { integrityOk, foreignKeyViolations, transientTotal: 0 };
+  } finally {
+    database.close();
+  }
 }
 
 export function validatePlaygroundResetTarget(manifest) {
@@ -221,12 +265,23 @@ async function privatePath(value, { existing }) {
 
 async function run() {
   const [manifestArg, reportArg, ...options] = process.argv.slice(2);
-  const sealedBaselineSql = options.includes('--sealed-baseline-sql');
-  if (options.some((option) => option !== '--sealed-baseline-sql')) {
-    throw new Error('Reset refused: unsupported reset option.');
+  let sealedBaselineSql = false;
+  let baselineDatabaseArg = '';
+  for (let index = 0; index < options.length; index += 1) {
+    if (options[index] === '--sealed-baseline-sql') sealedBaselineSql = true;
+    else if (options[index] === '--baseline-database' && options[index + 1]) {
+      baselineDatabaseArg = options[index + 1];
+      index += 1;
+    } else {
+      throw new Error('Reset refused: unsupported reset option.');
+    }
   }
+  if (sealedBaselineSql && baselineDatabaseArg) throw new Error('Reset refused: choose one baseline recovery source.');
   const manifestPath = await privatePath(manifestArg, { existing: true });
   const reportPath = await privatePath(reportArg, { existing: false });
+  const privateBaselineDatabasePath = baselineDatabaseArg
+    ? await privatePath(baselineDatabaseArg, { existing: true })
+    : '';
   const exportPath = await privatePath(
     path.join(
       path.dirname(reportPath),
@@ -247,7 +302,11 @@ async function run() {
   let preResetExportSha256 = '';
   let generation = 0;
   let before;
-  let d1RestoreMode = sealedBaselineSql ? 'SEALED_BASELINE_SQL' : 'TIME_TRAVEL_BOOKMARK';
+  let d1RestoreMode = privateBaselineDatabasePath
+    ? 'PRIVATE_VERIFIED_BASELINE_DATABASE'
+    : sealedBaselineSql
+      ? 'SEALED_BASELINE_SQL'
+      : 'TIME_TRAVEL_BOOKMARK';
   try {
     lock = await open(lockPath, 'wx', 0o600);
     await lock.writeFile(
@@ -296,8 +355,14 @@ async function run() {
     });
     preResetExportSha256 = sha256(await readFile(exportPath));
 
-    phase = sealedBaselineSql ? 'D1_SEALED_BASELINE_RECOVERY' : 'D1_RESTORE';
-    if (sealedBaselineSql) {
+    phase =
+      sealedBaselineSql || privateBaselineDatabasePath ? 'D1_SEALED_BASELINE_RECOVERY' : 'D1_RESTORE';
+    if (privateBaselineDatabasePath) {
+      validatePrivateBaselineDatabase(privateBaselineDatabasePath);
+      const replacementPath = path.join(workspace, 'private-clean-baseline-replacement.sql');
+      await writeFile(replacementPath, dumpDatabaseReplacement(privateBaselineDatabasePath), { flag: 'wx' });
+      wrangler(['d1', 'execute', databaseId, '--remote', '--file', replacementPath, '--yes']);
+    } else if (sealedBaselineSql) {
       const expectedBaselineSha256 = String(manifest.d1?.baselineSqlSha256 ?? '').toLowerCase();
       if (!/^[0-9a-f]{64}$/u.test(expectedBaselineSha256)) {
         throw new Error('Reset refused: sealed baseline SQL digest is unavailable.');
