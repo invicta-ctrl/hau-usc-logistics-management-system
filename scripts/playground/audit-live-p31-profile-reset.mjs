@@ -223,14 +223,13 @@ if (mode === 'stage-mutate') {
   );
   requireCondition(restored.avatar.available === expected.avatar.available, 'avatar availability restored');
   requireCondition(restored.avatar.updatedAt === expected.avatar.updatedAt, 'avatar revision restored');
-  const avatarRead = await fetch(`${baseUrl}/api/me/avatar`, {
-    headers: { accept: 'image/*', cookie: session.cookie },
-  });
-  requireCondition(
-    avatarRead.status === (expected.avatar.available ? 200 : 404),
-    'working R2 avatar state restored',
-  );
-  await avatarRead.arrayBuffer();
+  if (expected.avatar.available) {
+    const avatarRead = await fetch(`${baseUrl}/api/me/avatar`, {
+      headers: { accept: 'image/*', cookie: session.cookie },
+    });
+    requireCondition(avatarRead.status === 200, 'restored profile avatar object is readable');
+    await avatarRead.arrayBuffer();
+  }
   await rm(snapshotPath, { force: true });
   await writeFile(
     reportPath,
@@ -243,7 +242,10 @@ if (mode === 'stage-mutate') {
         productionMutation: 'NONE',
         googleMutation: 'NONE',
         d1: { profileRestored: true, appearanceRestored: true },
-        r2: { avatarStateRestored: true },
+        r2: {
+          avatarStateRestored: true,
+          objectProbe: expected.avatar.available ? 'HTTP_200' : 'NOT_APPLICABLE_TO_INITIALS_FALLBACK',
+        },
         newEntry: true,
       },
       null,
