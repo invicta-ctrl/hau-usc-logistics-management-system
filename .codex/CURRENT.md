@@ -4,7 +4,7 @@ PROGRAM: HAU-USC Logistics
 MASTER_PROMPT: PLAYGROUND-MASTER-2026-08-28
 MILESTONE: PLAYGROUND_MASTER_CONSOLIDATION
 STATUS: ACTIVE
-PHASE: P31_RESET_E2E_ACCEPTANCE_PASS;P32_PERMANENT_PLAYGROUND_BRANCH_NEXT
+PHASE: P32_PERMANENT_PLAYGROUND_BRANCH_PASS;P33_HISTORICAL_BRANCH_RETIREMENT_NEXT
 MODE: EXECUTE_CONTINUOUSLY_ACROSS_NAMED_PHASES
 BRANCH: Playground
 BASE_BRANCH: release/v0.8.3-fi12-playground
@@ -113,6 +113,8 @@ P30_DEPLOYED_TREE: 23caaf499f961dbe450f99946d78324d49172c22
 P30_DEPLOYED_ARTIFACT_SHA256: 3bfa8b83a9bc06d1066cffa9f5467aa34f44e812ec83b3ecf5bba7349d934e0b
 P31_STATUS: PASS_LIVE_PLAYGROUND_TWO_INDEPENDENT_MUTATION_RESET_CYCLES;GENERATION_8_CLEAN
 P31_AUDIT: .codex/PLAYGROUND_MASTER_P31_RESET_E2E_ACCEPTANCE.md
+P32_STATUS: PASS_PERMANENT_PLAYGROUND_ESTABLISHED;REMOTE_PARITY_PROVEN;TEMP_BRANCH_RETIRED;MAIN_UNCHANGED
+P32_AUDIT: .codex/PLAYGROUND_MASTER_P32_PERMANENT_BRANCH.md
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Execute P32 preservation-first reconciliation of the permanent Playground branch to the accepted source lineage, prove existing-ref unique work is resolved, verify remote parity and documentation targeting, keep main unchanged, and retain the temporary reconciliation branch until parity is proven.
+NEXT_EXACT_ACTION: Execute P33 preservation-gated inventory and retirement of obsolete permanent/historical branch refs. Record exact head/tree, unique history, immutable preservation, dependency clearance, deletion, and absence for each ref; preserve any ref that fails a gate.
 HANDOFF_STATUS: ACTIVE
