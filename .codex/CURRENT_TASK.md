@@ -32,4 +32,4 @@ COMPLETED_SO_FAR: P00–P31 are complete at their assigned audit gates. P12 prov
 
 P30_COMPLETION_ADDENDUM: P30 found and repaired one same-session public Borrow-to-Tracking route-state defect, added a two-width regression test, passed 1,243 tests and the 1,683-module staging build, guardedly redeployed exact source `ab35689` / tree `23caaf4` only to Playground, and passed the complete fresh-context authenticated/public matrix at 390 and 1440. Its five session/transient rows remain truthfully DIRTY for P31.
 
-NEXT_EXACT_ACTION: Execute P33 per-ref branch retirement only after exact head/tree inventory, unique-history resolution, immutable preservation, deployment/document/worktree dependency clearance, and exact absence verification. Preserve any ref that cannot satisfy every gate.
+NEXT_EXACT_ACTION: Execute P34 compact operator documentation, preserve only the required durable guides and exact final receipt, update the three current pointers, verify final branch/live identity, and stop at `READY_FOR_EARL_MANUAL_ANNOTATION`.

@@ -9,4 +9,5 @@
 - P31: two independent real Worker/D1/R2 mutation/reset cycles passed. The final live state is coverage baseline v2, schema 32/migration 0032, reset generation 8 CLEAN, zero sessions/transient rows/foreign-key violations, and complete baseline D1-to-R2 linkage.
 - P32: the permanent `Playground` ref was created only after confirming that no local or remote ref existed, so there was no unknown unique work to overwrite. Deployment and continuation documentation now targets `Playground`; remote parity and temporary-branch retirement are recorded in the P32 checkpoint.
 - Production, `main`, Google, email, schedules, and Figma remain untouched by this program.
-- Next phase: P33 preservation-gated retirement of obsolete permanent and historical branch refs.
+- P33: ten obsolete branch lineages were preserved by verified remote archive tags and retired; only permanent `main` and `Playground` branch heads remain locally and remotely. Completed detached worktrees and their existing dirty files remain preserved.
+- Next phase: P34 compact durable operator documentation and exact final candidate freeze.

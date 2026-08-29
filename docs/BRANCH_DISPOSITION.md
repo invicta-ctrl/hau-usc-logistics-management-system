@@ -1,6 +1,6 @@
 # Git Branch Disposition
 
-Status: permanent `Playground` established; preservation-gated historical-ref retirement active.
+Status: complete; only permanent `main` and `Playground` branch heads remain locally and remotely.
 
 ## Target policy
 
