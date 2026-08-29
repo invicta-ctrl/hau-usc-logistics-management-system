@@ -218,11 +218,12 @@ export function validateResetVerification(row, r2, expectedGeneration) {
   }
   const evidenceObjectCount = nonNegativeInteger(row.evidence_object_count, 'evidence_object');
   const foreignKeyViolations = nonNegativeInteger(row.foreign_key_violations, 'foreign_key_violation');
-  const r2Evidence = r2?.working?.evidence;
+  const r2Evidence = r2?.d1Evidence;
   const linkageMatches =
     evidenceObjectCount === evidenceKeys.length &&
     evidenceObjectCount === Number(r2Evidence?.count) &&
-    sha256(JSON.stringify(evidenceKeys)) === String(r2Evidence?.keyHash ?? '');
+    sha256(JSON.stringify(evidenceKeys)) === String(r2Evidence?.keyHash ?? '') &&
+    r2Evidence?.allPresent === true;
   const failures = [
     [String(row.schema_version) === '32', 'SCHEMA'],
     [String(row.latest_migration) === '0032_staff_account_activity_history.sql', 'MIGRATION'],
@@ -434,6 +435,20 @@ async function run() {
     ]);
 
     phase = 'R2_RECONCILIATION';
+    const expectedEvidenceKeys = d1Rows(
+      wrangler(
+        [
+          'd1',
+          'execute',
+          databaseId,
+          '--remote',
+          '--command',
+          "SELECT private_storage_reference FROM evidence_metadata WHERE private_storage_reference IS NOT NULL AND TRIM(private_storage_reference) <> '' ORDER BY private_storage_reference;",
+          '--json',
+        ],
+        { json: true },
+      ),
+    ).map((row) => String(row.private_storage_reference));
     const token = randomBytes(32).toString('base64url');
     const configPath = path.join(path.dirname(reportPath), `r2-reset-${Date.now()}.private.jsonc`);
     const config = {
@@ -448,7 +463,10 @@ async function run() {
         { binding: 'BASELINE_EVIDENCE', bucket_name: names.r2BaselineEvidence },
         { binding: 'WORKING_EVIDENCE', bucket_name: names.r2WorkingEvidence },
       ],
-      vars: { RESET_TOKEN: token },
+      vars: {
+        RESET_TOKEN: token,
+        EXPECTED_EVIDENCE_KEYS_JSON: JSON.stringify(expectedEvidenceKeys),
+      },
     };
     await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
     let deployed = false;

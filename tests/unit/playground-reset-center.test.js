@@ -9,6 +9,10 @@ const resetSource = readFileSync(
   new URL('../../scripts/playground/reset-workspace.mjs', import.meta.url),
   'utf8',
 );
+const r2ResetSource = readFileSync(
+  new URL('../../scripts/playground/r2-reset-worker.js', import.meta.url),
+  'utf8',
+);
 
 describe('P13 Playground Reset Center contract', () => {
   it('places an exact-confirmation full reset control in Administration System status', () => {
@@ -29,5 +33,12 @@ describe('P13 Playground Reset Center contract', () => {
     expect(resetSource.lastIndexOf('validateResetVerification')).toBeLessThan(
       resetSource.indexOf("'playground.last_reset_receipt'"),
     );
+  });
+
+  it('proves restored D1 evidence objects against working R2 without exposing object keys', () => {
+    expect(resetSource).toContain('EXPECTED_EVIDENCE_KEYS_JSON');
+    expect(resetSource).toContain('r2?.d1Evidence');
+    expect(r2ResetSource).toContain('d1EvidenceAllPresent');
+    expect(r2ResetSource).toContain('allPresent: d1EvidenceAllPresent');
   });
 });

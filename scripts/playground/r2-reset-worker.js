@@ -49,6 +49,19 @@ async function manifest(bucket, accept) {
   };
 }
 
+function expectedEvidenceKeys(value) {
+  let parsed;
+  try {
+    parsed = JSON.parse(String(value ?? '[]'));
+  } catch {
+    throw new Error('EXPECTED_EVIDENCE_KEYS_INVALID');
+  }
+  if (!Array.isArray(parsed) || parsed.some((key) => typeof key !== 'string' || !key.trim())) {
+    throw new Error('EXPECTED_EVIDENCE_KEYS_INVALID');
+  }
+  return [...new Set(parsed)].sort();
+}
+
 async function resetBucket(
   baseline,
   working,
@@ -116,6 +129,8 @@ export default {
     if (!(await authorized(request, env.RESET_TOKEN))) {
       return new Response('Forbidden', { status: 403 });
     }
+    const d1EvidenceKeys = expectedEvidenceKeys(env.EXPECTED_EVIDENCE_KEYS_JSON);
+    const d1EvidenceKeySet = new Set(d1EvidenceKeys);
     const redactedEvidence = (object) => object.key.startsWith('playground-redacted/');
     const before = {
       brand: await manifest(env.WORKING_BRAND),
@@ -132,12 +147,22 @@ export default {
     ]);
     const baselineBrandKeys = new Set((await listAll(env.BASELINE_BRAND)).map((object) => object.key));
     const governedWorkingBrand = (object) => baselineBrandKeys.has(object.key) || governedBrandObject(object);
-    const [baselineBrand, workingBrand, baselineEvidence, workingEvidence] = await Promise.all([
+    const [baselineBrand, workingBrand, baselineEvidence, workingEvidence, d1Evidence] = await Promise.all([
       manifest(env.BASELINE_BRAND),
       manifest(env.WORKING_BRAND, governedWorkingBrand),
       manifest(env.BASELINE_EVIDENCE, redactedEvidence),
       manifest(env.WORKING_EVIDENCE, redactedEvidence),
+      manifest(env.WORKING_EVIDENCE, (object) => d1EvidenceKeySet.has(object.key)),
     ]);
+    const expectedEvidenceKeyHash = await crypto.subtle.digest(
+      'SHA-256',
+      encoder.encode(JSON.stringify(d1EvidenceKeys)),
+    );
+    const expectedEvidenceKeyHashHex = [...new Uint8Array(expectedEvidenceKeyHash)]
+      .map((value) => value.toString(16).padStart(2, '0'))
+      .join('');
+    const d1EvidenceAllPresent =
+      d1Evidence.count === d1EvidenceKeys.length && d1Evidence.keyHash === expectedEvidenceKeyHashHex;
     const ok =
       baselineBrand.count === workingBrand.count &&
       baselineBrand.bytes === workingBrand.bytes &&
@@ -145,11 +170,13 @@ export default {
       baselineEvidence.count === workingEvidence.count &&
       baselineEvidence.bytes === workingEvidence.bytes &&
       baselineEvidence.hash === workingEvidence.hash;
+    const fullyVerified = ok && d1EvidenceAllPresent;
     return Response.json({
-      ok,
+      ok: fullyVerified,
       before,
       baseline: { brand: baselineBrand, evidence: baselineEvidence },
       working: { brand: workingBrand, evidence: workingEvidence },
+      d1Evidence: { ...d1Evidence, allPresent: d1EvidenceAllPresent },
       changes: { brand, evidence },
       preservedUnclassified: {
         brand: brand.preservedUnclassified,
