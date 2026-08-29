@@ -3,15 +3,15 @@
 ## Current resume block
 
 - Repository/worktree: `D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-master-reconciliation`.
-- Branch/base: `reconcile/playground-master` from clean remote-parity `release/v0.8.3-fi12-playground@631724a5f32a49b9dcf45eec5a894aa7baf66266`.
-- Current phase: P05 accepted FI frontend reconciliation complete; P06 normal-runtime fixture boundary audit is next.
+- Branch/upstream: permanent `Playground` / `origin/Playground`; historical base was `release/v0.8.3-fi12-playground@631724a5f32a49b9dcf45eec5a894aa7baf66266`.
+- Current phase: P31 live reset acceptance complete; P32 permanent-branch establishment and documentation targeting complete; P33 preservation-gated historical-ref retirement is next.
 - Authority: accepted `PLAYGROUND-MASTER-2026-08-28`, project policy, repository functional contracts, live design-source roles, and the P01 reconciliation manifest.
-- Completed: P00–P04 authority/base/live diagnosis/root/navigation; P05 182-path FI reconciliation, explicit divergence classifications, restored FI-13 containment, dual real/Preview Overview, rebuilt preview/shareable/staging artifacts, and focused verification.
-- Preserved: prior deployed Playground source `9d48eaa8...`, schema 32/migration 0032/generation-3 DIRTY state; main and other worktrees; frontend `.ai-bridge/` and `.local/`; every old recovery/design/release ref.
-- External state: read-only Git/live inspection, branch checkpoint pushes, and a controlled local 4173 test server now stopped; no provider, D1/R2, reset, migration, deployment, Production, Google, or Figma mutation.
-- Next action: execute P06 full normal-runtime fixture/mock/simulated-success inventory and deterministic build boundary gate.
+- Completed: P00–P31 accepted authority, preservation, implementation, UI/UX, performance, accessibility, exact-candidate deployment, fresh-browser acceptance, and two independent live mutation/reset cycles. P32 created permanent `Playground` from that lineage after confirming no prior ref existed and retargeted operational documentation.
+- Preserved: deployed Playground source `ab356898...` / tree `23caaf4...`; live schema 32/migration 0032/baseline v2/generation-8 CLEAN state; `main` and other worktrees; frontend `.ai-bridge/` and `.local/`; every historical/recovery/design/release ref pending P33 classification.
+- External state: isolated Playground Worker/D1/R2 changes are recorded in P29–P31 checkpoints. Production, `main`, Google, email, schedules, and Figma remain untouched. Git branch establishment affects only `Playground` and the accepted temporary reconciliation ref.
+- Next action: execute P33 per-ref inventory, immutable preservation, dependency clearing, exact deletion, and absence verification until only permanent `main` and `Playground` plus any proven active task refs remain.
 - Resume commands: read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, accepted master prompt, and `.codex/PLAYGROUND_MASTER_RECONCILIATION_MANIFEST.md`; verify Git/upstream and live Playground identity.
-- Prohibited: Production/main mutation; broad branch merge; branch deletion; history rewrite; unknown residue mutation; unbacked reset/migration; unclassified R2 deletion; Figma write.
+- Prohibited: Production/main mutation; broad branch merge; deletion without exact P33 preservation proof; history rewrite; unknown residue mutation; unbacked reset/migration; unclassified R2 deletion; Figma write.
 
 ## FI-04 historical resume block
 

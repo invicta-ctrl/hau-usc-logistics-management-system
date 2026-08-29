@@ -4,12 +4,12 @@ FROM: Completed FI00–FI17 Playground migration closeout
 TO: Active PLAYGROUND-MASTER-2026-08-28 program
 PROGRAM: HAU-USC Logistics Playground consolidation
 MODE: EXECUTE_CONTINUOUSLY
-BRANCH: reconcile/playground-master
+BRANCH: Playground
 BASE_BRANCH: release/v0.8.3-fi12-playground
 STARTING_SHA: 631724a5f32a49b9dcf45eec5a894aa7baf66266
 STARTING_TREE: 9dd5ee8c6d1f92bd72f762bbb5a790616d58a3f3
 HEAD: GIT_HEAD
-UPSTREAM: origin/reconcile/playground-master
+UPSTREAM: origin/Playground
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-master-reconciliation
 WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: SOL_HIGH:/root

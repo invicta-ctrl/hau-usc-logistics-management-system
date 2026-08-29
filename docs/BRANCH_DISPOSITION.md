@@ -1,6 +1,6 @@
 # Git Branch Disposition
 
-Status: `PLAYGROUND-MASTER-2026-08-28` adopted; preservation audit active.
+Status: permanent `Playground` established; preservation-gated historical-ref retirement active.
 
 ## Target policy
 
@@ -17,7 +17,8 @@ The exact evidence and disposition for every current local/remote branch and wor
 
 Current decisions:
 
-- Base `reconcile/playground-master` on clean, remote-parity `release/v0.8.3-fi12-playground` because that lineage contains the isolated Playground backend/reset tooling and accepted FI00–FI17 migration.
+- `Playground` is the canonical isolated Playground/demo/testing source lineage. It was established from the accepted `reconcile/playground-master` lineage only after P31 candidate acceptance and proof that no prior local or remote `Playground` ref existed.
+- Retire `reconcile/playground-master` only after `Playground` remote parity is proven; its complete history is then preserved by `Playground`.
 - Preserve `main` unchanged; its two known governance-only working-tree files remain outside this worktree.
 - Preserve `frontend-design-integration`, its protected `.ai-bridge/` and `.local/` residue, and all unique FI history.
 - Preserve `origin/local/post-fi17-design-pass-20260828` as divergent design evidence pending selective review; do not broad-merge it.
@@ -36,4 +37,4 @@ Before any branch ref is deleted:
 6. pass `validateLegacyBranchRetirement`;
 7. delete only the exact authorized ref and verify it is absent.
 
-No deletion is authorized by P00/P01.
+P32 authorizes retirement only of the temporary `reconcile/playground-master` ref after permanent-branch parity. Every other ref remains subject to the P33 per-ref preservation gate.
