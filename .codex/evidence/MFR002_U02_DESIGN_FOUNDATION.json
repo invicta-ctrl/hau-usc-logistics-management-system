@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "program": "HAU-USC-MFR-002",
+  "phase": "U02_MOBILE_FIRST_DESIGN_FOUNDATION",
+  "base": {
+    "playgroundCommit": "66f028013f1d294de68d308f2ca2abcb107019bc",
+    "playgroundTree": "2683979817a68b21e33acf52df504d6828db4e67",
+    "branch": "work/playground-mfr002-design-foundation",
+    "mainCommitPreserved": "f7e5bf83205dbe58b5fb72126a4456747d92e906",
+    "mainTreePreserved": "480cf65cb9ec07fbab729f0588023e120cf3f97a"
+  },
+  "change": {
+    "source": "scripts/design/foundation-source.mjs",
+    "generatedCss": "src/frontend/styles/foundation.css",
+    "generatedCssBytes": 11040,
+    "generatedCssSha256": "71c678191dc65893872c964e881ba05f6de4d7d30c5e0c39d23ffc183d78d791",
+    "typeRoles": 11,
+    "nonColorTokens": 59,
+    "cascadeLayers": [
+      "reset",
+      "tokens",
+      "base",
+      "layout",
+      "components",
+      "states",
+      "utilities",
+      "overrides"
+    ],
+    "structuralWidthsCssPx": [320, 390, 768, 1024, 1440],
+    "themeFamiliesPreserved": 6,
+    "lightDarkAppearanceSelectorsPreserved": 12,
+    "routeComponentChanges": 0,
+    "backendOrDataContractChanges": 0,
+    "lockfileSha256": "d874f080c0cb72a444929b84fb4710e71a619530dd9aa9999e43a0a23a6fff11"
+  },
+  "foundationContracts": [
+    "semantic typography ramp",
+    "primitive and role-based spacing/density",
+    "reading/form/workbench/wide content measures",
+    "safe-area and dynamic-viewport roles",
+    "container-query layout primitives",
+    "semantic solid surface, border, and elevation aliases",
+    "44px minimum control hit target",
+    "6/8/10/14px radius roles",
+    "named z-index contract",
+    "intent-based motion duration and easing",
+    "reduced-motion, focus-visible, and forced-color behavior"
+  ],
+  "verification": {
+    "focusedUnit": "PASS_4_FILES_15_TESTS",
+    "fullUnit": "PASS_170_FILES_1250_TESTS_1_INTENTIONAL_SKIP",
+    "lint": "PASS_0_ERRORS_2_PREEXISTING_WARNINGS",
+    "designSourceChecks": "PASS_FOUNDATION_THEME_AND_MAKE_THEME_CURRENT",
+    "designMirrorChecks": "PASS_TRACKER_MAKE_ROUTES_AND_RESOLVED_CASCADE",
+    "contrast": "PASS_66_OF_66_LIGHT_DARK_PAIRS",
+    "fiveWidthTestEnumeration": "PASS_15_CASES_ACROSS_FRONTEND_320_390_768_1024_1440",
+    "themeContract": "PASS_ALL_SIX_FAMILIES_WITH_LIGHT_AND_DARK_ROLE_BLOCKS",
+    "canonicalArtifact": "PASS_NORMAL_EXTERNAL_ASSET_ARCHITECTURE",
+    "stagingArtifact": "PASS_EXACT_STAGING_MARKER_NORMAL_ASSETS_AND_BYTE_IDENTICAL_HERO",
+    "diffCheck": "PASS"
+  },
+  "canonicalArtifact": {
+    "fileCount": 9,
+    "totalBytes": 36820903,
+    "manifestSha256": "cdc9fffd4b0e7046fe3a93c5a77e2c9ce2327a620b49ba82fa7b071c0539a49e",
+    "entryHtmlBytes": 1502,
+    "entryHtmlSha256": "41f34c4a91e8872ea4e4d08367f0368afde16685b58615ba4c86a66c0c28c107",
+    "directRequestsIncludingHtml": 3,
+    "directBytes": 331716,
+    "directGzipBytes": 88653,
+    "cssBytes": 116942,
+    "entryJavaScriptBytes": 213272,
+    "largestAssetBytes": 20000000
+  },
+  "stagingArtifact": {
+    "fileCount": 9,
+    "totalBytes": 36820957,
+    "manifestSha256": "45de485c31a1087c811b93b47ec18514159eb2731dd5ae87d5b602c976dff457",
+    "heroSourceBytes": 36018711,
+    "heroPartsBytes": [20000000, 16018711],
+    "heroSourceSha256": "657b38b82d452a234ab76c64a3c4312133279ec3d59b9923c84c5e24501e71d1"
+  },
+  "u01BudgetComparison": {
+    "u01DirectBytes": 325123,
+    "u02DirectBytes": 331716,
+    "directByteDelta": 6593,
+    "directByteDeltaPercent": 2.0278,
+    "u01DirectGzipBytes": 87257,
+    "u02DirectGzipBytes": 88653,
+    "directGzipDelta": 1396,
+    "directGzipDeltaPercent": 1.5999,
+    "u01CssBytes": 110349,
+    "u02CssBytes": 116942,
+    "cssByteDelta": 6593,
+    "cssByteDeltaPercent": 5.9747,
+    "entryJavaScriptByteDelta": 0,
+    "assessment": "PASS_BOUNDED_FOUNDATION_COST_WITH_NO_JAVASCRIPT_GROWTH"
+  },
+  "renderedBrowser": {
+    "status": "UNRUN_ENVIRONMENT_BLOCKED",
+    "notClaimed": "No fresh rendered five-width or visual-regression PASS is claimed for U02.",
+    "attempts": [
+      "The project-pinned Chromium binary was absent; the bounded workspace-local install could not maintain Playwright's download lock.",
+      "The connected cloud browser refused the workspace loopback preview with net::ERR_BLOCKED_BY_CLIENT."
+    ],
+    "fallbackEvidence": [
+      "The exact five-width Playwright configuration enumerates all 15 relevant test cases.",
+      "Static foundation tests cover safe areas, dynamic viewport units, container queries, touch size, focus, forced colors, reduced motion, cascade order, and all twelve family/mode selectors.",
+      "No route component or business-semantic source changed in this slice.",
+      "Canonical and staging builds compile the complete CSS through Vite and pass artifact validation."
+    ]
+  },
+  "result": "PASS_U02_DETERMINISTIC_FOUNDATION_WITH_RENDERED_BROWSER_RESIDUAL",
+  "rollback": "Revert the isolated U02 commit. The generated CSS must be changed through scripts/design/foundation-source.mjs and regenerated, never hand-edited.",
+  "productionMutation": "ZERO"
+}

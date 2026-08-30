@@ -4,8 +4,6 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --font-size: 16px;
-
   /* HAU-USC brand palette */
   --oxblood-deep:   #40070a;
   --oxblood-mid:    #78141a;
@@ -30,22 +28,6 @@
   --font-body: "IBM Plex Sans", system-ui, sans-serif;
   --font-record: "IBM Plex Mono", ui-monospace, monospace;
   --font-wordmark: "Newsreader", Georgia, serif;
-
-  /* Four-point spacing and restrained motion */
-  --space-2xs: 0.25rem;
-  --space-xs: 0.5rem;
-  --space-sm: 0.75rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2.5rem;
-  --space-2xl: 4rem;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --dur-response: 120ms;
-  --dur-state: 200ms;
-  --dur-surface: 280ms;
-  --dur-narrative: 400ms;
 
   /* G0–G4 material hierarchy: depth communicates task and selection. */
   --g0-ground: var(--paper-bg);
@@ -77,12 +59,6 @@
   --atrium-ink: var(--paper-warm);
   --atrium-muted: var(--gold-cream);
 
-  /* Named stacking levels. */
-  --z-base: 1;
-  --z-raised: 10;
-  --z-sticky: 200;
-  --z-modal: 400;
-
   /* Tailwind semantic tokens — light */
   --background:          var(--paper-warm);
   --foreground:          var(--ink-deep);
@@ -112,7 +88,6 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
   --sidebar: var(--oxblood-deep);
   --sidebar-foreground: var(--gold-cream);
   --sidebar-primary: var(--gold-vivid);

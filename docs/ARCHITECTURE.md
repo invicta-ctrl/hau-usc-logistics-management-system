@@ -19,6 +19,8 @@ Browser portals and authenticated workspaces
 - `src/server/` owns authorization, validation, workflow, provider, and repository boundaries.
 - `src/server/d1/` is the canonical operational repository layer.
 - `src/frontend/` is the canonical React application and product interface.
+- `scripts/design/theme-source.mjs` owns color intent; `scripts/design/foundation-source.mjs` owns shared type, spacing, sizing, shape, motion, stacking, and responsive-inspection contracts.
+- `src/frontend/styles/foundation.css` is generated from that non-color source and checked before every canonical or deployment build. Its ordered cascade layers are `reset`, `tokens`, `base`, `layout`, `components`, `states`, `utilities`, and `overrides`.
 - `src/visual/` and `src/styles/visual/` preserve the retained Apps Script recovery interface.
 - `src/apps-script.html` is the isolated Apps Script frontend entry; `npm run build:apps-script` generates the checked `apps-script/` partials, which are never hand-edited.
 

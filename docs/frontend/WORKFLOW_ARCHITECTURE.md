@@ -5,7 +5,7 @@ Scope: `src/frontend/` on permanent `Playground`; historical design lineage is p
 Authority: `DESIGN.md` (design) → repository server/Worker/auth contracts (functional) → this document (frontend workflow ownership)
 Accepted amendment: `.codex/specs/accepted/2026-08-23-r3-a1-a2-owner-routing-identity-three-context.md` (R3-A1-A2)
 Companion: `docs/frontend/ROUTING.md` — what each individual control does
-Last reviewed: 2026-08-29 (P33 permanent-branch consolidation; R3-A1-A2 contract preserved)
+Last reviewed: 2026-08-31 (MFR-002 U02 design foundation; R3-A1-A2 contract preserved)
 
 This document records **who each frontend surface is for and what it is allowed
 to do**. It does not define product policy; where it describes access rules it is
@@ -218,7 +218,7 @@ This branch does not claim end-to-end security completion while either is open.
 | FE-R3-008 | P3 | `CurrentSection` prints the same status sentence twice (figure placeholder and article body) in loading, empty, and error states. | FI-12 |
 | FE-R3-009 | P3 | `npm run lint` fails at branch baseline: 26 `no-undef` errors in `prototypes/public-portals-r3/app.js` plus one unused-var warning in `src/server/public-request-service.js`. Pre-existing; lint is not in the branch's accepted gate. | FI-12 |
 | FE-R3-010 | P2 | *Closed by R3-A1.* Stale Impeccable sidecar flagged the real institutional palette as drift. Rebuilt at schemaVersion 2; `design-system-color` findings 27 → 0. | CLOSED |
-| FE-R3-011 | P3 | 7 advisory `design-system-radius` findings in `PublicFlows.tsx`, and the shipped system has never defined a type ramp: `theme.css` carries only `--font-size: 16px` while public components use ten ad-hoc literal steps. | FI-12 / FI-13 |
+| FE-R3-011 | P3 | **Foundation closed by MFR-002 U02.** `scripts/design/foundation-source.mjs` now owns the semantic type ramp and 6/8/10/14 px radius roles, with deterministic CSS and drift checks. Seven route-local `PublicFlows.tsx` radius literals remain migration work for its bounded route slice; they are no longer a missing-system-contract defect. | MFR-002 U04 route migration |
 | FE-R3-012 | P2 | *Closed by R3-A1-A2.* `appRoutes.ts` labelled the internal route "Staff Request Center", colliding with the public Request Center. Renamed to Internal Request Hub in `appRoutes.ts` and the preview registry. | CLOSED |
 | FE-R3-015 | P2 | **Closed 2026-08-24.** The repository Make mirror was MCP-read-derived and 47 files carried literal truncation markers. Rebuilt from a provider export at Version 41 — 208 files, 0 markers. | CLOSED |
 | FE-R3-013 | P2 | **New.** Literals `theme.css` ships but `DESIGN.md` frontmatter does not declare: `--destructive` (`#d4183d`) across six surfaces, and the account-panel treatments `#fff7e6` / `#f7f0e2` shared by `AccountAccessPanel` and `AccountRecoveryPanel`, which are also light-mode only. New code uses a token where one exists (`var(--destructive)`, `var(--green-open)`); the shared panel literals are left matched between the two siblings on purpose and should be fixed together. | FI-12 |

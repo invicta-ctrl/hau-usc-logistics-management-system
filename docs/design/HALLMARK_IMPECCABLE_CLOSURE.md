@@ -264,12 +264,18 @@ real scale `sm 6 · md 8 · lg 10 · xl 14 · pill 999` computed from
 
 ### One finding the detector cannot raise, recorded deliberately
 
-The shipped system declares font **families and weights** but has never defined a
-**type ramp**. `theme.css` carries only `--font-size: 16px`, while the public
-components use ten ad-hoc literal steps — 9, 10, 11, 12, 13, 14, 15, 16, 18 and
-19px. `DESIGN.md` therefore declares no `fontSize` steps on purpose: declaring
-the literals in use would have silenced the check by blessing the debt. This is
-recorded as FE-R3-011 and is product-source work, not design-authority work.
+> Historical P33 finding, superseded at the foundation level by MFR-002 U02 on
+> 2026-08-31. The semantic ramp now lives in
+> `scripts/design/foundation-source.mjs`; route-local migration remains bounded
+> to the later route slices.
+
+At that checkpoint, the shipped system declared font **families and weights**
+but had no **type ramp**. `theme.css` carried only `--font-size: 16px`, while the
+public components used ten ad-hoc literal steps — 9, 10, 11, 12, 13, 14, 15, 16,
+18 and 19px. `DESIGN.md` therefore declared no `fontSize` steps: declaring the
+literals in use would have silenced the check by blessing the debt. That finding
+was recorded as FE-R3-011 and later closed at the foundation level by MFR-002
+U02; route-local migration remains separate product-source work.
 
 ## Hallmark — anti-slop audit
 

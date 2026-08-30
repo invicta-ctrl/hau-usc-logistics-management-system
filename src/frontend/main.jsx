@@ -5,7 +5,6 @@ import { installStaleChunkRecovery } from './app/installStaleChunkRecovery';
 import { loadFrontendVersion } from './integration/frontendVersion';
 import { isPreviewIndexHash, previewInspectionRouteFromHash } from './preview/index/routeHash';
 import './styles/index.css';
-import './styles/atrium-motion.css';
 import './styles/skip-link.css';
 
 installStaleChunkRecovery();

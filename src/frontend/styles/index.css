@@ -2,6 +2,7 @@
 @import './fonts.css';
 @import 'tailwindcss';
 @import './theme.css';
+@import './foundation.css';
 @import './atrium-motion.css';
 
 html,body,#root{max-width:100%;overflow-x:clip}
@@ -359,7 +360,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .atrium__secondary,
 .atrium__text-action {
   min-height: 48px;
-  border-radius: 0.625rem;
+  border-radius: var(--radius-surface);
   padding-inline: 1.25rem;
   display: inline-flex;
   align-items: center;
@@ -655,7 +656,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
   margin-block-start: var(--space-xs);
   padding-inline: var(--space-sm);
   border: 1px solid var(--border);
-  border-radius: 0.625rem;
+  border-radius: var(--radius-surface);
   color: var(--foreground);
   background: var(--input-background);
 }
@@ -785,7 +786,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .command-ledger-list {
   overflow: clip;
   border: 1px solid var(--border);
-  border-radius: 0.875rem;
+  border-radius: var(--radius-overlay);
   background: var(--content-surface);
 }
 
@@ -849,7 +850,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .command-topology-list,
 .command-recon-list {
   border: 1px solid var(--border);
-  border-radius: 0.875rem;
+  border-radius: var(--radius-overlay);
   background: var(--content-surface);
 }
 
@@ -1005,13 +1006,13 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 .command-inspector__fields div { display: grid; gap: var(--space-2xs); }
 .command-inspector__fields dt { color: var(--muted-foreground); font-family: var(--font-record); font-size: 0.625rem; letter-spacing: 0.07em; text-transform: uppercase; }
 .command-inspector__fields dd { margin: 0; font-size: 0.8125rem; line-height: 1.5; }
-.command-inspector__action { min-height: 44px; padding-inline: var(--space-md); border: 1px solid var(--glass-border-strong); border-radius: 0.625rem; color: var(--primary-foreground); background: var(--primary); font-family: var(--font-body); font-size: 0.8125rem; font-weight: 650; white-space: nowrap; }
+.command-inspector__action { min-height: var(--control-hit-area-min); padding-inline: var(--space-md); border: 1px solid var(--glass-border-strong); border-radius: var(--radius-surface); color: var(--primary-foreground); background: var(--primary); font-family: var(--font-body); font-size: 0.8125rem; font-weight: 650; white-space: nowrap; }
 .command-inspector__note { margin: 0; color: var(--muted-foreground); font-family: var(--font-record); font-size: 0.6875rem; line-height: 1.5; }
 
 .command-local-success {
   padding: var(--space-sm);
   border: 1px solid color-mix(in oklch, var(--green-open) 35%, var(--border));
-  border-radius: 0.625rem;
+  border-radius: var(--radius-surface);
   color: var(--green-open);
   background: color-mix(in oklch, var(--green-open) 8%, transparent);
   font-size: 0.75rem;
@@ -1019,7 +1020,7 @@ button,a,[role="button"],summary,label,input,select,textarea{touch-action:manipu
 }
 
 .command-skeleton {
-  border-radius: 0.625rem;
+  border-radius: var(--radius-surface);
   background: color-mix(in oklch, var(--muted) 82%, var(--g1-soft));
   animation: command-skeleton-pulse 1.4s var(--ease-in-out) infinite;
 }

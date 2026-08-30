@@ -15,7 +15,7 @@ describe('MFR-002 canonical build architecture', () => {
     ]);
 
     expect(packageJson.scripts.build).toBe(
-      'npm run verify:frontend:fixture-boundary && vite build --mode application',
+      'npm run verify:frontend:fixture-boundary && npm run design:foundation:check && vite build --mode application',
     );
     expect(Object.keys(packageJson.scripts)).not.toContain('build:share');
     expect(Object.keys(packageJson.scripts)).not.toContain('build:legacy-artifacts');

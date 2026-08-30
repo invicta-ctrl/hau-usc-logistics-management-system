@@ -56,7 +56,7 @@
   min-height: 44px;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--gold-mid);
-  border-radius: 0.625rem;
+  border-radius: var(--radius-surface);
   color: var(--atrium-ink);
   background: var(--atrium-g2);
   font-family: var(--font-body);

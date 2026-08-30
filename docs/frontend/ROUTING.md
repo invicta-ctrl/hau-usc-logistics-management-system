@@ -4,7 +4,7 @@ Status: current authority
 Scope: `src/frontend/` on permanent `Playground`; historical design lineage is preserved by `archive/p33-frontend-design-integration-20260829`
 Accepted amendment: `.codex/specs/accepted/2026-08-23-r3-a1-a2-owner-routing-identity-three-context.md` (R3-A1-A2)
 Authority: Earl instruction → accepted R3-A1-A2 amendment → accepted backend/API/auth contracts (functional truth) → this document (frontend control ownership)
-Last reviewed: 2026-08-29
+Last reviewed: 2026-08-31
 
 `WORKFLOW_ARCHITECTURE.md` explains the business flow. **This document explains
 exactly what each control does**, so the branch can be read and implemented
@@ -322,7 +322,7 @@ open.** No Production, Playground, D1 or R2 mutation was performed.
 | FE-R3-005 | P2 | No URL routing. Routing is in-memory React state in `useAppController.ts`; routes are not addressable and refresh, deep link, Back and Forward do not restore route state. Recorded, not accidental — introducing a router needs accepted authority. |
 | FE-R3-003 | P2 | Public sub-routes stack the site `PublicNavbar` and the `PublicFlows` masthead, presenting two Home affordances on one page. R3-A1-A2 made them behave identically, which removes the correctness problem but not the duplication. |
 | FE-R3-004 | P2 | `PublicMobileDrawer` sets `role="dialog" aria-modal="true"` and handles Escape and scroll lock, but performs no focus management: focus is not moved in, not trapped, and not restored on close. |
-| FE-R3-011 | P3 | 7 advisory radius findings in `PublicFlows.tsx`, and the shipped system still declares no type ramp — `theme.css` carries only `--font-size: 16px` while components use ten ad-hoc literal steps. |
+| FE-R3-011 | P3 | **Foundation closed by MFR-002 U02.** The generated shared foundation now defines the semantic type and radius contracts. Seven `PublicFlows.tsx` radius literals remain route-migration work for MFR-002 U04. |
 | FE-R3-015 | P2 | **Closed 2026-08-24.** The repository Make mirror was MCP-read-derived and 47 of its files carried literal `…N tokens truncated…` markers, so it was never byte-faithful despite the register claiming fidelity. Rebuilt from a provider `Download code` export at Version 41: 208 files, 0 markers. |
 | FE-R3-013 | P2 | **New.** Literal colours that `theme.css` ships but `DESIGN.md` frontmatter does not declare, so the Impeccable detector reads them as drift. Two families: `--destructive` (`#d4183d`) across six surfaces, and the account-panel treatments `#fff7e6` / `#f7f0e2` shared by `AccountAccessPanel` and `AccountRecoveryPanel`. The account panels are also light-mode only. New code uses tokens where one exists (`var(--destructive)`, `var(--green-open)`); the shared literals are deliberately left matched between the two sibling panels rather than diverging one of them, and should be fixed for both together. |
 

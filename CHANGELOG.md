@@ -10,6 +10,13 @@
 
 ## Unreleased
 
+### MFR-002 U02 mobile-first design foundation
+
+- Added a deterministic non-color design authority and generated CSS for 11 semantic type roles, mobile-first spacing/density, bounded content measures, safe areas/dynamic viewport units, container-query primitives, semantic solid surfaces/elevation, 44px touch targets, 6/8/10/14px shape roles, named stacking, restrained motion, focus, reduced motion, and forced colors.
+- Removed split ownership of spacing/motion/radius/z-index tokens from the theme stylesheet, added build-time foundation drift rejection, migrated only low-risk touched shared styles, and removed a duplicate Atrium CSS import without changing route or business semantics.
+- Preserved all six theme families and twelve Light/Dark contracts; 66/66 measured contrast pairs, 170 unit files/1,250 tests, canonical build, and staging artifact/hero verification pass. Rendered five-width browser evidence remains explicitly UNRUN because this environment has no usable local-browser path.
+- U02 changes no backend/data/auth behavior, dependency or lockfile, provider, deployment, D1/R2, reset, schema/migration, Google, Figma, `main`, or Production state.
+
 ### MFR-002 U01 build foundation
 
 - Replaced the 48.9 MB inlined canonical entry and duplicate shareable output with one generated-only, root-relative, content-hashed application build while preserving the accepted P23 two-part hero-media deployment architecture.
