@@ -15,7 +15,7 @@ export default [
   },
   js.configs.recommended,
   {
-    files: ['src/**/*.js'],
+    files: ['src/**/*.js', 'prototypes/**/*.js'],
     languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.browser },
     rules: { 'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }] },
   },

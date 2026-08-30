@@ -213,10 +213,10 @@ import { signedLedgerQuantity } from '../domain/inventory.js';
   let activeModuleRequest;
   const useEssentialBootstrap=backendMode!=='mock'&&bootstrapContractVersion>=2;
   const compositeRequestsEnabled = globalThis.__HAU_RUNTIME_CONFIG__?.compositeRequestsEnabled ?? true;
-  const shareableModule=document.documentElement.dataset.shareableModule;
+  const requestedModule=document.documentElement.dataset.module;
   const routeModuleValue=()=>({requests:'request',request:'request',lending:'lending',release:'release',inventory:'inventory',restocking:'restocking',procurement:'procurement'}[workspaceRouteFromPath(location.pathname).module]);
   const routeModule=routeModuleValue();
-  const defaultView=Object.hasOwn(VIEW_TITLES,shareableModule)?shareableModule:Object.hasOwn(VIEW_TITLES,routeModule)?routeModule:'overview';
+  const defaultView=Object.hasOwn(VIEW_TITLES,requestedModule)?requestedModule:Object.hasOwn(VIEW_TITLES,routeModule)?routeModule:'overview';
   const ui={view:defaultView,activeCommitteeId:'',dashboardStale:false,requestDraftLines:[],editingRequestLineIndex:-1,selectedRequestItemId:'',requestSuggestions:[],requestSuggestionIndex:-1,lendingTab:'FOR_REVIEW',procurementTab:'deliverables',recentDays:7,canvassPage:1,canvassPageSize:8,requestPage:1,requestPagination:null,inventoryPage:1,inventoryPageSize:10,uploads:{restock:null,canvass:null,deliverable:null,release:null},filters:{},renderQueued:false};
   function loadState(){
     try{ const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); if(saved&&saved.version==='1.0.0'){saved.eventDays=Array.isArray(saved.eventDays)?saved.eventDays:[];return saved;} }catch(e){ console.warn('Could not read preview storage',e); }

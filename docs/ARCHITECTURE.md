@@ -1,6 +1,6 @@
 # Architecture
 
-HAU-USC Logistics v0.7.2 is a Cloudflare Worker application with static single-file browser assets, D1 operational storage, separate R2 brand/evidence buckets, and server-owned authentication and authorization. Apps Script remains a packaged sidecar and recovery/reference path; it is not the current production authority.
+HAU-USC Logistics v0.8.3 is a Cloudflare Worker application with cacheable external browser assets, D1 operational storage, separate R2 brand/evidence buckets, and server-owned authentication and authorization. Apps Script remains an independently generated sidecar and recovery/reference path; it is not the current production authority.
 
 ## Runtime boundaries
 
@@ -18,13 +18,15 @@ Browser portals and authenticated workspaces
 - `src/worker/index.js` owns HTTP routing and safe release/readiness identity.
 - `src/server/` owns authorization, validation, workflow, provider, and repository boundaries.
 - `src/server/d1/` is the canonical operational repository layer.
-- `src/visual/` and `src/styles/visual/` preserve the accepted product identity and role-specific experiences.
-- `apps-script/` is generated through the repository pipeline; generated HTML is never hand-edited.
+- `src/frontend/` is the canonical React application and product interface.
+- `src/visual/` and `src/styles/visual/` preserve the retained Apps Script recovery interface.
+- `src/apps-script.html` is the isolated Apps Script frontend entry; `npm run build:apps-script` generates the checked `apps-script/` partials, which are never hand-edited.
 
 ## Environment and artifact isolation
 
-- Tracked `dist/` is the canonical preview/mock artifact only.
+- `npm run build` creates the ignored, generated-only canonical application in `dist/`; its entry uses root-relative, content-hashed CSS and JavaScript so SPA deep links resolve correctly.
 - Staging, production, Cloudflare dry-run, deployment, and local Worker acceptance build into isolated output directories.
+- Staging and production artifacts carry an exact environment marker and must also pass the normal-asset architecture gate; an inlined historical artifact is never deployable.
 - Staging and production use distinct Worker, D1, R2, secrets, provider configuration, and routes.
 - Runtime identity comes from `/api/version` and `/api/readiness`, including application version, exact candidate SHA, and schema/migration.
 - Staging alone displays `STAGING TEST ENV` with version, SHA, and schema.

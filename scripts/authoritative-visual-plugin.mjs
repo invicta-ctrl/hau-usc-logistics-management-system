@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { shareableModuleIds } from './shareable-module-registry.mjs';
+import { legacyVisualViewIds } from './legacy-visual-view-registry.mjs';
 
 export function authoritativeVisual() {
   return {
@@ -9,7 +9,7 @@ export function authoritativeVisual() {
       const visualRoot = resolve(process.cwd(), 'src/visual');
       const fragments = await Promise.all([
         readFile(resolve(visualRoot, 'shell-before.html'), 'utf8'),
-        ...shareableModuleIds.map((id) => readFile(resolve(visualRoot, `views/${id}.html`), 'utf8')),
+        ...legacyVisualViewIds.map((id) => readFile(resolve(visualRoot, `views/${id}.html`), 'utf8')),
         readFile(resolve(visualRoot, 'views/reference-admin.html'), 'utf8'),
         readFile(resolve(visualRoot, 'shell-after.html'), 'utf8'),
       ]);

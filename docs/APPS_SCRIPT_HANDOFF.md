@@ -1,6 +1,6 @@
 # Google Apps Script Handoff
 
-The Apps Script implementation is under `apps-script/`; `npm run build` generates its `Index.html`. It is code-complete for staging setup but has not been pushed or deployed.
+The retained Apps Script recovery/sidecar implementation is under `apps-script/`; `npm run build:apps-script` deterministically generates `Index.html`, `AppBody.html`, `AppStyles.html`, and `AppScript.html` from the isolated `src/apps-script.html` entry. `npm run check:apps-script` verifies server sources, parser safety, executable bootstrap behavior, and generated parity. This is independent of the canonical React/Cloudflare build and is not the current production authority. It has not been pushed to an Apps Script project or deployed by MFR-002.
 
 Each write entry point uses the server pattern: resolve identity/permission, validate command, acquire lock, check idempotency, load current state, validate transition/reservation/balance, allocate server IDs, append/update records, write status and audit with correlation ID, release lock, and return a normalized safe result. Paired transfer ledger rows use one batch range write.
 

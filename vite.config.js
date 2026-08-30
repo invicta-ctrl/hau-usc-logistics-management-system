@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import { viteSingleFile } from 'vite-plugin-singlefile';
 import { readFileSync } from 'node:fs';
 import { parsePlaygroundOrigin, verifyPlaygroundOrigin } from './scripts/playground-proxy-guard.mjs';
 
@@ -10,11 +9,10 @@ const DEPLOY_ARTIFACT_MARKER_NAME = 'hau-deploy-target';
 const HERO_MEDIA_SUFFIX = '/frontend/assets/hero/hausc-institutional-logistics-hero.mp4';
 const HERO_MEDIA_CHUNK_BYTES = 20_000_000;
 
-function cloudflareHeroMediaChunks(mode) {
-  if (!CLOUDFLARE_BUILD_MODES.has(mode)) return undefined;
-
+function largeHeroMediaChunks() {
   return {
-    name: 'hau-cloudflare-hero-media-chunks',
+    name: 'hau-large-hero-media-chunks',
+    apply: 'build',
     enforce: 'pre',
     load(id) {
       const normalizedId = id.replaceAll('\\', '/').split('?', 1)[0];
@@ -63,11 +61,9 @@ function deployArtifactMarker(mode) {
   };
 }
 
-function prioritizeDeploymentStyles(mode) {
-  if (!CLOUDFLARE_BUILD_MODES.has(mode)) return undefined;
-
+function prioritizeApplicationStyles() {
   return {
-    name: 'hau-prioritize-deployment-styles',
+    name: 'hau-prioritize-application-styles',
     apply: 'build',
     transformIndexHtml: {
       order: 'post',
@@ -76,11 +72,18 @@ function prioritizeDeploymentStyles(mode) {
         const stylesheets = html.match(stylesheetPattern) ?? [];
         const moduleScriptPattern = /<script type="module"[^>]*><\/script>/;
         const moduleScript = html.match(moduleScriptPattern)?.[0];
-        if (!moduleScript || stylesheets.length === 0 || html.indexOf(stylesheets[0]) < html.indexOf(moduleScript)) {
+        if (
+          !moduleScript ||
+          stylesheets.length === 0 ||
+          html.indexOf(stylesheets[0]) < html.indexOf(moduleScript)
+        ) {
           return html;
         }
         const withoutStylesheets = html.replace(stylesheetPattern, '');
-        return withoutStylesheets.replace(moduleScriptPattern, `${stylesheets.join('\n    ')}\n    ${moduleScript}`);
+        return withoutStylesheets.replace(
+          moduleScriptPattern,
+          `${stylesheets.join('\n    ')}\n    ${moduleScript}`,
+        );
       },
     },
   };
@@ -106,17 +109,16 @@ async function playgroundProxy() {
 }
 
 export default defineConfig(async ({ mode }) => {
-  const singleFileBuild = !CLOUDFLARE_BUILD_MODES.has(mode);
-
   return {
     root: 'src',
-    base: './',
+    // All accepted deployments are rooted at one origin. Root-relative assets
+    // keep BrowserRouter deep links from resolving scripts beneath /app/*.
+    base: '/',
     plugins: [
-      cloudflareHeroMediaChunks(mode),
+      largeHeroMediaChunks(),
       react(),
       tailwindcss(),
-      singleFileBuild ? viteSingleFile() : undefined,
-      prioritizeDeploymentStyles(mode),
+      prioritizeApplicationStyles(),
       deployArtifactMarker(mode),
     ].filter(Boolean),
     server: { host: '127.0.0.1', proxy: await playgroundProxy() },
@@ -124,9 +126,8 @@ export default defineConfig(async ({ mode }) => {
     build: {
       outDir: '../dist',
       emptyOutDir: true,
-      cssCodeSplit: !singleFileBuild,
-      assetsInlineLimit: singleFileBuild ? 100_000_000 : 4096,
-      rollupOptions: singleFileBuild ? { output: { inlineDynamicImports: true } } : undefined,
+      cssCodeSplit: true,
+      assetsInlineLimit: 4096,
     },
     test: {
       environment: 'node',

@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { gzipSync } from 'node:zlib';
-import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
@@ -63,11 +63,9 @@ async function summarizeBuild(directory) {
 }
 
 async function artifactBaseline() {
-  const shareable = path.join(ROOT, 'HAU-USC_Logistics-Frontend-Shareable.html');
   return {
     deployment: await summarizeBuild(path.join(ROOT, '.wrangler', 'build', 'staging')),
-    offlineShareable: await summarizeBuild(path.join(ROOT, 'dist')),
-    deterministicShareableBytes: (await stat(shareable)).size,
+    canonicalApplication: await summarizeBuild(path.join(ROOT, 'dist')),
   };
 }
 
@@ -403,7 +401,7 @@ try {
   console.log(`${phase} performance baseline written to ${path.relative(ROOT, output).replaceAll('\\', '/')}`);
   console.log(`Deployment HTML: ${artifacts.deployment.initialHtmlBytes} bytes (${artifacts.deployment.initialHtmlGzipBytes} gzip bytes)`);
   console.log(`Deployment route chunks: ${artifacts.deployment.routeChunkCount}`);
-  console.log(`Offline shareable: ${artifacts.deterministicShareableBytes} bytes`);
+  console.log(`Canonical application HTML: ${artifacts.canonicalApplication.initialHtmlBytes} bytes (${artifacts.canonicalApplication.initialHtmlGzipBytes} gzip bytes)`);
 } finally {
   await browser.close();
 }

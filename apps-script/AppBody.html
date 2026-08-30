@@ -1,0 +1,618 @@
+<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->
+
+  <div id="loading" class="loading-overlay"><div><div class="spinner"></div>Preparing the Logistics workspace…</div></div>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Primary navigation">
+      <div class="brand brand-text-lockup">
+        <div><small>Holy Angel University · University Student Council</small><strong>HAU-USC Logistics</strong><span>Operations workspace</span></div>
+      </div>
+      <nav id="primaryNav" class="nav">
+        <button class="active" data-view="overview"><span class="nav-icon">⌂</span><span class="nav-copy">Overview<small>Operations at a glance</small></span></button>
+        <button data-view="request"><span class="nav-icon">＋</span><span class="nav-copy">Request Center<small>Events & catalog restock</small></span></button>
+        <button data-view="lending"><span class="nav-icon">⇄</span><span class="nav-copy">Office Lending Hub<small>Library-style circulation</small></span></button>
+        <button data-view="release"><span class="nav-icon">✓</span><span class="nav-copy">Release Desk<small>Controlled handoff</small></span></button>
+        <button data-view="restocking"><span class="nav-icon">↧</span><span class="nav-copy">Restocking<small>Requests & receiving</small></span></button>
+        <button data-view="procurement"><span class="nav-icon">₱</span><span class="nav-copy">Procurement & Deliverables<small>Canvas, receive, deliver</small></span></button>
+        <button data-view="inventory"><span class="nav-icon">▦</span><span class="nav-copy">Inventory Management<small>Catalog, stock & history</small></span></button>
+      <button data-admin-view="referenceAdmin" hidden><span class="nav-icon">⚙</span><span class="nav-copy">Reference Administration<small>Controlled data and access</small></span></button></nav>
+      <div class="sidebar-foot"><strong data-runtime-label><span class="live-dot"></span>Secure workspace</strong><span data-runtime-detail>Checking the server-authorized operational service.</span></div>
+    </aside>
+    <main class="main">
+      <div class="portal-header"><div><strong>HAU-USC Logistics Request Center</strong><small>Submit and track requests without internal operational access</small></div><span data-runtime-status>Requester portal</span></div>
+      <header class="app-header"><div><p class="eyebrow">Department of Logistics</p><h1 id="pageTitle">Operations Overview</h1></div><div class="header-tools internal-only"><span data-runtime-status>Connecting securely…</span></div></header>
+
+<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->
+<section id="overview" class="view active">
+        <article class="hero">
+          <div class="hero-copy"><p class="eyebrow">WELCOME TO HAU-USC LOGISTICS</p><h2>One trusted workspace for every logistics handoff.</h2><p>Plan requests, prevent unnecessary purchases, coordinate receiving and release, and preserve a clear audit trail from need to completion.</p><div class="hero-actions"><button class="hero-primary" data-go="request">Create Request</button><button class="hero-ghost" data-go="release">Open Release Desk</button><button class="hero-ghost" data-go="procurement">Review Deliverables</button><button class="hero-ghost" data-go="inventory">Open Inventory</button></div></div>
+          <div id="heroStats" class="hero-stats"></div>
+        </article>
+        <div id="overviewMetrics" class="grid-4"></div>
+        <article id="committeeDashboardPanel" class="panel section-gap">
+          <div class="panel-head"><div><h2>Committee Main Hub</h2><p id="dashboardScopeNote">Capability-aware queues for the active committee context.</p></div><div class="button-row"><label>Active committee<select id="dashboardCommitteeSelect"></select></label><button id="dashboardRefresh" class="secondary" type="button">Refresh dashboard</button></div></div>
+          <div id="dashboardFreshness" class="mode-note" role="status" aria-live="polite">Loading dashboard freshness…</div>
+          <div id="dashboardQueues" class="grid-4 section-gap"></div>
+          <div class="grid-2 section-gap"><section><div class="section-kicker">Assigned staff workload</div><div id="dashboardStaff" class="line-list"></div></section><section><div class="section-kicker">Recent activity</div><div id="dashboardActivity" class="line-list"></div></section></div>
+          <div id="dashboardQuickLinks" class="button-row section-gap"></div>
+        </article>
+        <div class="section-title"><div><h2>Upcoming Events</h2><p>Readiness is calculated from live request-line status, not from hard-coded event cards.</p></div><span id="upcomingCount" class="pill">—</span></div>
+        <div id="upcomingEvents" class="event-series"></div>
+        <div class="grid-2 section-gap">
+          <article class="panel"><div class="panel-head"><div><h2>Operational Pulse</h2><p>Exceptions that need attention now.</p></div><span class="pill">Actionable</span></div><div id="operationalPulse" class="alert-list"></div></article>
+          <article class="panel"><div class="panel-head"><div><h2>Completed Event History</h2><p>Finished events remain searchable without crowding the active dashboard.</p></div><span id="completedEventCount" class="pill">0 events</span></div><div id="completedEvents"></div></article>
+        </div>
+        <article class="panel section-gap"><div class="panel-head"><div><h2>Roadmap to Version 1.0</h2><p>A plain-language implementation path for staff, maintainers, and future developers.</p></div><span id="roadmapOverall" class="pill">—</span></div><div id="roadmap" class="roadmap"></div></article>
+      </section>
+
+<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->
+<section id="request" class="view">
+        <form id="requestForm" novalidate>
+          <article class="panel"><div class="panel-head"><div><h2>What does your department need?</h2><p>Requests are reviewed before stock, procurement, or release is confirmed.</p></div><span class="pill">Request-only safe</span></div>
+            <div class="request-types">
+              <label class="request-type"><input type="radio" name="requestType" value="EVENT_LOGISTICS" checked><strong>Event Logistics</strong><span>For an approved or proposed event/sub-event, including materials, equipment, food, venue, or services.</span></label>
+              <label class="request-type"><input type="radio" name="requestType" value="CATALOG_RESTOCK"><strong>Catalog Restock</strong><span>For replenishing an existing Office Inventory or Pantry catalog item.</span></label>
+            </div>
+          </article>
+          <div class="grid-2 section-gap">
+            <article class="panel stack">
+              <div><div class="section-kicker">01 · Requester</div><div class="form-grid">
+                <label>Full name<input name="requesterName" autocomplete="name" placeholder="Requestor or project lead" required></label>
+                <label>Email address<input type="email" name="requesterEmail" autocomplete="email" placeholder="you@example.com" required></label>
+                <label>Department / office<input name="department" placeholder="Example: Department of Events Management" required></label>
+                <label>Priority<select name="priority"><option value="ROUTINE">Routine</option><option value="TIME_SENSITIVE">Time-sensitive</option><option value="URGENT">Urgent / exception review</option></select></label>
+              </div></div>
+              <div id="eventRequestFields"><div class="section-kicker">02 · Event context</div><div class="form-grid">
+                <label>Event Series<select id="requestEventSeries" name="eventSeriesId"></select></label>
+                <label>Approved Event / Sub-event<select id="requestEvent" name="eventId"></select></label>
+                <label>Request stage<select id="requestStage" name="requestStage"><option value="INITIAL">Initial request</option><option value="ADDITIONAL">Additional request</option></select></label>
+                <label id="originalRequestWrap" class="hidden">Original Request ID<select id="originalRequestId" name="parentRequestId"></select></label>
+                <label class="span-2">Event / activity title<input id="requestEventName" name="eventName" placeholder="Official event or project title"></label>
+                <div class="span-2 date-range" role="group" aria-label="Event Date Range"><label>Start date<input id="requestStartDate" type="date" name="startDate"></label><span class="range-sep">to</span><label>End date<input id="requestEndDate" type="date" name="endDate"></label></div>
+                <label>Event time<input id="requestEventTime" name="eventTime" placeholder="Example: 9:00 AM – 5:00 PM"></label>
+                <label>Estimated participants<input type="number" name="participants" min="0" step="1" placeholder="0"></label>
+                <label class="span-2">Venue / use location<input name="venue" placeholder="Where the requested resources will be used"></label>
+              </div></div>
+              <div id="catalogRequestFields" class="hidden"><div class="section-kicker">02 · Catalog context</div><div class="form-grid"><label>Catalog Type<select id="catalogType" name="catalogType"><option value="OFFICE_INVENTORY">Office Inventory</option><option value="PANTRY">Pantry</option></select></label><label>Date needed<input id="catalogNeededAt" type="date" name="catalogNeededAt"></label></div></div>
+              <div><div class="section-kicker">03 · Purpose</div><label>Purpose / justification<textarea name="purpose" placeholder="What is this for, who will use it, and why is it needed?" required></textarea></label></div>
+              <div><div class="section-kicker">04 · Add requested items</div><div class="line-composer">
+                <div class="composer-grid">
+                  <label class="wide">Item / Particular<div class="autocomplete"><input id="requestItemInput" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="requestAutocomplete" placeholder="Search item name, Product ID, alias, category, or stock area"><div id="requestAutocomplete" class="autocomplete-panel" role="listbox"></div></div></label>
+                  <label>Quantity<input id="requestQty" type="number" min="0.01" step="0.01" value="1"></label>
+                  <label>Unit<select id="requestUnit"></select></label>
+                  <label>Fulfillment<select id="requestFulfillment" disabled><option>System decides from inventory</option></select></label>
+                  <label>Date needed<input id="requestNeededAt" type="date"></label>
+                  <label id="requestReturnWrap" class="hidden">Return due<input id="requestReturnDue" type="date"></label>
+                  <label>Lead-time class<select id="requestLeadTime"></select></label>
+                  <label>Suggested supplier<input id="requestSupplier" placeholder="Optional"></label>
+                  <label id="newItemCategoryWrap" class="hidden">New-item category<select id="newItemCategory"></select></label>
+                  <label id="newItemSpecWrap" class="wide hidden">New-item specification<textarea id="newItemSpec" placeholder="Brand, dimensions, material, color, compatibility, or other identifying details"></textarea></label>
+                </div>
+                <div id="requestDecision" class="decision" aria-live="polite"></div>
+                <div class="button-row" style="margin-top:12px"><button id="addRequestLine" class="secondary" type="button">+ Add Request</button><button id="cancelLineEdit" class="ghost hidden" type="button">Cancel edit</button></div>
+              </div></div>
+              <div id="requestLines" class="line-list"><div class="empty">No requested items yet.</div></div>
+            </article>
+            <aside class="panel stack" style="align-self:start;position:sticky;top:20px"><div class="panel-head"><div><h2>Review before sending</h2><p>Line decisions explain what can be issued from stock and what still needs procurement.</p></div><span id="draftLineCount" class="pill">0 lines</span></div><div id="requestSummary" class="mode-note">Add at least one request line.</div><label><span><input id="requestConsent" type="checkbox" style="width:auto;min-height:auto;margin-right:6px" required>I confirm that these details are accurate and may be used for USC logistics processing.</span></label><button class="primary" type="submit">Submit for DOL Review</button><p class="hint">Submission creates a FOR REVIEW record. Physical stock is not reduced until a controlled release is confirmed.</p></aside>
+          </div>
+        </form>
+        <article id="compositeRequestPanel" class="panel section-gap" data-composite-feature hidden>
+          <div class="panel-head"><div><p class="eyebrow">04 · Event logistics sections</p><h2>Food, Materials, and Venue &amp; Equipment</h2><p>All three sections are exposed together. Complete one, two, or all; every selected non-empty section becomes one independently trackable child, while untouched sections create no child.</p></div><span class="pill">One parent request</span></div>
+          <form id="compositeRequestForm" novalidate>
+            <div class="form-grid">
+              <label>Requester name<input name="compositeRequesterName" value="Preview Requester" required></label>
+              <label>Department / office<input name="compositeDepartment" value="DOL - Preview Committee" required></label>
+              <label>Approved event / sub-event<select id="compositeEvent" name="eventId" required></select></label>
+              <label>Purpose / justification<input name="compositePurpose" value="Preview composite logistics request" required></label>
+            </div>
+            <div class="grid-2 section-gap">
+              <fieldset class="panel" data-composite-section="FOOD"><legend><label><input type="checkbox" name="foodEnabled" value="FOOD" data-composite-toggle> Food</label></legend><div class="form-grid" data-composite-fields><label>Optional label<input name="foodLabel" placeholder="Food section label"></label><label>Line description<input name="foodLine" placeholder="Required when selected"></label><label>Quantity<input name="foodQuantity" type="number" min="0.01" step="0.01" value="1"></label><label>Unit<select name="foodUnit"><option value="meal">Meal</option><option value="pack">Pack</option><option value="piece">Piece</option></select></label></div></fieldset>
+              <fieldset class="panel" data-composite-section="MATERIALS"><legend><label><input type="checkbox" name="materialsEnabled" value="MATERIALS" data-composite-toggle> Materials</label></legend><div class="form-grid" data-composite-fields><label>Optional label<input name="materialsLabel" placeholder="Materials section label"></label><label>Line description<input name="materialsLine" placeholder="Required when selected"></label><label>Quantity<input name="materialsQuantity" type="number" min="0.01" step="0.01" value="1"></label><label>Unit<select name="materialsUnit"><option value="piece">Piece</option><option value="pack">Pack</option><option value="box">Box</option></select></label></div></fieldset>
+              <fieldset class="panel" data-composite-section="VENUE_EQUIPMENT"><legend><label><input type="checkbox" name="venueEquipmentEnabled" value="VENUE_EQUIPMENT" data-composite-toggle> Venue &amp; Equipment</label></legend><div class="form-grid" data-composite-fields><label>Optional label<input name="venueEquipmentLabel" placeholder="Venue or equipment label"></label><label>Line description<input name="venueEquipmentLine" placeholder="Required when selected"></label><label>Quantity<input name="venueEquipmentQuantity" type="number" min="0.01" step="0.01" value="1"></label><label>Unit<select name="venueEquipmentUnit"><option value="service">Service</option><option value="piece">Piece</option><option value="set">Set</option></select></label></div></fieldset>
+            </div>
+            <div class="button-row section-gap"><button class="primary" type="submit">Review composite request</button><span id="compositeRequestReview" class="muted" aria-live="polite">Select at least one section.</span></div>
+            <div id="compositeRequestResult" class="mode-note hidden" aria-live="polite"></div>
+          </form>
+        </article>
+      </section>
+
+<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->
+<section id="lending" class="view">
+        <div class="grid-2">
+          <article class="panel"><div class="panel-head"><div><h2>New Lending / Consumable Ticket</h2><p>Create a review ticket first. Approval and physical handoff are separate steps.</p></div><span class="pill">Library-style flow</span></div>
+            <form id="lendingForm"><div class="form-grid">
+              <label>Student ID Number<input name="studentIdNumber" required inputmode="numeric" pattern="[0-9]{1,8}" maxlength="8" autocomplete="off" aria-describedby="studentIdHelp" placeholder="Digits only, maximum 8"></label>
+              <label>Borrower name<input name="borrowerName" required placeholder="Full name"></label>
+              <label>Borrower type<select name="borrowerType"><option value="USC_STAFF">USC Officer/Staff</option><option value="ANGELITE">Angelite/Student</option></select></label>
+              <label>Department / organization<input name="department" required></label>
+              <label>Contact detail<input name="contact" placeholder="Optional but recommended"></label>
+              <label>Item<select id="lendingItem" name="itemId" required></select></label>
+              <label>Quantity<input name="quantity" type="number" min="1" step="1" value="1" required></label>
+              <label id="lendingDueWrap">Due date<input name="dueAt" type="datetime-local"></label>
+              <label class="span-2">Purpose<textarea name="purpose" required placeholder="How will the item be used?"></textarea></label>
+            </div><p id="studentIdHelp" class="hint">Digits only; maximum 8 digits. Borrower identity is checked against the approved source during review.</p><div id="lendingAvailability" class="mode-note"></div><button class="primary" type="submit">Create For Review Ticket</button></form>
+          </article>
+          <article class="panel"><div class="panel-head"><div><h2>Circulation Summary</h2><p>Overdue is derived from the current time on every render.</p></div><span id="loanSummaryCount" class="pill">—</span></div><div id="loanMetrics" class="grid-2"></div><div class="mode-note" style="margin-top:12px">Production note: a daily Apps Script trigger should recalculate and notify overdue loans.</div></article>
+        </div>
+        <article class="panel section-gap"><div class="panel-head"><div><h2>Borrowing Tickets</h2><p>Approve, hand off, return, or review complete borrower history.</p></div></div><div id="lendingTabs" class="tabs"></div><div class="toolbar compact"><input id="lendingSearch" placeholder="Search borrower, Student ID, item, or department"><select id="lendingItemFilter"><option value="ALL">All items</option></select><select id="lendingBorrowerFilter"><option value="ALL">All borrower types</option><option value="USC_STAFF">USC Officer/Staff</option><option value="ANGELITE">Angelite/Student</option></select><button id="clearLendingFilters" class="secondary" type="button">Clear</button></div><div id="lendingTickets" class="loan-board"></div></article>
+      </section>
+
+<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->
+<section id="release" class="view">
+        <article class="panel"><div class="panel-head"><div><h2>Active Release Tickets</h2><p>The controlled physical handoff point for accepted event requests and approved circulation tickets.</p></div><span id="releaseActiveCount" class="pill">—</span></div><div id="releaseScopeSummary" class="mode-note">The server-authorized operational scope filters this one shared queue across every workspace route.</div><div class="toolbar compact"><input id="releaseSearch" placeholder="Search request, event, item, department, or recipient"><select id="releaseSeriesFilter"><option value="ALL">All event series</option></select><select id="releaseSourceFilter"><option value="ALL">All sources</option><option value="EVENT">Event requests</option><option value="LENDING">Approved lending/consumables</option></select><button id="clearReleaseFilters" class="secondary" type="button">Clear</button></div><div id="releaseTickets" class="line-list"></div></article>
+        <article class="panel section-gap"><div class="panel-head"><div><h2>Release History</h2><p>Completed tickets leave the active queue but remain fully traceable.</p></div><span id="releaseHistoryCount" class="pill">—</span></div><div id="releaseHistory" class="line-list"></div></article>
+      </section>
+
+<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->
+<section id="restocking" class="view">
+        <article class="panel"><div class="panel-head"><div><h2>Catalog Restock Requests</h2><p>Automatically populated from Catalog Restock submissions in the Request Center.</p></div><span id="restockRequestCount" class="pill">—</span></div><div class="toolbar"><input id="restockSearch" placeholder="Search item, requester, department, or request ID"><select id="restockStatusFilter"></select><select id="restockCatalogFilter"><option value="ALL">All catalog types</option><option value="OFFICE_INVENTORY">Office Inventory</option><option value="PANTRY">Pantry</option></select><input id="restockDateFilter" type="date"><button id="clearRestockFilters" class="secondary" type="button">Clear</button></div><div id="restockRequestsTable"></div></article>
+        <div class="grid-2 section-gap">
+          <article class="panel"><div class="panel-head"><div><h2>Receive Selected Restock Line</h2><p>Open Review details and choose Receive this line. The exact request line and revision are retained internally; siblings are never completed.</p></div><span class="pill">PURCHASE_RECEIPT</span></div><form id="restockReceiveForm"><input id="restockSourceRequestId" type="hidden" name="sourceRequestId"><input id="restockRequestId" type="hidden" name="restockRequestId"><input id="restockRequestLineId" type="hidden" name="requestLineId"><input id="restockExpectedRevision" type="hidden" name="expectedRevision"><div class="form-grid">
+            <label class="span-2">Existing product<select id="restockProduct" name="itemId" required></select></label>
+            <label>Quantity received<input name="quantity" type="number" min="0.01" step="0.01" value="1" required></label>
+            <label>Unit<input id="restockUnit" name="unit" readonly></label>
+            <label>Supplier<select id="restockSupplier" name="supplierId"><option value="">Select supplier</option></select></label>
+            <label>Actual unit price (₱)<input name="unitPrice" type="number" min="0" step="0.01" placeholder="0.00"></label>
+            <label>Invoice status<select name="invoiceStatus"><option value="UNKNOWN">Unknown</option><option value="ORIGINAL_RECEIPT">Original receipt available</option><option value="SALES_INVOICE">Sales invoice available</option><option value="UNAVAILABLE">Unavailable / follow up</option></select></label>
+            <label>Invoice / OR number<input name="invoiceNumber"></label>
+            <label>Storage area<select name="storageArea"><option value="Inventory">Inventory</option><option value="Pantry">Pantry</option></select></label>
+            <label>Storage location<select name="storageLocation"><option value="Main Cabinet">Main Cabinet</option><option value="Pantry Shelf">Pantry Shelf</option><option value="Equipment Rack">Equipment Rack</option><option value="To assign">To assign</option></select></label>
+            <label class="span-2">Receiving notes<textarea name="notes" placeholder="Condition, substitution, batch, expiry, shortage, or delivery issue"></textarea></label>
+          </div><div id="restockUploader"></div><button id="restockReceiveSubmit" class="primary" type="submit" disabled>Confirm Line Receiving</button></form></article>
+          <article class="panel"><div class="panel-head"><div><h2>Recently Restocked</h2><p>Dashboard window only; complete history is preserved.</p></div><div class="tabs" style="padding:0"><button class="tab active" data-recent-days="7">7 days</button><button class="tab" data-recent-days="30">30 days</button></div></div><div id="recentRestocks" class="line-list"></div></article>
+        </div>
+        <article class="panel section-gap"><div class="panel-head"><div><h2>Restock Log</h2><p>All receiving records, including those older than 30 days.</p></div><span id="restockLogCount" class="pill">—</span></div><div id="restockLog"></div></article>
+      </section>
+
+<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->
+<section id="procurement" class="view">
+        <article class="panel"><div class="panel-head"><div><h2>Procurement & Deliverables</h2><p>One operating area for event deliverables, canvassing, and automatic receiving registration.</p></div><span class="pill">Merged workflow</span></div><div id="procurementTabs" class="tabs"><button class="tab active" data-proc-tab="deliverables">Event Deliverables Queue</button><button class="tab" data-proc-tab="canvass">Canvass Library</button><button class="tab" data-proc-tab="receiving">Receiving & Auto-Registration</button></div></article>
+        <div id="proc-deliverables" class="subtab-panel active section-gap">
+          <article class="panel"><div class="panel-head"><div><h2>Event Deliverables Queue</h2><p>Review, match, canvas, procure, receive, and route items to the Release Desk.</p></div><span id="deliverableCount" class="pill">—</span></div><div class="toolbar"><input id="deliverableSearch" placeholder="Search event, item, request, department, or ID"><select id="deliverableSeriesFilter"><option value="ALL">All event series</option></select><select id="deliverableEventFilter"><option value="ALL">All sub-events</option></select><select id="deliverableStatusFilter"></select><select id="deliverableCommitteeFilter"><option value="ALL">All committees</option></select><input id="deliverableDateFilter" type="date" aria-label="Filter deliverables by date needed"><button id="clearDeliverableFilters" class="secondary" type="button">Clear</button></div><div id="deliverablesTable"></div></article>
+        </div>
+        <div id="proc-canvass" class="subtab-panel section-gap">
+          <div class="grid-2">
+            <article class="panel"><div class="panel-head"><div><h2>Add Canvass Reference</h2><p>Reusable supplier and quote data with receipt compliance and evidence.</p></div><span class="pill">CAN ID</span></div><form id="canvassForm"><div class="form-grid">
+              <label>Linked deliverable / restock line<select id="canvassLinkedLine" name="linkedLineId"><option value="">Unlinked library reference</option></select></label>
+              <label>Supplier name<input name="supplierName" required></label>
+              <label>Location<input name="location"></label>
+              <label>Item / specification<input name="itemSpec" required></label>
+              <label>Price (₱)<input name="price" type="number" min="0" step="0.01" required></label>
+              <label>Unit<select id="canvassUnit" name="unit"></select></label>
+              <label>Checked date<input name="checkedAt" type="date" required></label>
+              <label>Receipt / invoice status<select name="receiptStatus"><option value="NOT_CHECKED">Not checked</option><option value="ORIGINAL_RECEIPT">Original receipt available</option><option value="SALES_INVOICE">Sales invoice available</option><option value="UNAVAILABLE">Unavailable / follow up</option></select></label>
+              <label>Supplier TIN<input name="supplierTin"></label>
+              <label>Reliability / compliance<select name="reliability"><option value="UNRATED">Unrated</option><option value="RELIABLE">Reliable</option><option value="CONDITIONAL">Conditional</option><option value="FOLLOW_UP">Follow up required</option></select></label>
+              <label class="span-2">Evidence / source URL<input type="url" name="sourceUrl" placeholder="Optional shop page, Drive link, or online quote"></label>
+              <label class="span-2">Notes<textarea name="notes"></textarea></label>
+            </div><div id="canvassUploader"></div><button class="primary" type="submit">Save Canvass Reference</button></form></article>
+            <article class="panel"><div class="panel-head"><div><h2>Quote Comparison</h2><p>Compare linked supplier quotes and select a preferred option.</p></div><span id="quoteCompareCount" class="pill">0 quotes</span></div><label>Line to compare<select id="quoteCompareLine"></select></label><div id="quoteComparison" class="line-list" style="margin-top:12px"></div></article>
+          </div>
+          <article class="panel section-gap"><div class="panel-head"><div><h2>Canvass Library</h2><p>Scalable search, filters, sorting, pagination, price history, and safe archiving.</p></div><span id="canvassCount" class="pill">—</span></div><div class="toolbar"><input id="canvassSearch" placeholder="Search item, supplier, location, TIN, note, or CAN ID"><select id="canvassReceiptFilter"><option value="ALL">All receipt statuses</option><option value="ORIGINAL_RECEIPT">Original receipt</option><option value="SALES_INVOICE">Sales invoice</option><option value="UNAVAILABLE">Unavailable</option><option value="NOT_CHECKED">Not checked</option></select><select id="canvassSupplierFilter"><option value="ALL">All suppliers</option></select><select id="canvassSort"><option value="CHECKED_DESC">Newest checked</option><option value="PRICE_ASC">Lowest price</option><option value="PRICE_DESC">Highest price</option><option value="SUPPLIER_ASC">Supplier A–Z</option></select><button id="clearCanvassFilters" class="secondary" type="button">Clear</button></div><div id="canvassLibrary"></div><div id="canvassPagination" class="pagination"></div></article>
+        </div>
+        <div id="proc-receiving" class="subtab-panel section-gap">
+          <div class="grid-2"><article class="panel"><div class="panel-head"><div><h2>Receive Requested Event Item</h2><p>Known request and quote data are prefilled; receiving automatically assigns an event-item ID.</p></div><span class="pill">EIT auto-ID</span></div><form id="deliverableReceiveForm"><div class="form-grid">
+            <label class="span-2">Procured deliverable<select id="receiveDeliverable" name="deliverableId" required></select></label>
+            <label>Quantity received<input name="quantity" type="number" min="0.01" step="0.01" required></label>
+            <label>Unit<input id="receiveUnit" name="unit" readonly></label>
+            <label>Actual supplier<select id="receiveSupplier" name="supplierId"><option value="">Select supplier</option></select></label>
+            <label>Actual unit price (₱)<input name="unitPrice" type="number" min="0" step="0.01"></label>
+            <label>Receipt status<select name="receiptStatus"><option value="ORIGINAL_RECEIPT">Original receipt available</option><option value="SALES_INVOICE">Sales invoice available</option><option value="UNAVAILABLE">Unavailable / follow up</option></select></label>
+            <label>Batch / expiry<input name="batchExpiry" placeholder="Optional"></label>
+            <label>Condition<select name="condition"><option>Good</option><option>With minor issue</option><option>For verification</option></select></label>
+            <label class="span-2">Receiving notes<textarea name="notes"></textarea></label>
+          </div><div id="deliverableUploader"></div><button class="primary" type="submit">Receive & Auto-Register</button></form></article>
+          <article class="panel"><div class="panel-head"><div><h2>Received Event Items</h2><p>Event-specific IDs stay linked to their request, event, and supplier provenance.</p></div><span id="eventItemCount" class="pill">—</span></div><div id="receivedEventItems" class="line-list"></div></article></div>
+        </div>
+      </section>
+
+<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->
+<section id="inventory" class="view">
+        <article class="panel"><div class="panel-head"><div><h2>Inventory Management</h2><p>On-hand is derived from the append-only ledger; reservations determine available-to-promise.</p></div><div class="button-row"><span id="inventoryCount" class="pill">—</span><button id="adminCatalogException" class="secondary" type="button">Admin Catalog Exception</button></div></div><div class="toolbar"><input id="inventorySearch" placeholder="Search Product ID, name, alias, category, or provenance"><select id="inventoryAreaFilter"><option value="ALL">All areas</option><option value="Inventory">Inventory</option><option value="Pantry">Pantry</option><option value="Event-Specific">Event-Specific</option></select><select id="inventoryHandlingFilter"><option value="ALL">All handling</option><option value="Consumable">Consumable</option><option value="Loanable">Loanable</option></select><select id="inventoryStatusFilter"><option value="ALL">All statuses</option><option value="IN_STOCK">In stock</option><option value="LOW_STOCK">Low stock</option><option value="OUT_OF_STOCK">Out of stock</option><option value="VERIFY">Verify</option></select><button id="clearInventoryFilters" class="secondary" type="button">Clear</button></div><div id="inventoryTable"></div><div id="inventoryPagination" class="pagination"></div></article>
+      </section>
+
+<section id="referenceAdmin" class="view internal-only">
+  <div id="referenceAdminWorkspace" class="view-stack" hidden>
+    <article class="hero">
+      <div>
+        <p class="eyebrow">Authorized administration · governed control desk</p>
+        <h2>Resolve exceptions without widening access.</h2>
+        <p>
+          Start with the change, warning, or review that needs attention. Every control below delegates to the
+          existing server-authorized reference workspace; changing a view never grants permission.
+        </p>
+      </div>
+      <div class="hero-actions">
+        <span class="pill" data-reference-admin-write-state>Checking write controls</span>
+        <button class="secondary" type="button" data-reference-admin-refresh>Refresh</button>
+      </div>
+    </article>
+
+    <section class="admin-control-section" aria-labelledby="adminControlAreasTitle">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">System control</p>
+          <h2 id="adminControlAreasTitle">Governed control areas</h2>
+          <p>Authorized visibility across the system, with no client-side authority change.</p>
+        </div>
+      </div>
+      <div class="admin-control-grid">
+        <button class="admin-control-card" type="button" data-reference-admin-control-domain="PERMISSIONS">
+          <span class="admin-control-kicker">Access Management</span
+          ><strong>Accounts, roles, and scope</strong
+          ><small>Permission changes remain review-gated and cannot self-escalate.</small
+          ><span class="admin-control-action">Open controlled permissions</span>
+        </button>
+        <button class="admin-control-card" type="button" data-reference-admin-control-domain="VENUES">
+          <span class="admin-control-kicker">Reference Data</span><strong>Versioned operational values</strong
+          ><small>Manage approved references without editing raw operational sources.</small
+          ><span class="admin-control-action">Open reference data</span>
+        </button>
+        <button class="admin-control-card" type="button" data-reference-admin-link-registry>
+          <span class="admin-control-kicker">Link Registry</span
+          ><strong>Routes and canonical ownership</strong
+          ><small
+            >Versioned canonical D1 links with explicit audience, lifecycle, history, and sync state.</small
+          ><span class="admin-control-action">Open controlled routing</span>
+        </button>
+        <button class="admin-control-card" type="button" data-reference-admin-control-domain="SYNC_HEALTH">
+          <span class="admin-control-kicker">Audit &amp; System</span
+          ><strong>Health, evidence, and exceptions</strong
+          ><small>System status is visible here; restricted configuration remains protected.</small
+          ><span class="admin-control-action">Open read-only health</span>
+        </button>
+        <button class="admin-control-card" type="button" data-admin-control-surface="operational-health">
+          <span class="admin-control-kicker">Operational Health</span
+          ><strong>Environment and workflow readiness</strong
+          ><small
+            >Inspect server-reported identity, freshness, and cross-workspace attention without exposing
+            secrets.</small
+          ><span class="admin-control-action">Open operational health</span>
+        </button>
+        <button class="admin-control-card" type="button" data-admin-control-surface="brand-assets">
+          <span class="admin-control-kicker">Brand Assets</span><strong>Governed public media slots</strong
+          ><small>Inspect all six active R2-backed identity, background, favicon, and fallback routes.</small
+          ><span class="admin-control-action">Open governed assets</span>
+        </button>
+        <button class="admin-control-card" type="button" data-admin-control-surface="system-status">
+          <span class="admin-control-kicker">System Owner only</span><strong>System Operational Health</strong
+          ><small
+            >Inspect protected release, data, authentication, provider, storage, inventory, and recovery
+            status.</small
+          ><span class="admin-control-action">Open operational health</span>
+        </button>
+        <button class="admin-control-card" type="button" data-admin-control-surface="identity-roster">
+          <span class="admin-control-kicker">System Owner only</span
+          ><strong>USC Officer and Staff Directory</strong
+          ><small
+            >Review, apply, and roll back the protected directory from the approved private source.</small
+          ><span class="admin-control-action">Open protected directory</span>
+        </button>
+        <button class="admin-control-card" type="button" data-advertisement-admin-control>
+          <span class="admin-control-kicker">USC Announcements</span
+          ><strong>Public advertisement rotation</strong
+          ><small>Create, preview, schedule, reorder, and archive governed public media.</small
+          ><span class="admin-control-action">Manage advertisements</span>
+        </button>
+      </div>
+    </section>
+
+    <article class="admin-governance-note" aria-label="Administrator authority boundary">
+      <strong>Authority boundary</strong>
+      <span
+        >Operational work remains in its role workspace. This control desk surfaces authorized context and
+        invokes existing server checks; it does not grant access, bypass review, or mutate ledger
+        records.</span
+      >
+    </article>
+
+    <article class="panel" data-admin-operational-health hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Operational Health</h2>
+          <p>
+            Server-reported environment identity, data freshness, and operational exceptions. Secret values
+            and provider identifiers are intentionally omitted.
+          </p>
+        </div>
+        <span class="pill">Read only</span>
+      </div>
+      <div class="grid-4 section-gap" data-admin-health-metrics></div>
+      <div class="line-list section-gap" data-admin-health-attention></div>
+    </article>
+
+    <article class="panel" data-admin-brand-assets hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Brand Assets</h2>
+          <p>
+            Preview all six governed routes. The System Owner can upload validated drafts, publish
+            replacements, and roll back retained versions.
+          </p>
+        </div>
+        <div class="button-row">
+          <span class="pill" data-brand-assets-owner-state>Checking authority</span
+          ><button class="secondary" type="button" data-brand-assets-refresh>Refresh</button>
+        </div>
+      </div>
+      <div class="admin-brand-slot-grid section-gap" data-admin-brand-slots></div>
+    </article>
+
+    <article class="panel" data-admin-evidence-status hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Evidence status</h2>
+          <p>
+            Cross-workspace evidence exceptions and records requiring follow-up. Files remain governed by
+            their owning workflow.
+          </p>
+        </div>
+        <span class="pill">Read only</span>
+      </div>
+      <div class="grid-4 section-gap" data-admin-evidence-metrics></div>
+      <div class="line-list section-gap" data-admin-evidence-results></div>
+    </article>
+
+    <article class="panel" data-system-status hidden>
+      <div class="panel-head">
+        <div>
+          <h2>System Operational Health</h2>
+          <p>
+            Protected release, data, authentication, provider, storage, inventory, and recovery health for the
+            System Owner. Secrets, account identifiers, provider IDs, raw errors, object keys, OAuth values,
+            and personal data are intentionally omitted.
+          </p>
+        </div>
+        <div class="button-row">
+          <span class="pill">System Owner only</span
+          ><button class="secondary" type="button" data-system-status-refresh>Refresh</button>
+        </div>
+      </div>
+      <div class="alert" data-system-status-state aria-live="polite">
+        Open System Operational Health to load safe aggregate status.
+      </div>
+      <div class="grid-4 section-gap" data-system-status-metrics></div>
+      <details class="section-gap" data-system-status-technical>
+        <summary>Technical Details</summary>
+        <div class="line-list section-gap" data-system-status-technical-details></div>
+      </details>
+    </article>
+
+    <article class="panel" data-identity-roster hidden>
+      <div class="panel-head">
+        <div>
+          <h2>USC Officer and Staff Directory</h2>
+          <p>
+            Review the approved private source before changing the protected directory. Google is read only
+            for this review; login uses the encrypted D1 copy.
+          </p>
+        </div>
+        <div class="button-row">
+          <button class="secondary" type="button" data-roster-refresh>Refresh</button
+          ><button class="primary" type="button" data-roster-preview>Preview directory update</button>
+        </div>
+      </div>
+      <div class="context-cues" aria-label="Directory guidance">
+        <details class="context-cue">
+          <summary aria-label="How directory updates work">?</summary>
+          <p>
+            A preview compares the approved source with D1 and shows additions, changes, removals, unchanged
+            records, and quarantined rows before any write.
+          </p>
+        </details>
+        <details class="context-cue warning">
+          <summary aria-label="Important directory safety warning">!</summary>
+          <p>
+            Duplicate or incomplete rows stay quarantined. Confirm the exact fingerprint before applying, and
+            use rollback only for the latest applied update.
+          </p>
+        </details>
+      </div>
+      <div class="alert warning" data-roster-source-state aria-live="polite">
+        Checking the private roster source configuration.
+      </div>
+      <div class="grid-4 section-gap" data-roster-metrics></div>
+      <div class="section-gap" data-roster-preview-result></div>
+      <div class="toolbar section-gap">
+        <label
+          >Search officers and staff<input
+            name="identityRosterSearch"
+            maxlength="160"
+            placeholder="Student ID, HAU email, name, or verification"
+        /></label>
+        <label
+          >Activity<select name="identityRosterActive">
+            <option value="ALL">All activity states</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+          </select></label
+        >
+        <label
+          >Verification<select name="identityRosterVerification">
+            <option value="ALL">All verification states</option>
+            <option value="VERIFIED">Verified</option>
+            <option value="PENDING">Pending</option>
+            <option value="NOT_VERIFIED">Not verified</option>
+            <option value="REJECTED">Rejected</option>
+          </select></label
+        >
+      </div>
+      <div class="line-list section-gap" data-roster-directory aria-live="polite">
+        <div class="empty">Open the USC Officer and Staff Directory to load protected records.</div>
+      </div>
+      <div class="access-pagination section-gap" data-roster-pagination hidden>
+        <button class="secondary mini" type="button" data-roster-page="previous">Previous</button>
+        <span data-roster-page-summary></span>
+        <button class="secondary mini" type="button" data-roster-page="next">Next</button>
+      </div>
+      <details class="section-gap">
+        <summary>Update and rollback history</summary>
+        <div class="line-list section-gap" data-roster-history>
+          <div class="empty">No update history loaded.</div>
+        </div>
+      </details>
+    </article>
+
+    <article class="panel" data-access-management hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Access Management</h2>
+          <p>Search governed accounts, inspect Access ID history, and perform confirmed account actions.</p>
+        </div>
+        <div class="button-row">
+          <button class="secondary" type="button" data-access-seed-departments>
+            Initialize department accounts
+          </button>
+          <button class="primary" type="button" data-access-create>Create account</button>
+        </div>
+      </div>
+      <div class="toolbar access-management-toolbar">
+        <label
+          >Search<input
+            name="accessSearch"
+            maxlength="120"
+            placeholder="Access ID, department, or display name"
+        /></label>
+        <label
+          >Role<select name="accessRole">
+            <option value="">All roles</option>
+            <option value="REQUESTER">Department requester</option>
+            <option value="ADMINISTRATOR">Administrator</option>
+            <option value="DIRECTOR">Director</option>
+            <option value="DOL_STAFF">DOL staff</option>
+            <option value="COMMITTEE_HEAD">Committee head</option>
+            <option value="READ_ONLY_AUDITOR">Read-only auditor</option>
+          </select></label
+        >
+        <label
+          >Status<select name="accessStatus">
+            <option value="ALL">All statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="DISABLED">Disabled</option>
+            <option value="REVOKED">Archived / revoked</option>
+            <option value="LOCKED">Locked</option>
+            <option value="PENDING_FIRST_LOGIN">Pending first login</option>
+          </select></label
+        >
+        <label
+          >Committee<select name="accessCommittee">
+            <option value="">All committees</option>
+            <option value="COM_FOOD">Food</option>
+            <option value="COM_INVENTORY_PANTRY">Inventory &amp; Pantry</option>
+            <option value="COM_MATERIALS">Materials</option>
+          </select></label
+        >
+        <label
+          >Sort<select name="accessSort">
+            <option value="accessId">Identifier</option>
+            <option value="department">Department</option>
+            <option value="role">Role</option>
+            <option value="status">Status</option>
+            <option value="lastLogin">Last login</option>
+          </select></label
+        >
+      </div>
+      <div class="line-list section-gap" data-access-results>
+        <div class="empty">Open Access Management to load authorized accounts.</div>
+      </div>
+      <div class="access-pagination section-gap" data-access-pagination hidden>
+        <button class="secondary mini" type="button" data-access-page="previous">Previous</button>
+        <span data-access-page-summary></span>
+        <button class="secondary mini" type="button" data-access-page="next">Next</button>
+      </div>
+    </article>
+
+    <article class="panel" data-reference-admin-generic>
+      <div class="panel-head">
+        <div>
+          <h2>Controlled domain workspace</h2>
+          <p>Search, inspect, add, version, archive, or restore through server-authorized forms.</p>
+        </div>
+        <button class="primary" type="button" data-reference-admin-add>Add record</button>
+      </div>
+      <div class="toolbar reference-admin-toolbar">
+        <label
+          >Domain<select name="referenceAdminDomain">
+            <option value="ORGANIZATION">Organization</option>
+            <option value="PEOPLE_MEMBERSHIPS">People and memberships</option>
+            <option value="COMMITTEES">Committees</option>
+            <option value="VENUES" selected>Venues</option>
+            <option value="EQUIPMENT">Equipment</option>
+            <option value="ROUTING">Routing</option>
+            <option value="LIFECYCLE">Lifecycle</option>
+            <option value="PERMISSIONS">Permissions</option>
+            <option value="SYNC_HEALTH">Sync health</option>
+          </select></label
+        >
+        <label
+          >Search<input name="referenceAdminSearch" maxlength="120" placeholder="Stable ID, name, or alias"
+        /></label>
+        <label
+          >Status<select name="referenceAdminStatus">
+            <option value="ALL">All statuses</option>
+            <option value="DRAFT">Draft</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="ARCHIVED">Archived</option>
+          </select></label
+        >
+      </div>
+      <div class="line-list section-gap" data-reference-admin-results>
+        <div class="empty">Loading authorized references…</div>
+      </div>
+    </article>
+
+    <article class="panel" data-reference-admin-pending-panel>
+      <div class="panel-head">
+        <div>
+          <h2>Pending second review</h2>
+          <p>
+            Permission escalation and cross-office routing remain unapplied until a different authorized
+            administrator reviews them.
+          </p>
+        </div>
+      </div>
+      <div class="line-list" data-reference-admin-pending><div class="empty">Loading review queue…</div></div>
+    </article>
+
+    <article class="panel" data-advertisement-admin hidden>
+      <div class="panel-head">
+        <div>
+          <h2>USC Announcements</h2>
+          <p>Administrator-only public advertisement media and rotation.</p>
+        </div>
+        <button class="primary" type="button" data-advertisement-create>Create advertisement</button>
+      </div>
+      <div class="toolbar">
+        <label
+          >Search<input name="advertisementSearch" maxlength="120" placeholder="Stable ID or title"
+        /></label>
+        <label
+          >Status<select name="advertisementStatus">
+            <option value="ALL">All statuses</option>
+            <option value="DRAFT">Draft</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="ARCHIVED">Archived</option>
+          </select></label
+        >
+        <button class="secondary" type="button" data-advertisement-refresh>Refresh</button>
+      </div>
+      <div class="line-list section-gap" data-advertisement-results>
+        <div class="empty">Open USC Announcements to load authorized records.</div>
+      </div>
+      <div class="access-pagination section-gap" data-advertisement-pagination hidden>
+        <button class="secondary mini" type="button" data-advertisement-page="previous">Previous</button>
+        <span data-advertisement-page-summary></span>
+        <button class="secondary mini" type="button" data-advertisement-page="next">Next</button>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->
+
+    </main>
+  </div>
+  <div id="drawerBackdrop" class="drawer-backdrop" role="presentation"><aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle"></aside></div>
+  <div id="modalBackdrop" class="modal-backdrop" role="presentation"><section id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></section></div>
+  <div id="toast" role="status" aria-live="polite"></div>

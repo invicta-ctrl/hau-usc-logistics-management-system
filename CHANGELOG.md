@@ -10,6 +10,14 @@
 
 ## Unreleased
 
+### MFR-002 U01 build foundation
+
+- Replaced the 48.9 MB inlined canonical entry and duplicate shareable output with one generated-only, root-relative, content-hashed application build while preserving the accepted P23 two-part hero-media deployment architecture.
+- Removed the complete active shareable/demo pipeline, 49 unreachable export UI wrappers, 53 unreachable production dependencies, and the single-file plugin; release manifests now bind the complete application artifact rather than duplicate HTML.
+- Added fail-closed normal-asset verification for canonical/staging/Production-mode builds, real SPA deep-link HTTP proof, and one-reload Vite stale-chunk recovery with loop protection.
+- Restored Apps Script recovery packaging from an isolated sidecar entry and re-enabled deterministic generated-partial parity instead of silently skipping missing files on the React candidate.
+- U01 performs no deployment, provider, D1/R2, reset, schema/migration, Google, Figma, `main`, or Production mutation.
+
 ### MFR-002 U00 adoption
 
 - Adopted the owner-supplied `HAU-USC-MFR-002` reference as the single current Playground transformation specification and preserved its original attachment SHA-256 in the repository-normalized front matter.

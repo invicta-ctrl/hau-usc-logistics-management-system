@@ -7,14 +7,18 @@ const root = resolve(import.meta.dirname, '../..');
 const read = (file) => readFile(resolve(root, file), 'utf8');
 
 describe('authoritative release pipeline', () => {
-  it('does not require retired generated Apps Script UI artifacts for a Figma frontend checkout', async () => {
-    const check = await read('scripts/check-apps-script.mjs');
+  it('keeps the Apps Script recovery sidecar independently generated and verified', async () => {
+    const [check, packageJson, sidecarEntry] = await Promise.all([
+      read('scripts/check-apps-script.mjs'),
+      read('package.json').then(JSON.parse),
+      read('src/apps-script.html'),
+    ]);
 
-    expect(check).toContain(
-      "const frontendWorkerCandidate = applicationIndex.includes('./frontend/main.jsx')",
-    );
-    expect(check).toContain('requiredFiles.filter((file) => !generatedAppsScriptFiles.has(file))');
-    expect(check).toContain('Legacy generated UI artifacts are not applicable');
+    expect(packageJson.scripts['build:apps-script']).toBe('node scripts/create-apps-script-bundle.mjs');
+    expect(check).toContain("readFile(resolve(root, 'AppBody.html'), 'utf8')");
+    expect(check).toContain('createAppsScriptBundleFromProject()');
+    expect(check).not.toContain('frontendWorkerCandidate');
+    expect(sidecarEntry).toContain('<!-- AUTHORITATIVE_VISUAL -->');
   });
 
   it('keeps the Cloudflare preview static, manually gated, and free of protected bindings', async () => {
@@ -105,7 +109,8 @@ describe('authoritative release pipeline', () => {
     expect(workflow).toContain('.release/candidate.json');
     expect(workflow).toContain('release-candidate-${{ steps.identity.outputs.sha }}');
     expect(workflow).toContain('actions/upload-artifact@v4');
-    expect(workflow).toContain('HAU-USC_Logistics-Frontend-Shareable.html');
+    expect(workflow).toContain('dist/');
+    expect(workflow).not.toContain('HAU-USC_Logistics-Frontend-Shareable.html');
     expect(workflow).not.toContain('HAU-USC_Logistics-Prototype-Shareable.html');
     expect(workflow).not.toContain('apps-script/');
     expect(workflow).toContain('environment: isolated-staging-playground');
@@ -127,6 +132,7 @@ describe('authoritative release pipeline', () => {
     expect(viteConfig).toContain("const DEPLOY_ARTIFACT_MARKER_NAME = 'hau-deploy-target';");
     expect(viteConfig).toContain('name: DEPLOY_ARTIFACT_MARKER_NAME');
     expect(artifactVerifier).toContain('must contain exactly one canonical deploy target marker');
+    expect(artifactVerifier).toContain('validateNormalApplicationArtifact');
     expect(artifactVerifier).not.toContain('const modeMatches =');
   });
 
@@ -136,11 +142,13 @@ describe('authoritative release pipeline', () => {
       read('package.json').then(JSON.parse),
     ]);
 
-    expect(manifest).toMatchObject({ schemaVersion: 1, releaseVersion: packageJson.version });
+    expect(manifest).toMatchObject({ schemaVersion: 2, releaseVersion: packageJson.version });
     expect(manifest.candidate.releaseSha).toMatch(/^[0-9a-f]{40}$/u);
     expect(manifest.candidate.distSha256).toMatch(/^[0-9a-f]{64}$/u);
-    expect(manifest.artifacts.cloudflareHtmlSha256).toBe(manifest.candidate.distSha256);
-    expect(manifest.artifacts.shareableHtmlSha256).toMatch(/^[0-9a-f]{64}$/u);
+    expect(manifest.artifacts.canonicalApplication.entryHtmlSha256).toBe(manifest.candidate.distSha256);
+    expect(manifest.artifacts.canonicalApplication.manifestSha256).toMatch(/^[0-9a-f]{64}$/u);
+    expect(manifest.artifacts.canonicalApplication.files.length).toBeGreaterThan(2);
+    expect(manifest.artifacts).not.toHaveProperty('shareableHtmlSha256');
     expect(manifest.artifacts).not.toHaveProperty('appsScriptHtmlSha256');
   });
 

@@ -16,7 +16,8 @@ const BOOTSTRAP_CONTRACT_VERSION_VALUE_MARKER = '<?= bootstrapContractVersion ?>
 const COMPOSITE_REQUESTS_ENABLED_VALUE_MARKER = "<?= compositeRequestsEnabled ? 'true' : 'false' ?>";
 const FOOD_REQUESTS_ENABLED_VALUE_MARKER = "<?= foodRequestsEnabled ? 'true' : 'false' ?>";
 const MATERIALS_REQUESTS_ENABLED_VALUE_MARKER = "<?= materialsRequestsEnabled ? 'true' : 'false' ?>";
-const VENUE_EQUIPMENT_REQUESTS_ENABLED_VALUE_MARKER = "<?= venueEquipmentRequestsEnabled ? 'true' : 'false' ?>";
+const VENUE_EQUIPMENT_REQUESTS_ENABLED_VALUE_MARKER =
+  "<?= venueEquipmentRequestsEnabled ? 'true' : 'false' ?>";
 
 const TAG_NAME_CHAR = /[A-Za-z0-9:_-]/;
 const ATTR_NAME_CHAR = /[^\s=/>]/;
@@ -438,7 +439,8 @@ export async function createAppsScriptBundleFromProject() {
     import('vite'),
     import('./authoritative-visual-plugin.mjs'),
   ]);
-  const sourceHtml = (await readFile(resolve('src/index.html'), 'utf8')).replace(/\r\n?/g, '\n');
+  const sidecarEntry = resolve('src/apps-script.html');
+  const sourceHtml = (await readFile(sidecarEntry, 'utf8')).replace(/\r\n?/g, '\n');
   const visualPlugin = authoritativeVisual();
   const expandedHtml = await visualPlugin.transformIndexHtml(sourceHtml);
   const viteResult = await build({
@@ -454,6 +456,7 @@ export async function createAppsScriptBundleFromProject() {
       assetsInlineLimit: 100_000_000,
       modulePreload: { polyfill: false },
       rollupOptions: {
+        input: sidecarEntry,
         output: {
           inlineDynamicImports: true,
           entryFileNames: 'app.js',

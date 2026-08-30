@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "program": "HAU-USC-MFR-002",
+  "phase": "U01_BUILD_FOUNDATION",
+  "measurementClass": "before-after-local-build-and-http-smoke",
+  "hypothesis": "Replacing the canonical single-file/shareable path with content-hashed external assets will make normal builds cacheable and deep-link safe while preserving P23 deployment limits and reducing initial transfer cost.",
+  "beforeEvidence": {
+    "sourceCommit": "471d45d55df7de1b46fe5943a605d05891f2c4e8",
+    "buildCommand": "vite build --mode preview followed by frontend shareable generation",
+    "entryHtmlBytes": 48877838,
+    "entryHtmlGzipBytes": 36389890,
+    "entryHtmlSha256": "ad411d245076891c412bbffa909573e1ec46ef800a278e260ba1eb2c1b4632a0",
+    "externalEntryAssetRequests": 0,
+    "productionDependencies": 56,
+    "developmentDependencies": 12,
+    "lockfileSha256": "c84ee33bead67db1c3a620462191727a9040e197d9f6a9767b54f4cadcecc183"
+  },
+  "change": [
+    "Made npm run build an ordinary application build with root-relative content-hashed CSS and JavaScript.",
+    "Applied the accepted P23 20,000,000-byte hero chunking limit to canonical, staging, and Production-mode builds.",
+    "Removed the active shareable/demo generators, outputs, tests, workflow references, and single-file plugin.",
+    "Removed unreachable Figma-export UI wrappers and dependencies after entry-graph proof.",
+    "Restored Apps Script as an independently generated and parity-checked recovery sidecar.",
+    "Added bounded stale dynamic-chunk recovery and fail-closed normal-asset deployment validation."
+  ],
+  "afterEvidence": {
+    "buildMode": "application",
+    "entryHtmlBytes": 1502,
+    "entryHtmlGzipBytes": 852,
+    "entryHtmlSha256": "42d8e6dc65aebcf4aa1ccbff5a5f6b7b8570f891c40afeb84bfa6f639f2d31b4",
+    "directEntryRequestsIncludingHtml": 3,
+    "directEntryUncompressedBytes": 325123,
+    "directEntryGzipBytes": 87257,
+    "artifactFiles": 9,
+    "artifactTotalBytesIncludingLazyHeroMedia": 36814310,
+    "artifactManifestSha256": "aefb6e156f4d946e02c591e731e0d9a8c7940ac96aca43eba1ae561d2169907d",
+    "largestAssetBytes": 20000000,
+    "productionDependencies": 3,
+    "developmentDependencies": 11,
+    "lockfileSha256": "d874f080c0cb72a444929b84fb4710e71a619530dd9aa9999e43a0a23a6fff11",
+    "stagingArtifactManifestSha256": "741c992ec520ea2e9d86e62f10ff3568cad3793201e2608603d01860327e35c2",
+    "productionModeArtifactManifestSha256": "e2cc4c8ad1398ddc45708614d3175e309afc753f8e929b6fa79e582938f6d289"
+  },
+  "comparison": {
+    "entryHtmlByteReductionPercent": 99.9969,
+    "entryHtmlGzipReductionPercent": 99.9977,
+    "initialGzipReductionPercent": 99.7602,
+    "productionDependencyReductionPercent": 94.6429,
+    "cacheability": "PASS_CONTENT_HASHED_EXTERNAL_ASSETS",
+    "spaDeepLink": "PASS_HTTP_200_EXACT_ENTRY_AND_ROOT_RELATIVE_ASSETS",
+    "heroMediaIdentity": "PASS_BYTE_IDENTICAL_TWO_PART_RECONSTRUCTION"
+  },
+  "environment": {
+    "platform": "linux x64",
+    "node": "v24.19.0",
+    "npm": "11.9.0",
+    "vite": "7.3.6",
+    "cleanInstall": "PASS_NPM_CI_IGNORE_SCRIPTS_235_PACKAGES",
+    "deepLinkProbe": "Vite preview /app/admin with exact dist/index.html hash and 200 CSS/JS responses"
+  },
+  "confounders": [
+    "Artifact totals include 36,018,711 bytes of lazy hero media; those bytes are emitted for deployment but are not part of the initial route transfer.",
+    "A fresh Playwright browser journey was UNRUN because the pinned Chromium download timed out repeatedly in this workspace; deterministic unit gates and the real HTTP SPA fallback probe passed.",
+    "Wrangler dry-run passed after the U01 architecture and dependency retirement. A repeated invocation after the final two dead-wrapper deletions was policy-blocked before execution; the final staging artifact is smaller and independently passes manifest, marker, hero-identity, and per-asset budget checks."
+  ],
+  "result": "PASS_U01_BUILD_FOUNDATION_LOCAL_GATES",
+  "rollback": "Revert the isolated U01 commit. Do not restore generated shareable outputs by hand; Git history is the rollback/history location.",
+  "doNotRepeat": "Do not reintroduce a single-file canonical build, tracked dist output, or dependencies reachable only from discarded export wrappers."
+}

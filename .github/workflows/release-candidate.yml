@@ -62,8 +62,7 @@ jobs:
           name: release-candidate-${{ steps.identity.outputs.sha }}
           path: |
             .release/candidate.json
-            dist/index.html
-            HAU-USC_Logistics-Frontend-Shareable.html
+            dist/
           if-no-files-found: error
           retention-days: 14
 

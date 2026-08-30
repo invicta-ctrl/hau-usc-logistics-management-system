@@ -14,6 +14,7 @@
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
+import { validateNormalApplicationArtifact } from './build-artifact-lib.mjs';
 
 const CLOUDFLARE_MODES = new Set(['staging', 'production']);
 const DEPLOY_ARTIFACT_MARKER_NAME = 'hau-deploy-target';
@@ -39,7 +40,9 @@ try {
 
 const markers = [...html.matchAll(canonicalMarkerPattern)].map((match) => match[1]);
 if (markers.length !== 1) {
-  throw new Error('The isolated artifact must contain exactly one canonical deploy target marker. Refusing to deploy.');
+  throw new Error(
+    'The isolated artifact must contain exactly one canonical deploy target marker. Refusing to deploy.',
+  );
 }
 
 const buildMode = markers[0];
@@ -57,8 +60,14 @@ if (target && buildMode !== target) {
   );
 }
 
+// A marker alone is not sufficient identity. Reject the pre-U01 single-file
+// artifact shape even if a marker has been inserted into it.
+const artifact = await validateNormalApplicationArtifact(artifactDirectory);
+
 const digest = createHash('sha256').update(html).digest('hex');
 process.stdout.write(
-  `Deploy artifact verified: build mode ${buildMode}, ${html.length} bytes, sha256 ${digest.slice(0, 16)}...\n` +
+  `Deploy artifact verified: build mode ${buildMode}, ${artifact.fileCount} files, ` +
+    `${artifact.totalBytes.toLocaleString()} bytes, manifest ${artifact.manifestSha256.slice(0, 16)}..., ` +
+    `HTML sha256 ${digest.slice(0, 16)}...\n` +
     `${target ? `Target: ${target}\n` : ''}`,
 );

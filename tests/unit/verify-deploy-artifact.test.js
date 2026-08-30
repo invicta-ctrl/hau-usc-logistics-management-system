@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,13 +7,24 @@ import { describe, expect, it } from 'vitest';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const verifier = resolve(root, 'scripts', 'verify-deploy-artifact.mjs');
-const artifact = (mode) => `<!doctype html><html><head><meta name="hau-deploy-target" content="${mode}"></head><body></body></html>`;
+const artifact = (mode) => `<!doctype html><html><head>
+  <title>HAU-USC Logistics</title>
+  <link rel="stylesheet" href="/assets/index-ABCDEFGH.css">
+  <script type="module" src="/assets/index-ABCDEFGH.js"></script>
+  <meta name="hau-deploy-target" content="${mode}">
+</head><body><div id="app"></div></body></html>`;
 
 async function verify(target, html) {
   const directory = await mkdtemp(join(tmpdir(), 'hau-deploy-artifact-'));
   try {
+    await mkdir(join(directory, 'assets'));
     await writeFile(join(directory, 'index.html'), html);
-    const result = spawnSync(process.execPath, [verifier, target, directory], { cwd: root, encoding: 'utf8' });
+    await writeFile(join(directory, 'assets', 'index-ABCDEFGH.css'), 'body{color:#210b0d}');
+    await writeFile(join(directory, 'assets', 'index-ABCDEFGH.js'), 'globalThis.__hau=true;');
+    const result = spawnSync(process.execPath, [verifier, target, directory], {
+      cwd: root,
+      encoding: 'utf8',
+    });
     return { status: result.status, output: `${result.stdout}${result.stderr}` };
   } finally {
     await rm(directory, { recursive: true, force: true });
@@ -41,10 +52,26 @@ describe('deploy artifact verifier', () => {
 
   it('rejects absent, duplicate, and preview markers', async () => {
     const absent = await verify('staging', '<!doctype html><html><head></head><body></body></html>');
-    const duplicate = await verify('staging', `<head>${artifact('staging').match(/<meta[^>]+>/u)[0]}${artifact('staging').match(/<meta[^>]+>/u)[0]}</head>`);
+    const duplicate = await verify(
+      'staging',
+      `<head>${artifact('staging').match(/<meta[^>]+>/u)[0]}${artifact('staging').match(/<meta[^>]+>/u)[0]}</head>`,
+    );
     const preview = await verify('staging', artifact('preview'));
     expect(absent.output).toContain('exactly one canonical deploy target marker');
     expect(duplicate.output).toContain('exactly one canonical deploy target marker');
     expect(preview.output).toContain('invalid deploy target marker');
+  });
+
+  it('rejects an inlined historical artifact even when its marker is valid', async () => {
+    const historical = artifact('production')
+      .replace('<link rel="stylesheet" href="/assets/index-ABCDEFGH.css">', '<style>body{}</style>')
+      .replace(
+        '<script type="module" src="/assets/index-ABCDEFGH.js"></script>',
+        '<script type="module">globalThis.__hau=true;</script>',
+      );
+    const result = await verify('production', historical);
+
+    expect(result.status).toBe(1);
+    expect(result.output).toMatch(/external module|inline executable/iu);
   });
 });

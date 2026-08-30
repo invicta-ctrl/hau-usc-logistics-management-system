@@ -1,24 +1,25 @@
-import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validateNormalApplicationArtifact } from './build-artifact-lib.mjs';
 import { productionCandidateEvidence } from './production-authorization.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
-const sha256File = async (file) =>
-  createHash('sha256').update(await readFile(path.join(repoRoot, file))).digest('hex');
 
 export async function createReleaseCandidateManifest() {
   const packageMetadata = JSON.parse(await readFile(path.join(repoRoot, 'package.json'), 'utf8'));
-  const candidate = await productionCandidateEvidence({ requireRepositoryReady: false });
+  const [candidate, canonicalApplication] = await Promise.all([
+    productionCandidateEvidence({ requireRepositoryReady: false }),
+    validateNormalApplicationArtifact(path.join(repoRoot, 'dist')),
+  ]);
+  if (candidate.distSha256 !== canonicalApplication.entryHtmlSha256) {
+    throw new Error('Candidate identity and canonical application entry hashes do not match.');
+  }
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     releaseVersion: packageMetadata.version,
     candidate,
-    artifacts: {
-      cloudflareHtmlSha256: await sha256File('dist/index.html'),
-      shareableHtmlSha256: await sha256File('HAU-USC_Logistics-Frontend-Shareable.html'),
-    },
+    artifacts: { canonicalApplication },
   };
 }
 
