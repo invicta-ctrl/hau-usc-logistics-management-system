@@ -10,6 +10,12 @@
 
 ## Unreleased
 
+### MFR-002 U00 adoption
+
+- Adopted the owner-supplied `HAU-USC-MFR-002` reference as the single current Playground transformation specification and preserved its original attachment SHA-256 in the repository-normalized front matter.
+- Re-anchored the canonical current/task/handoff chain from the completed P34 freeze to the sequential U00→U11 program while preserving the exact P34 runtime, schema, baseline, reset, performance, and Production-nonmutation evidence.
+- U00 changes documentation/governance only. It makes no application, build, provider, deployment, D1/R2, reset, migration, Google, Figma, `main`, or Production change.
+
 ### Playground Master consolidation P00/P01
 
 - Adopted `PLAYGROUND-MASTER-2026-08-28` in full and established isolated `reconcile/playground-master` from the clean, remote-parity FI00–FI17 Playground lineage.

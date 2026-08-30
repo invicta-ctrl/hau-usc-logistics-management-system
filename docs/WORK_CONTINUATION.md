@@ -2,20 +2,20 @@
 
 ## Current resume block
 
-- **Repository/worktree:** `D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-master-reconciliation`.
-- **Branch/HEAD/upstream:** permanent `Playground` / `GIT_HEAD` / `origin/Playground`; historical base is preserved by `archive/p33-fi12-playground-20260829`.
-- **Current phase/stage:** P34 complete; `READY_FOR_EARL_MANUAL_ANNOTATION`.
-- **Accepted scope:** `PLAYGROUND-MASTER-2026-08-28` P00–P34 through `READY_FOR_EARL_MANUAL_ANNOTATION`; Production and `main` mutation excluded.
-- **Completed work:** P00–P33 passed, including isolated deployment, full route acceptance, two live reset cycles, permanent `Playground`, and preservation-gated branch retirement.
-- **Files changed by purpose:** P34 updates only durable Playground architecture/reset/baseline, theme, language, branch-governance, residual, receipt, and current-pointer documentation plus the stale design-tracker claims list.
-- **Tests verified at current SHA:** lint passed with zero errors/two unchanged warnings; full Vitest 169 files/1,245 tests; Playground contracts 11 files/54 tests; staging build 1,683 modules; design tracker, governance, fixture boundary, and diff checks passed. Final provider re-probe was authorization-blocked; last accepted generation-8 CLEAN evidence remains time-bounded in the final receipt.
-- **Generated artifacts:** accepted deployed runtime remains source `ab356898...`, tree `23caaf4...`, staging entry SHA-256 `3bfa8b83...`; P34 documentation does not redeploy or replace it.
-- **External actions:** P29–P31 Playground-only deploy/reset actions and P32–P33 Git ref changes are recorded in their receipts; Production, `main`, Google, email, schedules, and Figma remain untouched.
-- **Rollback:** deployed runtime rollback and reset recovery remain private and verified; retired branch heads are recoverable through exact remote `archive/p33-*` tags.
-- **Blocker:** none for manual annotation; future provider commands require supported Cloudflare reauthentication.
-- **Next three actions:** Earl opens the frozen candidate; records manual annotations; supplies a new explicit instruction before any later change.
-- **Resume commands:** read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, the accepted prompt, and the final candidate receipt; verify Git/upstream and live Playground identity.
-- **Prohibited actions:** Production/main mutation; deployment; new business-data mutation; reset repetition; branch deletion; history rewrite; detached-worktree cleanup; Figma write; work after the manual-annotation freeze without new owner authority.
+- **Repository/worktree:** `/workspace/scratch/9d88b058f45e/repo`.
+- **Branch/HEAD/upstream:** `work/playground-mfr002-adopt` from permanent `Playground` `6186f90`; integration target is `origin/Playground`.
+- **Current phase/stage:** MFR-002 U00 adoption and re-anchor; focused governance is green and integration is next.
+- **Accepted scope:** `HAU-USC-MFR-002` U00–U11 through `READY_FOR_EARL_MOBILE_FIRST_ANNOTATION`; Production and `main` mutation are excluded.
+- **Completed work:** P00–P34 remains the accepted starting baseline. U00 verified Git lineage/writer state, preserved the frozen candidate, registered the repository-normalized MFR-002 specification, and re-anchored the canonical continuity chain.
+- **Files changed by purpose:** accepted MFR-002 specification; current/task/handoff; compact project status, continuation, and changelog adoption records. No product/runtime source is changed by U00.
+- **Tests verified at current SHA:** P34 evidence remains reusable because U00 changes documentation only. U00 passes handoff verification, the 12-file agent-instruction check, the 14-field continuation check, combined governance, secret scan, diff check, and complete documentation review.
+- **Generated artifacts:** accepted deployed runtime remains source `ab356898...`, tree `23caaf4...`, staging entry SHA-256 `3bfa8b83...`; U00 creates no application artifact.
+- **External actions:** read-only GitHub/Git fetch and local task-branch creation only; no provider, deployment, D1/R2, reset, data, Google, email, Figma, main, or Production mutation.
+- **Rollback:** discard or revert only the isolated U00 documentation commit before integration; after integration use a normal revert. P34 runtime and private recovery evidence remain unchanged.
+- **Blocker:** none.
+- **Next three actions:** commit/push the verified U00 checkpoint; fast-forward integrate it into `Playground` and prove containment; create `work/playground-mfr002-build-foundation` from the new Playground head and begin measured U01 work.
+- **Resume commands:** verify Git status/origin parity; read the MFR-002 current chain; run `npm run handoff:verify`, `npm run check:agents`, `npm run check:continuation`, and `git diff --check`.
+- **Prohibited actions:** Production/main mutation; deployment; D1/R2/reset/schema/migration/provider changes; Figma write; branch/history/unknown-work deletion; U01 product change before U00 integration.
 
 ## FI-04 archived historical block
 

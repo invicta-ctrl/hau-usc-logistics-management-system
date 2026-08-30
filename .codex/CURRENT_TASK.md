@@ -1,35 +1,24 @@
-# Current Bounded Task — Playground Master Consolidation
+# Current Bounded Task — MFR-002 U00 Adoption
 
-STATUS: READY_FOR_EARL_MANUAL_ANNOTATION
-INTENT: repository maintenance + bug fix + frontend migration + feature + testing + performance + UI/UX refinement + Playground data lifecycle
-MODE: execute continuously across P00 through P34 while all gates remain green
-TARGET: `reconcile/playground-master`, permanent `Playground`, and the existing isolated Playground Worker/D1/R2
+STATUS: ACTIVE
+INTENT: REPOSITORY_MAINTENANCE
+SECONDARY_INTENTS: SOFTWARE_FEATURE;FRONTEND_REDESIGN;FULLSTACK_INTEGRATION;PERFORMANCE_OPTIMIZATION;ACCESSIBILITY;REFACTOR
+MODE: EXECUTE
+OBJECTIVE: Formally adopt MFR-002 as the single current Playground transformation program, preserve the P34 frozen candidate as the verified starting baseline, and integrate a documentation-only U00 checkpoint before any product write.
+TARGET: work/playground-mfr002-adopt -> Playground
+SKILLS: personal-context
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED_AT_FINAL_CANDIDATE_FREEZE
-ROUTE: SOLO
-ACCEPTED_SPEC: .codex/specs/accepted/2026-08-28-playground-master-consolidation-operational-uiux-performance-reset.md
-AUTHORITY: Earl's current instruction and accepted PLAYGROUND-MASTER-2026-08-28 -> project governance -> repository functional contracts -> live design-source roles.
-REQUIRED_MODEL: GPT-5.6 SOL HIGH
+ACCEPTED_SPEC: .codex/specs/accepted/2026-08-31-mfr002-unified-mobile-first-fullstack-performance-transformation.md
+AUTHORITY: Earl's HAU-USC-MFR-002-LAUNCHER and attached MFR-002 -> repository root AGENTS.md -> .agents/PROJECT_POLICY.md -> verified Playground continuity and Git state
+REQUIRED_MODEL: GPT-5.6 SOL ULTRA
+ACTIVE_WRITER: SOL_ULTRA:/root
 RISK: HIGH
-
-OBJECTIVE: Deliver one permanent, isolated, backend-backed, resettable, operationally truthful and professionally polished Playground candidate; stop at `READY_FOR_EARL_MANUAL_ANNOTATION`.
-
-SCOPE: P00–P34 through READY_FOR_EARL_MANUAL_ANNOTATION under the accepted master prompt.
-
-IN_SCOPE: every named P00–P34 phase, including preservation-gated branch consolidation, Playground-only deployment/data/reset operations, supported workflow repair, themes/copy/semantics/performance, Hallmark/Impeccable, exact candidate freeze, and final Playground branch establishment.
-
-OUT_OF_SCOPE: Production deployment or mutation; main mutation by this program; Production D1/R2/secrets/provider sends; unsupported business behavior; Figma writes; reverse synchronization; deletion before preservation proof; final Production promotion.
-
-CONSTRAINTS: one writer in this worktree; no delegation; no background continuation; Production writes remain zero; browser success must use real Playground Worker/D1/R2 state; preserve immutable ledger/audit/custody/history; privacy-filter all Production-derived data; rebuild generated artifacts; stop before speculative migration/index work.
-
-VERIFICATION: exact Git/tree/artifact/provider identity; branch/worktree manifest; route browser evidence; real workflow consequences; fixture exclusion; two deterministic reset cycles; privacy and authorization; measured query/performance evidence; responsive/accessibility matrices; Hallmark then Impeccable; complete diff review; durable handoff.
-
-STOP_CONDITIONS: every stop condition in section 52 of the accepted master prompt, including wrong worktree, unknown owned-path dirt, conflicting writer, Production crossover, privacy/secret exposure, missing reset/migration backup, unclassified R2 deletion risk, destructive schema need, unsafe branch-history resolution, repeated bounded repair failure, or unresolved P0/P1.
-
-COMPLETED_SO_FAR: P00–P31 are complete at their assigned audit gates. P12 proved two guarded reset architecture cycles. P13–P29 delivered and deployed the isolated backend-backed resettable candidate through the accepted UI/UX, accessibility, performance, Hallmark, Impeccable, exact-candidate, and Playground-only deployment gates. P30 repaired the same-session Borrow-to-Tracking state defect and passed the complete 390/1440 fresh-browser route and public-flow matrix. P31 then passed two independent live mutation/reset cycles across supported workflows, governed R2 evidence, and profile/contact/theme/avatar state; both cycles restored the coverage-v2 schema-32 baseline, invalidated old sessions, permitted new System Owner entry, and left critical routes green. The final reconciled state is generation 8 CLEAN with zero sessions, transient rows, or foreign-key violations and exact D1-to-R2 baseline linkage.
-
-P30_COMPLETION_ADDENDUM: P30 found and repaired one same-session public Borrow-to-Tracking route-state defect, added a two-width regression test, passed 1,243 tests and the 1,683-module staging build, guardedly redeployed exact source `ab35689` / tree `23caaf4` only to Playground, and passed the complete fresh-context authenticated/public matrix at 390 and 1440. Its five session/transient rows remain truthfully DIRTY for P31.
-
-NEXT_EXACT_ACTION: Earl manually annotates the frozen candidate. No autonomous continuation is authorized; any later code, provider, data, branch, Figma, or Production action requires a new explicit owner instruction.
+SCOPE: U00 only: exact repository-normalized MFR-002 adoption, current/task/handoff re-anchoring, preserved P34 evidence, focused governance checks, commit/push, and safe fast-forward integration into Playground.
+OUT_OF_SCOPE: Product source changes; runtime/provider/D1/R2/reset/deployment changes; schema or migration changes; Figma writes; branch retirement; main or Production mutation; U01 implementation before U00 integration.
+CONSTRAINTS: One writer; sequential Playground branches; main remains read-only; Production mutation remains zero; preserve unknown work and P34 evidence; no broad audit or expensive application gate for this documentation-only slice.
+DELIVERABLE: MFR-002 is the accepted specification named by the canonical continuity chain and U00 is integrated into Playground with exact source and baseline identities recorded.
+VERIFICATION: Verify Git root/branch/HEAD/upstream/cleanliness; main and Playground identities/containment; accepted runtime source/tree/artifact receipt; attachment source hash; handoff verification; agent/continuation governance; git diff --check; complete documentation diff; pushed branch and post-integration containment.
+STOP_CONDITIONS: Authority conflict; unexpected divergence or dirty work; active-writer conflict; secret/private data; main/Production mutation; non-fast-forward integration; failed required governance verification that cannot be repaired within U00.
+COMPLETED_SO_FAR: Live Git and continuity handshake passed at Playground 6186f90/a802a2f; main remains f7e5bf8/480cf65; P34 runtime/baseline evidence is preserved; repository-normalized MFR-002 and the re-anchored continuity records are prepared; handoff, agent, continuation, combined governance, secret-scan, and diff checks pass.
+NEXT_EXACT_ACTION: Commit and push the verified U00 adoption, fast-forward integrate it into Playground, verify containment, then create work/playground-mfr002-build-foundation from the new Playground HEAD.
