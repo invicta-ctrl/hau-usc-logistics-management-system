@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import type { Route } from '../appTypes';
 import { UscMark } from '../brand/BrandMarks';
@@ -10,43 +10,54 @@ import { NAV_LINKS } from './publicNavConfig';
 export function PublicMobileDrawer({
   open,
   onClose,
+  route,
   dark,
   onToggleTheme,
   onNavigate,
-  onHome,
+  onOpenSection,
 }: {
   open: boolean;
   onClose: () => void;
+  route: Route;
   dark: boolean;
   onToggleTheme: () => void;
   onNavigate: (r: Route) => void;
-  onHome: () => void;
+  onOpenSection: (sectionId: string) => void;
 }) {
+  const [visible, setVisible] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
-  useDialogFocusTrap({ open, dialogRef });
+  useDialogFocusTrap({
+    open,
+    dialogRef,
+    inertSelector: '[data-public-shell-chrome], #main-content, [data-public-shell-footer]',
+  });
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setVisible(false);
+      return;
+    }
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const frame = requestAnimationFrame(() => setVisible(true));
     const handle = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', handle);
-    return () => document.removeEventListener('keydown', handle);
-  }, [open, onClose]);
-
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : '';
     return () => {
-      document.body.style.overflow = '';
+      cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', handle);
+      document.body.style.overflow = originalOverflow;
     };
-  }, [open]);
+  }, [open, onClose]);
 
   if (!open) return null;
 
   return (
     <>
       <div
-        className="fixed inset-0 z-40"
+        className="shell-drawer-backdrop"
+        data-visible={visible}
         style={{ background: 'rgba(0,0,0,0.5)' }}
         onClick={onClose}
         aria-hidden="true"
@@ -57,16 +68,15 @@ export function PublicMobileDrawer({
         aria-modal="true"
         aria-label="Navigation menu"
         tabIndex={-1}
-        className="fixed top-0 right-0 bottom-0 z-50 flex flex-col"
+        className="shell-drawer shell-drawer--end"
+        data-visible={visible}
         style={{
-          width: 'min(320px, 100vw)',
           background: '#40070a',
           borderLeft: '1px solid rgba(242,209,92,0.22)',
-          overscrollBehavior: 'contain',
         }}
       >
         <div
-          className="flex items-center justify-between px-5 py-4 border-b"
+          className="shell-drawer__header flex items-center justify-between pb-4 border-b"
           style={{ borderColor: 'rgba(242,209,92,0.22)' }}
         >
           <div className="flex items-center gap-3">
@@ -93,18 +103,24 @@ export function PublicMobileDrawer({
           </button>
         </div>
 
-        <nav className="flex flex-col gap-1 px-5 py-6" aria-label="Site navigation">
+        <nav className="shell-drawer__body flex flex-col gap-1 px-5 py-6" aria-label="Site navigation">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              onClick={onClose}
-              className="flex items-center gap-2 px-3 py-3 rounded-[8px] text-[15px] leading-none transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+              onClick={(event) => {
+                event.preventDefault();
+                onClose();
+                onOpenSection(link.href.slice(1));
+              }}
+              className="shell-control flex items-center gap-2 px-3 py-3 rounded-[8px] text-[15px] leading-none transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+              aria-current={route === 'landing' && link.active ? 'page' : undefined}
               style={{
                 fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                color: link.active ? '#ffffff' : '#faeecb',
-                background: link.active ? 'rgba(232,185,60,0.1)' : 'transparent',
-                borderLeft: link.active ? '2px solid #e8b93c' : '2px solid transparent',
+                color: route === 'landing' && link.active ? '#ffffff' : '#faeecb',
+                background: route === 'landing' && link.active ? 'rgba(232,185,60,0.1)' : 'transparent',
+                borderLeft:
+                  route === 'landing' && link.active ? '2px solid #e8b93c' : '2px solid transparent',
               }}
             >
               {link.label}
@@ -113,7 +129,7 @@ export function PublicMobileDrawer({
         </nav>
 
         <div
-          className="mt-auto flex flex-col gap-3 px-5 pb-8 pt-4 border-t"
+          className="shell-drawer__footer mt-auto flex flex-col gap-3 px-5 pt-4 border-t"
           style={{ borderColor: 'rgba(242,209,92,0.18)' }}
         >
           <a
@@ -139,7 +155,7 @@ export function PublicMobileDrawer({
             onClick={(event) => {
               event.preventDefault();
               onClose();
-              onHome();
+              onOpenSection('hero');
             }}
             className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
             style={{

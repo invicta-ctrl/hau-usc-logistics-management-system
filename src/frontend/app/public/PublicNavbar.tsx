@@ -1,19 +1,22 @@
-import { useState } from "react";
-import { Menu } from "lucide-react";
-import type { Route } from "../appTypes";
-import { DolMark, UscMark } from "../brand/BrandMarks";
-import { ThemeToggle } from "../brand/ThemeToggle";
-import { appRouteHash } from "../routeHash";
-import { NavLink } from "./NavLink";
-import { PublicMobileDrawer } from "./PublicMobileDrawer";
-import { NAV_LINKS } from "./publicNavConfig";
+import { useState } from 'react';
+import { Menu } from 'lucide-react';
+import type { Route } from '../appTypes';
+import { DolMark, UscMark } from '../brand/BrandMarks';
+import { ThemeToggle } from '../brand/ThemeToggle';
+import { appRouteHash } from '../routeHash';
+import { NavLink } from './NavLink';
+import { PublicMobileDrawer } from './PublicMobileDrawer';
+import { openLandingSection } from './landingSectionNavigation';
+import { NAV_LINKS } from './publicNavConfig';
 
 export function PublicNavbar({
+  route,
   dark,
   onToggle,
   onNavigate,
   onHome,
 }: {
+  route: Route;
   dark: boolean;
   onToggle: () => void;
   onNavigate: (r: Route) => void;
@@ -22,51 +25,100 @@ export function PublicNavbar({
   onHome: () => void;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const openSection = (sectionId: string) => openLandingSection(sectionId, onHome);
+
   return (
     <>
-      <header className="sticky top-0 z-30 w-full public-nav--glass">
+      <header className="public-shell__navbar w-full public-nav--glass" data-public-shell-chrome>
         <div className="flex items-center gap-5 px-5 md:px-8 py-[14px] md:py-[17px] max-w-[1520px] mx-auto w-full">
           <a
             href="/"
             onClick={(event) => {
               event.preventDefault();
-              onHome();
+              openSection('hero');
             }}
             className="flex items-center gap-3 shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e8b93c] rounded-sm"
             aria-label="HAU-USC home"
-            style={{ background: "none" }}
+            style={{ background: 'none' }}
           >
             <UscMark size={46} />
             <span className="hidden sm:flex flex-col">
-              <span style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 700, fontSize: 15, color: "#fff", letterSpacing: -0.075, lineHeight: "18.75px" }}>
+              <span
+                style={{
+                  fontFamily: "'Newsreader', Georgia, serif",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  color: '#fff',
+                  letterSpacing: -0.075,
+                  lineHeight: '18.75px',
+                }}
+              >
                 University Student Council
               </span>
-              <span style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: "#f6e29a", letterSpacing: 0.22, lineHeight: "13.75px" }}>
+              <span
+                style={{
+                  fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                  fontSize: 11,
+                  color: '#f6e29a',
+                  letterSpacing: 0.22,
+                  lineHeight: '13.75px',
+                }}
+              >
                 Holy Angel University
               </span>
             </span>
-            <span className="hidden min-[415px]:inline-flex items-center gap-2 pl-3" style={{ borderLeft: "1px solid rgba(242,209,92,.28)" }}>
+            <span
+              className="hidden min-[415px]:inline-flex items-center gap-2 pl-3"
+              style={{ borderLeft: '1px solid rgba(242,209,92,.28)' }}
+            >
               <DolMark size={34} />
-              <span className="hidden md:inline" style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 10, color: "#f6e29a", lineHeight: 1.2 }}>
-                Department of<br />Logistics
+              <span
+                className="hidden md:inline"
+                style={{
+                  fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                  fontSize: 10,
+                  color: '#f6e29a',
+                  lineHeight: 1.2,
+                }}
+              >
+                Department of
+                <br />
+                Logistics
               </span>
             </span>
           </a>
 
           <nav className="hidden lg:flex items-center gap-5 flex-1 justify-end" aria-label="Site navigation">
-            {NAV_LINKS.map((link) => <NavLink key={link.href} {...link} />)}
+            {NAV_LINKS.map((link) => (
+              <NavLink
+                key={link.href}
+                {...link}
+                active={route === 'landing' && link.active}
+                onClick={(event) => {
+                  event.preventDefault();
+                  openSection(link.href.slice(1));
+                }}
+              />
+            ))}
           </nav>
 
           <div className="hidden lg:flex items-center gap-3 ml-auto lg:ml-0">
             <ThemeToggle dark={dark} onToggle={onToggle} />
             <a
-              href={appRouteHash("staff-signin")}
+              href={appRouteHash('staff-signin')}
               onClick={(event) => {
                 event.preventDefault();
-                onNavigate("staff-signin");
+                onNavigate('staff-signin');
               }}
-              className="flex items-center justify-center rounded-[10px] text-[11px] font-semibold tracking-[-0.11px] whitespace-nowrap transition-opacity hover:opacity-90 active:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
-              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 32, paddingLeft: 13, paddingRight: 13, border: "1px solid #d1b478" }}
+              className="shell-control flex items-center justify-center rounded-[10px] text-[11px] font-semibold tracking-[-0.11px] whitespace-nowrap transition-opacity hover:opacity-90 active:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
+              style={{
+                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                color: '#faeecb',
+                paddingLeft: 13,
+                paddingRight: 13,
+                border: '1px solid #d1b478',
+              }}
             >
               Staff sign in
             </a>
@@ -91,10 +143,11 @@ export function PublicNavbar({
       <PublicMobileDrawer
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
+        route={route}
         dark={dark}
         onToggleTheme={onToggle}
         onNavigate={onNavigate}
-        onHome={onHome}
+        onOpenSection={openSection}
       />
     </>
   );

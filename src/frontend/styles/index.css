@@ -3,6 +3,7 @@
 @import 'tailwindcss';
 @import './theme.css';
 @import './foundation.css';
+@import './shell.css';
 @import './atrium-motion.css';
 
 html,body,#root{max-width:100%;overflow-x:clip}

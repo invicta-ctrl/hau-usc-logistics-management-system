@@ -1,5 +1,7 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
+import { AUTH_ROUTE_INTENT_LABELS } from '../appRoutes';
 import type { AuthRoute, Route } from '../appTypes';
+import { useRouteFocus } from '../hooks/useRouteFocus';
 import { appRouteHash } from '../routeHash';
 import { AuthMobileDrawer } from './AuthMobileDrawer';
 import { AuthShellSidebar } from './AuthShellSidebar';
@@ -32,89 +34,127 @@ export function AuthenticatedShell({
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const mobileDock = visibleNavigationItems(MOBILE_DOCK, [...presentation.visibleRoutes]);
+  const routeLabel = AUTH_ROUTE_INTENT_LABELS[route];
+  useRouteFocus({ routeKey: route, label: routeLabel, focusOnMount: true });
 
   return (
     <div
-      className="min-h-screen flex"
-      style={{ background: 'var(--background)' }}
+      className="auth-shell"
+      data-has-mobile-dock={mobileDock.length > 0}
       data-preview-inspection={inspection ? 'true' : undefined}
       data-preview-route={inspection ? route : undefined}
     >
-      <AuthShellSidebar
-        route={route}
-        navigate={navigate}
-        presentation={presentation}
-        onHome={onHome}
-        onSignOut={onSignOut}
-        inspection={inspection}
-        onBackToPreview={onBackToPreview}
-      />
-
-      <div className="flex flex-col flex-1 min-w-0 lg:ml-[76px] xl:ml-[272px] min-h-screen">
-        <AuthShellTopbar
+      <div className="auth-shell__background" data-auth-shell-background>
+        <AuthShellSidebar
+          route={route}
           navigate={navigate}
           presentation={presentation}
-          dark={dark}
-          onToggle={onToggle}
-          onOpenDrawer={() => setDrawerOpen(true)}
+          onHome={onHome}
+          onSignOut={onSignOut}
           inspection={inspection}
           onBackToPreview={onBackToPreview}
         />
 
-        <main className="flex-1 min-w-0 overflow-x-hidden pb-20 lg:pb-8" id="main-content">
-          {inspection ? (
-            <section
-              className="mx-4 mt-4 rounded-[8px] px-4 py-3 flex flex-wrap items-center justify-between gap-3"
-              style={{ background: 'var(--theme-warning)', border: '1px solid var(--border)', color: 'var(--theme-page)' }}
-              role="note"
-              aria-label="Playground inspection"
-            >
-              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '0.35px' }}>
-                PLAYGROUND INSPECTION · Sample data · Actions are unavailable.
-              </p>
-              <a href="#/__preview/index" className="preview-action" onClick={(event) => { event.preventDefault(); onBackToPreview?.(); }}>
-                Back to Playground Index
-              </a>
-            </section>
-          ) : null}
-          {children}
-        </main>
+        <div className="auth-shell__workspace">
+          <AuthShellTopbar
+            navigate={navigate}
+            presentation={presentation}
+            dark={dark}
+            onToggle={onToggle}
+            onOpenDrawer={() => setDrawerOpen(true)}
+            inspection={inspection}
+            onBackToPreview={onBackToPreview}
+          />
 
-        {/* Mobile bottom dock */}
-        <nav
-          className="lg:hidden fixed bottom-0 left-0 right-0 z-10 flex items-center justify-around px-1 py-2"
-          style={{ background: 'var(--sidebar)', borderTop: '1px solid var(--sidebar-border)', minHeight: 60 }}
-          aria-label="Quick navigation"
-        >
-          {mobileDock.map((item) => (
-            <a
-              key={item.route}
-              href={appRouteHash(item.route)}
-              onClick={(event) => {
-                event.preventDefault();
-                navigate(item.route);
-              }}
-              className="flex flex-col items-center gap-1 px-2 py-1 rounded-[8px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
-              aria-current={route === item.route ? 'page' : undefined}
-            >
-              <item.Icon
-                size={20}
-                strokeWidth={1.5}
-                color={route === item.route ? 'var(--sidebar-primary)' : 'color-mix(in oklch, var(--sidebar-foreground) 52%, transparent)'}
-              />
-              <span
+          <main
+            className="auth-shell__main route-focus-target"
+            id="main-content"
+            tabIndex={-1}
+            aria-label={routeLabel}
+          >
+            {inspection ? (
+              <section
+                className="mx-4 mt-4 rounded-[8px] px-4 py-3 flex flex-wrap items-center justify-between gap-3"
                 style={{
-                  fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                  fontSize: 10,
-                  color: route === item.route ? 'var(--sidebar-primary)' : 'color-mix(in oklch, var(--sidebar-foreground) 52%, transparent)',
-                  letterSpacing: -0.1,
+                  background: 'var(--theme-warning)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--theme-page)',
                 }}
+                role="note"
+                aria-label="Playground inspection"
               >
-                {item.label}
-              </span>
-            </a>
-          ))}
-        </nav>
+                <p
+                  style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '0.35px' }}
+                >
+                  PLAYGROUND INSPECTION · Sample data · Actions are unavailable.
+                </p>
+                <a
+                  href="#/__preview/index"
+                  className="preview-action"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    onBackToPreview?.();
+                  }}
+                >
+                  Back to Playground Index
+                </a>
+              </section>
+            ) : null}
+            {children}
+          </main>
+
+          {mobileDock.length > 0 ? (
+            <nav
+              className="auth-shell__dock"
+              style={
+                {
+                  background: 'var(--sidebar)',
+                  borderTop: '1px solid var(--sidebar-border)',
+                  '--dock-item-count': mobileDock.length,
+                } as CSSProperties
+              }
+              aria-label="Quick navigation"
+            >
+              {mobileDock.map((item) => (
+                <a
+                  key={item.route}
+                  href={appRouteHash(item.route)}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    navigate(item.route);
+                  }}
+                  className="auth-shell__dock-link focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
+                  aria-current={route === item.route ? 'page' : undefined}
+                  aria-label={item.label}
+                >
+                  <item.Icon
+                    size={20}
+                    strokeWidth={1.5}
+                    color={
+                      route === item.route
+                        ? 'var(--sidebar-primary)'
+                        : 'color-mix(in oklch, var(--sidebar-foreground) 62%, transparent)'
+                    }
+                  />
+                  <span
+                    className="auth-shell__dock-label"
+                    style={{
+                      fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                      fontSize: 10,
+                      color:
+                        route === item.route
+                          ? 'var(--sidebar-primary)'
+                          : 'color-mix(in oklch, var(--sidebar-foreground) 68%, transparent)',
+                      letterSpacing: -0.1,
+                    }}
+                  >
+                    {item.mobileLabel ?? item.label}
+                  </span>
+                </a>
+              ))}
+            </nav>
+          ) : null}
+        </div>
       </div>
 
       <AuthMobileDrawer

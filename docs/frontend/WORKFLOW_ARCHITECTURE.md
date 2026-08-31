@@ -5,7 +5,7 @@ Scope: `src/frontend/` on permanent `Playground`; historical design lineage is p
 Authority: `DESIGN.md` (design) → repository server/Worker/auth contracts (functional) → this document (frontend workflow ownership)
 Accepted amendment: `.codex/specs/accepted/2026-08-23-r3-a1-a2-owner-routing-identity-three-context.md` (R3-A1-A2)
 Companion: `docs/frontend/ROUTING.md` — what each individual control does
-Last reviewed: 2026-08-31 (MFR-002 U02 design foundation; R3-A1-A2 contract preserved)
+Last reviewed: 2026-08-31 (MFR-002 U03 app shell; R3-A1-A2 contract preserved)
 
 This document records **who each frontend surface is for and what it is allowed
 to do**. It does not define product policy; where it describes access rules it is
@@ -48,7 +48,7 @@ canonical record set.
 | Entry | `landing` → `borrow` | `staff-signin` with external intent | `staff-signin` with internal capability |
 | Authentication | **none, ever** | **required** | **required** |
 | Authorization | none | server-derived `request.create` | server-derived per-route capability |
-| Module | `PublicFlows.tsx` | `request/ExternalRequestCenter.tsx` | FI-04, not yet exposed |
+| Module | `PublicFlows.tsx` | `request/ExternalRequestCenter.tsx` | `AuthenticatedShell` plus capability-gated route modules |
 
 **These must not be collapsed.** In particular, B is not "A behind a login
 screen": it is served by a different backend contract with a different identity
@@ -57,6 +57,25 @@ model (§4).
 A staff sign-in *link* is not a staff sign-in *requirement*. Context A must never
 place authentication, activation, or approval in front of browsing, borrowing, or
 tracking.
+
+### 1.1 Shared frame ownership
+
+MFR-002 U03 separates persistent chrome from route content:
+
+- `PublicNavbar` and `Footer` own shared public chrome; public route modules own
+  their contextual navigation and forms.
+- `AuthenticatedShell` owns capability-filtered navigation, the page landmark,
+  and responsive frame. Route modules own records and business actions.
+- Below 1024 CSS pixels, authorized high-frequency destinations use the mobile
+  dock and the complete capability-filtered set remains available in the drawer.
+  At 1024 the rail is 76px; from 1280 it is 272px.
+- Route changes move focus to the named `main-content` landmark after transient
+  drawer focus has been restored. Open modal navigation makes the background
+  inert, contains focus, restores its opener, and uses safe-area-aware dynamic
+  viewport geometry.
+
+These rules change presentation only. Session, route visibility, capabilities,
+backend authority, record identifiers, and mutation legality remain unchanged.
 
 ---
 
@@ -210,13 +229,13 @@ This branch does not claim end-to-end security completion while either is open.
 |---|---|---|---|
 | FE-R3-001 | P0 | *Historical.* Every public "Start a logistics request" CTA called `requireAuth("request-center")`, sending public requesters to the staff sign-in wall. Fixed by R3 under the then-current public-request authority; **re-scoped by R3-A1-A2**, under which routing to sign-in is now correct — but with `EXTERNAL_REQUEST_CENTER` intent and a stated access rule, not a capability-gated internal target. | CLOSED |
 | FE-R3-002 | P1 | *Fixed.* Generic "Staff sign in" pre-committed to `request-center`, so a valid staff account lacking `view.request` was told "Access denied". Preserved as rule 3 above and asserted by AUTH-01/02. | CLOSED |
-| FE-R3-003 | P2 | Public sub-routes stack the site `PublicNavbar` and the `PublicFlows` masthead, presenting two Home affordances on one page. R3-A1-A2 made both behave identically, removing the correctness problem but not the duplication. | FI-04 shell |
-| FE-R3-004 | P2 | `PublicMobileDrawer` sets `role="dialog" aria-modal="true"`, handles Escape and locks body scroll, but performs no focus management: focus is never moved in, there is no trap, and it is not restored on close. | FI-04 shell |
-| FE-R3-005 | P2 | No URL routing: no deep links, no Back/Forward, no refresh restore. Introducing a router is out of scope without accepted authority. | FI-04 |
+| FE-R3-003 | P2 | Public sub-routes stack the site `PublicNavbar` and the `PublicFlows` masthead, presenting two Home affordances on one page. R3-A1-A2 made both behave identically, removing the correctness problem but not the duplication. | MFR-002 U04 route slice |
+| FE-R3-004 | P2 | **Closed by MFR-002 U03.** Public and authenticated mobile drawers now move focus in, contain Tab/Shift+Tab, make background regions inert for pointer/keyboard/AT, restore prior attributes and the opener, honor Escape and reduced motion, and remain safe-area/dynamic-viewport bounded. | CLOSED |
+| FE-R3-005 | P2 | **Closed in the current route foundation.** Canonical route hashes support direct load, reload, and Back/Forward; invalid hashes fail closed without inventing a destination. | CLOSED |
 | FE-R3-006 | P2 | *Closed by R3-A1-A2.* The `session && isAuthRoute(route)` branch in `AppRouteRenderer` is now reachable: `resolvePostAuthDestination` routes an authorized internal session to its resolved route. | CLOSED |
-| FE-R3-007 | P2 | The preview registry labels ten staff routes `SURFACE_PREVIEW`, but `AuthenticatedShell` and all staff route components are orphaned — nothing imports them, so the surfaces do not render. Registry status overstates reality. | FI-04 |
+| FE-R3-007 | P2 | **Closed by the FI-04 through FI-12 integrations.** `AuthenticatedShell` and the capability-gated staff route modules are mounted in the normal renderer; Preview inspection remains explicitly labelled and isolated. | CLOSED |
 | FE-R3-008 | P3 | `CurrentSection` prints the same status sentence twice (figure placeholder and article body) in loading, empty, and error states. | FI-12 |
-| FE-R3-009 | P3 | `npm run lint` fails at branch baseline: 26 `no-undef` errors in `prototypes/public-portals-r3/app.js` plus one unused-var warning in `src/server/public-request-service.js`. Pre-existing; lint is not in the branch's accepted gate. | FI-12 |
+| FE-R3-009 | P3 | **Closed in the current baseline.** `npm run lint` passes with zero errors; two unrelated unused-variable warnings remain owner-recorded. | CLOSED |
 | FE-R3-010 | P2 | *Closed by R3-A1.* Stale Impeccable sidecar flagged the real institutional palette as drift. Rebuilt at schemaVersion 2; `design-system-color` findings 27 → 0. | CLOSED |
 | FE-R3-011 | P3 | **Foundation closed by MFR-002 U02.** `scripts/design/foundation-source.mjs` now owns the semantic type ramp and 6/8/10/14 px radius roles, with deterministic CSS and drift checks. Seven route-local `PublicFlows.tsx` radius literals remain migration work for its bounded route slice; they are no longer a missing-system-contract defect. | MFR-002 U04 route migration |
 | FE-R3-012 | P2 | *Closed by R3-A1-A2.* `appRoutes.ts` labelled the internal route "Staff Request Center", colliding with the public Request Center. Renamed to Internal Request Hub in `appRoutes.ts` and the preview registry. | CLOSED |

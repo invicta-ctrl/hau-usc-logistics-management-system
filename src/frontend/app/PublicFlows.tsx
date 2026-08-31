@@ -224,7 +224,11 @@ export default function PublicFlows({
   }
 
   return (
-    <main className={`pub ${dark ? "dark" : "light"}`}>
+    <main
+      id="main-content"
+      className={`pub route-focus-target ${dark ? "dark" : "light"}`}
+      tabIndex={-1}
+    >
       <style>{css}</style>
 
       {/* G0 · institutional ground. Decorative only, so it is never announced. */}

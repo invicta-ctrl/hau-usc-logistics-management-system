@@ -10,6 +10,14 @@
 
 ## Unreleased
 
+### MFR-002 U03 app shell and responsive navigation
+
+- Added one mobile-first shell contract for authenticated and shared public chrome: capability-filtered bottom navigation below 1024 CSS pixels, a 76px compact rail at 1024, and the intentional 272px rail from 1280 upward.
+- Added route-context focus and document titles, focus-contained drawers with background inertness and opener restoration, dynamic-viewport/safe-area geometry, viewport-bound inspectors, mobile sticky actions, 44px controls, reduced-motion behavior, and forced-color affordances.
+- Corrected public Home/Logistics navigation so controls perform their stated destination, retained capability/auth/route/business semantics, and kept entry JavaScript effectively flat at +211 bytes (+0.10%) over U02.
+- All 171 unit files/1,255 tests, focused shell contracts, lint, generated-design checks, 66/66 contrast pairs, canonical/staging builds, and byte-identical hero verification pass. The exact 20-case five-width browser matrix is enumerated; rendered execution remains explicitly UNRUN because this environment has no usable browser path.
+- U03 changes no backend/data/auth contract, dependency or lockfile, provider, deployment, D1/R2, reset, schema/migration, Google, Figma, `main`, or Production state.
+
 ### MFR-002 U02 mobile-first design foundation
 
 - Added a deterministic non-color design authority and generated CSS for 11 semantic type roles, mobile-first spacing/density, bounded content measures, safe areas/dynamic viewport units, container-query primitives, semantic solid surfaces/elevation, 44px touch targets, 6/8/10/14px shape roles, named stacking, restrained motion, focus, reduced motion, and forced colors.

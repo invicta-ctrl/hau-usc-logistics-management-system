@@ -1,0 +1,309 @@
+/* MFR-002 U03 — shared application-shell geometry.
+ *
+ * Route modules own their content. This file owns only persistent chrome,
+ * viewport-bound drawers/sheets, safe areas, and the responsive frame.
+ */
+
+@layer components {
+  .route-focus-target {
+    min-inline-size: 0;
+    scroll-margin-block-start: calc(var(--control-height-large) + var(--space-lg) + var(--safe-area-top));
+  }
+
+  .route-focus-target:focus {
+    outline: none;
+  }
+
+  .shell-control {
+    min-block-size: var(--control-hit-area-min);
+    min-inline-size: var(--control-hit-area-min);
+  }
+
+  .auth-shell {
+    min-block-size: var(--viewport-block);
+    min-inline-size: 0;
+    isolation: isolate;
+    background: var(--background);
+  }
+
+  .auth-shell__background {
+    display: flex;
+    min-block-size: var(--viewport-block);
+    min-inline-size: 0;
+  }
+
+  .auth-shell__workspace {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-block-size: var(--viewport-block);
+    min-inline-size: 0;
+  }
+
+  .auth-shell__topbar,
+  .public-shell__navbar {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: var(--z-sticky);
+  }
+
+  .auth-shell__environment {
+    padding-block-start: max(var(--space-2xs), var(--safe-area-top));
+    padding-block-end: var(--space-2xs);
+    padding-inline-start: max(var(--space-md), var(--safe-area-left));
+    padding-inline-end: max(var(--space-md), var(--safe-area-right));
+  }
+
+  .auth-shell__command {
+    min-block-size: var(--density-row-comfortable);
+    padding-inline-start: max(var(--space-md), var(--safe-area-left));
+    padding-inline-end: max(var(--space-md), var(--safe-area-right));
+  }
+
+  .auth-shell__main {
+    container-name: auth-workspace;
+    container-type: inline-size;
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow-x: clip;
+    padding-block-end: calc(4.25rem + max(var(--space-xs), var(--safe-area-bottom)));
+  }
+
+  .auth-shell__sidebar {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: var(--z-sticky);
+    display: none;
+    inline-size: 4.75rem;
+    block-size: var(--viewport-block);
+    padding-block-end: var(--safe-area-bottom);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .auth-shell__sidebar-link {
+    min-block-size: var(--control-hit-area-min);
+  }
+
+  .auth-shell__dock {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: var(--z-sticky);
+    display: grid;
+    grid-template-columns: repeat(var(--dock-item-count, 5), minmax(0, 1fr));
+    min-block-size: calc(3.75rem + var(--safe-area-bottom));
+    padding-block-start: var(--space-2xs);
+    padding-block-end: max(var(--space-2xs), var(--safe-area-bottom));
+    padding-inline-start: max(var(--space-2xs), var(--safe-area-left));
+    padding-inline-end: max(var(--space-2xs), var(--safe-area-right));
+  }
+
+  .auth-shell__dock-link {
+    display: flex;
+    flex-direction: column;
+    min-block-size: 3.5rem;
+    min-inline-size: 0;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2xs);
+    padding: var(--space-2xs);
+    border-radius: var(--radius-control);
+    text-align: center;
+  }
+
+  .auth-shell__dock-label {
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .auth-shell:not([data-has-mobile-dock='true']) .auth-shell__main {
+    padding-block-end: max(var(--space-lg), var(--safe-area-bottom));
+  }
+
+  .shell-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+    opacity: 0;
+    transition: opacity var(--motion-duration-surface) var(--motion-ease-standard);
+  }
+
+  .shell-drawer-backdrop[data-visible='true'] {
+    opacity: 1;
+  }
+
+  .shell-drawer {
+    position: fixed;
+    inset-block: 0;
+    z-index: var(--z-modal);
+    display: flex;
+    block-size: var(--viewport-block);
+    max-block-size: var(--viewport-block);
+    flex-direction: column;
+    overflow: hidden;
+    overscroll-behavior: contain;
+    transition: transform var(--motion-duration-surface) var(--motion-ease-enter);
+  }
+
+  .shell-drawer--start {
+    inset-inline-start: 0;
+    inline-size: min(17.5rem, calc(100vw - 2.5rem));
+    transform: translateX(-100%);
+  }
+
+  .shell-drawer--end {
+    inset-inline-end: 0;
+    inline-size: min(20rem, 100vw);
+    transform: translateX(100%);
+  }
+
+  .shell-drawer[data-visible='true'] {
+    transform: translateX(0);
+  }
+
+  .shell-drawer__header {
+    flex: 0 0 auto;
+    padding-block-start: max(var(--space-md), var(--safe-area-top));
+    padding-inline-start: max(var(--space-md), var(--safe-area-left));
+    padding-inline-end: max(var(--space-md), var(--safe-area-right));
+  }
+
+  .shell-drawer--end .shell-drawer__header {
+    padding-inline-start: max(var(--space-lg), var(--safe-area-left));
+  }
+
+  .shell-drawer__body {
+    min-block-size: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .shell-drawer__footer {
+    flex: 0 0 auto;
+    padding-block-end: max(var(--space-lg), var(--safe-area-bottom));
+  }
+
+  .public-shell__navbar {
+    padding-block-start: var(--safe-area-top);
+  }
+
+  .public-shell__footer {
+    padding-block-end: var(--safe-area-bottom);
+  }
+
+  .shell-sheet--viewport {
+    block-size: var(--viewport-block);
+    max-block-size: var(--viewport-block);
+    overscroll-behavior: contain;
+  }
+
+  .shell-sheet__header {
+    padding-block-start: max(var(--space-md), var(--safe-area-top));
+    padding-inline-start: max(var(--space-lg), var(--safe-area-left));
+    padding-inline-end: max(var(--space-lg), var(--safe-area-right));
+  }
+
+  .shell-sheet__actions {
+    padding-block-end: max(var(--space-md), var(--safe-area-bottom));
+  }
+
+  .shell-modal__surface {
+    max-block-size: calc(var(--viewport-block) - var(--safe-area-top) - var(--safe-area-bottom) - 2rem);
+    overscroll-behavior: contain;
+  }
+
+  @media (min-width: 64rem) {
+    .auth-shell__sidebar {
+      display: flex;
+    }
+
+    .auth-shell__workspace {
+      margin-inline-start: 4.75rem;
+    }
+
+    .auth-shell__main {
+      padding-block-end: var(--space-xl);
+    }
+
+    .auth-shell__dock {
+      display: none;
+    }
+
+    .shell-sheet--responsive {
+      block-size: auto;
+      max-block-size: calc(var(--viewport-block) - 2rem);
+    }
+  }
+
+  @media (min-width: 80rem) {
+    .auth-shell__sidebar {
+      inline-size: 17rem;
+    }
+
+    .auth-shell__workspace {
+      margin-inline-start: 17rem;
+    }
+  }
+
+  @media (max-width: 63.999rem) {
+    .shell-sheet--responsive {
+      block-size: var(--viewport-block);
+      max-block-size: var(--viewport-block);
+    }
+
+    .shell-sheet__actions {
+      position: sticky;
+      inset-block-end: 0;
+      z-index: var(--z-raised);
+    }
+  }
+
+  @media (max-width: 22.499rem) {
+    .auth-shell__command {
+      gap: var(--space-xs);
+    }
+
+    .auth-shell__dock-label {
+      font-size: 0.625rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shell-drawer,
+    .shell-drawer-backdrop {
+      transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .auth-shell__dock,
+    .shell-drawer {
+      border: 1px solid CanvasText;
+    }
+
+    .auth-shell__dock-link[aria-current='page'] {
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+  }
+}
+
+@layer overrides {
+  .shell-modal__surface {
+    max-block-size: calc(var(--viewport-block) - var(--safe-area-top) - var(--safe-area-bottom) - 2rem);
+  }
+
+  @media (max-width: 63.999rem) {
+    .shell-sheet--responsive {
+      padding-block-start: max(var(--space-md), var(--safe-area-top));
+      padding-block-end: max(var(--space-md), var(--safe-area-bottom));
+      padding-inline-start: max(var(--space-md), var(--safe-area-left));
+      padding-inline-end: max(var(--space-md), var(--safe-area-right));
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import type { Route } from "../appTypes";
 import { UscMark } from "../brand/BrandMarks";
 import { appRouteHash } from "../routeHash";
+import { openLandingSection } from "./landingSectionNavigation";
 
 export function Footer({
   onNavigate,
@@ -10,7 +11,7 @@ export function Footer({
   onHome: () => void;
 }) {
   return (
-    <footer className="w-full" style={{ background: "#40070a", borderTop: "1px solid rgba(242,209,92,0.16)" }} aria-label="Site footer">
+    <footer className="public-shell__footer w-full" data-public-shell-footer style={{ background: "#40070a", borderTop: "1px solid rgba(242,209,92,0.16)" }} aria-label="Site footer">
       <div className="max-w-[1520px] mx-auto px-5 md:px-8 py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           <div className="flex flex-col gap-4">
@@ -38,7 +39,11 @@ export function Footer({
               <li>
                 <a
                   href="#logistics"
-                  className="flex items-center gap-2 text-[13px] tracking-[-0.15px] transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c] rounded-sm"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    openLandingSection("logistics", onHome);
+                  }}
+                  className="shell-control flex items-center gap-2 text-[13px] tracking-[-0.15px] transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c] rounded-sm"
                   style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb" }}
                 >
                   Logistics hub
@@ -60,8 +65,8 @@ export function Footer({
                 event.preventDefault();
                 onNavigate("external-request");
               }}
-              className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
-              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", background: "#e8b93c", color: "#40070a", minHeight: 40, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
+              className="shell-control flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
+              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", background: "#e8b93c", color: "#40070a", minHeight: 44, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
             >
               Start a logistics request
             </a>
@@ -69,10 +74,10 @@ export function Footer({
               href="/"
               onClick={(event) => {
                 event.preventDefault();
-                onHome();
+                openLandingSection("hero", onHome);
               }}
-              className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
-              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 40, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
+              className="shell-control flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
+              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 44, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
             >
               Home
             </a>
@@ -82,8 +87,8 @@ export function Footer({
                 event.preventDefault();
                 onNavigate("staff-signin");
               }}
-              className="flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
-              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 40, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
+              className="shell-control flex items-center justify-center rounded-[10px] text-[13px] font-semibold tracking-[-0.13px] transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
+              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: "#faeecb", minHeight: 44, paddingLeft: 16, paddingRight: 16, border: "1px solid #d1b478" }}
             >
               Staff sign in
             </a>

@@ -1,5 +1,5 @@
 import PublicFlows from './PublicFlows';
-import { isAuthRoute } from './appRoutes';
+import { APP_ROUTE_LABELS, isAuthRoute } from './appRoutes';
 import type { PublicSubRoute } from './appTypes';
 import type { AppController } from './useAppController';
 import { StaffSignInPage } from './auth/StaffSignInPage';
@@ -18,6 +18,7 @@ import { PublicNavbar } from './public/PublicNavbar';
 import { ExternalRequestCenter } from './request/ExternalRequestCenter';
 import { AuthenticatedShell } from './shell/AuthenticatedShell';
 import { shellPresentationFromSession } from './shell/presentation';
+import { useRouteFocus } from './hooks/useRouteFocus';
 
 export function AppRouteRenderer({ controller }: { controller: AppController }) {
   const {
@@ -45,6 +46,12 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
     setAppearance,
     handleSessionRevoked,
   } = controller;
+
+  useRouteFocus({
+    routeKey: route,
+    label: APP_ROUTE_LABELS[route],
+    enabled: !(session && isAuthRoute(route)),
+  });
 
   /* Context B — External Request Center. Only reachable with a session; the
    * controller routes here exclusively through `resolvePostAuthDestination`, so
@@ -159,8 +166,12 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: dark ? '#40070a' : '#f2eae5' }}>
-      <PublicNavbar dark={dark} onToggle={toggleTheme} onNavigate={navigate} onHome={goHome} />
+    <div
+      className="min-h-screen flex flex-col"
+      data-public-shell
+      style={{ background: dark ? '#40070a' : '#f2eae5' }}
+    >
+      <PublicNavbar route={route} dark={dark} onToggle={toggleTheme} onNavigate={navigate} onHome={goHome} />
 
       {route !== 'landing' ? (
         <PublicFlows

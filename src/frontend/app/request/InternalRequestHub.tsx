@@ -483,9 +483,7 @@ function lifecycleFor(status: string) {
       done: status === 'ACCEPTED',
       current: false,
       note:
-        status === 'ACCEPTED'
-          ? 'Downstream line routes are recorded.'
-          : 'No line route has been recorded.',
+        status === 'ACCEPTED' ? 'Downstream line routes are recorded.' : 'No line route has been recorded.',
     },
     {
       label: 'Outcome',
@@ -576,7 +574,7 @@ function RequestInspector({
         aria-modal="true"
         aria-labelledby="internal-request-record-title"
         tabIndex={-1}
-        className="fixed inset-0 z-50 flex w-full flex-col overflow-y-auto overscroll-contain md:inset-y-0 md:left-auto md:w-[min(470px,100vw)]"
+        className="shell-sheet--viewport fixed inset-0 z-50 flex w-full flex-col overflow-y-auto overscroll-contain md:inset-y-0 md:left-auto md:w-[min(470px,100vw)]"
         style={{
           background: colors.surface,
           color: colors.text,
@@ -585,7 +583,7 @@ function RequestInspector({
         }}
       >
         <header
-          className="flex shrink-0 items-center justify-between gap-3 px-5 py-3"
+          className="shell-sheet__header flex shrink-0 items-center justify-between gap-3 pb-3"
           style={{ borderBottom: `1px solid ${colors.border}` }}
         >
           <button
@@ -777,7 +775,10 @@ function RequestInspector({
           </div>
         </section>
         {canWrite && lines.length > 0 && (
-          <section className="mt-auto shrink-0 px-5 py-4" style={{ borderTop: `1px solid ${colors.border}` }}>
+          <section
+            className="shell-sheet__actions mt-auto shrink-0 px-5 pt-4"
+            style={{ borderTop: `1px solid ${colors.border}`, background: colors.surface }}
+          >
             <label className="block text-xs" style={{ color: colors.muted }}>
               Review note <span className="font-normal">(optional)</span>
               <textarea
@@ -1099,7 +1100,7 @@ export function InternalRequestHub({
           }}
         >
           Last known queue shown. The refresh did not complete, so review controls remain disabled until a
-           current page loads.
+          current page loads.
         </p>
       )}
       {loadState === 'refreshing' && (
@@ -1112,8 +1113,7 @@ export function InternalRequestHub({
             border: `1px solid ${colors.border}`,
           }}
         >
-          Updating the request queue. Review controls are temporarily disabled until this refresh
-          completes.
+          Updating the request queue. Review controls are temporarily disabled until this refresh completes.
         </p>
       )}
       {loadState === 'loading' ? (
@@ -1311,7 +1311,10 @@ export function InternalRequestHub({
                   })}
                 </div>
                 <div className="hidden overflow-x-auto md:block">
-                  <table className="w-full tabular-nums" style={{ borderCollapse: 'collapse', minWidth: 690 }}>
+                  <table
+                    className="w-full tabular-nums"
+                    style={{ borderCollapse: 'collapse', minWidth: 690 }}
+                  >
                     <thead>
                       <tr style={{ background: colors.inset, borderBottom: `1px solid ${colors.border}` }}>
                         {['Request', 'Committee', 'Needed by', 'State', 'Urgency'].map((heading) => (

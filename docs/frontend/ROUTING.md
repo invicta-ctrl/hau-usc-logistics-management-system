@@ -123,6 +123,20 @@ session survives.
 `aria-hidden` markup, never in CSS pseudo-content, so a control announces as
 its label.
 
+### 3.1 Route and transient-focus semantics
+
+Client-side navigation updates the canonical route hash, resets scroll, and
+makes the new `main-content` landmark the keyboard focus destination. A drawer
+that initiated the transition closes first so its focus trap can restore the
+opener before route focus establishes the final context. Initial public page
+load does not steal focus; authenticated shell entry does, because it follows an
+identity/context boundary.
+
+Open public and authenticated drawers are modal: the rendered background is
+inert and hidden from assistive technology, focus is contained, Escape closes,
+and the prior background attributes and opener are restored. Closed drawers are
+unmounted. These presentation rules do not grant a route or capability.
+
 ---
 
 ## 4. Control contract
@@ -137,7 +151,7 @@ Field key: **CONTROL_ID** · **LABEL** · **SURFACE** · **PERSONA** ·
 | CONTROL_ID | LABEL | SURFACE | PERSONA | ENTRY_INTENT | AUTH | CAPABILITY | DESTINATION | BACKEND | MUTATES | TEST |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `NAV_HOME` | HAU-USC home | `PublicNavbar` | any | — | no | — | `landing`, session preserved | none | no | HOME-01/02/03 |
-| `NAV_PUBLIC_SERVICES` | Logistics hub | `PublicNavbar` → `publicNavConfig` | any | — | no | — | in-page anchor `#logistics` | none | no | — |
+| `NAV_PUBLIC_SERVICES` | Logistics hub | `PublicNavbar` → `publicNavConfig` | any | — | no | — | in-page anchor `#logistics`, heading focused | none | no | MFR-002 U03 shell |
 | `NAV_THEME` | Theme toggle | `PublicNavbar`, `StaffSignInPage`, `ExternalRequestCenter` | any | — | no | — | none (local preference) | none | no | FVR-001 theme |
 | `NAV_STAFF_SIGNIN` | Staff sign in | `PublicNavbar`, drawer, footer, lending nav | any | `GENERIC_STAFF_SIGN_IN` | no (it *is* the gate) | — | `staff-signin` | none | no | AUTH-01/02 |
 

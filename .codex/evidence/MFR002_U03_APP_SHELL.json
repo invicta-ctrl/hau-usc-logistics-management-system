@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "program": "HAU-USC-MFR-002",
+  "phase": "U03_APP_SHELL_RESPONSIVE_NAVIGATION",
+  "base": {
+    "playgroundCommit": "f48edd8e49608e02c50ca41189b4a3e8ae22752e",
+    "playgroundTree": "2908bf5fbb708d075253dfc005ff746db333c40c",
+    "branch": "work/playground-mfr002-shell",
+    "mainCommitPreserved": "f7e5bf83205dbe58b5fb72126a4456747d92e906",
+    "mainTreePreserved": "480cf65cb9ec07fbab729f0588023e120cf3f97a"
+  },
+  "designAuthority": {
+    "figmaFileKey": "hXJElH4p72KfgAaoUyfNOC",
+    "readOnlyFrames": {
+      "desktop1440": "283:245",
+      "compact1024": "283:926",
+      "mobile390": "283:1366",
+      "mobileDrawer": "283:153"
+    },
+    "repositoryReceipt": ".codex/FI04_AUTHENTICATED_SHELL_RECEIPT.md",
+    "writeMutation": "ZERO"
+  },
+  "change": {
+    "sharedShellCss": "src/frontend/styles/shell.css",
+    "routeFocusHook": "src/frontend/app/hooks/useRouteFocus.ts",
+    "dialogIsolationHook": "src/frontend/app/hooks/useDialogFocusTrap.ts",
+    "structuralWidthsCssPx": [320, 390, 768, 1024, 1440],
+    "mobileDock": "capability-filtered equal-width bottom navigation",
+    "compactRailCssPx": 76,
+    "fullRailCssPx": 272,
+    "fullRailThresholdCssPx": 1280,
+    "minimumInteractiveTargetCssPx": 44,
+    "safeAreaEdges": ["top", "right", "bottom", "left"],
+    "dynamicViewport": true,
+    "routeFocusManagement": true,
+    "drawerFocusTrapAndRestore": true,
+    "drawerBackgroundInert": true,
+    "viewportBoundInspectors": true,
+    "mobileStickyActions": true,
+    "reducedMotionAndForcedColors": true,
+    "routeOrCapabilitySemanticChanges": 0,
+    "backendOrDataContractChanges": 0,
+    "dependencyChanges": 0,
+    "lockfileSha256": "d874f080c0cb72a444929b84fb4710e71a619530dd9aa9999e43a0a23a6fff11"
+  },
+  "verification": {
+    "focusedUnit": "PASS_3_FILES_15_TESTS",
+    "fullUnit": "PASS_171_FILES_1255_TESTS_1_INTENTIONAL_SKIP",
+    "fullUnitRerunContext": "An initial concurrent run timed out one unrelated access-management repository test; that file passed 14 of 14 in isolation and the clean complete rerun passed with zero failures.",
+    "lint": "PASS_0_ERRORS_2_PREEXISTING_WARNINGS",
+    "designSourceChecks": "PASS_FOUNDATION_THEME_MAKE_THEME_AND_MAKE_ROUTES_CURRENT",
+    "designMirrorChecks": "PASS_TRACKERS_MAKE_LANDING_AND_RESOLVED_CASCADE",
+    "contrast": "PASS_66_OF_66_LIGHT_DARK_PAIRS",
+    "fiveWidthTestEnumeration": "PASS_20_CASES_ACROSS_FRONTEND_320_390_768_1024_1440",
+    "canonicalArtifact": "PASS_NORMAL_EXTERNAL_ASSET_ARCHITECTURE",
+    "stagingArtifact": "PASS_EXACT_STAGING_MARKER_NORMAL_ASSETS_AND_BYTE_IDENTICAL_HERO",
+    "diffCheck": "PASS"
+  },
+  "canonicalArtifact": {
+    "fileCount": 9,
+    "totalBytes": 36829115,
+    "manifestSha256": "6193eba7de3eb96c74da271ece31daa32f41aff82313080a279b66a76812d5cb",
+    "entryHtmlBytes": 1502,
+    "entryHtmlSha256": "c21e10662a2569a4fc7adffa9482dc5270826af89e6eae23b0a520bb202bc8dd",
+    "directRequestsIncludingHtml": 3,
+    "directBytes": 337489,
+    "directGzipBytes": 90059,
+    "cssBytes": 122504,
+    "cssSha256": "cb99dfcac256fa6edd5c67bd7497ceb6a8cab99b974e35a6d5be7292690e85f9",
+    "entryJavaScriptBytes": 213483,
+    "entryJavaScriptSha256": "f4f6d5e790abfb99be637640b8c721e390de331f1c3f1f0c939d00b76ca4edb0",
+    "largestAssetBytes": 20000000
+  },
+  "stagingArtifact": {
+    "fileCount": 9,
+    "totalBytes": 36829169,
+    "manifestSha256": "305e0e3788ee8c26b58952192e3db3b30a499045e8b2512c72960830368f2980",
+    "entryHtmlBytes": 1556,
+    "entryHtmlSha256": "1e136e4431f9fb382d839854767a5f7c55eb9f92da580d23d3117406d46ec896",
+    "heroSourceBytes": 36018711,
+    "heroPartsBytes": [20000000, 16018711],
+    "heroSourceSha256": "657b38b82d452a234ab76c64a3c4312133279ec3d59b9923c84c5e24501e71d1"
+  },
+  "u02BudgetComparison": {
+    "u02DirectBytes": 331716,
+    "u03DirectBytes": 337489,
+    "directByteDelta": 5773,
+    "directByteDeltaPercent": 1.7403,
+    "u02DirectGzipBytes": 88653,
+    "u03DirectGzipBytes": 90059,
+    "directGzipDelta": 1406,
+    "directGzipDeltaPercent": 1.586,
+    "u02CssBytes": 116942,
+    "u03CssBytes": 122504,
+    "cssByteDelta": 5562,
+    "cssByteDeltaPercent": 4.7562,
+    "entryJavaScriptByteDelta": 211,
+    "entryJavaScriptByteDeltaPercent": 0.0989,
+    "assessment": "PASS_BOUNDED_SHARED_SHELL_COST_WITH_EFFECTIVELY_FLAT_ENTRY_JAVASCRIPT"
+  },
+  "renderedBrowser": {
+    "status": "UNRUN_ENVIRONMENT_BLOCKED",
+    "notClaimed": "No fresh rendered five-width, keyboard, 200 percent zoom, or visual-regression PASS is claimed for U03.",
+    "constraints": [
+      "The project-pinned Chromium binary is absent and no usable local browser is available.",
+      "The connected cloud browser refuses the workspace loopback preview with net::ERR_BLOCKED_BY_CLIENT."
+    ],
+    "fallbackEvidence": [
+      "The exact Playwright configuration enumerates 20 U03 cases across 320, 390, 768, 1024, and 1440 CSS pixels.",
+      "Focused source contracts cover capability-filtered dock geometry, 76/272 px rails, dynamic viewport and safe-area behavior, route focus, modal inertness, focus containment/restoration, reduced motion, forced colors, sticky actions, and focusable main landmarks.",
+      "The complete React application and staging variants compile through Vite and pass normal-asset and byte-identical hero validation.",
+      "All route, capability, authentication, backend, and data semantics remain unchanged."
+    ]
+  },
+  "result": "PASS_U03_DETERMINISTIC_APP_SHELL_WITH_RENDERED_BROWSER_RESIDUAL",
+  "rollback": "Revert the isolated U03 commit. Shell geometry remains separate in src/frontend/styles/shell.css, and route modules retain ownership of their content.",
+  "deploymentMutation": "ZERO",
+  "productionMutation": "ZERO"
+}

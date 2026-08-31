@@ -27,7 +27,7 @@ export function AuthShellSidebar({
 
   return (
     <aside
-      className="hidden lg:flex w-[76px] xl:w-[272px] flex-col fixed left-0 top-0 bottom-0 z-20 overflow-y-auto"
+      className="auth-shell__sidebar flex-col"
       style={{ background: 'var(--sidebar)', borderRight: '1px solid var(--sidebar-border)' }}
       aria-label="Workspace navigation"
     >
@@ -199,11 +199,15 @@ export function AuthShellSidebar({
           <button
             type="button"
             onClick={onSignOut}
-            className="flex items-center justify-center px-2 py-2 w-full rounded-[8px] text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)] xl:justify-start xl:gap-2 xl:px-3"
+            className="auth-shell__sidebar-link flex items-center justify-center px-2 py-2 w-full rounded-[8px] text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)] xl:justify-start xl:gap-2 xl:px-3"
             aria-label="Sign out"
             title="Sign out"
           >
-            <LogOut size={14} strokeWidth={1.5} color="color-mix(in oklch, var(--sidebar-foreground) 55%, transparent)" />
+            <LogOut
+              size={14}
+              strokeWidth={1.5}
+              color="color-mix(in oklch, var(--sidebar-foreground) 55%, transparent)"
+            />
             <span
               className="hidden xl:inline"
               style={{
@@ -223,7 +227,7 @@ export function AuthShellSidebar({
               event.preventDefault();
               onBackToPreview?.();
             }}
-            className="flex items-center justify-center px-2 py-2 w-full rounded-[8px] text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)] xl:justify-start xl:gap-2 xl:px-3"
+            className="auth-shell__sidebar-link flex items-center justify-center px-2 py-2 w-full rounded-[8px] text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)] xl:justify-start xl:gap-2 xl:px-3"
             aria-label="Back to Playground Index"
           >
             <span

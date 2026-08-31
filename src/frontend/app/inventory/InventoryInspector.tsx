@@ -108,11 +108,12 @@ export function InventoryInspector({
         aria-modal="true"
         aria-labelledby="inv-inspector-title"
         tabIndex={-1}
+        className="shell-sheet--viewport"
         style={panelStyle}
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-5 py-4 shrink-0"
+          className="shell-sheet__header flex items-center justify-between pb-4 shrink-0"
           style={{ borderBottom: `1px solid ${c.border}` }}
         >
           {isMobile ? (

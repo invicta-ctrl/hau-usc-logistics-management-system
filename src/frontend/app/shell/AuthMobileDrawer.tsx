@@ -4,7 +4,6 @@ import type { AuthRoute, Route } from '../appTypes';
 import { DolMark } from '../brand/BrandMarks';
 import { ThemeToggle } from '../brand/ThemeToggle';
 import { useDialogFocusTrap } from '../hooks/useDialogFocusTrap';
-import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import { appRouteHash } from '../routeHash';
 import { NAV_ADMINISTRATION, NAV_OPERATIONS, visibleNavigationItems } from './navConfig';
 import type { ShellPresentation } from './presentation';
@@ -36,17 +35,17 @@ export function AuthMobileDrawer({
 }) {
   const [visible, setVisible] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const reducedMotion = usePrefersReducedMotion();
   const operations = visibleNavigationItems(NAV_OPERATIONS, [...presentation.visibleRoutes]);
   const administration = visibleNavigationItems(NAV_ADMINISTRATION, [...presentation.visibleRoutes]);
 
-  useDialogFocusTrap({ open, dialogRef });
+  useDialogFocusTrap({ open, dialogRef, inertSelector: '[data-auth-shell-background]' });
 
   useEffect(() => {
     if (!open) {
       setVisible(false);
       return;
     }
+    const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const id = requestAnimationFrame(() => setVisible(true));
     const handle = (e: KeyboardEvent) => {
@@ -56,7 +55,7 @@ export function AuthMobileDrawer({
     return () => {
       cancelAnimationFrame(id);
       document.removeEventListener('keydown', handle);
-      document.body.style.overflow = '';
+      document.body.style.overflow = originalOverflow;
     };
   }, [open, onClose]);
 
@@ -66,11 +65,10 @@ export function AuthMobileDrawer({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40"
+        className="shell-drawer-backdrop"
+        data-visible={visible}
         style={{
           background: 'rgba(36,20,22,0.44)',
-          opacity: visible ? 1 : 0,
-          transition: reducedMotion ? 'none' : 'opacity 280ms',
         }}
         onClick={onClose}
         aria-hidden="true"
@@ -82,18 +80,16 @@ export function AuthMobileDrawer({
         aria-modal="true"
         aria-label="Workspace navigation"
         tabIndex={-1}
-        className="fixed left-0 top-0 bottom-0 z-50 flex flex-col"
+        className="shell-drawer shell-drawer--start"
+        data-visible={visible}
         style={{
-          width: 280,
           background: 'var(--sidebar)',
           borderRight: '1px solid var(--sidebar-border)',
-          transform: visible ? 'translateX(0)' : 'translateX(-100%)',
-          transition: reducedMotion ? 'none' : 'transform 280ms cubic-bezier(0.4,0,0.2,1)',
         }}
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-4 py-4"
+          className="shell-drawer__header flex items-center justify-between pb-4"
           style={{ borderBottom: '1px solid var(--sidebar-border)' }}
         >
           <div className="flex flex-col items-start gap-1.5">
@@ -148,7 +144,7 @@ export function AuthMobileDrawer({
         </div>
 
         {/* Nav */}
-        <div className="flex-1 overflow-y-auto px-2 py-4 flex flex-col gap-4">
+        <div className="shell-drawer__body px-2 py-4 flex flex-col gap-4">
           {operations.length > 0 && (
             <nav className="flex flex-col gap-0.5" aria-label="Operations">
               <p
@@ -173,23 +169,31 @@ export function AuthMobileDrawer({
                     navigate(item.route);
                     onClose();
                   }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-[8px] w-full text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
+                  className="shell-control flex items-center gap-3 px-3 py-2.5 rounded-[8px] w-full text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
                   style={{
                     background: route === item.route ? 'var(--sidebar-accent)' : 'transparent',
-                    borderLeft: route === item.route ? '2px solid var(--sidebar-primary)' : '2px solid transparent',
+                    borderLeft:
+                      route === item.route ? '2px solid var(--sidebar-primary)' : '2px solid transparent',
                   }}
                   aria-current={route === item.route ? 'page' : undefined}
                 >
                   <item.Icon
                     size={15}
                     strokeWidth={1.6}
-                    color={route === item.route ? 'var(--sidebar-primary)' : 'color-mix(in oklch, var(--sidebar-foreground) 65%, transparent)'}
+                    color={
+                      route === item.route
+                        ? 'var(--sidebar-primary)'
+                        : 'color-mix(in oklch, var(--sidebar-foreground) 65%, transparent)'
+                    }
                   />
                   <span
                     style={{
                       fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
                       fontSize: 14,
-                      color: route === item.route ? 'var(--sidebar-foreground)' : 'color-mix(in oklch, var(--sidebar-foreground) 75%, transparent)',
+                      color:
+                        route === item.route
+                          ? 'var(--sidebar-foreground)'
+                          : 'color-mix(in oklch, var(--sidebar-foreground) 75%, transparent)',
                       letterSpacing: -0.15,
                     }}
                   >
@@ -228,23 +232,31 @@ export function AuthMobileDrawer({
                     navigate(item.route);
                     onClose();
                   }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-[8px] w-full text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
+                  className="shell-control flex items-center gap-3 px-3 py-2.5 rounded-[8px] w-full text-left transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
                   style={{
                     background: route === item.route ? 'var(--sidebar-accent)' : 'transparent',
-                    borderLeft: route === item.route ? '2px solid var(--sidebar-primary)' : '2px solid transparent',
+                    borderLeft:
+                      route === item.route ? '2px solid var(--sidebar-primary)' : '2px solid transparent',
                   }}
                   aria-current={route === item.route ? 'page' : undefined}
                 >
                   <item.Icon
                     size={15}
                     strokeWidth={1.6}
-                    color={route === item.route ? 'var(--sidebar-primary)' : 'color-mix(in oklch, var(--sidebar-foreground) 65%, transparent)'}
+                    color={
+                      route === item.route
+                        ? 'var(--sidebar-primary)'
+                        : 'color-mix(in oklch, var(--sidebar-foreground) 65%, transparent)'
+                    }
                   />
                   <span
                     style={{
                       fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
                       fontSize: 14,
-                      color: route === item.route ? 'var(--sidebar-foreground)' : 'color-mix(in oklch, var(--sidebar-foreground) 75%, transparent)',
+                      color:
+                        route === item.route
+                          ? 'var(--sidebar-foreground)'
+                          : 'color-mix(in oklch, var(--sidebar-foreground) 75%, transparent)',
                       letterSpacing: -0.15,
                     }}
                   >
@@ -258,7 +270,7 @@ export function AuthMobileDrawer({
 
         {/* Footer */}
         <div
-          className="px-4 pb-6 pt-3 flex flex-col gap-3"
+          className="shell-drawer__footer px-4 pt-3 flex flex-col gap-3"
           style={{ borderTop: '1px solid var(--sidebar-border)' }}
         >
           <a
@@ -268,7 +280,7 @@ export function AuthMobileDrawer({
               onHome();
               onClose();
             }}
-            className="flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
+            className="shell-control flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
           >
             <span
               style={{
@@ -283,7 +295,11 @@ export function AuthMobileDrawer({
           </a>
           <div className="flex items-center justify-between">
             <span
-              style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", fontSize: 11, color: 'var(--sidebar-primary)' }}
+              style={{
+                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                fontSize: 11,
+                color: 'var(--sidebar-primary)',
+              }}
             >
               Theme
             </span>
@@ -297,7 +313,7 @@ export function AuthMobileDrawer({
                 onBackToPreview?.();
                 onClose();
               }}
-              className="flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
+              className="shell-control flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
             >
               <span
                 style={{
@@ -317,9 +333,13 @@ export function AuthMobileDrawer({
                 onSignOut();
                 onClose();
               }}
-              className="flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
+              className="shell-control flex items-center gap-2 rounded-[8px] px-3 py-2 transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)]"
             >
-              <LogOut size={14} strokeWidth={1.5} color="color-mix(in oklch, var(--sidebar-foreground) 60%, transparent)" />
+              <LogOut
+                size={14}
+                strokeWidth={1.5}
+                color="color-mix(in oklch, var(--sidebar-foreground) 60%, transparent)"
+              />
               <span
                 style={{
                   fontFamily: "'IBM Plex Sans', system-ui, sans-serif",

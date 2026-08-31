@@ -32,7 +32,7 @@ export function AuthShellTopbar({
 
   return (
     <header
-      className="sticky top-0 z-10"
+      className="auth-shell__topbar"
       style={{
         background: commandBackground,
         borderBottom: '1px solid var(--theme-border)',
@@ -40,7 +40,7 @@ export function AuthShellTopbar({
       aria-label="Workspace command bar"
     >
       <div
-        className="flex items-center justify-between gap-2 px-4 py-1"
+        className="auth-shell__environment flex items-center justify-between gap-2"
         style={{ background: 'var(--sidebar)', borderBottom: '1px solid var(--sidebar-border)' }}
       >
         <span
@@ -67,15 +67,15 @@ export function AuthShellTopbar({
       </div>
 
       <div
-        className="flex items-center gap-3 px-4 py-2"
-        style={{ minHeight: 56, background: commandBackground }}
+        className="auth-shell__command flex items-center gap-3 py-2"
+        style={{ background: commandBackground }}
         data-command-surface={dark ? 'dark-command' : 'light-paper'}
       >
         <button
           type="button"
           onClick={onOpenDrawer}
-          className="flex items-center gap-2 rounded-[8px] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)] transition-colors hover:bg-white/8"
-          style={{ minHeight: 40, background: navigateBackground }}
+          className="shell-control flex items-center gap-2 rounded-[8px] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sidebar-ring)] transition-colors hover:bg-white/8"
+          style={{ background: navigateBackground }}
           aria-label="Open navigation"
           data-navigate-surface={dark ? 'dark-command' : 'light-oxblood'}
         >
@@ -161,9 +161,9 @@ export function AuthShellTopbar({
               event.preventDefault();
               navigate('profile');
             }}
-            className="flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
+            className="shell-control flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
             aria-label={`${presentation.displayName} — go to profile`}
-            style={{ width: 34, height: 34, background: 'var(--theme-accent)', flexShrink: 0 }}
+            style={{ width: 44, height: 44, background: 'var(--theme-accent)', flexShrink: 0 }}
           >
             <span
               style={{

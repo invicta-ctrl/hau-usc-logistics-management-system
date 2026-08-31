@@ -23,9 +23,12 @@ function focusableElements(container: HTMLElement): HTMLElement[] {
 export function useDialogFocusTrap({
   open,
   dialogRef,
+  inertSelector,
 }: {
   open: boolean;
   dialogRef: RefObject<HTMLElement | null>;
+  /** Background regions made unavailable to pointer, keyboard and AT while open. */
+  inertSelector?: string;
 }) {
   const restoreFocusRef = useRef<HTMLElement | null>(null);
 
@@ -36,6 +39,20 @@ export function useDialogFocusTrap({
 
     const active = document.activeElement;
     restoreFocusRef.current = active instanceof HTMLElement && active !== document.body ? active : null;
+    const inertSnapshots = inertSelector
+      ? Array.from(document.querySelectorAll<HTMLElement>(inertSelector))
+          .filter((element) => element !== dialog && !element.contains(dialog))
+          .map((element) => ({
+            element,
+            inert: element.inert,
+            ariaHidden: element.getAttribute('aria-hidden'),
+          }))
+      : [];
+
+    for (const snapshot of inertSnapshots) {
+      snapshot.element.inert = true;
+      snapshot.element.setAttribute('aria-hidden', 'true');
+    }
 
     const focusInitial = () => {
       const preferred = dialog.querySelector<HTMLElement>('[data-dialog-initial-focus]');
@@ -69,9 +86,14 @@ export function useDialogFocusTrap({
     return () => {
       cancelAnimationFrame(frame);
       document.removeEventListener('keydown', trapTab);
+      for (const snapshot of inertSnapshots) {
+        snapshot.element.inert = snapshot.inert;
+        if (snapshot.ariaHidden === null) snapshot.element.removeAttribute('aria-hidden');
+        else snapshot.element.setAttribute('aria-hidden', snapshot.ariaHidden);
+      }
       const restore = restoreFocusRef.current;
       restoreFocusRef.current = null;
       if (restore?.isConnected) restore.focus();
     };
-  }, [dialogRef, open]);
+  }, [dialogRef, inertSelector, open]);
 }

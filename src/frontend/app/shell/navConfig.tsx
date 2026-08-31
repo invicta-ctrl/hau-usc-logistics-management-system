@@ -16,6 +16,7 @@ import type { AuthRoute } from '../appTypes';
 export type NavItem = {
   route: AuthRoute;
   label: string;
+  mobileLabel?: string;
   Icon: LucideIcon;
 };
 
@@ -37,8 +38,8 @@ export const NAV_ADMINISTRATION: NavItem[] = [
 
 export const MOBILE_DOCK: NavItem[] = [
   { route: 'overview', label: 'Overview', Icon: LayoutDashboard },
-  { route: 'request-center', label: 'Internal Request Hub', Icon: ClipboardList },
-  { route: 'lending', label: 'Internal Lending Hub', Icon: ArrowRightLeft },
+  { route: 'request-center', label: 'Internal Request Hub', mobileLabel: 'Requests', Icon: ClipboardList },
+  { route: 'lending', label: 'Internal Lending Hub', mobileLabel: 'Lending', Icon: ArrowRightLeft },
   { route: 'inventory', label: 'Inventory', Icon: Package },
   { route: 'release', label: 'Release', Icon: ArrowUpFromLine },
 ];

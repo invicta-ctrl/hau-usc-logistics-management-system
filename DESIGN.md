@@ -251,13 +251,19 @@ deep-link to it or display its result; they do not re-implement it.
 
 ## Current implemented scope
 
-FI-00 through FI-03 are implemented in `src/frontend/`:
+The public/identity surfaces and FI-04 through FI-12 operational workspaces are
+implemented in `src/frontend/`:
 
 - institutional design foundation and public landing;
 - Make hero poster, scrims, entrance motion, and reduced-motion behavior;
 - public navigation, Request, Lending, receipt, and tracking presentation;
 - sign-in, session/bootstrap, logout, starter activation, email verification,
   account application, private status-token lookup, and withdrawal;
+- capability-gated authenticated navigation and operational route modules for
+  Overview through the governed reference surfaces;
+- one MFR-002 U03 shell contract for capability-filtered mobile navigation,
+  compact/full desktop rails, route focus, safe-area/dynamic-viewport drawers,
+  and viewport-bound inspectors with mobile sticky actions;
 - responsive layouts at 320, 390, 768, 1024, and 1440 CSS pixels, plus 200%
   effective reflow;
 - light/dark presentation, keyboard focus, semantic states, and no horizontal
@@ -275,12 +281,11 @@ Home preserves the session on every surface.
 > accessible name states the public no-sign-in model", baseline `e30fbff` — was
 > correct under the authority R3 held and is preserved here as history.
 
-**Authenticated operational workspaces begin in FI-04 and are not exposed.**
-`AuthenticatedShell` is not mounted and the staff route components are orphaned.
-Design material for pages 20–80 is therefore **DESIGN AUTHORITY / READY FOR
-FI-04 IMPLEMENTATION** — it is *not* implementation-verified. No design artifact
-may fabricate authorization, identifiers, status, inventory, approval, or
-provider state.
+Authenticated operational workspaces mount only after the existing session and
+capability resolution succeeds. `AuthenticatedShell` owns persistent frame and
+navigation behavior; each route module still owns its content and business
+actions. No design artifact may fabricate authorization, identifiers, status,
+inventory, approval, or provider state.
 
 ## Visual system
 

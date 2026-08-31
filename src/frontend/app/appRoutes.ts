@@ -39,6 +39,16 @@ export const AUTH_ROUTE_INTENT_LABELS: Record<AuthRoute, string> = {
   profile: 'Account profile',
 };
 
+/** One presentational route name for document titles and focus context. */
+export const APP_ROUTE_LABELS: Record<Route, string> = {
+  landing: 'Home',
+  tracking: 'Track lending',
+  borrow: 'Public Lending Hub',
+  'staff-signin': 'Staff sign in',
+  'external-request': 'External Request Center',
+  ...AUTH_ROUTE_INTENT_LABELS,
+};
+
 export const AUTH_PLACEHOLDER_LABELS: Partial<Record<AuthRoute, string>> = {
   inventory: 'Inventory',
   'request-center': 'Internal Request Hub',

@@ -511,8 +511,7 @@ export function traceableReviewError(input: {
   quantity: number;
   assetIds: string[];
 }) {
-  if (!input.item)
-    return 'The selected inventory item is unavailable. Refresh the queue and try again.';
+  if (!input.item) return 'The selected inventory item is unavailable. Refresh the queue and try again.';
   if (input.item.lendingKind === 'CONSUMABLE') {
     return input.assetIds.length ? 'Consumable approvals cannot include traceable asset assignments.' : '';
   }
@@ -605,7 +604,7 @@ function Modal({
         aria-modal="true"
         aria-labelledby="fi07-modal-title"
         tabIndex={-1}
-        className="max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-auto rounded-xl border border-[var(--border-paper)] bg-[var(--paper-mid)] p-5 text-[var(--ink-deep)] shadow-2xl"
+        className="shell-modal__surface w-full max-w-2xl overflow-auto rounded-xl border border-[var(--border-paper)] bg-[var(--paper-mid)] p-5 text-[var(--ink-deep)] shadow-2xl"
       >
         <div className="flex items-start justify-between gap-4 border-b border-[var(--border-paper)] pb-4">
           <div>
@@ -944,8 +943,7 @@ export function InternalLendingHub({
 
   const submitReview = useCallback(async () => {
     if (!selected || !review || submitting || inFlight.current) return;
-    if (loadState !== 'ready')
-      return setInlineError('Actions are paused until the current queue reloads.');
+    if (loadState !== 'ready') return setInlineError('Actions are paused until the current queue reloads.');
     const quantity = numberValue(review.approvedQuantity);
     const targetItem = review.decision === 'SUBSTITUTE' ? review.substitutionItemId : selected.itemId;
     const targetInventoryItem = queue.inventoryItems.find((item) => item.id === targetItem) ?? null;
@@ -1022,10 +1020,7 @@ export function InternalLendingHub({
       complete({
         tone: 'success',
         title: 'Lending review recorded',
-        message:
-          result.ticketId +
-          ' is now ' +
-          label(result.status) + '.',
+        message: result.ticketId + ' is now ' + label(result.status) + '.',
         correlationId: result.correlationId || undefined,
       });
     } catch (error) {
@@ -1048,8 +1043,7 @@ export function InternalLendingHub({
 
   const submitHandoff = useCallback(async () => {
     if (!selected || submitting || inFlight.current) return;
-    if (loadState !== 'ready')
-      return setInlineError('Actions are paused until the current queue reloads.');
+    if (loadState !== 'ready') return setInlineError('Actions are paused until the current queue reloads.');
     if (!handoff.acknowledged)
       return setInlineError('Acknowledge the custody consequence before recording this handoff or issue.');
     if (inspection) {
@@ -1079,10 +1073,7 @@ export function InternalLendingHub({
       complete({
         tone: 'success',
         title: selected.ticketType === 'CONSUMABLE' ? 'Item issue recorded' : 'Item handoff recorded',
-        message:
-          result.ticketId +
-          ' is now ' +
-          label(result.status) + '.',
+        message: result.ticketId + ' is now ' + label(result.status) + '.',
         correlationId: result.correlationId || undefined,
       });
     } catch (error) {
@@ -1095,8 +1086,7 @@ export function InternalLendingHub({
 
   const submitReturn = useCallback(async () => {
     if (!selected || !returnState || submitting || inFlight.current) return;
-    if (loadState !== 'ready')
-      return setInlineError('Actions are paused until the current queue reloads.');
+    if (loadState !== 'ready') return setInlineError('Actions are paused until the current queue reloads.');
     const returned = numberValue(returnState.returned);
     const lost = numberValue(returnState.lost);
     const damaged = numberValue(returnState.damaged);
@@ -1179,10 +1169,7 @@ export function InternalLendingHub({
       complete({
         tone: 'success',
         title: 'Item return recorded',
-        message:
-          result.ticketId +
-          ' is now ' +
-          label(result.status) + '.',
+        message: result.ticketId + ' is now ' + label(result.status) + '.',
         correlationId: result.correlationId || evidence.correlationId || undefined,
       });
     } catch (error) {
@@ -1300,14 +1287,11 @@ export function InternalLendingHub({
             Loans and custody
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--ink-mid)]">
-            Find a lending ticket, verify the current record, then complete only the permitted next
-            action.
+            Find a lending ticket, verify the current record, then complete only the permitted next action.
           </p>
         </div>
         <aside className="min-w-0 rounded-lg border border-[var(--border-paper)] bg-[var(--paper-mid)] px-4 py-3 text-xs sm:min-w-64">
-          <strong className="block">
-            {inspection ? 'Inspection mode' : 'Current lending records'}
-          </strong>
+          <strong className="block">{inspection ? 'Inspection mode' : 'Current lending records'}</strong>
           <span className="mt-1 block leading-5 text-[var(--ink-mid)]">
             {inspection ? 'Sample data · Actions unavailable' : 'Records are current as of this page load.'}
           </span>
@@ -1410,7 +1394,7 @@ export function InternalLendingHub({
                 </h2>
               </div>
               <span className="max-w-36 text-right font-mono text-[10px] leading-4 text-[var(--ink-mid)]">
-                 Page {queue.pagination.page} · {queue.lendingTickets.length} loaded
+                Page {queue.pagination.page} · {queue.lendingTickets.length} loaded
               </span>
             </div>
             <p className="mt-3 text-xs leading-5 text-[var(--ink-mid)]">
@@ -1522,10 +1506,18 @@ export function InternalLendingHub({
                   <table className="w-full min-w-[630px] border-collapse text-left text-sm tabular-nums">
                     <thead className="bg-black/[.035] text-[10px] uppercase tracking-[.07em] text-[var(--ink-mid)]">
                       <tr>
-                        <th scope="col" className="p-3">Lending ticket</th>
-                        <th scope="col" className="p-3">Borrower / custody</th>
-                        <th scope="col" className="p-3">Timing</th>
-                        <th scope="col" className="p-3">Lifecycle</th>
+                        <th scope="col" className="p-3">
+                          Lending ticket
+                        </th>
+                        <th scope="col" className="p-3">
+                          Borrower / custody
+                        </th>
+                        <th scope="col" className="p-3">
+                          Timing
+                        </th>
+                        <th scope="col" className="p-3">
+                          Lifecycle
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1550,9 +1542,7 @@ export function InternalLendingHub({
                                 onClick={(event) => selectTicket(ticket, event.currentTarget)}
                                 className="grid w-full gap-1 text-left"
                               >
-                                <strong>
-                                   {item?.name ?? 'Item details unavailable'}
-                                </strong>
+                                <strong>{item?.name ?? 'Item details unavailable'}</strong>
                                 <span className="font-mono text-[11px] text-[var(--ink-mid)]">
                                   {ticket.id} · {ticket.quantity} {ticket.unit}
                                 </span>
@@ -1594,7 +1584,7 @@ export function InternalLendingHub({
                           <StatusBadge status={derivedLendingStatus(ticket, now)} />
                         </div>
                         <h3 className="mt-4 text-base font-semibold">
-                           {item?.name ?? 'Item details unavailable'}
+                          {item?.name ?? 'Item details unavailable'}
                         </h3>
                         <p className="mt-1 text-xs leading-5 text-[var(--ink-mid)]">
                           {borrowerLabel(ticket)} · {ticket.quantity} {ticket.unit} ·{' '}
@@ -1628,7 +1618,7 @@ export function InternalLendingHub({
               aria-labelledby="fi07-ticket-title"
               data-lending-inspector
               tabIndex={-1}
-              className="fixed inset-0 z-50 overflow-auto border-[var(--border-paper)] bg-[var(--paper-mid)] p-4 lg:sticky lg:top-4 lg:z-auto lg:max-h-[calc(100vh-2rem)] lg:rounded-xl lg:border"
+              className="shell-sheet--responsive fixed inset-0 z-50 overflow-auto border-[var(--border-paper)] bg-[var(--paper-mid)] p-4 lg:sticky lg:top-4 lg:z-auto lg:max-h-[calc(100vh-2rem)] lg:rounded-xl lg:border"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -1636,7 +1626,7 @@ export function InternalLendingHub({
                     {selected.id}
                   </p>
                   <h2 id="fi07-ticket-title" className="mt-1 font-serif text-3xl">
-                     {selectedItem?.name ?? 'Lending ticket'}
+                    {selectedItem?.name ?? 'Lending ticket'}
                   </h2>
                 </div>
                 <button
@@ -1806,7 +1796,7 @@ export function InternalLendingHub({
                   record.
                 </p>
               </section>
-              <div className="mt-4 grid gap-2">
+              <div className="shell-sheet__actions mt-4 grid gap-2 bg-[var(--paper-mid)]">
                 {selected.status === 'FOR_REVIEW' ? (
                   <button
                     type="button"
@@ -1882,8 +1872,8 @@ export function InternalLendingHub({
             }}
           >
             <p className="m-0 text-sm leading-6 text-[var(--ink-mid)]">
-              The review is checked against identity, access, availability, quantity, asset assignment, lifecycle,
-              and duplicate protection before it is recorded.
+              The review is checked against identity, access, availability, quantity, asset assignment,
+              lifecycle, and duplicate protection before it is recorded.
             </p>
             <Field label="Decision">
               <select
@@ -1968,19 +1958,19 @@ export function InternalLendingHub({
                     </legend>
                     {reviewTargetItem.traceableAssets === undefined ? (
                       <p role="alert" className="m-0 text-xs leading-5 text-rose-800">
-                        Asset assignment is unavailable because the selected item details are restricted.
-                        This reusable review cannot be submitted.
+                        Asset assignment is unavailable because the selected item details are restricted. This
+                        reusable review cannot be submitted.
                       </p>
                     ) : reviewTargetItem.traceableAssets === 0 ? (
                       <p className="m-0 text-xs leading-5 text-[var(--ink-mid)]">
-                        The selected item has no traceable assets. No asset identities will be submitted
-                        for this review.
+                        The selected item has no traceable assets. No asset identities will be submitted for
+                        this review.
                       </p>
                     ) : (
                       <>
                         <p className="m-0 text-xs leading-5 text-[var(--ink-mid)]">
                           Choose exactly the approved quantity from matching available candidates. They are
-                           not custody assignments until the review is accepted.
+                          not custody assignments until the review is accepted.
                         </p>
                         {reviewAssets.length ? (
                           reviewAssets.map((asset) => (
@@ -2011,8 +2001,8 @@ export function InternalLendingHub({
                           ))
                         ) : (
                           <p role="alert" className="m-0 text-xs leading-5 text-rose-800">
-                            No matching assets are available. This traceable reusable
-                            review cannot be submitted.
+                            No matching assets are available. This traceable reusable review cannot be
+                            submitted.
                           </p>
                         )}
                       </>
@@ -2194,7 +2184,7 @@ export function InternalLendingHub({
           >
             <p className="m-0 text-sm leading-6 text-[var(--ink-mid)]">
               Returned, lost, and damaged-beyond-use quantities must exactly reconcile to {selected.quantity}{' '}
-               {selected.unit}. Required return evidence must be stored before the return can be accepted.
+              {selected.unit}. Required return evidence must be stored before the return can be accepted.
             </p>
             <Field label="Return condition">
               <select

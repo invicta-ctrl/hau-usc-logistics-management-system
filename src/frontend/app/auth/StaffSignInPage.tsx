@@ -148,7 +148,8 @@ export function StaffSignInPage({
       {/* Form */}
       <main
         id="main-content"
-        className="flex flex-1 items-center justify-center px-5 py-14"
+        className="route-focus-target flex flex-1 items-center justify-center px-5 py-14"
+        tabIndex={-1}
         style={{
           backgroundImage: `linear-gradient(${dark ? "rgba(18,11,11,.58)" : "rgba(64,7,10,.48)"}, ${dark ? "rgba(18,11,11,.68)" : "rgba(64,7,10,.58)"}), url(${loginBackground})`,
           backgroundSize: "cover",

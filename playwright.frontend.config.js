@@ -15,6 +15,7 @@ export default defineConfig({
     'fi07-lending-hub.spec.js',
     'playground-accessibility-semantics.spec.js',
     'playground-theme-accessibility.spec.js',
+    'mfr002-shell.spec.js',
   ],
   timeout: 30_000,
   fullyParallel: false,

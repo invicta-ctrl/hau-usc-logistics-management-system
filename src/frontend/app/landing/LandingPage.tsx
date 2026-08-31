@@ -1,7 +1,7 @@
-import type { Route } from "../appTypes";
-import { CurrentSection } from "./CurrentSection";
-import { HeroSection } from "./HeroSection";
-import { LogisticsHubSection } from "./LogisticsHubSection";
+import type { Route } from '../appTypes';
+import { CurrentSection } from './CurrentSection';
+import { HeroSection } from './HeroSection';
+import { LogisticsHubSection } from './LogisticsHubSection';
 
 export function LandingPage({
   onNavigate,
@@ -13,15 +13,12 @@ export function LandingPage({
   onRequireExternalRequest: () => void;
 }) {
   return (
-    <main id="main-content" className="flex flex-col flex-1">
+    <main id="main-content" className="route-focus-target flex flex-col flex-1" tabIndex={-1}>
       <HeroSection onNavigate={onNavigate} onRequireExternalRequest={onRequireExternalRequest} />
 
       <CurrentSection />
 
-      <LogisticsHubSection
-        onNavigate={onNavigate}
-        onRequireExternalRequest={onRequireExternalRequest}
-      />
+      <LogisticsHubSection onNavigate={onNavigate} onRequireExternalRequest={onRequireExternalRequest} />
     </main>
   );
 }

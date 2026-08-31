@@ -212,6 +212,7 @@ export function useAppController() {
    */
   const goHome = useCallback(() => {
     if (window.location.hash) window.location.hash = '';
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     setEntryIntent('GENERIC_STAFF_SIGN_IN');
     setIntendedRoute(null);
     setDenialReason(null);
