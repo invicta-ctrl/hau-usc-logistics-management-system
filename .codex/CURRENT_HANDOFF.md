@@ -1,44 +1,44 @@
-# MFR-002 U10 Worker Hardening Handoff
+# MFR-002 U11 Final Acceptance and Freeze Handoff
 
-FROM: HAU-USC-MFR-002 U09 integrated Fullstack Data Path
-TO: HAU-USC-MFR-002 U10 Worker Modularity + Cache/Static/Security + Repository Cleanup
+FROM: HAU-USC-MFR-002 U10 integrated Worker Hardening
+TO: HAU-USC-MFR-002 U11 Final Integrated Playground Acceptance and Freeze
 PROGRAM: HAU-USC Logistics MFR-002
-BRANCH: work/playground-mfr002-worker-hardening
+BRANCH: work/playground-mfr002-final
 BASE_BRANCH: Playground
-STARTING_SHA: 6397780e3a22919cd5637507dd840e14465bf64a
-STARTING_TREE: 67ddcc7d699026a09ce27ac5f8865a52ed3ee57f
+STARTING_SHA: de2bc3b032550763d86345cfdfd9458a56a7a03e
+STARTING_TREE: d40d7ced406845e9c39b6975c436b23a616e11ea
 HEAD: GIT_HEAD
-UPSTREAM: PENDING_PUBLICATION
+UPSTREAM: origin/Playground@de2bc3b032550763d86345cfdfd9458a56a7a03e
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-master-reconciliation
-WORKTREE_STATE: DIRTY_CLOSEOUT_RECORDS_ONLY
+WORKTREE_STATE: DIRTY_CURRENT_RECORDS_ONLY
 ACTIVE_WRITER: SOL_HIGH:/root
-WRITER_LOCK: ACTIVE_MFR002_U10
+WRITER_LOCK: ACTIVE_MFR002_U11
 ROUTE: SOLO
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-31-mfr002-unified-mobile-first-fullstack-performance-transformation.md
 
-PHASE: U10_WORKER_CACHE_SECURITY_REPOSITORY
-BASE_PLAYGROUND_SHA: 6397780e3a22919cd5637507dd840e14465bf64a
+PHASE: U11_FINAL_INTEGRATED_PLAYGROUND_ACCEPTANCE
+BASE_PLAYGROUND_SHA: de2bc3b032550763d86345cfdfd9458a56a7a03e
 ENDING_SHA: GIT_HEAD
 TREE: GIT_TREE
-OBJECTIVE: Complete the accepted U10 Worker modularity, cache/static/security, and repository cleanup through separate evidence-backed repairs without changing business truth or deleting unknown or historical material.
-COMPLETED: U10 extracted one bounded public-entry Worker route family, tightened static and API cache/security contracts, and produced one cleanup/archive manifest with zero eligible deletions. Source work ends at d2bd6231bcdf0ade930d79d9182e7c2a69973b6d / tree ba9140ef2fd35f941b0e777beb768b20e9dbfc7b. The complete 181-file / 1,304-test suite and all proportional deterministic gates pass. Publication and non-force Playground integration remain pending.
-FILES_CHANGED: src/worker/index.js and new public-entry-routes.js; src/public/_headers; three focused unit contracts; one cleanup/archive manifest; U10 evidence; canonical continuity records.
-FACTS_INVALIDATED: U09's Worker entry-module line count, static cache/header contract, dynamic API security-header set, test count, and dist byte count are superseded by U10. U09 data-path, schema, provider, reset, and remote-integration facts remain valid.
-VALIDATION: Public-entry extraction focused suite 60/60; cache/security focused suite 89/89; cleanup manifest 2/2; full suite 181 files / 1,304 tests; lint 0 errors with one unrelated pre-existing warning; 1,696-module build; Apps Script 34-source / 57-function parity; dist 9 files / 36,963,114 bytes / 2 direct assets; Cloudflare dry-run 11 assets and no deploy; supported changed-file Prettier, diff, added-line secret, governance, and handoff checks pass after the closeout edit.
-BROWSER_EVIDENCE: Not required for the deterministic U10 source contract; U11 owns the final browser matrix.
-PERFORMANCE_EFFECT: Worker entry module reduced from 1,533 to 1,490 lines; fingerprinted assets now receive immutable caching while HTML revalidates. No speculative shared API cache was added.
-D1_EFFECT: None; U10 does not authorize schema, migration, index, provider, or data mutation.
-ACCESSIBILITY_EFFECT: No UI interaction, content, or semantic contract changed in U10.
+OBJECTIVE: Prove the complete transformed product once, perform only one evidence-backed final repair batch and hardening pass, reset and deploy only the isolated Playground, freeze exact identities and results, and stop at READY_FOR_EARL_MOBILE_FIRST_ANNOTATION.
+COMPLETED: U10 is published and integrated non-force on GitHub Playground at de2bc3b032550763d86345cfdfd9458a56a7a03e / tree d40d7ced406845e9c39b6975c436b23a616e11ea. Its temporary branch has exact parity, main remains unchanged, and this clean U11 branch starts from that exact remote identity. No U11 source or external mutation has occurred.
+FILES_CHANGED: Canonical continuity records only at U11 start.
+FACTS_INVALIDATED: U10 is no longer pending publication or integration. Its deterministic source/build evidence remains the U11 baseline until an exact U11 source or configuration change invalidates a relevant result. Deployed runtime/reset evidence remains separately unverified for U11.
+VALIDATION: U10 remote temporary-branch and Playground commit/tree parity, ancestry from U09, clean U11 start, and unchanged main are verified. U11 Hallmark, Impeccable, browser, reset, deployment, and freeze gates have not yet run.
+BROWSER_EVIDENCE: U11 route and accessibility matrices pending.
+PERFORMANCE_EFFECT: U11 measurements pending; no prior performance result will be reused after a source/build/config/data change that invalidates it.
+D1_EFFECT: U11 reset acceptance is authorized only through the accepted isolated runbook; no reset or data mutation has occurred yet.
+ACCESSIBILITY_EFFECT: U11 five-width automation and keyboard/focus verification pending.
 PLAYGROUND_DEPLOYMENT: ZERO.
-EXTERNAL_WRITES: ZERO during U10 source work. No provider, D1/R2, reset, data, Google, email, Figma, main, Production, or GitHub branch write has occurred yet for U10.
-EXTERNAL_ACTIONS: Read-only Git/GitHub remote checks and local deterministic verification only.
-KNOWN_RESIDUALS: U10 publication/integration and U11 final hardening, browser, reset, deployment, and final-freeze work remain open. Repository-wide historical formatting remains a preserved baseline condition outside changed files.
-NEXT_BRANCH: work/playground-mfr002-final after verified U10 integration.
-DO_NOT_REPEAT: Do not republish U09, combine all U10 domains in one diff, rewrite the Worker broadly, apply speculative caching, delete unknown or historical material, add migration 0033, or touch main/Production.
+EXTERNAL_WRITES: U10 temporary branch creation and non-force Playground update to de2bc3b032550763d86345cfdfd9458a56a7a03e only. No provider, D1/R2, reset, data, Google, email, Figma, main, or Production write.
+EXTERNAL_ACTIONS: GitHub U10 publication/integration and read-only remote verification only.
+KNOWN_RESIDUALS: The one Hallmark review, bounded repair decision, one Impeccable hardening pass, release-candidate gate, browser/state matrices, isolated reset/deployment, live verification, final evidence, GitHub integration, and freeze remain open.
+NEXT_BRANCH: NONE_STOP_AFTER_READY_FOR_EARL_MOBILE_FIRST_ANNOTATION
+DO_NOT_REPEAT: Do not rerun broad P26/P27 redesign, perform more than one repair batch, add migration 0033, create provider resources, repeat an uncertain reset/deploy, or touch main/Production.
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Publish the exact U10 commits and closeout to the temporary branch, integrate non-force into Playground, verify remote tree parity and unchanged main, then create work/playground-mfr002-final from that integrated lineage.
-RESUME_COMMANDS: Verify branch/status and exact base 6397780e3a22919cd5637507dd840e14465bf64a / tree 67ddcc7d699026a09ce27ac5f8865a52ed3ee57f; inspect only accepted U10 hotspots and their direct tests/imports; require dependency/replacement proof before removal; rerun governance and handoff after any continuity edit.
-PROHIBITED_ACTIONS: Mutate main or Production; deploy in U10; change D1/R2/schema/migration/index/provider data; broad Worker rewrite; shared-cache private APIs; transform protected evidence; delete unknown or historical material; weaken capability, privacy, identity, cumulative, evidence, idempotency, ledger, or audit contracts.
-HANDOFF_STATUS: READY_TO_INTEGRATE
+NEXT_EXACT_ACTION: Run the one read-only Hallmark final-product audit against the accepted design system and current source, record a ranked bounded repair batch, then run the one Impeccable hardening pass without redesigning the accepted product.
+RESUME_COMMANDS: Verify branch/status and exact base de2bc3b032550763d86345cfdfd9458a56a7a03e / tree d40d7ced406845e9c39b6975c436b23a616e11ea; read only the accepted U11 section, current design authority, final route map, isolated reset runbook, and direct verification/deploy scripts; check prior reset/deploy identity before consequential action.
+PROHIBITED_ACTIONS: Mutate main or Production; deploy outside isolated Playground; create provider resources; add unaccepted schema/migration/index changes; broad redesign; more than one repair batch; transform protected evidence; write Figma/Google/email; weaken capability, privacy, identity, cumulative, evidence, idempotency, ledger, or audit contracts.
+HANDOFF_STATUS: ACTIVE
