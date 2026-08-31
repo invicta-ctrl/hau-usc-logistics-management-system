@@ -11,6 +11,7 @@ import {
   canAdvanceLendingPage,
   derivedLendingStatus,
   evidenceByteDigest,
+  lendingLifecycleMatches,
   lendingClientRequestId,
   lendingCommandSignature,
   returnReconciliationError,
@@ -222,6 +223,12 @@ describe('FI-07 internal lending frontend contract', () => {
         Date.UTC(2026, 7, 24),
       ),
     ).toBe('READY_TO_CLAIM');
+    expect(lendingLifecycleMatches('OVERDUE', 'OVERDUE')).toBe(true);
+    expect(lendingLifecycleMatches('ON_LOAN', 'OVERDUE')).toBe(false);
+    expect(lendingLifecycleMatches('RETURNED_COMPLETED', 'RETURNED')).toBe(true);
+    expect(lendingLifecycleMatches('RETURNED_COMPLETED', 'COMPLETED')).toBe(true);
+    expect(lendingLifecycleMatches('RETURNED_COMPLETED', 'REJECTED')).toBe(true);
+    expect(lendingLifecycleMatches('RETURNED_COMPLETED', 'CANCELLED')).toBe(true);
     const command = {
       verb: 'review',
       ticketId: 'LEND-1',

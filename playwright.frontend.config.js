@@ -18,6 +18,7 @@ export default defineConfig({
     'mfr002-shell.spec.js',
     'mfr002-entry-flows.spec.js',
     'mfr002-overview-inventory.spec.js',
+    'mfr002-custody.spec.js',
   ],
   timeout: 30_000,
   fullyParallel: false,

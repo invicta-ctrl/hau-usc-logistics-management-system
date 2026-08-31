@@ -152,15 +152,18 @@ for (const protectedCall of [
 }
 
 const operationalRoute = read('src/frontend/app/operations/OperationalModuleRoute.tsx');
-for (const protectedCall of [
-  'frontendBackend.uploadOperationalEvidence',
-  'frontendBackend.confirmRelease',
-  'frontendBackend.receiveRestock',
-]) {
-  requireText(operationalRoute, protectedCall, 'OperationalModuleRoute authenticated mutation path');
+const releaseStation = read('src/frontend/app/operations/ReleaseStation.tsx');
+for (const protectedCall of ['frontendBackend.uploadOperationalEvidence', 'frontendBackend.confirmRelease']) {
+  requireText(releaseStation, protectedCall, 'ReleaseStation authenticated mutation path');
 }
+requireText(
+  operationalRoute,
+  'frontendBackend.receiveRestock',
+  'OperationalModuleRoute authenticated mutation path',
+);
 for (const forbidden of ['Synthetic prototype', 'Locally confirmed', 'synthetic fixture']) {
   forbidText(operationalRoute, forbidden, 'OperationalModuleRoute normal runtime');
+  forbidText(releaseStation, forbidden, 'ReleaseStation normal runtime');
 }
 if ((lendingHub.match(/if \(inspection\) \{/gu) ?? []).length < 3) {
   fail('InternalLendingHub inspection-only local demonstrations are no longer explicit');

@@ -288,6 +288,9 @@ test('FI-07 projects the strict lending page, responsive queue, custody actions,
     page.getByText(/Search and status filters apply only to this loaded authoritative page/u),
   ).toBeVisible();
   await expect(page.getByText(/No global lending-ticket total is shown/u)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'For review 1' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ready to claim 1' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Overdue 1' })).toBeVisible();
   expect(
     await page
       .locator('[data-fi07-lending-hub] span')
@@ -305,7 +308,17 @@ test('FI-07 projects the strict lending page, responsive queue, custody actions,
   ).toBeLessThanOrEqual(1);
 
   await page.locator('[data-ticket-trigger="LEND-REVIEW"]:visible').click();
-  await expect(page.locator('[data-lending-inspector]')).toBeVisible();
+  const inspector = page.locator('[data-lending-inspector]');
+  await expect(inspector).toBeVisible();
+  if (['frontend-320', 'frontend-390', 'frontend-768'].includes(testInfo.project.name)) {
+    await expect(inspector).toHaveAttribute('role', 'dialog');
+    await expect(inspector).toHaveAttribute('aria-modal', 'true');
+    await expect(page.locator('.auth-shell__sidebar')).toHaveAttribute('aria-hidden', 'true');
+  } else {
+    await expect(inspector).toHaveAttribute('role', 'complementary');
+    await expect(inspector).not.toHaveAttribute('aria-modal', 'true');
+    await expect(page.locator('.auth-shell__sidebar')).not.toHaveAttribute('aria-hidden', 'true');
+  }
   await expect(
     page
       .locator('[data-lending-inspector]')
@@ -314,6 +327,13 @@ test('FI-07 projects the strict lending page, responsive queue, custody actions,
   ).toBeVisible();
   await page.getByRole('button', { name: 'Review ticket', exact: true }).click();
   const review = page.getByRole('dialog', { name: 'Review LEND-REVIEW' });
+  await expect(page.locator('.auth-shell__sidebar')).toHaveAttribute('aria-hidden', 'true');
+  const reviewSummary = review.getByLabel('Custody consequence summary');
+  await expect(reviewSummary).toContainText('LEND-REVIEW');
+  await expect(reviewSummary).toContainText('FI-07 Angelite');
+  await expect(reviewSummary).toContainText('Marker packs');
+  await expect(reviewSummary).toContainText('4 pack');
+  await expect(reviewSummary).toContainText('does not yet transfer custody');
   await review.getByRole('checkbox', { name: /Identity verified through/u }).check();
   await review.getByRole('button', { name: 'Record server review', exact: true }).click();
   await expect(page.getByText('Server lending review recorded', { exact: true })).toBeVisible();
@@ -330,6 +350,12 @@ test('FI-07 projects the strict lending page, responsive queue, custody actions,
   await page.locator('[data-ticket-trigger="LEND-CLAIM"]:visible').click();
   await page.getByRole('button', { name: 'Confirm issue', exact: true }).click();
   const handoff = page.getByRole('dialog', { name: 'Confirm issue for LEND-CLAIM' });
+  const handoffSummary = handoff.getByLabel('Custody consequence summary');
+  await expect(handoffSummary).toContainText('LEND-CLAIM');
+  await expect(handoffSummary).toContainText('FI-07 USC Office');
+  await expect(handoffSummary).toContainText('Packing tape');
+  await expect(handoffSummary).toContainText('2 pack');
+  await expect(handoffSummary).toContainText('Records a consumable issue');
   await handoff
     .getByRole('checkbox', { name: /I understand this records the physical custody consequence/u })
     .check();
@@ -350,6 +376,12 @@ test('FI-07 projects the strict lending page, responsive queue, custody actions,
     mimeType: 'image/jpeg',
     buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0]),
   });
+  const returnSummary = returnDialog.getByLabel('Custody consequence summary');
+  await expect(returnSummary).toContainText('LEND-RETURN');
+  await expect(returnSummary).toContainText('FI-07 Custodian');
+  await expect(returnSummary).toContainText('Wireless microphone');
+  await expect(returnSummary).toContainText('1 returned · 0 lost · 0 damaged beyond use');
+  await expect(returnSummary).toContainText('fi07-return.jpg');
   await returnDialog
     .getByRole('checkbox', { name: /I confirm the inspected quantities and condition/u })
     .check();

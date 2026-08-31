@@ -35,6 +35,24 @@ const RETURN_CONDITIONS = [
   'LOST',
 ] as const;
 const EVIDENCE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
+const LENDING_LIFECYCLES = [
+  { value: 'FOR_REVIEW', label: 'For review' },
+  { value: 'READY_TO_CLAIM', label: 'Ready to claim' },
+  { value: 'ON_LOAN', label: 'On loan' },
+  { value: 'OVERDUE', label: 'Overdue' },
+  { value: 'RETURNED_COMPLETED', label: 'Returned / completed' },
+] as const;
+const LENDING_MODAL_BACKGROUND = [
+  '.auth-shell__sidebar',
+  '.auth-shell__topbar',
+  '.auth-shell__dock',
+  '[data-fi07-lending-hub] > header',
+  '[data-fi07-lending-hub] > ol',
+  '[data-fi07-lending-hub] > nav',
+  '[data-fi07-lending-hub] > p',
+  '[data-fi07-lending-hub] > section',
+  '[data-lending-queue-background]',
+].join(',');
 
 type Decision = (typeof DECISIONS)[number];
 type ReturnCondition = (typeof RETURN_CONDITIONS)[number];
@@ -343,25 +361,32 @@ export function derivedLendingStatus(
   return Number.isFinite(due) && due < now ? 'OVERDUE' : ticket.status;
 }
 
+export function lendingLifecycleMatches(filter: string, status: string) {
+  if (filter === 'ALL') return true;
+  if (filter === 'RETURNED_COMPLETED') {
+    return ['RETURNED', 'COMPLETED', 'REJECTED', 'CANCELLED'].includes(status);
+  }
+  return filter === status;
+}
+
 function statusClasses(status: string) {
   const values: Record<string, string> = {
-    FOR_REVIEW: 'border-amber-700/30 bg-amber-500/15 text-amber-900',
-    READY_TO_CLAIM: 'border-sky-700/30 bg-sky-500/15 text-sky-900',
-    ON_LOAN: 'border-violet-700/30 bg-violet-500/15 text-violet-900',
-    OVERDUE: 'border-rose-700/30 bg-rose-500/15 text-rose-900',
-    RETURNED: 'border-emerald-700/30 bg-emerald-500/15 text-emerald-900',
-    COMPLETED: 'border-emerald-700/30 bg-emerald-500/15 text-emerald-900',
-    REJECTED: 'border-rose-700/30 bg-rose-500/15 text-rose-900',
+    FOR_REVIEW: 'custody-status--review',
+    READY_TO_CLAIM: 'custody-status--ready',
+    ON_LOAN: 'custody-status--loan',
+    OVERDUE: 'custody-status--overdue',
+    RETURNED: 'custody-status--complete',
+    COMPLETED: 'custody-status--complete',
+    REJECTED: 'custody-status--rejected',
   };
-  return values[status] ?? 'border-stone-500/30 bg-stone-500/10 text-stone-700';
+  return values[status] ?? '';
 }
 
 function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={
-        'inline-flex whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold ' +
-        statusClasses(status)
+        'custody-status whitespace-nowrap px-2.5 py-1 text-[11px] font-semibold ' + statusClasses(status)
       }
     >
       {label(status)}
@@ -595,9 +620,9 @@ function Modal({
   children: ReactNode;
 }) {
   const ref = useRef<HTMLElement | null>(null);
-  useDialogFocusTrap({ open: true, dialogRef: ref });
+  useDialogFocusTrap({ open: true, dialogRef: ref, inertSelector: LENDING_MODAL_BACKGROUND });
   return (
-    <div className="fixed inset-0 z-[90] grid place-items-center bg-black/55 p-4">
+    <div className="fixed inset-0 z-[90] grid place-items-center bg-black/55 p-4" data-lending-dialog>
       <section
         ref={ref}
         role="dialog"
@@ -657,6 +682,44 @@ function KeyValue({ label: keyLabel, value }: { label: string; value: string }) 
   );
 }
 
+function CustodyConsequenceSummary({
+  record,
+  person,
+  item,
+  quantity,
+  consequence,
+  evidence,
+}: {
+  record: string;
+  person: string;
+  item: string;
+  quantity: string;
+  consequence: string;
+  evidence?: string;
+}) {
+  const entries = [
+    ['Record', record],
+    ['Person / recipient', person],
+    ['Item', item],
+    ['Quantity', quantity],
+    ...(evidence ? [['Protected identity / evidence', evidence]] : []),
+    ['Consequence', consequence],
+  ];
+  return (
+    <section className="custody-summary" aria-label="Custody consequence summary">
+      <p className="custody-summary__heading">Review before recording</p>
+      <dl className="custody-summary__grid">
+        {entries.map(([entryLabel, entryValue]) => (
+          <div key={entryLabel}>
+            <dt>{entryLabel}</dt>
+            <dd>{entryValue}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
 export function InternalLendingHub({
   dark,
   navigate,
@@ -682,6 +745,7 @@ export function InternalLendingHub({
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('ALL');
   const [selected, setSelected] = useState<FrontendLendingTicket | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [review, setReview] = useState<ReviewDraft | null>(null);
   const [handoff, setHandoff] = useState<HandoffDraft>({ condition: 'GOOD', note: '', acknowledged: false });
@@ -702,7 +766,19 @@ export function InternalLendingHub({
   useEffect(() => {
     dialogRef.current = dialog;
   }, [dialog]);
-  useDialogFocusTrap({ open: Boolean(selected) && !dialog, dialogRef: inspectorRef });
+  useDialogFocusTrap({
+    open: Boolean(selected) && !dialog && isMobile,
+    dialogRef: inspectorRef,
+    inertSelector: LENDING_MODAL_BACKGROUND,
+  });
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 63.99rem)');
+    const sync = () => setIsMobile(media.matches);
+    sync();
+    media.addEventListener('change', sync);
+    return () => media.removeEventListener('change', sync);
+  }, []);
 
   const restoreQueueFocus = useCallback((ticketId?: string) => {
     requestAnimationFrame(() => {
@@ -805,13 +881,13 @@ export function InternalLendingHub({
   }, [clearSelection, inspection, page, refreshEpoch]);
 
   useEffect(() => {
-    if (!selected && !dialog) return;
+    if (!dialog && !(selected && isMobile)) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = previous;
     };
-  }, [dialog, selected]);
+  }, [dialog, isMobile, selected]);
 
   const closeInspector = useCallback(() => {
     const id = selected?.id;
@@ -836,7 +912,7 @@ export function InternalLendingHub({
     const needle = query.trim().toLowerCase();
     return queue.lendingTickets.filter((ticket) => {
       const status = derivedLendingStatus(ticket, now);
-      const filterMatch = filter === 'ALL' || filter === status || filter === ticket.status;
+      const filterMatch = lendingLifecycleMatches(filter, status);
       const text = [
         ticket.id,
         ticket.borrowerName,
@@ -849,6 +925,20 @@ export function InternalLendingHub({
       return filterMatch && (!needle || text.includes(needle));
     });
   }, [filter, now, query, queue.inventoryItems, queue.lendingTickets]);
+
+  const lifecycleCounts = useMemo(() => {
+    const counts = new Map<string, number>(LENDING_LIFECYCLES.map((entry) => [entry.value, 0]));
+    for (const ticket of queue.lendingTickets) {
+      const status = derivedLendingStatus(ticket, now);
+      for (const lifecycle of LENDING_LIFECYCLES) {
+        if (lendingLifecycleMatches(lifecycle.value, status)) {
+          counts.set(lifecycle.value, (counts.get(lifecycle.value) ?? 0) + 1);
+          break;
+        }
+      }
+    }
+    return counts;
+  }, [now, queue.lendingTickets]);
 
   const selectTicket = useCallback((ticket: FrontendLendingTicket, trigger?: HTMLButtonElement) => {
     if (trigger) triggerRefs.current[ticket.id] = trigger;
@@ -1264,6 +1354,65 @@ export function InternalLendingHub({
   const reviewAllowed = inspection || (canApproveLending && loadState === 'ready');
   const handoffAllowed = inspection || (canHandoffLending && loadState === 'ready');
   const returnAllowed = inspection || (canReturnLending && canUploadLendingEvidence && loadState === 'ready');
+  const reviewQuantity =
+    selected && review
+      ? review.decision === 'REJECT'
+        ? selected.requestedQuantity
+        : numberValue(review.approvedQuantity)
+      : Number.NaN;
+  const reviewQuantityValid = Number.isFinite(reviewQuantity) && reviewQuantity > 0;
+  const reviewAssignmentError =
+    selected && review && review.decision !== 'REJECT' && reviewQuantityValid
+      ? traceableReviewError({
+          item: reviewTargetItem,
+          targetItemId: reviewItemId,
+          candidates: reviewAssets,
+          quantity: reviewQuantity,
+          assetIds: review.assetIds,
+        })
+      : '';
+  const reviewConsequence =
+    selected && review
+      ? review.decision === 'REJECT'
+        ? 'Rejects this lending request. No item is issued and no custody transfer is recorded.'
+        : !review.identityVerified
+          ? 'Confirm the approved borrower identity source before approval. This review does not yet transfer custody.'
+          : !reviewQuantityValid
+            ? 'Enter a valid approved quantity before recording this review. No custody transfer occurs during review.'
+            : review.decision === 'APPROVE' && reviewQuantity !== selected.requestedQuantity
+              ? `Approve full request requires ${selected.requestedQuantity} ${selected.unit}. No custody transfer occurs during review.`
+              : review.decision === 'PARTIAL_APPROVE' && reviewQuantity >= selected.requestedQuantity
+                ? `Partial approval must be below ${selected.requestedQuantity} ${selected.unit}. No custody transfer occurs during review.`
+                : reviewAssignmentError
+                  ? `${reviewAssignmentError} No custody transfer occurs during review.`
+                  : review.decision === 'PARTIAL_APPROVE'
+                    ? `Approves ${reviewQuantity} ${selected.unit} for later claim. This review does not yet transfer custody.`
+                    : review.decision === 'SUBSTITUTE'
+                      ? 'Approves the selected substitute for later claim. This review does not yet transfer custody.'
+                      : 'Approves the full request for later claim. This review does not yet transfer custody.'
+      : '';
+  const returnedQuantity = returnState ? numberValue(returnState.returned) : Number.NaN;
+  const lostQuantity = returnState ? numberValue(returnState.lost) : Number.NaN;
+  const damagedQuantity = returnState ? numberValue(returnState.damaged) : Number.NaN;
+  const returnDraftError =
+    selected && returnState
+      ? returnReconciliationError({
+          quantity: selected.quantity,
+          returned: returnedQuantity,
+          lost: lostQuantity,
+          damaged: damagedQuantity,
+          condition: returnState.condition,
+          note: returnState.note,
+          item: selectedItem,
+        })
+      : '';
+  const returnOutcome =
+    selected && returnState && [returnedQuantity, lostQuantity, damagedQuantity].every(Number.isFinite)
+      ? `${returnedQuantity} returned · ${lostQuantity} lost · ${damagedQuantity} damaged beyond use`
+      : '';
+  const returnConsequence = returnDraftError
+    ? `${returnDraftError} No custody update will be recorded with this draft.`
+    : 'Records the inspected return outcome and updates custody only after evidence, lifecycle, quantity, and server authorization checks succeed.';
   const inputClass =
     'min-h-11 w-full rounded-lg border border-[var(--border-paper)] bg-[var(--paper-light)] px-3 py-2 text-sm text-[var(--ink-deep)]';
   const quietButton =
@@ -1273,7 +1422,7 @@ export function InternalLendingHub({
 
   return (
     <main
-      className="max-w-full space-y-4 overflow-x-hidden text-[var(--ink-deep)]"
+      className="custody-workspace max-w-full space-y-4 overflow-x-hidden text-[var(--ink-deep)]"
       data-fi07-lending-hub
       data-fi07-mode={inspection ? 'preview' : 'authenticated'}
       data-theme={dark ? 'dark' : 'light'}
@@ -1309,6 +1458,29 @@ export function InternalLendingHub({
           </li>
         ))}
       </ol>
+
+      <nav className="custody-lifecycle" aria-label="Loaded lending lifecycle">
+        <button
+          type="button"
+          aria-pressed={filter === 'ALL'}
+          onClick={() => setFilter('ALL')}
+          className="px-3 text-xs font-semibold"
+        >
+          All loaded <span className="ml-1 font-mono">{queue.lendingTickets.length}</span>
+        </button>
+        {LENDING_LIFECYCLES.map((lifecycle) => (
+          <button
+            type="button"
+            key={lifecycle.value}
+            aria-pressed={filter === lifecycle.value}
+            onClick={() => setFilter(lifecycle.value)}
+            className="px-3 text-xs font-semibold"
+          >
+            {lifecycle.label}{' '}
+            <span className="ml-1 font-mono">{lifecycleCounts.get(lifecycle.value) ?? 0}</span>
+          </button>
+        ))}
+      </nav>
 
       {loadState === 'refreshing' ? (
         <p role="status" className="flex items-center gap-2 text-sm text-[var(--ink-mid)]">
@@ -1383,6 +1555,7 @@ export function InternalLendingHub({
           <section
             className="min-w-0 rounded-xl border border-[var(--border-paper)] bg-[var(--paper-mid)] p-4"
             aria-labelledby="fi07-queue-heading"
+            data-lending-queue-background
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -1401,7 +1574,7 @@ export function InternalLendingHub({
               Search and status filters apply only to this loaded page. A total is not shown because it cannot
               be confirmed for lending tickets.
             </p>
-            <div className="mt-4 grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(10rem,.42fr)_auto]">
+            <div className="mt-4 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
               <label className="grid gap-1 text-xs font-semibold text-[var(--ink-mid)]">
                 <span>Search loaded tickets</span>
                 <span className="flex min-h-11 items-center gap-2 rounded-lg border border-[var(--border-paper)] bg-[var(--paper-light)] px-3">
@@ -1418,27 +1591,9 @@ export function InternalLendingHub({
                   />
                 </span>
               </label>
-              <label className="grid gap-1 text-xs font-semibold text-[var(--ink-mid)]">
-                <span>Lifecycle</span>
-                <select
-                  className={inputClass}
-                  aria-label="Filter loaded lending tickets by lifecycle"
-                  value={filter}
-                  onChange={(event) => setFilter(event.target.value)}
-                >
-                  <option value="ALL">All loaded states</option>
-                  <option value="FOR_REVIEW">For review</option>
-                  <option value="READY_TO_CLAIM">Ready to claim</option>
-                  <option value="ON_LOAN">On loan</option>
-                  <option value="OVERDUE">Overdue</option>
-                  <option value="RETURNED">Returned</option>
-                  <option value="COMPLETED">Issued</option>
-                  <option value="REJECTED">Rejected</option>
-                </select>
-              </label>
               <button
                 type="button"
-                className={quietButton}
+                className={quietButton + ' self-end'}
                 onClick={() => {
                   setQuery('');
                   setFilter('ALL');
@@ -1612,12 +1767,12 @@ export function InternalLendingHub({
           {selected ? (
             <aside
               ref={inspectorRef}
-              role={dialog ? undefined : 'dialog'}
-              aria-modal={dialog ? undefined : true}
+              role={dialog ? undefined : isMobile ? 'dialog' : 'complementary'}
+              aria-modal={dialog ? undefined : isMobile ? true : undefined}
               aria-hidden={dialog ? true : undefined}
               aria-labelledby="fi07-ticket-title"
               data-lending-inspector
-              tabIndex={-1}
+              tabIndex={isMobile ? -1 : undefined}
               className="shell-sheet--responsive fixed inset-0 z-50 overflow-auto border-[var(--border-paper)] bg-[var(--paper-mid)] p-4 lg:sticky lg:top-4 lg:z-auto lg:max-h-[calc(100vh-2rem)] lg:rounded-xl lg:border"
             >
               <div className="flex items-start justify-between gap-4">
@@ -2033,6 +2188,26 @@ export function InternalLendingHub({
                 }
               />
             </Field>
+            <CustodyConsequenceSummary
+              record={selected.id}
+              person={borrowerLabel(selected)}
+              item={reviewTargetItem?.name ?? 'Item selection incomplete'}
+              quantity={
+                review.decision === 'REJECT'
+                  ? `${selected.requestedQuantity} ${selected.unit} requested · rejected`
+                  : reviewQuantityValid
+                    ? `${reviewQuantity} ${selected.unit}`
+                    : 'Quantity not complete'
+              }
+              evidence={
+                review.decision === 'REJECT'
+                  ? 'Not required for rejection'
+                  : review.identityVerified
+                    ? reviewIdentity.label
+                    : 'Identity verification not confirmed'
+              }
+              consequence={reviewConsequence}
+            />
             {inlineError ? (
               <p
                 role="alert"
@@ -2112,6 +2287,22 @@ export function InternalLendingHub({
                 onChange={(event) => setHandoff((current) => ({ ...current, note: event.target.value }))}
               />
             </Field>
+            <CustodyConsequenceSummary
+              record={selected.id}
+              person={borrowerLabel(selected)}
+              item={selectedItem?.name ?? 'Item details unavailable'}
+              quantity={`${selected.quantity} ${selected.unit}`}
+              evidence={
+                selected.eligibilitySource
+                  ? identityFor(selected).label
+                  : 'Approved identity source not reported'
+              }
+              consequence={
+                selected.ticketType === 'CONSUMABLE'
+                  ? 'Records a consumable issue and completes this ticket. The item is not placed on returnable loan.'
+                  : 'Transfers reusable custody to this borrower and places the approved quantity on loan until a governed return is recorded.'
+              }
+            />
             <label className="flex gap-2 rounded-lg border border-[var(--border-paper)] bg-[var(--paper-light)] p-3 text-xs leading-5">
               <input
                 className="mt-0.5 h-4 w-4 shrink-0"
@@ -2285,6 +2476,24 @@ export function InternalLendingHub({
                 Return evidence has been securely staged and will be linked to this governed return.
               </p>
             ) : null}
+            <CustodyConsequenceSummary
+              record={selected.id}
+              person={borrowerLabel(selected)}
+              item={selectedItem?.name ?? 'Item details unavailable'}
+              quantity={returnOutcome || 'Return quantities not complete'}
+              evidence={`${
+                selected.eligibilitySource
+                  ? identityFor(selected).label
+                  : 'Approved identity source not reported'
+              } · ${
+                inspection
+                  ? 'Sample evidence only · no upload'
+                  : returnState.evidence
+                    ? 'Governed evidence stored and ready to link'
+                    : returnState.file?.name || 'Evidence not selected'
+              }`}
+              consequence={returnConsequence}
+            />
             <label className="flex gap-2 rounded-lg border border-[var(--border-paper)] bg-[var(--paper-light)] p-3 text-xs leading-5">
               <input
                 className="mt-0.5 h-4 w-4 shrink-0"

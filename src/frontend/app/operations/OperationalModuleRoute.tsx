@@ -5,6 +5,18 @@ import {
   type FrontendOperationalModuleBootstrap,
   type FrontendOperationalModuleName,
 } from '../../integration/backend';
+import { ReleaseHistory } from './ReleaseHistory';
+import { ReleaseStation } from './ReleaseStation';
+import {
+  evidenceError,
+  numberValue,
+  operationalClientRequestId,
+  readAsDataUrl,
+  readable,
+  textValue,
+} from './operationUtils';
+
+export { operationalClientRequestId } from './operationUtils';
 
 /* Hallmark · design-system: DESIGN.md · macrostructure: Workbench · mode: operate */
 
@@ -12,70 +24,24 @@ type LoadState = 'loading' | 'ready' | 'denied' | 'unavailable';
 type RecordRow = Record<string, unknown>;
 type CommitNotice = { tone: 'success' | 'error' | 'warning'; message: string };
 
-const EVIDENCE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
-
-function value(row: RecordRow, keys: string[]) {
-  for (const key of keys) {
-    if (row[key] !== undefined && row[key] !== null) return row[key];
-  }
-  return undefined;
-}
-
-function textValue(row: RecordRow, keys: string[]) {
-  const candidate = value(row, keys);
-  return typeof candidate === 'string' ? candidate.trim() : '';
-}
-
-function numberValue(row: RecordRow, keys: string[]) {
-  const candidate = Number(value(row, keys));
-  return Number.isFinite(candidate) ? candidate : 0;
-}
-
-export function operationalClientRequestId(kind: string, values: Array<string | number | boolean>) {
-  let hash = 2166136261;
-  for (const character of [kind, ...values.map(String)].join('|')) {
-    hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
-  }
-  return `p08-${kind}-${(hash >>> 0).toString(36)}`;
-}
-
-function evidenceError(file: File | null) {
-  if (!file) return 'Select a governed photo or PDF before recording this operation.';
-  if (!EVIDENCE_TYPES.has(file.type)) return 'Use a JPG, PNG, WEBP, or PDF evidence file.';
-  if (file.size <= 0) return 'The selected evidence file is empty.';
-  if (file.size > 10 * 1024 * 1024) return 'The selected evidence file exceeds the 10 MB limit.';
-  return '';
-}
-
-function readAsDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('The evidence file could not be read.'));
-    reader.onload = () => resolve(String(reader.result ?? ''));
-    reader.readAsDataURL(file);
-  });
-}
-
 const ROUTE_COPY: Record<
   FrontendOperationalModuleName,
   { title: string; summary: string; collections: string[] }
 > = {
   overview: {
     title: 'Current operational picture',
-    summary:
-      'Review the requests, events, inventory, and work queues currently authorized for this account.',
+    summary: 'Review the requests, events, inventory, and work queues currently authorized for this account.',
     collections: ['requests', 'events', 'inventoryItems', 'requestLines'],
   },
   release: {
-    title: 'Physical release records',
+    title: 'Release Desk',
     summary:
-      'Review ready work and recorded releases. This route does not invent or simulate a custody change.',
+      'Select one ready record, identify the recipient, review the exact custody consequence, and let the server recheck authority before recording the handoff.',
     collections: ['releaseConfirmations', 'requests', 'lendingTickets', 'releaseCorrections'],
   },
   restocking: {
     title: 'Restocking and receiving',
-    summary:
-      'Review restock requests, receipts, and canvass references from the current authorized records.',
+    summary: 'Review restock requests, receipts, and canvass references from the current authorized records.',
     collections: ['restockRequests', 'restockRecords', 'canvassReferences', 'inventoryItems'],
   },
   procurement: {
@@ -107,15 +73,6 @@ function scalar(row: RecordRow, keys: string[]) {
     if (typeof value === 'number' && Number.isFinite(value)) return String(value);
   }
   return '';
-}
-
-function readable(value: string) {
-  return value
-    ? value
-        .replaceAll('_', ' ')
-        .toLowerCase()
-        .replace(/\b\w/gu, (letter) => letter.toUpperCase())
-    : 'Not reported';
 }
 
 function rowPresentation(row: RecordRow, index: number) {
@@ -208,254 +165,22 @@ function Collection({ name, rows }: { name: string; rows: RecordRow[] }) {
   );
 }
 
-function MutationNotice({ notice }: { notice: CommitNotice | null }) {
+function MutationNotice({
+  notice,
+  releaseBackground = false,
+}: {
+  notice: CommitNotice | null;
+  releaseBackground?: boolean;
+}) {
   if (!notice) return null;
-  const tone =
-    notice.tone === 'success'
-      ? 'border-emerald-700/30 bg-emerald-500/10'
-      : notice.tone === 'warning'
-        ? 'border-amber-700/30 bg-amber-500/10'
-        : 'border-rose-700/30 bg-rose-500/10';
   return (
     <div
-      className={`mb-5 border px-4 py-3 text-sm ${tone}`}
+      className={`custody-notice custody-notice--${notice.tone} mb-5 px-4 py-3 text-sm`}
       role={notice.tone === 'error' ? 'alert' : 'status'}
+      data-release-station-background={releaseBackground ? true : undefined}
     >
       {notice.message}
     </div>
-  );
-}
-
-function ReleaseWorkflow({
-  bootstrap,
-  enabled,
-  onCommitted,
-}: {
-  bootstrap: FrontendOperationalModuleBootstrap;
-  enabled: boolean;
-  onCommitted: (message: string) => void;
-}) {
-  const candidates = useMemo(() => {
-    const requests = new Map((bootstrap.data.requests ?? []).map((row) => [textValue(row, ['id']), row]));
-    return (bootstrap.data.requestLines ?? [])
-      .filter((row) => ['READY_TO_RELEASE', 'PARTIALLY_RELEASED'].includes(textValue(row, ['status'])))
-      .map((row) => {
-        const requestId = textValue(row, ['requestId', 'request_id']);
-        const requested = numberValue(row, ['quantity', 'requestedQuantity', 'requested_quantity']);
-        const released = numberValue(row, ['releasedQuantity', 'released_quantity']);
-        return {
-          id: textValue(row, ['id']),
-          requestId,
-          description:
-            textValue(row, ['description']) ||
-            textValue(requests.get(requestId) ?? {}, ['purpose']) ||
-            requestId,
-          department: textValue(requests.get(requestId) ?? {}, ['department']),
-          unit: textValue(row, ['unit']),
-          remaining: Math.max(0, requested - released),
-        };
-      })
-      .filter((row) => row.id && row.requestId && row.remaining > 0);
-  }, [bootstrap]);
-  const [selectedId, setSelectedId] = useState('');
-  const selected = candidates.find((row) => row.id === selectedId) ?? candidates[0] ?? null;
-  const [quantity, setQuantity] = useState('');
-  const [recipientName, setRecipientName] = useState('');
-  const [recipientRole, setRecipientRole] = useState('');
-  const [department, setDepartment] = useState('');
-  const [notes, setNotes] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [notice, setNotice] = useState<CommitNotice | null>(null);
-
-  useEffect(() => {
-    if (!selected) return;
-    setQuantity(String(selected.remaining));
-    setDepartment(selected.department);
-  }, [selected?.id, selected?.remaining, selected?.department]);
-
-  const submit = async () => {
-    if (!selected || submitting) return;
-    const amount = Number(quantity);
-    const fileProblem = evidenceError(file);
-    if (!Number.isFinite(amount) || amount <= 0 || amount > selected.remaining) {
-      setNotice({ tone: 'error', message: `Enter a release quantity from 1 through ${selected.remaining}.` });
-      return;
-    }
-    if (!recipientName.trim() || !recipientRole.trim() || !department.trim()) {
-      setNotice({ tone: 'error', message: 'Recipient name, role, and department are required.' });
-      return;
-    }
-    if (fileProblem || !file) {
-      setNotice({ tone: 'error', message: fileProblem });
-      return;
-    }
-    setSubmitting(true);
-    setNotice(null);
-    try {
-      const evidence = await frontendBackend.uploadOperationalEvidence({
-        evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
-        relatedEntityType: 'RELEASE_REQUEST',
-        relatedEntityId: selected.requestId,
-        requestId: selected.requestId,
-        originalFileName: file.name,
-        mimeType: file.type,
-        base64: await readAsDataUrl(file),
-        clientRequestId: operationalClientRequestId('release-evidence', [
-          selected.requestId,
-          file.name,
-          file.size,
-          file.lastModified,
-        ]),
-      });
-      const receipt = await frontendBackend.confirmRelease({
-        requestId: selected.requestId,
-        recipientConfirmed: true,
-        recipientName: recipientName.trim(),
-        recipientRole: recipientRole.trim(),
-        department: department.trim(),
-        evidenceId: evidence.evidenceId,
-        lines: [{ requestLineId: selected.id, quantity: amount }],
-        notes: notes.trim(),
-        clientRequestId: operationalClientRequestId('release', [
-          bootstrap.scopeRevision.token,
-          selected.requestId,
-          selected.id,
-          amount,
-          recipientName.trim(),
-          recipientRole.trim(),
-          department.trim(),
-          evidence.evidenceId,
-          notes.trim(),
-        ]),
-      });
-      onCommitted(
-        `${receipt.status === 'COMPLETED' ? 'Full' : 'Partial'} release recorded. The queue, reservation coverage, and inventory records were reloaded.`,
-      );
-    } catch (error) {
-      const conflict = error instanceof FrontendApiError && error.status === 409;
-      setNotice({
-        tone: conflict ? 'warning' : 'error',
-        message: conflict
-          ? 'The release state changed or this command conflicts with the current reservation. Reload before trying again.'
-          : error instanceof FrontendApiError
-            ? error.message
-            : 'The release could not be recorded. No local success was assumed.',
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <section
-      className="mb-6 border-y border-border bg-card/40 px-4 py-5"
-      aria-labelledby="release-operation-title"
-    >
-      <p className="text-xs font-bold uppercase tracking-[.14em]">Custody operation</p>
-      <h2 id="release-operation-title" className="mt-1 font-serif text-2xl">
-        Record a physical release
-      </h2>
-      {!enabled ? (
-        <p className="mt-3 text-sm opacity-75">
-          This account can view the queue but cannot record releases or upload the required evidence.
-        </p>
-      ) : !candidates.length ? (
-        <p className="mt-3 text-sm opacity-75">
-          No request line in this authorized page is ready for physical release.
-        </p>
-      ) : (
-        <div className="mt-4 grid gap-3 lg:grid-cols-2">
-          <label className="grid gap-1 text-sm font-semibold">
-            Ready request line
-            <select
-              className="min-h-11 border border-border bg-background px-3"
-              value={selected?.id ?? ''}
-              onChange={(event) => setSelectedId(event.target.value)}
-            >
-              {candidates.map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.description} · {row.remaining} {row.unit} remaining
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-1 text-sm font-semibold">
-            Quantity to release
-            <input
-              className="min-h-11 border border-border bg-background px-3"
-              type="number"
-              min="1"
-              max={selected?.remaining ?? 1}
-              step="1"
-              value={quantity}
-              onChange={(event) => setQuantity(event.target.value)}
-            />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold">
-            Recipient name
-            <input
-              className="min-h-11 border border-border bg-background px-3"
-              value={recipientName}
-              onChange={(event) => setRecipientName(event.target.value)}
-            />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold">
-            Recipient role
-            <input
-              className="min-h-11 border border-border bg-background px-3"
-              value={recipientRole}
-              onChange={(event) => setRecipientRole(event.target.value)}
-            />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold">
-            Department
-            <input
-              className="min-h-11 border border-border bg-background px-3"
-              value={department}
-              onChange={(event) => setDepartment(event.target.value)}
-            />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold">
-            Release evidence
-            <input
-              className="min-h-11 border border-border bg-background px-3 py-2"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,application/pdf"
-              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-            />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold lg:col-span-2">
-            Operational note
-            <textarea
-              className="min-h-20 border border-border bg-background px-3 py-2"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-            />
-          </label>
-          <div className="flex flex-wrap gap-2 lg:col-span-2">
-            <button
-              type="button"
-              className="min-h-11 border border-border px-4 font-semibold"
-              onClick={() => selected && setQuantity(String(selected.remaining))}
-            >
-              Record full remaining quantity
-            </button>
-            <button
-              type="button"
-              className="min-h-11 bg-primary px-4 font-semibold text-primary-foreground disabled:opacity-60"
-              disabled={submitting}
-              onClick={() => void submit()}
-            >
-              {submitting ? 'Recording release…' : 'Confirm recipient and release'}
-            </button>
-          </div>
-          <div className="lg:col-span-2">
-            <MutationNotice notice={notice} />
-          </div>
-        </div>
-      )}
-    </section>
   );
 }
 
@@ -726,8 +451,14 @@ export function OperationalModuleRoute({
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-7 md:px-8 md:py-9" data-operational-module={module}>
-      <header className="mb-6 border-b border-border pb-6">
+    <div
+      className="custody-workspace mx-auto w-full max-w-[1440px] px-4 py-7 md:px-8 md:py-9"
+      data-operational-module={module}
+    >
+      <header
+        className="mb-6 border-b border-border pb-6"
+        data-release-station-background={module === 'release' ? true : undefined}
+      >
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-3xl">
             <h1 className="font-serif text-3xl leading-tight sm:text-4xl md:text-5xl">{copy.title}</h1>
@@ -735,7 +466,7 @@ export function OperationalModuleRoute({
           </div>
           <div className="text-right text-xs opacity-70">
             <p className="font-bold uppercase tracking-[.12em]">
-              Current records ·{' '}
+              {module === 'release' ? 'Focused station' : 'Current records'} ·{' '}
               {mutationEnabled && ['release', 'restocking'].includes(module)
                 ? 'operational writes enabled'
                 : 'read-only'}
@@ -776,25 +507,32 @@ export function OperationalModuleRoute({
         </section>
       ) : (
         <>
-          <MutationNotice notice={commitNotice} />
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-y border-border bg-muted/40 px-4 py-3 text-sm">
-            <span>
-              <strong>{totalRows}</strong> authorized rows across {collections.length} operational collections
-            </span>
-            <span className="opacity-70">
-              Record version {bootstrap?.scopeRevision.token} · page {bootstrap?.pagination.page}
-            </span>
-          </div>
+          <MutationNotice notice={commitNotice} releaseBackground={module === 'release'} />
+          {module !== 'release' ? (
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-y border-border bg-muted/40 px-4 py-3 text-sm">
+              <span>
+                <strong>{totalRows}</strong> authorized rows across {collections.length} operational
+                collections
+              </span>
+              <span className="opacity-70">
+                Record version {bootstrap?.scopeRevision.token} · page {bootstrap?.pagination.page}
+              </span>
+            </div>
+          ) : null}
           {module === 'release' && bootstrap ? (
-            <ReleaseWorkflow bootstrap={bootstrap} enabled={mutationEnabled} onCommitted={commit} />
+            <ReleaseStation bootstrap={bootstrap} enabled={mutationEnabled} onCommitted={commit} />
           ) : module === 'restocking' && bootstrap ? (
             <RestockWorkflow bootstrap={bootstrap} enabled={mutationEnabled} onCommitted={commit} />
           ) : null}
-          <div className="grid gap-4 xl:grid-cols-2">
-            {collections.map((collection) => (
-              <Collection key={collection.name} name={collection.name} rows={collection.rows} />
-            ))}
-          </div>
+          {module === 'release' && bootstrap ? (
+            <ReleaseHistory bootstrap={bootstrap} />
+          ) : (
+            <div className="grid gap-4 xl:grid-cols-2">
+              {collections.map((collection) => (
+                <Collection key={collection.name} name={collection.name} rows={collection.rows} />
+              ))}
+            </div>
+          )}
           {module !== 'overview' && module !== 'release' && module !== 'restocking' ? (
             <aside className="mt-5 border-t border-dashed border-border px-1 pt-4 text-sm opacity-75">
               This page is read-only because no approved update action is available for this record.

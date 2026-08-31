@@ -9,6 +9,7 @@
 @import './operations-overview.css';
 @import './inventory-workspace.css';
 @import './request-hub.css';
+@import './custody-workspaces.css';
 
 html,body,#root{max-width:100%;overflow-x:clip}
 /* Removes the 300ms double-tap zoom delay on touch without disabling pinch zoom. */
