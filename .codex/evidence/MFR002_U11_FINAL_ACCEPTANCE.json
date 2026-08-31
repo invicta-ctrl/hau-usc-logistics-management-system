@@ -1,0 +1,263 @@
+{
+  "schemaVersion": 1,
+  "milestone": "MFR002_U11_FINAL_ACCEPTANCE",
+  "status": "PASS",
+  "finalState": "READY_FOR_EARL_MOBILE_FIRST_ANNOTATION",
+  "completedAt": "2026-08-31T23:34:10.878Z",
+  "authority": "HAU-USC-MFR002-U11-VISUAL-RECOVERY-A1",
+  "designDirection": "CIVIC_LEDGER_WORKBENCH",
+  "protectedTruth": "U00_U10_FUNCTIONAL_BACKEND_AUTHORIZATION_SCHEMA_AND_PROVIDER_TRUTH_PRESERVED",
+  "git": {
+    "branch": "work/playground-mfr002-final",
+    "baseBranch": "Playground",
+    "start": {
+      "commit": "de2bc3b032550763d86345cfdfd9458a56a7a03e",
+      "tree": "d40d7ced406845e9c39b6975c436b23a616e11ea"
+    },
+    "sourceCheckpoint": "176f8ad04b90fbbb03a3579ba98eb076a525b4a7",
+    "deploymentCandidate": {
+      "commit": "fb9a670ab5b19a223fdfcc0ffba0549923fcb9c0",
+      "tree": "e48e1ebc205a029551821752fbcd4ca80aa1410c",
+      "remoteParity": "PASS"
+    },
+    "finalReceiptCommit": "COMMIT_CONTAINING_THIS_RECORD",
+    "publication": "NON_FORCE_ORIGIN_PLAYGROUND"
+  },
+  "artifact": {
+    "buildMode": "staging",
+    "indexHtmlSha256": "5e50f9863471fd7eebb03fd930d98b6ee931edf39a5d21240b5e7800973703ff",
+    "files": 9,
+    "bytes": 36998494,
+    "candidateBinding": "PASS"
+  },
+  "routeCoverage": {
+    "surfaces": 16,
+    "redesign": [
+      "Landing",
+      "Track Record",
+      "Public Lending",
+      "Staff Sign In",
+      "External Request Center",
+      "Operations Overview",
+      "Internal Request Hub",
+      "Release Desk",
+      "Restocking",
+      "Procurement",
+      "Administration",
+      "Playground Index"
+    ],
+    "refine": [
+      "Inventory",
+      "Internal Lending Hub",
+      "Events"
+    ],
+    "keepWithProof": [
+      "Account Profile"
+    ]
+  },
+  "browser": {
+    "beforeEvidence": "PRIVATE_PRESERVED_OUTSIDE_GIT",
+    "afterEvidence": {
+      "status": "PASS",
+      "routes": 16,
+      "widths": [
+        390,
+        1440
+      ],
+      "screenshots": 32,
+      "immutableHashes": true,
+      "private": true
+    },
+    "structuralWidths": [
+      320,
+      390,
+      768,
+      1024,
+      1440
+    ],
+    "frontendMatrix": {
+      "command": "npm.cmd run test:e2e:frontend",
+      "port": 4173,
+      "passed": 446,
+      "skipped": 94,
+      "failed": 0
+    },
+    "liveAcceptance": {
+      "status": "PASS",
+      "widths": [
+        390,
+        1440
+      ],
+      "authenticatedRoutesPerWidth": 11,
+      "supportedPublicFlows": true,
+      "exactRuntimeIdentity": true,
+      "failures": 0
+    },
+    "overflowFailures": 0,
+    "consoleErrors": 0,
+    "failedRequests": 0
+  },
+  "accessibility": {
+    "contrast": {
+      "command": "npm.cmd run design:contrast",
+      "passed": 66,
+      "failed": 0
+    },
+    "mobileAuditWidths": [
+      375,
+      414
+    ],
+    "reducedMotion": "PASS",
+    "focusAndKeyboard": "PASS",
+    "semanticHeadingAndLandmarkGuards": "PASS"
+  },
+  "motion": {
+    "durationRangeMs": [
+      120,
+      280
+    ],
+    "properties": [
+      "transform",
+      "opacity"
+    ],
+    "reducedMotionStaticPath": true
+  },
+  "releaseGate": {
+    "command": "npm.cmd run check:release-candidate",
+    "status": "PASS",
+    "stages": [
+      "governance",
+      "continuation",
+      "eslint",
+      "application-build",
+      "unit-and-integration-tests",
+      "apps-script-checks",
+      "distribution-verification",
+      "cloudflare-types",
+      "cloudflare-build",
+      "hero-integrity",
+      "cloudflare-dry-run"
+    ],
+    "lintErrors": 0,
+    "knownPreExistingWarnings": 1
+  },
+  "performance": {
+    "evidence": ".codex/evidence/MFR002_U11_FINAL_PERFORMANCE.json",
+    "commit": "176f8ad04b90fbbb03a3579ba98eb076a525b4a7",
+    "initialTransferBytes": {
+      "before": 96174,
+      "after": 105347,
+      "changePercent": 9.54,
+      "alarmPercent": 15,
+      "status": "PASS"
+    },
+    "indexReadyMs": {
+      "desktop1440": {
+        "before": 128,
+        "after": 125
+      },
+      "olderLaptop1440": {
+        "before": 805,
+        "after": 636
+      },
+      "midrangeMobile390": {
+        "before": 792,
+        "after": 729
+      },
+      "slowerNetwork390": {
+        "before": 1032,
+        "after": 1027
+      }
+    },
+    "cls": {
+      "before": 0,
+      "after": 0
+    },
+    "status": "PASS"
+  },
+  "deployment": {
+    "target": "ISOLATED_STAGING_PLAYGROUND",
+    "sourceCommit": "fb9a670ab5b19a223fdfcc0ffba0549923fcb9c0",
+    "sourceTree": "e48e1ebc205a029551821752fbcd4ca80aa1410c",
+    "privatePreflight": "PASS",
+    "rollbackVersionVerified": true,
+    "authenticationVerified": true,
+    "status": "PASS"
+  },
+  "reset": {
+    "startingGeneration": 8,
+    "initialTimestampAttempt": {
+      "status": "FAIL_CLOSED",
+      "phase": "R2_RECONCILIATION",
+      "finding": "HISTORICAL_POINT_RESOLVED_TO_OLDER_DIRTY_EVIDENCE_REFERENCE_SHAPE",
+      "r2Mutation": "NONE",
+      "recoveryEvidenceRetained": true
+    },
+    "recovery": {
+      "method": "EXACT_MANIFEST_HASHED_PRIVATE_COVERAGE_V2_BASELINE_DATABASE",
+      "localPreflight": "PASS",
+      "firstReset": "PASS",
+      "firstCanaryInvalidated": true,
+      "postResetCoreRouteSmoke": "PASS",
+      "secondReset": "PASS",
+      "secondCanaryInvalidated": true,
+      "finalRuntimeSmoke": "PASS"
+    },
+    "final": {
+      "generation": 9,
+      "baselineVersion": 2,
+      "schemaVersion": "32",
+      "latestMigration": "0032_staff_account_activity_history.sql",
+      "workingState": "CLEAN",
+      "sessions": 0,
+      "transients": 0,
+      "foreignKeyViolations": 0,
+      "privacySafeEvidenceReferences": {
+        "safe": 2,
+        "total": 2
+      },
+      "reversibleBookmarkAvailable": true,
+      "lastResetTimestampResolvable": true
+    }
+  },
+  "r2": {
+    "inspection": "PASS",
+    "brand": {
+      "baselineCount": 7,
+      "workingCount": 7,
+      "parity": "PASS"
+    },
+    "governedEvidence": {
+      "baselineCount": 2,
+      "workingCount": 2,
+      "parity": "PASS"
+    },
+    "fullEvidenceBucket": {
+      "baselineCount": 4,
+      "workingCount": 20,
+      "parity": "DIFFERENT_NON_GOVERNED_OBJECTS_RETAINED_BY_POLICY"
+    },
+    "temporaryInspectionWorkerRemoved": true
+  },
+  "securityPrivacy": {
+    "stagedChangedLineHighConfidenceSecretScan": "NO_MATCHES",
+    "privateEvidenceCommitted": false,
+    "privateProviderIdentifiersCommitted": false,
+    "productionMutation": "NONE",
+    "mainMutation": "NONE",
+    "googleMutation": "NONE",
+    "emailMutation": "NONE",
+    "figmaMutation": "NONE"
+  },
+  "protectedTargets": {
+    "main": {
+      "commit": "f7e5bf83205dbe58b5fb72126a4456747d92e906",
+      "tree": "480cf65cb9ec07fbab729f0588023e120cf3f97a",
+      "mutation": "NONE"
+    },
+    "production": {
+      "mutation": "NONE"
+    }
+  },
+  "stop": "U11_COMPLETE_NO_FURTHER_AUTOMATED_WORK_AUTHORIZED"
+}
