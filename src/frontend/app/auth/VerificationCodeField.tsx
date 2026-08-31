@@ -69,6 +69,10 @@ export function VerificationCodeField({
     if (failed) inputRef.current?.focus();
   }, [failed, state]);
 
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
   const busy = state === "verifying" || state === "resending";
 
   return (

@@ -406,11 +406,10 @@ scoped to a prototype tokens file. The only file R3-A1-A2 changed under
 `.impeccable/` is `design.json` — the sidecar refresh — not the suppression
 config.
 
-One item is deliberately left open and is recorded, not hidden: the
-account-panel pair (`AccountAccessPanel`, `AccountRecoveryPanel`) is still
-light-mode only, sharing literal surfaces. Converting them is a change to the
-**pair** — tokenising one would create a visible inconsistency between two panels
-that render in the same slot. Tracked as the remaining half of `FE-R3-013`.
+At the time of this audit, one item remained open: the account-panel pair was
+light-mode only. MFR-002 U04 subsequently migrated both panels together to the
+generated semantic theme roles, closing the remaining half of `FE-R3-013`
+without creating a mismatched intermediate state.
 
 `IMPECCABLE_FINAL` **PASS**.
 
@@ -455,14 +454,14 @@ controls stay enabled until the request starts.
   needed". Discovering a sign-in wall only after committing to a flow is the
   defect this prevents.
 
-**Count: 0 critical · 0 major · 2 minor.**
+**Original audit count: 0 critical · 0 major · 2 minor. Both recorded minors are now closed.**
 
 Minor, recorded against owning slices rather than fixed here:
 
 | ID | Minor finding | Owner |
 |---|---|---|
-| FE-R3-013 | The account-panel pair remains light-mode only with shared literal surfaces | FI-12 |
-| FE-R3-011 | No type ramp exists; components still use ten ad-hoc literal steps | FI-12 / FI-13 |
+| FE-R3-013 | **Closed by MFR-002 U04.** The account-panel pair is theme-aware and retains literal values only as fallbacks. | CLOSED |
+| FE-R3-011 | **Closed by MFR-002 U02 + U04.** The generated type/radius foundation is active and Public Lending consumes its roles. | CLOSED |
 
 `HALLMARK_PASS` **PASS** · `TASTE_PASS_OR_FINDINGS_RECORDED` **PASS**.
 

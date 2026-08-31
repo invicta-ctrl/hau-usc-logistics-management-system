@@ -47,37 +47,25 @@ const COPY: Record<RecoveryMode, { title: string; lede: string; submit: string; 
 const GENERIC_CONFIRMATION =
   "If this account exists, a verification code has been sent to its registered email.";
 
-/* Colour note. `#fff7e6` and `#f7f0e2` below are the input and card treatments
- * the sibling `AccountAccessPanel` already ships, and both panels render in the
- * same slot on the sign-in page — diverging one of them would be a visible
- * inconsistency, so they are matched deliberately rather than tokenised here.
- * That whole account-panel family predates R3-A1-A2 and is light-mode only.
- *
- * These are now declared in `DESIGN.md` frontmatter (`panel-input`,
- * `destructive`, `green-open`), so the detector reads them as the system tokens
- * they are rather than as drift. Declaring what actually ships was the fix;
- * suppressing the finding would not have been. Converting both panels to
- * theme-aware tokens stays open as FE-R3-013, and must be done to the pair.
- *
- * Values introduced by this file that had a shipped token available use it:
- * `var(--green-open)`, `var(--destructive)`. */
+/* Shared theme roles keep recovery consistent with AccountAccessPanel in every
+ * accepted appearance family while preserving the same account lifecycle. */
 const PANEL_CSS = `
-  .account-recovery{display:flex;flex-direction:column;gap:22px;color:#241416;font-family:"IBM Plex Sans",system-ui,sans-serif}
-  .account-recovery .account-close,.account-recovery .account-access-form button{min-height:44px;padding:10px 14px;border:1px solid #d1b478;border-radius:10px;color:#610b0f;background:transparent}
-  .account-recovery .account-primary{background:#e8b93c;color:#40070a;border-color:#d1b478;font-weight:650}
+  .account-recovery{display:flex;flex-direction:column;gap:22px;color:var(--theme-text,#241416);font-family:"IBM Plex Sans",system-ui,sans-serif}
+  .account-recovery .account-close,.account-recovery .account-access-form button{min-height:44px;padding:10px 14px;border:1px solid var(--theme-border,#d1b478);border-radius:10px;color:var(--theme-primary,#610b0f);background:transparent}
+  .account-recovery .account-primary{background:var(--theme-accent,#e8b93c);color:var(--theme-accent-text,#40070a);border-color:var(--theme-accent,#d1b478);font-weight:650}
   .account-recovery .account-primary[disabled]{opacity:.55}
   .account-recovery .account-access-form{display:flex;flex-direction:column;gap:14px}
   .account-recovery h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:24px;font-weight:700;letter-spacing:-.6px}
-  .account-recovery p,.account-recovery small{color:#6f5a60;font-size:12px;line-height:1.55}
-  .account-recovery label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:550;color:#241416}
-  .account-recovery input{min-height:44px;padding:10px 12px;border:1px solid #d1b478;border-radius:10px;background:#fff7e6;color:#241416;font:inherit}
-  .account-recovery input[aria-invalid="true"]{border-color:var(--destructive);border-width:2px}
+  .account-recovery p,.account-recovery small{color:var(--theme-text-muted,#6f5a60);font-size:12px;line-height:1.55}
+  .account-recovery label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:550;color:var(--theme-text,#241416)}
+  .account-recovery input{min-height:44px;padding:10px 12px;border:1px solid var(--theme-border,#d1b478);border-radius:10px;background:var(--theme-input,#fff7e6);color:var(--theme-text,#241416);font:inherit}
+  .account-recovery input[aria-invalid="true"]{border-color:var(--theme-danger,var(--destructive));border-width:2px}
   .account-code-field{display:flex;flex-direction:column;gap:8px}
   .account-code-field input{letter-spacing:.34em;font-variant-numeric:tabular-nums}
-  .account-code-error{color:var(--destructive)!important;font-weight:600}
-  .account-code-ok{color:var(--green-open)!important;font-weight:600}
+  .account-code-error{color:var(--theme-danger,var(--destructive))!important;font-weight:600}
+  .account-code-ok{color:var(--theme-success,var(--green-open))!important;font-weight:600}
   .account-code-resend button{align-self:flex-start}
-  .account-status-card{display:grid;gap:12px;padding:16px;border:1px solid #d1b478;border-radius:14px;background:#f7f0e2}
+  .account-status-card{display:grid;gap:12px;padding:16px;border:1px solid var(--theme-border,#d1b478);border-radius:14px;background:var(--theme-surface-muted,#f7f0e2)}
 `;
 
 export function AccountRecoveryPanel({
@@ -229,7 +217,7 @@ export function AccountRecoveryPanel({
       <h2>{copy.title}</h2>
 
       {step === "identify" && (
-        <form className="account-access-form" onSubmit={requestCode} noValidate>
+        <form className="account-access-form" onSubmit={requestCode}>
           <p>{copy.lede}</p>
           <label>
             Registered identifier or email
@@ -252,7 +240,7 @@ export function AccountRecoveryPanel({
       )}
 
       {step === "code" && (
-        <form className="account-access-form" onSubmit={verifyCode} noValidate>
+        <form className="account-access-form" onSubmit={verifyCode}>
           {notice && <p role="status" aria-live="polite">{notice}</p>}
           <VerificationCodeField
             value={code}
@@ -271,16 +259,17 @@ export function AccountRecoveryPanel({
       )}
 
       {step === "password" && (
-        <form className="account-access-form" onSubmit={setPassword} noValidate>
+        <form className="account-access-form" onSubmit={setPassword}>
           <p role="status" aria-live="polite">Code verified. Choose a password for your account.</p>
           <label>
             New password
-            <input name="password" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
+            <input name="password" type="password" autoComplete="new-password" minLength={12} maxLength={128} aria-describedby="recovery-password-hint" autoFocus required />
           </label>
           <label>
             Confirm password
-            <input name="confirmPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
+            <input name="confirmPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} aria-describedby="recovery-password-hint" required />
           </label>
+          <small id="recovery-password-hint">Use 12–128 characters and a password unique to this account.</small>
           {error && <p role="alert" className="account-code-error">Problem: {error}</p>}
           <button className="account-primary" disabled={busy}>{busy ? "Saving…" : copy.submit}</button>
           <button type="button" className="account-close" onClick={onClose}>Back to sign in</button>

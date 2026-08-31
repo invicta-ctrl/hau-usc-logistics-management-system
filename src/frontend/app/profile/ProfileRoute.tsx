@@ -12,9 +12,9 @@ import { FrontendApiError, frontendBackend, type FrontendProfile } from '../../i
 type Feedback = { tone: 'success' | 'error'; message: string } | null;
 
 const fieldClass =
-  'w-full rounded-[8px] border px-3 py-2.5 text-[13px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]';
+  'min-h-11 w-full rounded-[8px] border px-3 py-2.5 text-[13px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]';
 const buttonClass =
-  'rounded-[8px] px-4 py-2.5 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]';
+  'min-h-11 rounded-[8px] px-4 py-2.5 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]';
 
 function requestId(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
@@ -29,6 +29,15 @@ async function fileBase64(file: File) {
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary);
+}
+
+function formatProfileTimestamp(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.valueOf())) return value;
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
 }
 
 function Section({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
@@ -421,15 +430,13 @@ export function ProfileRoute({
             <div
               className="rounded-full overflow-hidden flex items-center justify-center"
               style={{ width: 88, height: 88, background: '#e8b93c' }}
-              role="img"
-              aria-label={
-                profile.avatar.available ? 'Profile picture' : `Initials ${profile.avatar.initials}`
-              }
+              role={avatarSource ? undefined : 'img'}
+              aria-label={avatarSource ? undefined : `Initials ${profile.avatar.initials}`}
             >
               {avatarSource ? (
                 <img
                   src={avatarSource}
-                  alt="Profile"
+                  alt={`Profile picture for ${profile.displayName}`}
                   className="w-full h-full object-cover"
                   onError={() => setAvatarFailed(true)}
                 />
@@ -491,7 +498,7 @@ export function ProfileRoute({
                   disabled={disabled('avatar')}
                   onClick={removeAvatar}
                 >
-                  <Trash2 size={15} /> Remove
+                  <Trash2 size={15} /> Remove picture
                 </button>
               )}
             </div>
@@ -526,10 +533,14 @@ export function ProfileRoute({
                 Legal name or identity details are incorrect
               </summary>
               <form className="mt-4 grid gap-3" onSubmit={submitCorrection}>
+                <label htmlFor="profile-correction-name" className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+                  Proposed legal name
+                </label>
                 <input
+                  id="profile-correction-name"
                   className={fieldClass}
                   style={inputStyle}
-                  aria-label="Proposed legal name"
+                  autoComplete="name"
                   value={correction.legalName}
                   onChange={(event) =>
                     setCorrection((value) => ({ ...value, legalName: event.target.value }))
@@ -537,10 +548,15 @@ export function ProfileRoute({
                   disabled={preview}
                   required
                 />
+                <label htmlFor="profile-correction-contact" className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+                  Proposed contact number
+                </label>
                 <input
+                  id="profile-correction-contact"
                   className={fieldClass}
                   style={inputStyle}
-                  aria-label="Proposed contact number"
+                  type="tel"
+                  autoComplete="tel"
                   value={correction.contactNumber}
                   onChange={(event) =>
                     setCorrection((value) => ({ ...value, contactNumber: event.target.value }))
@@ -548,20 +564,27 @@ export function ProfileRoute({
                   disabled={preview}
                   required
                 />
+                <label htmlFor="profile-correction-email" className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+                  Proposed email
+                </label>
                 <input
+                  id="profile-correction-email"
                   className={fieldClass}
                   style={inputStyle}
-                  aria-label="Proposed email"
                   type="email"
+                  autoComplete="email"
                   value={correction.email}
                   onChange={(event) => setCorrection((value) => ({ ...value, email: event.target.value }))}
                   disabled={preview}
                   required
                 />
+                <label htmlFor="profile-correction-reason" className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>
+                  Correction reason
+                </label>
                 <textarea
+                  id="profile-correction-reason"
                   className={fieldClass}
                   style={inputStyle}
-                  aria-label="Correction reason"
                   rows={3}
                   maxLength={500}
                   value={correction.reason}
@@ -742,7 +765,7 @@ export function ProfileRoute({
                   Credential version {profile.credentialVersion}
                 </p>
                 <p className="mt-1 text-[11px]" style={{ color: 'var(--muted-foreground)' }}>
-                  Profile record updated {profile.updatedAt}
+                  Profile record updated {formatProfileTimestamp(profile.updatedAt)}
                 </p>
               </div>
             </div>
@@ -770,6 +793,7 @@ export function ProfileRoute({
                 style={inputStyle}
                 type="password"
                 autoComplete="new-password"
+                aria-describedby="profile-password-requirements"
                 value={newPassword}
                 onChange={(event) => setNewPassword(event.target.value)}
                 disabled={preview}
@@ -784,12 +808,13 @@ export function ProfileRoute({
                 style={inputStyle}
                 type="password"
                 autoComplete="new-password"
+                aria-describedby="profile-password-requirements"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 disabled={preview}
                 required
               />
-              <p className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>
+              <p id="profile-password-requirements" className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>
                 Use 12–128 characters and include at least three of: uppercase, lowercase, number, or symbol.
               </p>
               <FeedbackLine value={feedback.password} />

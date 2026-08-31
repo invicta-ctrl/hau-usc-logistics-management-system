@@ -18,7 +18,7 @@
  * Logistics Hub, because its explicit entry intent was requester mode.
  */
 
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { ArrowUpRight, Home, Plus, Trash2 } from 'lucide-react';
 
 import { ap } from '../theme/palette';
@@ -109,7 +109,6 @@ export function ExternalRequestCenter({
   const [reload, setReload] = useState(0);
   const [alert, setAlert] = useState('');
   const [live, setLive] = useState('');
-  const [portalErrorCode, setPortalErrorCode] = useState('');
 
   const [composing, setComposing] = useState(false);
   const [requestType, setRequestType] = useState<'NEW' | 'ADDITIONAL'>('NEW');
@@ -126,6 +125,7 @@ export function ExternalRequestCenter({
   const [busy, setBusy] = useState(false);
   const [receipt, setReceipt] = useState<RequesterSubmissionReceipt | null>(null);
   const [clientRequestId, setClientRequestId] = useState(newClientRequestId);
+  const receiptRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (previewPortal) {
@@ -146,7 +146,6 @@ export function ExternalRequestCenter({
       .catch((error: unknown) => {
         if ((error as { name?: string })?.name === 'AbortError') return;
         const code = error instanceof FrontendApiError ? error.code : '';
-        setPortalErrorCode(code);
         // REQUESTER_PORTAL_REQUIRED is the server telling us this account is not a
         // roleId REQUESTER. That is the recorded DOL-requester-mode contract gap,
         // not a client bug, and it is reported truthfully rather than masked.
@@ -163,6 +162,10 @@ export function ExternalRequestCenter({
       });
     return () => controller.abort();
   }, [previewPortal, reload]);
+
+  useEffect(() => {
+    if (receipt) receiptRef.current?.focus();
+  }, [receipt]);
 
   const categories = useMemo(() => Object.keys(portal?.choices ?? {}), [portal]);
   const units = portal?.units ?? [];
@@ -200,7 +203,15 @@ export function ExternalRequestCenter({
 
   const allAcked = ACKS.every((ack) => acks[ack.name]);
   const linesValid = lines.length > 0 && lines.every((line) => line.description.trim() && line.quantity > 0);
-  const canSubmit = Boolean(eventSeriesId && eventId && purpose.trim() && linesValid && allAcked && !busy);
+  const canSubmit = Boolean(
+    (requestType === 'NEW' || parentRequestId) &&
+      eventSeriesId &&
+      eventId &&
+      purpose.trim() &&
+      linesValid &&
+      allAcked &&
+      !busy,
+  );
 
   async function submit() {
     if (inspection) {
@@ -245,6 +256,11 @@ export function ExternalRequestCenter({
     }
   }
 
+  const submitForm = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void submit();
+  };
+
   const field = {
     background: c.m2,
     border: `1px solid ${c.border}`,
@@ -286,10 +302,6 @@ export function ExternalRequestCenter({
       <div className="sr-only" role="status" aria-live="polite">
         {live}
       </div>
-      <div className="sr-only" role="alert" aria-live="assertive">
-        {alert}
-      </div>
-
       <header
         className="flex items-center gap-4 px-5 md:px-8 py-[14px]"
         style={{ background: '#40070a', borderBottom: '1px solid rgba(242,209,92,0.22)' }}
@@ -312,7 +324,7 @@ export function ExternalRequestCenter({
         </div>
         <div className="flex items-center gap-2 ml-auto">
           <ThemeToggle dark={dark} onToggle={onToggleTheme} />
-          <button type="button" onClick={onHome} style={{ ...quietButton, color: '#faeecb', minHeight: 36 }}>
+          <button type="button" onClick={onHome} style={{ ...quietButton, color: '#faeecb' }}>
             <span className="inline-flex items-center gap-2">
               <Home size={14} strokeWidth={1.6} aria-hidden="true" />
               Home
@@ -322,7 +334,7 @@ export function ExternalRequestCenter({
             <button
               type="button"
               onClick={() => void onSignOut()}
-              style={{ ...quietButton, color: '#faeecb', minHeight: 36 }}
+              style={{ ...quietButton, color: '#faeecb' }}
             >
               Sign out
             </button>
@@ -454,11 +466,14 @@ export function ExternalRequestCenter({
 
         {receipt && (
           <section
-            role="status"
+            ref={receiptRef}
+            tabIndex={-1}
+            aria-labelledby="request-receipt-heading"
             className="rounded-[14px] px-5 py-6 flex flex-col gap-2"
             style={{ background: c.m1, border: '1px solid #d1b478' }}
           >
-            <p
+            <h2
+              id="request-receipt-heading"
               style={{
                 fontFamily: "'IBM Plex Mono', monospace",
                 fontSize: 10,
@@ -468,7 +483,7 @@ export function ExternalRequestCenter({
               }}
             >
               Request submitted
-            </p>
+            </h2>
             <strong style={{ fontSize: 16, color: c.text }}>{receipt.id}</strong>
             <p style={{ fontSize: 13, color: c.muted }}>
               {receipt.event}
@@ -564,8 +579,9 @@ export function ExternalRequestCenter({
         )}
 
         {state === 'ready' && portal && composing && (
-          <section className="flex flex-col gap-5" aria-label="New request">
+          <form className="flex flex-col gap-5" aria-labelledby="new-request-heading" onSubmit={submitForm}>
             <h2
+              id="new-request-heading"
               style={{
                 fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
                 fontWeight: 700,
@@ -575,6 +591,7 @@ export function ExternalRequestCenter({
             >
               New request
             </h2>
+            <p className="entry-flow__step-label">Step 1 of 3 · Request context</p>
 
             {alert && (
               <p role="alert" style={{ fontSize: 12, color: 'var(--destructive)' }}>
@@ -583,35 +600,35 @@ export function ExternalRequestCenter({
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <label
+              <div
                 className="flex flex-col gap-1.5"
-                htmlFor={`${formId}-type`}
                 style={{ fontSize: 13, color: c.text }}
               >
-                Request type
+                <label htmlFor={`${formId}-type`}>Request type</label>
                 <select
                   id={`${formId}-type`}
                   value={requestType}
                   onChange={(e) => setRequestType(e.target.value as 'NEW' | 'ADDITIONAL')}
                   style={field}
+                  required
                 >
                   <option value="NEW">New request</option>
                   <option value="ADDITIONAL">Additional to an existing request</option>
                 </select>
-              </label>
+              </div>
 
               {requestType === 'ADDITIONAL' && (
-                <label
+                <div
                   className="flex flex-col gap-1.5"
-                  htmlFor={`${formId}-parent`}
                   style={{ fontSize: 13, color: c.text }}
                 >
-                  Parent request
+                  <label htmlFor={`${formId}-parent`}>Parent request</label>
                   <select
                     id={`${formId}-parent`}
                     value={parentRequestId}
                     onChange={(e) => setParentRequestId(e.target.value)}
                     style={field}
+                    required
                   >
                     <option value="">Select a request</option>
                     {openRequests.map((request) => (
@@ -620,15 +637,14 @@ export function ExternalRequestCenter({
                       </option>
                     ))}
                   </select>
-                </label>
+                </div>
               )}
 
-              <label
+              <div
                 className="flex flex-col gap-1.5"
-                htmlFor={`${formId}-series`}
                 style={{ fontSize: 13, color: c.text }}
               >
-                Event series
+                <label htmlFor={`${formId}-series`}>Event series</label>
                 <select
                   id={`${formId}-series`}
                   value={eventSeriesId}
@@ -637,28 +653,29 @@ export function ExternalRequestCenter({
                     setEventId('');
                   }}
                   style={field}
+                  required
                 >
                   <option value="">Select an event series</option>
                   {portal.eventSeries.map((series) => (
                     <option key={series.id} value={series.id}>
                       {series.name}
-                    </option>
-                  ))}
+                      </option>
+                    ))}
                 </select>
-              </label>
+              </div>
 
-              <label
+              <div
                 className="flex flex-col gap-1.5"
-                htmlFor={`${formId}-event`}
                 style={{ fontSize: 13, color: c.text }}
               >
-                Event or sub-event
+                <label htmlFor={`${formId}-event`}>Event or sub-event</label>
                 <select
                   id={`${formId}-event`}
                   value={eventId}
                   onChange={(e) => setEventId(e.target.value)}
                   style={field}
                   disabled={!eventSeriesId}
+                  required
                 >
                   <option value="">Select an event</option>
                   {eventsForSeries.map((event) => (
@@ -668,7 +685,7 @@ export function ExternalRequestCenter({
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
             </div>
 
             <label
@@ -685,12 +702,13 @@ export function ExternalRequestCenter({
                 maxLength={500}
                 placeholder="e.g. Seating and a rostrum for the opening plenary…"
                 style={{ ...field, minHeight: 88, resize: 'vertical' }}
+                required
               />
             </label>
 
             <fieldset className="flex flex-col gap-3">
               <legend style={{ fontSize: 13, fontWeight: 600, color: c.text, marginBottom: 8 }}>
-                Requested items
+                Step 2 of 3 · Requested items
               </legend>
               {lines.map((line, index) => {
                 const choices = portal.choices[line.category] ?? [];
@@ -701,12 +719,11 @@ export function ExternalRequestCenter({
                     style={{ background: c.m1, border: `1px solid ${c.border}` }}
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <label
+                      <div
                         className="flex flex-col gap-1.5"
-                        htmlFor={`${formId}-cat-${index}`}
                         style={{ fontSize: 12, color: c.text }}
                       >
-                        Category
+                        <label htmlFor={`${formId}-cat-${index}`}>Category</label>
                         <select
                           id={`${formId}-cat-${index}`}
                           value={line.category}
@@ -721,14 +738,13 @@ export function ExternalRequestCenter({
                             </option>
                           ))}
                         </select>
-                      </label>
+                      </div>
 
-                      <label
+                      <div
                         className="flex flex-col gap-1.5"
-                        htmlFor={`${formId}-item-${index}`}
                         style={{ fontSize: 12, color: c.text }}
                       >
-                        Item
+                        <label htmlFor={`${formId}-item-${index}`}>Item</label>
                         {choices.length > 0 && !line.custom ? (
                           <select
                             id={`${formId}-item-${index}`}
@@ -739,6 +755,7 @@ export function ExternalRequestCenter({
                               else updateLine(index, { description: e.target.value });
                             }}
                             style={field}
+                            required
                           >
                             <option value="">Select an approved item</option>
                             {choices.map((choice) => (
@@ -756,9 +773,10 @@ export function ExternalRequestCenter({
                             placeholder="e.g. Extension cords…"
                             maxLength={240}
                             style={field}
+                            required
                           />
                         )}
-                      </label>
+                      </div>
 
                       <label
                         className="flex flex-col gap-1.5"
@@ -775,15 +793,15 @@ export function ExternalRequestCenter({
                             updateLine(index, { quantity: Math.max(1, Number(e.target.value) || 1) })
                           }
                           style={field}
+                          required
                         />
                       </label>
 
-                      <label
+                      <div
                         className="flex flex-col gap-1.5"
-                        htmlFor={`${formId}-unit-${index}`}
                         style={{ fontSize: 12, color: c.text }}
                       >
-                        Unit
+                        <label htmlFor={`${formId}-unit-${index}`}>Unit</label>
                         <select
                           id={`${formId}-unit-${index}`}
                           value={line.unit}
@@ -796,7 +814,7 @@ export function ExternalRequestCenter({
                             </option>
                           ))}
                         </select>
-                      </label>
+                      </div>
                     </div>
 
                     <label
@@ -819,7 +837,7 @@ export function ExternalRequestCenter({
                       <button
                         type="button"
                         onClick={() => setLines((current) => current.filter((_, i) => i !== index))}
-                        style={{ ...quietButton, alignSelf: 'flex-start', minHeight: 38 }}
+                        style={{ ...quietButton, alignSelf: 'flex-start' }}
                       >
                         <span className="inline-flex items-center gap-2">
                           <Trash2 size={14} strokeWidth={1.6} aria-hidden="true" />
@@ -850,7 +868,7 @@ export function ExternalRequestCenter({
 
             <fieldset className="flex flex-col gap-3">
               <legend style={{ fontSize: 13, fontWeight: 600, color: c.text, marginBottom: 8 }}>
-                Acknowledgments
+                Step 3 of 3 · Acknowledgments
               </legend>
               {ACKS.map((ack) => (
                 <label
@@ -863,6 +881,7 @@ export function ExternalRequestCenter({
                     checked={acks[ack.name]}
                     onChange={(e) => setAcks((current) => ({ ...current, [ack.name]: e.target.checked }))}
                     style={{ marginTop: 3, width: 18, height: 18 }}
+                    required
                   />
                   <span className="flex flex-col gap-1">
                     <strong style={{ fontSize: 13, color: c.text }}>{ack.title}</strong>
@@ -877,12 +896,11 @@ export function ExternalRequestCenter({
               the request first; reservation and release are recorded separately.
             </p>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="entry-flow__actions">
               <button
-                type="button"
-                onClick={() => void submit()}
-                disabled={!canSubmit || inspection}
-                style={{ ...primaryButton, opacity: canSubmit && !inspection ? 1 : 0.55 }}
+                type="submit"
+                disabled={busy || inspection}
+                style={{ ...primaryButton, opacity: !busy && !inspection ? 1 : 0.55 }}
               >
                 {inspection ? 'Submission disabled in preview' : busy ? 'Submitting…' : 'Submit request'}
               </button>
@@ -897,7 +915,7 @@ export function ExternalRequestCenter({
                 Cancel
               </button>
             </div>
-          </section>
+          </form>
         )}
       </main>
     </div>

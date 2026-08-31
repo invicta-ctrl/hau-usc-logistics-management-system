@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import {
   FrontendApiError,
   frontendBackend,
@@ -27,6 +27,11 @@ const messageFor = (error: unknown) => error instanceof FrontendApiError
 
 const requestId = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 
+async function copyStatusToken(value: string) {
+  if (!navigator.clipboard?.writeText) throw new Error("Clipboard access is unavailable.");
+  await navigator.clipboard.writeText(value);
+}
+
 export function AccountAccessPanel({ initialMode = "apply", onClose }: { initialMode?: Mode; onClose: () => void }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [applyStep, setApplyStep] = useState<ApplyStep>("email");
@@ -45,6 +50,14 @@ export function AccountAccessPanel({ initialMode = "apply", onClose }: { initial
     setError("");
     setNotice("");
     setApplication(null);
+  };
+
+  const moveTab = (event: KeyboardEvent<HTMLButtonElement>, current: Mode) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const next: Mode = current === "apply" ? "status" : "apply";
+    switchMode(next);
+    document.getElementById(`account-access-${next}-tab`)?.focus();
   };
 
   async function startEmail(event: FormEvent<HTMLFormElement>) {
@@ -172,32 +185,33 @@ export function AccountAccessPanel({ initialMode = "apply", onClose }: { initial
   return (
     <section className="account-access-panel" aria-busy={busy}>
       <style>{`
-        .account-access-panel{display:flex;flex-direction:column;gap:22px;color:#241416;font-family:"IBM Plex Sans",system-ui,sans-serif}
+        .account-access-panel{display:flex;flex-direction:column;gap:22px;color:var(--theme-text,#241416);font-family:"IBM Plex Sans",system-ui,sans-serif}
         .account-access-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-        .account-access-tabs button,.account-close,.account-access-form button{min-height:42px;padding:10px 14px;border:1px solid #d1b478;border-radius:10px;color:#610b0f}
-        .account-access-tabs button[aria-selected="true"],.account-primary{background:#e8b93c!important;color:#40070a!important;border-color:#d1b478!important;font-weight:650}
+        .account-access-tabs button,.account-close,.account-access-form button,.account-status-card button{min-height:44px;padding:10px 14px;border:1px solid var(--theme-border,#d1b478);border-radius:10px;color:var(--theme-primary,#610b0f)}
+        .account-access-tabs button[aria-selected="true"],.account-primary{background:var(--theme-accent,#e8b93c)!important;color:var(--theme-accent-text,#40070a)!important;border-color:var(--theme-accent,#d1b478)!important;font-weight:650}
         .account-access-form{display:flex;flex-direction:column;gap:14px}
         .account-access-form h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:24px;font-weight:700;letter-spacing:-.6px}
-        .account-access-form p,.account-access-form small{color:#6f5a60;font-size:12px;line-height:1.55}
-        .account-access-form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:550}
-        .account-access-form input,.account-access-form select,.account-access-form textarea{min-height:44px;padding:10px 12px;border:1px solid #d1b478;border-radius:10px;background:#fff7e6;color:#241416;font:inherit}
+        .account-access-form p,.account-access-form small{color:var(--theme-text-muted,#6f5a60);font-size:12px;line-height:1.55}
+        .account-access-form label,.account-field{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:550}
+        .account-access-form input,.account-access-form select,.account-access-form textarea{min-height:44px;padding:10px 12px;border:1px solid var(--theme-border,#d1b478);border-radius:10px;background:var(--theme-input,#fff7e6);color:var(--theme-text,#241416);font:inherit}
         .account-access-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
         .account-access-form .account-check{display:grid;grid-template-columns:22px 1fr;align-items:start;font-weight:400;line-height:1.45}
         .account-access-form .account-check input{min-height:20px;width:20px;padding:0}
-        .account-status-card{display:grid;gap:8px;padding:16px;border:1px solid #d1b478;border-radius:12px;background:#f7f0e2}
-        .account-status-card p{display:flex;justify-content:space-between;gap:16px;font-size:12px}.account-status-card span{color:#6f5a60}
-        .account-token-warning{display:block!important;color:#9c2630!important}.account-status-token{overflow-wrap:anywhere;padding:10px;border-radius:8px;background:#fffdf8}
+        .account-status-card{display:grid;gap:8px;padding:16px;border:1px solid var(--theme-border,#d1b478);border-radius:12px;background:var(--theme-surface-muted,#f7f0e2)}
+        .account-status-card h3{font-size:16px;font-weight:700}.account-status-card p{display:flex;justify-content:space-between;gap:16px;font-size:12px}.account-status-card span{color:var(--theme-text-muted,#6f5a60)}
+        .account-token-warning{display:block!important;color:var(--theme-danger,#9c2630)!important}.account-status-token{overflow-wrap:anywhere;padding:10px;border-radius:8px;background:var(--theme-surface,#fffdf8)}
+        .account-copy-status{display:block!important;min-height:18px;color:var(--theme-text-muted,#6f5a60)!important}
         @media(max-width:640px){.account-access-grid{grid-template-columns:1fr}.account-access-tabs{grid-template-columns:1fr}}
       `}</style>
       <div className="account-access-tabs" role="tablist" aria-label="Account access">
-        <button type="button" role="tab" aria-selected={mode === "apply"} onClick={() => switchMode("apply")}>Apply for access</button>
-        <button type="button" role="tab" aria-selected={mode === "status"} onClick={() => switchMode("status")}>Application status</button>
+        <button id="account-access-apply-tab" type="button" role="tab" aria-selected={mode === "apply"} aria-controls="account-access-apply-panel" tabIndex={mode === "apply" ? 0 : -1} onKeyDown={(event) => moveTab(event, "apply")} onClick={() => switchMode("apply")}>Apply for access</button>
+        <button id="account-access-status-tab" type="button" role="tab" aria-selected={mode === "status"} aria-controls="account-access-status-panel" tabIndex={mode === "status" ? 0 : -1} onKeyDown={(event) => moveTab(event, "status")} onClick={() => switchMode("status")}>Application status</button>
       </div>
 
       {error && <p className="auth-gate-status" data-state="service-error" role="alert">{error}</p>}
       {notice && <p className="auth-gate-status" data-state="authorized" role="status">{notice}</p>}
 
-      {mode === "apply" && applyStep === "email" && <form className="account-access-form" onSubmit={startEmail}>
+      {mode === "apply" && applyStep === "email" && <form id="account-access-apply-panel" role="tabpanel" aria-labelledby="account-access-apply-tab" className="account-access-form" onSubmit={startEmail}>
         <h2>Create a staff account</h2>
         <p>Verification confirms email ownership. It does not grant staff access.</p>
         <label>Approved email address<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
@@ -205,7 +219,7 @@ export function AccountAccessPanel({ initialMode = "apply", onClose }: { initial
         <button className="account-primary" disabled={busy}>{busy ? "Sending…" : "Send verification code"}</button>
       </form>}
 
-      {mode === "apply" && applyStep === "code" && <form className="account-access-form" onSubmit={confirmEmail}>
+      {mode === "apply" && applyStep === "code" && <form id="account-access-apply-panel" role="tabpanel" aria-labelledby="account-access-apply-tab" className="account-access-form" onSubmit={confirmEmail}>
         <h2>Enter verification code</h2>
         <label>8-digit verification code<input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" minLength={8} maxLength={8} value={code} onChange={(event) => setCode(event.target.value)} /></label>
         <small>Enter all 8 digits. A leading zero is part of the code. Codes expire and a resend invalidates the previous code.</small>
@@ -213,30 +227,32 @@ export function AccountAccessPanel({ initialMode = "apply", onClose }: { initial
         <button type="button" onClick={() => { setApplyStep("email"); setCode(""); setError(""); }}>Use a different email</button>
       </form>}
 
-      {mode === "apply" && applyStep === "application" && <form className="account-access-form" onSubmit={submitApplication}>
+      {mode === "apply" && applyStep === "application" && <form id="account-access-apply-panel" role="tabpanel" aria-labelledby="account-access-apply-tab" className="account-access-form" onSubmit={submitApplication}>
         <h2>Staff account application</h2>
         <div className="account-access-grid">
           <label>Full legal name<input name="legalName" autoComplete="name" maxLength={200} required /></label>
           <label>Contact number<input name="contactNumber" autoComplete="tel" maxLength={24} required /></label>
           <label>USC department ID<input name="departmentId" maxLength={128} required /></label>
           <label>Course ID<input name="courseId" maxLength={128} required /></label>
-          <label>Year level<select name="yearLevel" required defaultValue=""><option value="">Select year</option>{Array.from({ length: 10 }, (_, index) => <option key={index + 1}>{index + 1}</option>)}</select></label>
-          <label>Requested username<input name="requestedUsername" autoComplete="username" minLength={4} maxLength={32} pattern="[a-z0-9](?:[a-z0-9]|[._-](?=[a-z0-9])){2,30}[a-z0-9]" required /></label>
+          <div className="account-field"><label htmlFor="account-year-level">Year level</label><select id="account-year-level" name="yearLevel" required defaultValue=""><option value="">Select year</option>{Array.from({ length: 10 }, (_, index) => <option key={index + 1}>{index + 1}</option>)}</select></div>
+          <label>Requested username<input name="requestedUsername" autoComplete="username" minLength={4} maxLength={32} pattern="[a-z0-9](?:[a-z0-9]|[._-](?=[a-z0-9])){2,30}[a-z0-9]" aria-describedby="requested-username-hint" required /></label>
         </div>
-        <label>Access preset<select name="accessPreset" required>{ACCESS_PRESETS.map((preset) => <option key={preset.id} value={preset.id}>{preset.label}</option>)}</select></label>
+        <small id="requested-username-hint">Use 4–32 lowercase letters or numbers; dots, underscores, and hyphens may separate them.</small>
+        <div className="account-field"><label htmlFor="account-access-preset">Access preset</label><select id="account-access-preset" name="accessPreset" required>{ACCESS_PRESETS.map((preset) => <option key={preset.id} value={preset.id}>{preset.label}</option>)}</select></div>
         <label className="account-check"><input name="lendingSelfService" type="checkbox" /> Request Lending self-service</label>
         <label className="account-check"><input name="requestCenterAccess" type="checkbox" defaultChecked /> Request Center access</label>
         <div className="account-access-grid">
-          <label>Password<input name="password" type="password" autoComplete="new-password" minLength={12} maxLength={128} required /></label>
-          <label>Confirm password<input name="confirmPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required /></label>
+          <label>Password<input name="password" type="password" autoComplete="new-password" minLength={12} maxLength={128} aria-describedby="account-password-hint" required /></label>
+          <label>Confirm password<input name="confirmPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} aria-describedby="account-password-hint" required /></label>
         </div>
+        <small id="account-password-hint">Use 12–128 characters and a password unique to this account.</small>
         <label className="account-check"><input type="checkbox" required /> I confirm these details are accurate and accept the privacy and acceptable-use requirements.</label>
         <button className="account-primary" disabled={busy}>{busy ? "Submitting…" : "Submit application for review"}</button>
       </form>}
 
-      {mode === "apply" && applyStep === "receipt" && application && <ApplicationStatusCard application={application} statusToken={statusToken} />}
+      {mode === "apply" && applyStep === "receipt" && application && <div id="account-access-apply-panel" role="tabpanel" aria-labelledby="account-access-apply-tab"><ApplicationStatusCard application={application} statusToken={statusToken} /></div>}
 
-      {mode === "status" && <>
+      {mode === "status" && <div id="account-access-status-panel" role="tabpanel" aria-labelledby="account-access-status-tab">
         <form className="account-access-form" onSubmit={loadStatus}>
           <h2>Check application status</h2>
           <p>The token remains on this page only while you check the application.</p>
@@ -250,7 +266,7 @@ export function AccountAccessPanel({ initialMode = "apply", onClose }: { initial
             <button type="button" disabled={busy} onClick={() => void withdraw()}>Withdraw application</button>
           </div>}
         </>}
-      </>}
+      </div>}
 
       <button type="button" className="account-close" onClick={onClose}>Return to staff sign in</button>
     </section>
@@ -258,7 +274,24 @@ export function AccountAccessPanel({ initialMode = "apply", onClose }: { initial
 }
 
 function ApplicationStatusCard({ application, statusToken = "" }: { application: AccountApplicationStatus; statusToken?: string }) {
-  return <div className="account-status-card" role="status">
+  const cardRef = useRef<HTMLElement>(null);
+  const [copyNotice, setCopyNotice] = useState("");
+
+  useEffect(() => {
+    if (statusToken) cardRef.current?.focus();
+  }, [statusToken]);
+
+  const copyToken = async () => {
+    try {
+      await copyStatusToken(statusToken);
+      setCopyNotice("Private status token copied. Save it in a password manager or secure note.");
+    } catch {
+      setCopyNotice("Copy was not available. Select the token and save it before leaving this page.");
+    }
+  };
+
+  return <section ref={cardRef} className="account-status-card" tabIndex={statusToken ? -1 : undefined} aria-labelledby="application-status-heading">
+    <h3 id="application-status-heading">{statusToken ? "Save application status access" : "Application status"}</h3>
     <p><span>Application reference</span><strong>{application.applicationCode}</strong></p>
     <p><span>Current status</span><strong>{application.state.replaceAll("_", " ")}</strong></p>
     {application.nextStep && <p><span>Next step</span><strong>{application.nextStep}</strong></p>}
@@ -267,6 +300,8 @@ function ApplicationStatusCard({ application, statusToken = "" }: { application:
     {statusToken && <>
       <p className="account-token-warning">Save this private status token now. It cannot be recovered and should not be shared.</p>
       <code className="account-status-token">{statusToken}</code>
+      <button type="button" className="account-primary" onClick={() => void copyToken()}>Copy private status token</button>
+      <p className="account-copy-status" role="status" aria-live="polite">{copyNotice}</p>
     </>}
-  </div>;
+  </section>;
 }

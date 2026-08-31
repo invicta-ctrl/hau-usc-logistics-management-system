@@ -444,7 +444,7 @@ test('LEND-01 browsing public lending requires no sign-in and probes no session'
   expect(sessionProbes).toBe(0);
 });
 
-test('LEND-02 the Public Lending Hub exposes no Request Center tab', async ({ page }) => {
+test('LEND-02 the Public Lending Hub keeps site exits in one public shell', async ({ page }) => {
   await installPublicFeed(page);
   await installLendingCatalog(page);
   await openPublicLending(page);
@@ -452,11 +452,12 @@ test('LEND-02 the Public Lending Hub exposes no Request Center tab', async ({ pa
   const nav = page.getByRole('navigation', { name: 'Public lending navigation' });
   await expect(nav).toBeVisible();
   await expect(nav.getByText('Request Center', { exact: true })).toHaveCount(0);
-  await expect(nav.getByRole('link', { name: 'Home', exact: true })).toBeVisible();
   for (const tab of ['Lending Center', 'Track lending', 'Lending policy']) {
     await expect(nav.getByRole('button', { name: tab, exact: true })).toBeVisible();
   }
-  await expect(nav.getByRole('link', { name: 'Staff sign in', exact: true })).toBeVisible();
+  await expect(nav.getByRole('link')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'HAU-USC home', exact: true })).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Staff sign in', exact: true }).first()).toBeVisible();
 });
 
 test('LEND-02A hash navigation remounts the correct public lending view', async ({ page }) => {
@@ -1555,19 +1556,18 @@ test('AUTH-05 the verification step enforces 8 digits and never enumerates accou
 
 /* ---- HOME-01 .. HOME-03 / AUTH-06 --------------------------------------- */
 
-test('HOME-01 and HOME-02 Home returns to the landing surface from Public Lending', async ({ page }) => {
+test('HOME-01 and HOME-02 the single public-shell Home returns from Public Lending', async ({ page }) => {
   await installPublicFeed(page);
   await installLendingCatalog(page);
   await openPublicLending(page);
 
-  await page.locator('.mast').getByRole('link', { name: 'Home', exact: true }).click();
+  const home = page.getByRole('link', { name: 'HAU-USC home', exact: true });
+  await expect(home).toHaveCount(1);
+  await home.click();
   await expect(page.getByRole('heading', { name: HERO_HEADING })).toBeVisible();
 
   await page.getByRole('link', { name: /^Browse public lending/u }).click();
-  await page
-    .getByRole('navigation', { name: 'Public lending navigation' })
-    .getByRole('link', { name: 'Home', exact: true })
-    .click();
+  await page.getByRole('link', { name: 'HAU-USC home', exact: true }).click();
   await expect(page.getByRole('heading', { name: HERO_HEADING })).toBeVisible();
 });
 

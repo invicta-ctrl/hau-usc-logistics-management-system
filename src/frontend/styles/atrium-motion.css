@@ -1,10 +1,10 @@
 /* ============================================================================
    DIGITAL ATRIUM — FULL-BLEED HERO ENVIRONMENT
 
-   The video is the Landing's primary visual identity layer, not a decorative
-   panel on the right. It fills the hero, runs behind the glass top bar, and is
-   read through a scrim that is weighted to the LEFT only — where the copy sits.
-   The right and centre stay open so the cultural animation is actually visible.
+   The poster is the Landing's complete initial visual identity layer. Optional
+   user-requested video can enhance that same full-bleed composition behind the
+   glass top bar without becoming an initial-load dependency. The weighted
+   scrim keeps copy readable while the right and centre remain visually open.
 
    The visual layer is decorative and aria-hidden: remove it and the hero still
    reads. The owner-authorized loop has a visible pause/resume control, and
@@ -71,6 +71,10 @@
 .atrium__motion-toggle:hover {
   background: var(--atrium-g3);
   border-color: var(--gold-vivid);
+}
+.atrium__motion-toggle:disabled {
+  cursor: wait;
+  opacity: 0.72;
 }
 .atrium__motion-toggle:focus-visible {
   outline: 2px solid var(--gold-vivid);

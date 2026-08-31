@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "program": "HAU-USC-MFR-002",
+  "phase": "U04_LANDING_PUBLIC_LENDING_AUTH_REQUEST_AUTH_PROFILE",
+  "base": {
+    "playgroundCommit": "4f82bc2a3e9e6a2d17a70fc82b08447fae655599",
+    "playgroundTree": "40b10806868b6e53b82ea64b12b33493ea8c0a4b",
+    "branch": "work/playground-mfr002-entry-flows",
+    "mainCommitPreserved": "f7e5bf83205dbe58b5fb72126a4456747d92e906",
+    "mainTreePreserved": "480cf65cb9ec07fbab729f0588023e120cf3f97a"
+  },
+  "designAuthority": {
+    "figmaFileKey": "hXJElH4p72KfgAaoUyfNOC",
+    "readOnlyFrames": {
+      "landingMobile": "411:2571",
+      "publicLendingMobileLight": "592:15",
+      "profileMobile": "279:1565"
+    },
+    "crossCheck": "PASS_POSTER_LED_LANDING_SINGLE_COMPACT_LENDING_SHELL_PERSISTENT_REVIEW_ACTION_AND_STACKED_PROFILE_CARDS",
+    "writeMutation": "ZERO"
+  },
+  "change": {
+    "landing": "Poster-first hero with user-requested motion, abortable chunk assembly, truthful loading/retry/pause/resume state, and reduced-motion protection.",
+    "publicLending": "One public shell; no-login access truth beside the task; explicit labels; three-step mobile sequence; persistent selected-item action; native tracking form; visible errors; focused one-time private receipt with copy and saved-details acknowledgment.",
+    "externalRequest": "Authenticated requester contract preserved; native request form; required parent for additional requests; explicit labels; three-step sequence; mobile sticky actions; focused receipt; visible service errors.",
+    "accountLifecycle": "Generic gateway and all existing activation, application, status, recovery, and password-manager semantics preserved; theme-aware panels; 44 CSS-pixel controls; keyboard tabs; focused verification and private status-token receipts.",
+    "profile": "Stacked operational cards, explicit correction labels, 44 CSS-pixel controls, corrected image semantics, readable timestamps, and linked password guidance.",
+    "sharedEntryCss": "src/frontend/styles/entry-flows.css",
+    "minimumInteractiveTargetCssPx": 44,
+    "publicLendingRequiresLogin": false,
+    "externalRequestRequiresAuthenticatedRequester": true,
+    "genericGatewayCapabilityPrecommit": false,
+    "backendOrDataContractChanges": 0,
+    "dependencyChanges": 0,
+    "lockfileSha256": "d874f080c0cb72a444929b84fb4710e71a619530dd9aa9999e43a0a23a6fff11"
+  },
+  "heroPerformance": {
+    "measurementBoundary": "Initial decorative hero media before a user requests motion.",
+    "u03InitialChunkRequests": 2,
+    "u03InitialChunkBytes": 36018711,
+    "u04InitialChunkRequests": 0,
+    "u04InitialChunkBytes": 0,
+    "requestReductionPercent": 100,
+    "byteReductionPercent": 100,
+    "method": "Deterministic component and emitted-asset inspection plus an enumerated interception assertion; no rendered-browser timing metric is claimed.",
+    "posterRemainsImmediate": true,
+    "motionRemainsAvailableOnRequest": true
+  },
+  "verification": {
+    "focusedUnit": "PASS_3_FILES_27_TESTS",
+    "fullUnit": "PASS_172_FILES_1260_TESTS_1_INTENTIONAL_SKIP",
+    "lint": "PASS_0_ERRORS_2_PREEXISTING_WARNINGS",
+    "designSourceChecks": "PASS_FOUNDATION_THEME_MAKE_THEME_AND_MAKE_ROUTES_CURRENT",
+    "designMirrorChecks": "PASS_TRACKERS_MAKE_LANDING_AND_RESOLVED_CASCADE",
+    "contrast": "PASS_66_OF_66_LIGHT_DARK_PAIRS",
+    "fiveWidthTestEnumeration": "PASS_25_CASES_ACROSS_FRONTEND_320_390_768_1024_1440",
+    "canonicalArtifact": "PASS_NORMAL_EXTERNAL_ASSET_ARCHITECTURE",
+    "stagingArtifact": "PASS_EXACT_STAGING_MARKER_NORMAL_ASSETS_AND_BYTE_IDENTICAL_HERO",
+    "fixtureBoundary": "PASS_NORMAL_ROUTES_BACKEND_BACKED",
+    "governance": "PASS_12_AGENT_FILES_AND_14_CONTINUATION_FIELDS",
+    "handoffAndSecretScan": "PASS_CANONICAL_RECORDS_GIT_STATE_AND_SECRET_SCAN",
+    "diffCheck": "PASS"
+  },
+  "canonicalArtifact": {
+    "fileCount": 9,
+    "totalBytes": 36839693,
+    "manifestSha256": "db5fed18ad2a1cc9609710e41f5a95af27490bdab96e43b311731d07dd057627",
+    "entryHtmlBytes": 1502,
+    "entryHtmlSha256": "841bfcb6684fe79bcc4117be9d10d79b31db00fcf89de84aa8b6aa14887a13e2",
+    "directAssetRequests": 2,
+    "directRequestsIncludingHtml": 3,
+    "directBytesIncludingHtml": 338745,
+    "directGzipBytesIncludingHtml": 90322,
+    "cssBytes": 123760,
+    "cssSha256": "7d7a4125571e237bb0ae9318bc61f2ee8eb545a4400fb313d37b97aae95d5114",
+    "entryJavaScriptBytes": 213483,
+    "entryJavaScriptSha256": "a266690b3bcf25a85896d1c154f4bdcb4776ea2dd9d4437c1d8f519611b51fd5",
+    "routeJavaScriptBytes": 191364,
+    "routeJavaScriptSha256": "e8d9587d069afe69874a9d0ccd14357b5bce690d0d48ed15ee20cbeade3bfec8",
+    "largestAssetBytes": 20000000
+  },
+  "stagingArtifact": {
+    "fileCount": 9,
+    "totalBytes": 36839747,
+    "manifestSha256": "80dfbed2f8e050a5437f496797a9b598c1e7b5703083224d705917ca6eb7f535",
+    "entryHtmlBytes": 1556,
+    "entryHtmlSha256": "b914ae139904df07ed39541d0e6a0e6eb092ab2b961cb18ebb0b40afe9112fc2",
+    "heroSourceBytes": 36018711,
+    "heroPartsBytes": [20000000, 16018711],
+    "heroSourceSha256": "657b38b82d452a234ab76c64a3c4312133279ec3d59b9923c84c5e24501e71d1"
+  },
+  "u03BudgetComparison": {
+    "u03DirectBytesIncludingHtml": 337489,
+    "u04DirectBytesIncludingHtml": 338745,
+    "directByteDelta": 1256,
+    "directByteDeltaPercent": 0.3722,
+    "u03DirectGzipBytesIncludingHtml": 90059,
+    "u04DirectGzipBytesIncludingHtml": 90322,
+    "directGzipDelta": 263,
+    "directGzipDeltaPercent": 0.292,
+    "u03CssBytes": 122504,
+    "u04CssBytes": 123760,
+    "cssByteDelta": 1256,
+    "cssByteDeltaPercent": 1.0253,
+    "entryJavaScriptByteDelta": 0,
+    "entryJavaScriptByteDeltaPercent": 0,
+    "assessment": "PASS_BOUNDED_ENTRY_FLOW_COST_WITH_FLAT_ENTRY_JAVASCRIPT_AND_ZERO_INITIAL_HERO_MEDIA_BYTES"
+  },
+  "renderedBrowser": {
+    "status": "UNRUN_ENVIRONMENT_BLOCKED",
+    "notClaimed": "No fresh rendered five-width, keyboard, 200 percent zoom, focus-obscuration, or visual-regression PASS is claimed for U04.",
+    "constraints": [
+      "The project-pinned Chromium binary is absent and no usable local browser is available.",
+      "The connected cloud browser refuses the workspace loopback preview with net::ERR_BLOCKED_BY_CLIENT."
+    ],
+    "fallbackEvidence": [
+      "The exact Playwright configuration enumerates 25 U04 cases across 320, 390, 768, 1024, and 1440 CSS pixels, including an exact 1440-to-720 CSS-pixel 200 percent reflow simulation.",
+      "Source contracts cover poster-first media, the single public shell, Public Lending no-login semantics, authenticated requester entry, generic sign-in, password-manager attributes, explicit labels, 44 CSS-pixel controls, receipt focus and private-token handling, sticky actions, and Profile card hierarchy.",
+      "The complete React application and staging variants compile through Vite and pass normal-asset, fixture-boundary, and byte-identical hero validation.",
+      "All Worker, API, authorization, D1/R2, inventory, custody, audit, and idempotency contracts remain unchanged."
+    ]
+  },
+  "result": "PASS_U04_DETERMINISTIC_ENTRY_FLOWS_WITH_RENDERED_BROWSER_RESIDUAL",
+  "rollback": "Revert the isolated U04 commit. The shared mobile action rhythm is isolated in src/frontend/styles/entry-flows.css; backend and data contracts require no rollback.",
+  "deploymentMutation": "ZERO",
+  "providerMutation": "ZERO",
+  "dataMutation": "ZERO",
+  "productionMutation": "ZERO"
+}

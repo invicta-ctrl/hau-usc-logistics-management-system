@@ -47,8 +47,8 @@ colors:
   destructive-dark: "#f6acb2"
   green-open: "#1f6b41"
   green-open-dark: "#9ad9b2"
-  # Account-panel surfaces. Light-mode only by history, shared by
-  # AccountAccessPanel and AccountRecoveryPanel; recorded rather than diverged.
+  # Historical fallback for the account-panel input role. Both account panels
+  # now consume generated theme roles in every Light/Dark appearance.
   panel-input: "#fff7e6"
 typography:
   display:

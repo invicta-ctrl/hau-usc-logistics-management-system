@@ -270,17 +270,18 @@ export function StaffSignInPage({
               </button>
             </div>
           ) : authState === "activation-required" ? (
-            <form onSubmit={handleActivationSubmit} className="flex flex-col gap-4" noValidate>
+            <form onSubmit={handleActivationSubmit} className="flex flex-col gap-4">
               {activationExpiresAt && <p className="text-xs" style={{ color: c.muted }}>Complete activation before {new Date(activationExpiresAt).toLocaleString()}.</p>}
               <label className="flex flex-col gap-1.5">Full name<input name="fullName" required autoComplete="name" className="rounded-[10px] px-4 py-3" style={{ background: c.m2, border: `1px solid ${c.border}`, color: c.text }} /></label>
               <label className="flex flex-col gap-1.5">Mobile number<input name="mobileNumber" required autoComplete="tel" className="rounded-[10px] px-4 py-3" style={{ background: c.m2, border: `1px solid ${c.border}`, color: c.text }} /></label>
               <label className="flex flex-col gap-1.5">Email address<input name="email" required type="email" autoComplete="email" className="rounded-[10px] px-4 py-3" style={{ background: c.m2, border: `1px solid ${c.border}`, color: c.text }} /></label>
-              <label className="flex flex-col gap-1.5">New password<input name="newPassword" required type="password" autoComplete="new-password" className="rounded-[10px] px-4 py-3" style={{ background: c.m2, border: `1px solid ${c.border}`, color: c.text }} /></label>
-              <label className="flex flex-col gap-1.5">Confirm password<input name="confirmPassword" required type="password" autoComplete="new-password" className="rounded-[10px] px-4 py-3" style={{ background: c.m2, border: `1px solid ${c.border}`, color: c.text }} /></label>
+              <label className="flex flex-col gap-1.5">New password<input name="newPassword" required type="password" autoComplete="new-password" minLength={12} maxLength={128} aria-describedby="activation-password-hint" className="rounded-[10px] px-4 py-3" style={{ background: c.m2, border: `1px solid ${c.border}`, color: c.text }} /></label>
+              <label className="flex flex-col gap-1.5">Confirm password<input name="confirmPassword" required type="password" autoComplete="new-password" minLength={12} maxLength={128} aria-describedby="activation-password-hint" className="rounded-[10px] px-4 py-3" style={{ background: c.m2, border: `1px solid ${c.border}`, color: c.text }} /></label>
+              <p id="activation-password-hint" className="text-xs" style={{ color: c.muted }}>Use 12–128 characters and a password unique to this account.</p>
               {error && <p role="alert" style={{ color: "#d4183d" }}>{error}</p>}
               <button type="submit" className="rounded-[10px] text-[13px] font-semibold" style={{ background: "#e8b93c", color: "#40070a", minHeight: 48 }}>Activate account</button>
             </form>
-          ) : <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
+          ) : <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="signin-id"
@@ -292,6 +293,7 @@ export function StaffSignInPage({
                 id="signin-id"
                 type="text"
                 autoComplete="username"
+                required
                 spellCheck={false}
                  value={identifier}
                  disabled={busy}
@@ -316,6 +318,7 @@ export function StaffSignInPage({
                   id="signin-pw"
                   type={showPw ? "text" : "password"}
                   autoComplete="current-password"
+                  required
                  value={password}
                  disabled={busy}
                   aria-invalid={Boolean(error)}
@@ -382,12 +385,12 @@ export function StaffSignInPage({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" aria-label="Account application links">
               <button type="button" onClick={() => setAccessMode("apply")}
                 className="rounded-[10px] text-[13px] font-semibold"
-                style={{ color: dark ? "#faeecb" : "#610b0f", minHeight: 42, border: "1px solid #d1b478" }}>
+                style={{ color: dark ? "#faeecb" : "#610b0f", minHeight: 44, border: "1px solid #d1b478" }}>
                 Apply for staff access
               </button>
               <button type="button" onClick={() => setAccessMode("status")}
                 className="rounded-[10px] text-[13px] font-semibold"
-                style={{ color: dark ? "#faeecb" : "#610b0f", minHeight: 42, border: "1px solid #d1b478" }}>
+                style={{ color: dark ? "#faeecb" : "#610b0f", minHeight: 44, border: "1px solid #d1b478" }}>
                 Check application status
               </button>
             </div>
@@ -395,9 +398,10 @@ export function StaffSignInPage({
           </>}
 
           <button
+            type="button"
             onClick={onBack}
             className="inline-flex items-center gap-2 text-[13px] tracking-[-0.15px] transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#610b0f] rounded-sm self-start"
-            style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: dark ? "#f6e29a" : "#610b0f", background: "none" }}
+            style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif", color: dark ? "#f6e29a" : "#610b0f", background: "none", minHeight: 44 }}
           >
             <ArrowLeft size={14} strokeWidth={1.5} aria-hidden="true" />
             Home
