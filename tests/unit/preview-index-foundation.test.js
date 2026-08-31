@@ -237,9 +237,9 @@ describe('preview index trusted gate and registry foundations', () => {
     expect(count((entry) => entry.implementationStatus === 'SURFACE_PREVIEW')).toBe(0);
     expect(count((entry) => entry.implementationStatus === 'IN_PROGRESS')).toBe(0);
     expect(count((entry) => entry.implementationStatus === 'NOT_STARTED')).toBe(0);
-    expect(count((entry) => entry.backendStatus === 'REAL_BACKEND')).toBe(11);
+    expect(count((entry) => entry.backendStatus === 'REAL_BACKEND')).toBe(14);
     expect(count((entry) => entry.backendStatus === 'PARTIAL')).toBe(1);
-    expect(count((entry) => entry.backendStatus === 'VISUAL_ONLY')).toBe(3);
+    expect(count((entry) => entry.backendStatus === 'VISUAL_ONLY')).toBe(0);
     expect(count((entry) => entry.access === 'PUBLIC')).toBe(4);
     expect(count((entry) => entry.access === 'AUTHENTICATED')).toBe(11);
     expect(count((entry) => entry.previewMode === 'REAL_MODULE')).toBe(15);
@@ -294,7 +294,7 @@ describe('preview index trusted gate and registry foundations', () => {
     });
     expect(entries.find((entry) => entry.route === 'release')).toMatchObject({
       implementationStatus: 'ACCEPTED',
-      backendStatus: 'VISUAL_ONLY',
+      backendStatus: 'REAL_BACKEND',
       access: 'AUTHENTICATED',
       previewMode: 'REAL_MODULE',
       group: 'STAFF',
@@ -343,7 +343,7 @@ describe('preview index trusted gate and registry foundations', () => {
         'administration',
       ].sort(),
     );
-    expect(filterPreviewRoutes('BACKEND_WIRED')).toHaveLength(11);
+    expect(filterPreviewRoutes('BACKEND_WIRED')).toHaveLength(14);
     expect(filterPreviewRoutes('PREVIEW_ONLY')).toHaveLength(0);
     expect(filterPreviewRoutes('IN_PROGRESS')).toEqual([]);
     expect(filterPreviewRoutes('NOT_STARTED')).toEqual([]);
@@ -360,11 +360,9 @@ describe('preview index trusted gate and registry foundations', () => {
 
   it('keeps a bounded, valid, de-duplicated recent-workspace list without sensitive state', () => {
     expect(PREVIEW_RECENT_ROUTES_KEY).toBe('hau-playground-recent-routes-v1');
-    expect(normalizeRecentPreviewRoutes(['inventory', 'bogus', 'inventory', 'landing', 4, 'profile'])).toEqual([
-      'inventory',
-      'landing',
-      'profile',
-    ]);
+    expect(
+      normalizeRecentPreviewRoutes(['inventory', 'bogus', 'inventory', 'landing', 4, 'profile']),
+    ).toEqual(['inventory', 'landing', 'profile']);
 
     const writes = [];
     const next = recordRecentPreviewRoute('release', ['inventory', 'release', 'landing', 'profile'], {

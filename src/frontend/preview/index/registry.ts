@@ -39,8 +39,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     route: 'external-request',
     label: 'External Request Center',
     group: 'REQUESTER',
-    description:
-      'Submit and track requests for an authorized USC office. Staff sign-in required.',
+    description: 'Submit and track requests for an authorized USC office. Staff sign-in required.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -101,8 +100,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     route: 'inventory',
     label: 'Inventory',
     group: 'STAFF',
-    description:
-      'Review current inventory quantities and item status. Inspection uses sample data.',
+    description: 'Review current inventory quantities and item status. Inspection uses sample data.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -114,8 +112,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     route: 'request-center',
     label: 'Internal Request Hub',
     group: 'STAFF',
-    description:
-      'Review and route internal logistics requests. Department of Logistics access required.',
+    description: 'Review and route internal logistics requests. Department of Logistics access required.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -143,10 +140,10 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     description:
       'Review ready work and record physical handoffs. Inspection uses sample data and does not change records.',
     implementationStatus: 'ACCEPTED',
-    backendStatus: 'VISUAL_ONLY',
+    backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
-    completeness: 'VISUAL_PREVIEW_COMPLETE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'restocking',
@@ -156,10 +153,10 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     description:
       'Review restock requests and receiving records. Inspection uses sample data and does not change records.',
     implementationStatus: 'ACCEPTED',
-    backendStatus: 'VISUAL_ONLY',
+    backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
-    completeness: 'VISUAL_PREVIEW_COMPLETE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'procurement',
@@ -169,18 +166,17 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     description:
       'Review procurement work, canvass references, and linked requests. Inspection uses sample data.',
     implementationStatus: 'ACCEPTED',
-    backendStatus: 'VISUAL_ONLY',
+    backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
     previewMode: 'REAL_MODULE',
-    completeness: 'VISUAL_PREVIEW_COMPLETE',
+    completeness: 'BACKEND_WIRED_COMPLETE',
   }),
   Object.freeze({
     id: 'events',
     route: 'events',
     label: 'Events',
     group: 'STAFF',
-    description:
-      'Review authorized event records and logistics requirements. Inspection uses sample data.',
+    description: 'Review authorized event records and logistics requirements. Inspection uses sample data.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',
@@ -205,8 +201,7 @@ const REGISTRY: readonly PreviewRouteEntry[] = Object.freeze([
     route: 'profile',
     label: 'Account profile',
     group: 'ADMINISTRATION',
-    description:
-      'Review account details and update appearance preferences. Inspection uses sample data.',
+    description: 'Review account details and update appearance preferences. Inspection uses sample data.',
     implementationStatus: 'ACCEPTED',
     backendStatus: 'REAL_BACKEND',
     access: 'AUTHENTICATED',

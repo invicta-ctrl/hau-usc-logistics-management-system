@@ -163,7 +163,7 @@ describe('FI-08 Release Desk frontend integration', () => {
     expect(releaseDesk).toContain('e.key === "Escape"');
   });
 
-  it('records real-module delivery accurately without claiming a backend binding', () => {
+  it('records the accepted backend-backed custody route accurately', () => {
     expect(listPreviewRoutes().find((entry) => entry.route === 'release')).toEqual({
       id: 'release',
       route: 'release',
@@ -172,10 +172,10 @@ describe('FI-08 Release Desk frontend integration', () => {
       description:
         'Review ready work and record physical handoffs. Inspection uses sample data and does not change records.',
       implementationStatus: 'ACCEPTED',
-      backendStatus: 'VISUAL_ONLY',
+      backendStatus: 'REAL_BACKEND',
       access: 'AUTHENTICATED',
       previewMode: 'REAL_MODULE',
-      completeness: 'VISUAL_PREVIEW_COMPLETE',
+      completeness: 'BACKEND_WIRED_COMPLETE',
     });
   });
 });

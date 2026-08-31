@@ -93,7 +93,7 @@ describe('FI-09 Supply operations frontend integration', () => {
     expect(supplyRoutes).toContain('receiving, event, or transaction records.');
   });
 
-  it('records accepted real-module delivery without claiming a backend binding', () => {
+  it('records the accepted backend-backed supply routes accurately', () => {
     expect(listPreviewRoutes().find((entry) => entry.route === 'restocking')).toEqual({
       id: 'restocking',
       route: 'restocking',
@@ -102,10 +102,10 @@ describe('FI-09 Supply operations frontend integration', () => {
       description:
         'Review restock requests and receiving records. Inspection uses sample data and does not change records.',
       implementationStatus: 'ACCEPTED',
-      backendStatus: 'VISUAL_ONLY',
+      backendStatus: 'REAL_BACKEND',
       access: 'AUTHENTICATED',
       previewMode: 'REAL_MODULE',
-      completeness: 'VISUAL_PREVIEW_COMPLETE',
+      completeness: 'BACKEND_WIRED_COMPLETE',
     });
     expect(listPreviewRoutes().find((entry) => entry.route === 'procurement')).toEqual({
       id: 'procurement',
@@ -115,10 +115,10 @@ describe('FI-09 Supply operations frontend integration', () => {
       description:
         'Review procurement work, canvass references, and linked requests. Inspection uses sample data.',
       implementationStatus: 'ACCEPTED',
-      backendStatus: 'VISUAL_ONLY',
+      backendStatus: 'REAL_BACKEND',
       access: 'AUTHENTICATED',
       previewMode: 'REAL_MODULE',
-      completeness: 'VISUAL_PREVIEW_COMPLETE',
+      completeness: 'BACKEND_WIRED_COMPLETE',
     });
   });
 });

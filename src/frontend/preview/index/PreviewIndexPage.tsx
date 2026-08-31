@@ -25,10 +25,18 @@ type QaStatus =
   | Readonly<{ state: 'unavailable' }>
   | Readonly<{ state: 'ready'; value: FrontendSystemStatus }>;
 
+const PRIMARY_PREVIEW_FILTERS: readonly PreviewFilter[] = ['ALL', 'PUBLIC', 'AUTHENTICATED'];
+const SECONDARY_PREVIEW_FILTERS = PREVIEW_FILTER.filter(
+  (filter) => !PRIMARY_PREVIEW_FILTERS.includes(filter),
+);
+
 let qaStatusRequest: Promise<FrontendSystemStatus> | null = null;
 
 function loadQaStatus(): Promise<FrontendSystemStatus> {
-  qaStatusRequest ??= frontendBackend.systemStatus();
+  qaStatusRequest ??= frontendBackend.systemStatus().catch((error: unknown) => {
+    qaStatusRequest = null;
+    throw error;
+  });
   return qaStatusRequest;
 }
 
@@ -57,6 +65,9 @@ function PreviewEntryRow({
   onRouteKeyDown: (event: ReactKeyboardEvent<HTMLAnchorElement>) => void;
 }) {
   const authenticated = entry.access === 'AUTHENTICATED';
+  const openEntry = authenticated ? onOpenPreview : onOpen;
+  const action = authenticated ? 'open-preview' : 'open';
+
   return (
     <li className="preview-entry" data-preview-route={entry.route}>
       <div className="preview-entry-main">
@@ -65,64 +76,74 @@ function PreviewEntryRow({
           <span className="preview-entry-route">{entry.route}</span>
         </div>
         <p className="preview-entry-description">{entry.description}</p>
-        <dl className="preview-entry-metas">
-          <EntryMeta label="Status" value={IMPLEMENTATION_STATUS_LABELS[entry.implementationStatus]} kind="status" />
-          <EntryMeta label="Connection" value={BACKEND_STATUS_LABELS[entry.backendStatus]} kind="backend" />
-          <EntryMeta label="Access" value={ACCESS_REQUIREMENT_LABELS[entry.access]} kind="access" />
-          <EntryMeta label="Mode" value={PREVIEW_MODE_LABELS[entry.previewMode]} kind="mode" />
-        </dl>
       </div>
       <div className="preview-entry-actions">
+        <span className="preview-entry-health" data-preview-entry-health={entry.backendStatus}>
+          <span aria-hidden="true" />
+          {BACKEND_STATUS_LABELS[entry.backendStatus]}
+        </span>
+        <a
+          href={routeHref(entry, authenticated)}
+          className="preview-action"
+          data-action={action}
+          data-preview-route-link
+          onKeyDown={onRouteKeyDown}
+          onClick={(event) => {
+            event.preventDefault();
+            openEntry(entry);
+          }}
+        >
+          {authenticated ? 'Open inspection' : 'Open page'}
+        </a>
         {authenticated ? (
-          <>
-            <a
-              href={routeHref(entry, true)}
-              className="preview-action"
-              data-action="open-preview"
-              data-preview-route-link
-              onKeyDown={onRouteKeyDown}
-              onClick={(event) => {
-                event.preventDefault();
-                onOpenPreview(entry);
-              }}
-            >
-              Open inspection
-            </a>
-            <a
-              href={routeHref(entry, false)}
-              className="preview-action preview-action-secondary"
-              data-action="test-real-access"
-              onClick={(event) => {
-                event.preventDefault();
-                onOpen(entry);
-              }}
-            >
-              Check signed-in access
-            </a>
-          </>
-        ) : (
           <a
             href={routeHref(entry, false)}
-            className="preview-action"
-            data-action="open"
-            data-preview-route-link
-            onKeyDown={onRouteKeyDown}
+            className="preview-action preview-action-secondary"
+            data-action="test-real-access"
             onClick={(event) => {
               event.preventDefault();
               onOpen(entry);
             }}
           >
-            Open page
+            Check signed-in access
           </a>
-        )}
+        ) : null}
       </div>
+      <details className="preview-entry-technical" data-preview-entry-details>
+        <summary>Technical details</summary>
+        <dl className="preview-entry-metas">
+          <EntryMeta
+            label="Status"
+            value={IMPLEMENTATION_STATUS_LABELS[entry.implementationStatus]}
+            kind="status"
+          />
+          <EntryMeta label="Connection" value={BACKEND_STATUS_LABELS[entry.backendStatus]} kind="backend" />
+          <EntryMeta label="Access" value={ACCESS_REQUIREMENT_LABELS[entry.access]} kind="access" />
+          <EntryMeta label="Mode" value={PREVIEW_MODE_LABELS[entry.previewMode]} kind="mode" />
+        </dl>
+      </details>
     </li>
   );
 }
 
-function QaStatusStrip({ status, onOpenReset }: { status: QaStatus; onOpenReset: () => void }) {
+function QaStatusStrip({
+  status,
+  onOpenReset,
+  onRetry,
+}: {
+  status: QaStatus;
+  onOpenReset: () => void;
+  onRetry: () => void;
+}) {
   const playground = status.state === 'ready' ? status.value.playground : null;
-  const protectedValue = status.state === 'unavailable' ? 'Not available' : 'Owner sign-in required';
+  const protectedValue =
+    status.state === 'loading'
+      ? 'Checking'
+      : status.state === 'authorization-required'
+        ? 'Authorized sign-in required'
+        : status.state === 'unavailable'
+          ? 'Unavailable'
+          : 'Not reported';
   const backendLabel =
     status.state === 'loading'
       ? 'Checking'
@@ -131,34 +152,61 @@ function QaStatusStrip({ status, onOpenReset }: { status: QaStatus; onOpenReset:
           ? 'Ready'
           : 'Responding'
         : status.state === 'authorization-required'
-          ? 'Available · owner sign-in required'
+          ? 'Authorized sign-in required'
           : 'Unavailable';
   return (
     <section className="preview-qa-status" aria-labelledby="preview-qa-status-heading">
-      <div className="preview-section-heading">
+      <div className="preview-runtime-summary">
         <div>
           <p className="preview-index-eyebrow">Current QA context</p>
           <h2 id="preview-qa-status-heading">Playground runtime</h2>
         </div>
-        <span className="preview-environment-badge">Isolated Playground</span>
+        <div className="preview-runtime-health">
+          <span className="preview-environment-badge">Isolated Playground</span>
+          <span data-preview-backend-health data-state={status.state}>
+            {backendLabel}
+          </span>
+          {status.state === 'unavailable' ? (
+            <button type="button" onClick={onRetry}>
+              Retry runtime check
+            </button>
+          ) : null}
+        </div>
       </div>
-      <dl className="preview-status-strip" aria-live="polite">
-        <div><dt>Backend</dt><dd data-preview-backend-health>{backendLabel}</dd></div>
-        <div><dt>Baseline</dt><dd data-preview-baseline>{playground ? `${playground.baselineId} · v${playground.baselineVersion}` : protectedValue}</dd></div>
-        <div><dt>Generation</dt><dd data-preview-generation>{playground ? playground.generation : '—'}</dd></div>
-        <div><dt>Working state</dt><dd>{playground?.workingState ?? 'Not available'}</dd></div>
-      </dl>
-      <a
-        href={appRouteHash('administration')}
-        className="preview-reset-shortcut"
-        data-action="reset-shortcut"
-        onClick={(event) => {
-          event.preventDefault();
-          onOpenReset();
-        }}
-      >
-        Open authorized reset controls
-      </a>
+      <details className="preview-runtime-details" data-preview-runtime-details>
+        <summary>Runtime details</summary>
+        <dl className="preview-status-strip" aria-live="polite">
+          <div>
+            <dt>Backend</dt>
+            <dd>{backendLabel}</dd>
+          </div>
+          <div>
+            <dt>Baseline</dt>
+            <dd data-preview-baseline>
+              {playground ? `${playground.baselineId} · v${playground.baselineVersion}` : protectedValue}
+            </dd>
+          </div>
+          <div>
+            <dt>Generation</dt>
+            <dd data-preview-generation>{playground ? playground.generation : '—'}</dd>
+          </div>
+          <div>
+            <dt>Working state</dt>
+            <dd>{playground?.workingState ?? protectedValue}</dd>
+          </div>
+        </dl>
+        <a
+          href={appRouteHash('administration')}
+          className="preview-reset-shortcut"
+          data-action="reset-shortcut"
+          onClick={(event) => {
+            event.preventDefault();
+            onOpenReset();
+          }}
+        >
+          Open authorized reset controls
+        </a>
+      </details>
     </section>
   );
 }
@@ -186,6 +234,7 @@ export function PreviewIndexPage({
   const [filter, setFilter] = useState<PreviewFilter>(browseState.filter);
   const [recentRoutes, setRecentRoutes] = useState<Route[]>(() => readRecentPreviewRoutes());
   const [qaStatus, setQaStatus] = useState<QaStatus>({ state: 'loading' });
+  const [qaStatusReloadKey, setQaStatusReloadKey] = useState(0);
 
   useEffect(() => {
     headingRef.current?.focus();
@@ -213,7 +262,7 @@ export function PreviewIndexPage({
     return () => {
       active = false;
     };
-  }, []);
+  }, [qaStatusReloadKey]);
 
   useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
@@ -242,11 +291,15 @@ export function PreviewIndexPage({
     () => searchPreviewRoutes(query, filterPreviewRoutes(filter)),
     [filter, query],
   );
+  const secondaryFilterLabel = SECONDARY_PREVIEW_FILTERS.includes(filter)
+    ? PREVIEW_FILTER_LABELS[filter]
+    : '';
   const groups = useMemo(() => groupPreviewRoutes(visibleEntries), [visibleEntries]);
   const recentEntries = useMemo(
-    () => recentRoutes
-      .map((route) => listPreviewRoutes().find((entry) => entry.route === route))
-      .filter((entry): entry is PreviewRouteEntry => Boolean(entry)),
+    () =>
+      recentRoutes
+        .map((route) => listPreviewRoutes().find((entry) => entry.route === route))
+        .filter((entry): entry is PreviewRouteEntry => Boolean(entry)),
     [recentRoutes],
   );
 
@@ -278,15 +331,21 @@ export function PreviewIndexPage({
     navigate('staff-signin');
   };
 
-  const focusRouteLink = (event: ReactKeyboardEvent<HTMLAnchorElement>, direction: number | 'first' | 'last') => {
-    const links = [...(mainRef.current?.querySelectorAll<HTMLAnchorElement>('[data-preview-route-link]') ?? [])];
+  const focusRouteLink = (
+    event: ReactKeyboardEvent<HTMLAnchorElement>,
+    direction: number | 'first' | 'last',
+  ) => {
+    const links = [
+      ...(mainRef.current?.querySelectorAll<HTMLAnchorElement>('[data-preview-route-link]') ?? []),
+    ];
     if (!links.length) return;
     const current = links.indexOf(event.currentTarget);
-    const next = direction === 'first'
-      ? 0
-      : direction === 'last'
-        ? links.length - 1
-        : (current + direction + links.length) % links.length;
+    const next =
+      direction === 'first'
+        ? 0
+        : direction === 'last'
+          ? links.length - 1
+          : (current + direction + links.length) % links.length;
     event.preventDefault();
     links[next]?.focus();
   };
@@ -303,13 +362,105 @@ export function PreviewIndexPage({
         <header className="preview-index-header">
           <div>
             <p className="preview-index-eyebrow">QA and demo launcher</p>
-            <h1 ref={headingRef} tabIndex={-1} className="preview-index-title">Playground Index</h1>
-            <p className="preview-index-subtitle">Find a workspace, inspect its current route, or verify real signed-in access.</p>
+            <h1 ref={headingRef} tabIndex={-1} className="preview-index-title">
+              Playground Index
+            </h1>
+            <p className="preview-index-subtitle">
+              Find a workspace, inspect its current route, or verify real signed-in access.
+            </p>
           </div>
-          <button type="button" className="preview-action preview-action-secondary" data-action="back" onClick={onClose}>Back</button>
+          <button
+            type="button"
+            className="preview-action preview-action-secondary"
+            data-action="back"
+            onClick={onClose}
+          >
+            Back
+          </button>
         </header>
 
-        <QaStatusStrip status={qaStatus} onOpenReset={openReset} />
+        <section className="preview-launcher" aria-labelledby="preview-launcher-heading">
+          <div className="preview-section-heading">
+            <div>
+              <p className="preview-index-eyebrow">Route launcher</p>
+              <h2 id="preview-launcher-heading">Find a workspace</h2>
+              <p>
+                Press <kbd>/</kbd> to search. Use ↑ and ↓ between primary route links.
+              </p>
+            </div>
+            <p className="preview-result-count" aria-live="polite" data-preview-count>
+              {visibleEntries.length} {visibleEntries.length === 1 ? 'route' : 'routes'}
+            </p>
+          </div>
+          <div className="preview-index-controls">
+            <label className="preview-search">
+              <span className="preview-sr-only">Search Playground pages</span>
+              <input
+                ref={searchRef}
+                type="search"
+                data-preview-search
+                placeholder="Search by workspace, route, or purpose"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape' && query) {
+                    event.preventDefault();
+                    setQuery('');
+                  }
+                  if (event.key === 'ArrowDown') {
+                    const first =
+                      mainRef.current?.querySelector<HTMLAnchorElement>('[data-preview-route-link]');
+                    if (first) {
+                      event.preventDefault();
+                      first.focus();
+                    }
+                  }
+                }}
+              />
+            </label>
+            <div className="preview-filters" role="group" aria-label="Filter Playground pages">
+              {PRIMARY_PREVIEW_FILTERS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className="preview-filter"
+                  data-filter={item}
+                  aria-pressed={filter === item}
+                  onClick={() => setFilter(item)}
+                >
+                  {PREVIEW_FILTER_LABELS[item]}
+                </button>
+              ))}
+              <details className="preview-more-filters" data-preview-more-filters>
+                <summary>More filters{secondaryFilterLabel ? ` · ${secondaryFilterLabel}` : ''}</summary>
+                <div role="group" aria-label="Additional Playground page filters">
+                  {SECONDARY_PREVIEW_FILTERS.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className="preview-filter"
+                      data-filter={item}
+                      aria-pressed={filter === item}
+                      onClick={() => setFilter(item)}
+                    >
+                      {PREVIEW_FILTER_LABELS[item]}
+                    </button>
+                  ))}
+                </div>
+              </details>
+            </div>
+          </div>
+        </section>
+
+        <QaStatusStrip
+          status={qaStatus}
+          onOpenReset={openReset}
+          onRetry={() => {
+            qaStatusRequest = null;
+            setQaStatus({ state: 'loading' });
+            setQaStatusReloadKey((value) => value + 1);
+          }}
+        />
 
         {recentEntries.length ? (
           <section className="preview-recent" aria-labelledby="preview-recent-heading" data-preview-recent>
@@ -328,7 +479,8 @@ export function PreviewIndexPage({
                       openPreferredRoute(entry);
                     }}
                   >
-                    <span>{entry.label}</span><small>{entry.route}</small>
+                    <span>{entry.label}</span>
+                    <small>{entry.route}</small>
                   </a>
                 </li>
               ))}
@@ -339,63 +491,49 @@ export function PreviewIndexPage({
         <section className="preview-index-list" aria-labelledby="preview-workspaces-heading">
           <div className="preview-section-heading">
             <div>
-              <h2 id="preview-workspaces-heading">Workspaces</h2>
-              <p>Press <kbd>/</kbd> to search. Use ↑ and ↓ between primary route links.</p>
-            </div>
-            <p className="preview-result-count" aria-live="polite" data-preview-count>
-              {visibleEntries.length} {visibleEntries.length === 1 ? 'route' : 'routes'}
-            </p>
-          </div>
-          <div className="preview-index-controls">
-            <label className="preview-search">
-              <span className="preview-sr-only">Search Playground pages</span>
-              <input
-                ref={searchRef}
-                type="search"
-                data-preview-search
-                placeholder="Search workspaces by name, route, or purpose"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Escape' && query) {
-                    event.preventDefault();
-                    setQuery('');
-                  }
-                  if (event.key === 'ArrowDown') {
-                    const first = mainRef.current?.querySelector<HTMLAnchorElement>('[data-preview-route-link]');
-                    if (first) {
-                      event.preventDefault();
-                      first.focus();
-                    }
-                  }
-                }}
-              />
-            </label>
-            <div className="preview-filters" role="group" aria-label="Filter Playground pages">
-              {PREVIEW_FILTER.map((item) => (
-                <button key={item} type="button" className="preview-filter" data-filter={item} aria-pressed={filter === item} onClick={() => setFilter(item)}>
-                  {PREVIEW_FILTER_LABELS[item]}
-                </button>
-              ))}
+              <h2 id="preview-workspaces-heading">Available routes</h2>
+              <p>Open a route immediately. Expand technical details only when you need them.</p>
             </div>
           </div>
 
           {visibleEntries.length === 0 ? (
-            <p className="preview-empty" data-preview-empty>No Playground pages match the current search and filters.</p>
+            <p className="preview-empty" data-preview-empty>
+              No Playground pages match the current search and filters.
+            </p>
           ) : (
             groups.map((group) => (
-              <section key={group.group} className="preview-group" data-preview-group={group.group} aria-labelledby={`preview-group-${group.group}`}>
-                <h3 id={`preview-group-${group.group}`} className="preview-group-title">{ROUTE_GROUP_LABELS[group.group]}</h3>
+              <section
+                key={group.group}
+                className="preview-group"
+                data-preview-group={group.group}
+                aria-labelledby={`preview-group-${group.group}`}
+              >
+                <h3 id={`preview-group-${group.group}`} className="preview-group-title">
+                  {ROUTE_GROUP_LABELS[group.group]}
+                </h3>
                 <ul className="preview-entry-list">
                   {group.items.map((entry) => (
-                    <PreviewEntryRow key={entry.route} entry={entry} onOpen={openRoute} onOpenPreview={openPreviewRoute} onRouteKeyDown={onRouteKeyDown} />
+                    <PreviewEntryRow
+                      key={entry.route}
+                      entry={entry}
+                      onOpen={openRoute}
+                      onOpenPreview={openPreviewRoute}
+                      onRouteKeyDown={onRouteKeyDown}
+                    />
                   ))}
                 </ul>
               </section>
             ))
           )}
 
-          <button type="button" className="preview-action preview-action-secondary preview-action-test-login" data-action="test-login" onClick={testRealLogin}>Test staff sign-in</button>
+          <button
+            type="button"
+            className="preview-action preview-action-secondary preview-action-test-login"
+            data-action="test-login"
+            onClick={testRealLogin}
+          >
+            Test staff sign-in
+          </button>
         </section>
       </div>
     </main>

@@ -113,6 +113,15 @@ test('allows the exact direct route and shows the launcher when playground is tr
   await installVersion(page, true);
   await page.goto('/#/__preview/index');
   await expect(page.locator('[data-preview-index]')).toBeVisible();
+  expect(
+    await page.evaluate(() => {
+      const search = document.querySelector('[data-preview-search]');
+      const runtime = document.querySelector('[data-preview-runtime-details]');
+      return Boolean(
+        search && runtime && search.compareDocumentPosition(runtime) & Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+    }),
+  ).toBe(true);
   await expect(page.getByRole('heading', { name: 'Playground Index' })).toBeVisible();
 
   await page.goto('/');
@@ -207,7 +216,14 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   ).toHaveText('Accepted');
   await expect(
     page.locator('[data-preview-route="release"] [data-preview-entry-meta="backend"] dd'),
-  ).toHaveText('Inspection only');
+  ).toBeHidden();
+  await page.locator('[data-preview-route="release"] [data-preview-entry-details] summary').click();
+  await expect(
+    page.locator('[data-preview-route="release"] [data-preview-entry-meta="backend"] dd'),
+  ).toBeVisible();
+  await expect(
+    page.locator('[data-preview-route="release"] [data-preview-entry-meta="backend"] dd'),
+  ).toHaveText('Connected');
   await expect(page.locator('[data-preview-route="release"] [data-preview-entry-meta="mode"] dd')).toHaveText(
     'Operational page',
   );
@@ -216,7 +232,7 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   ).toHaveText('Accepted');
   await expect(
     page.locator('[data-preview-route="restocking"] [data-preview-entry-meta="backend"] dd'),
-  ).toHaveText('Inspection only');
+  ).toHaveText('Connected');
   await expect(
     page.locator('[data-preview-route="restocking"] [data-preview-entry-meta="mode"] dd'),
   ).toHaveText('Operational page');
@@ -225,7 +241,7 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   ).toHaveText('Accepted');
   await expect(
     page.locator('[data-preview-route="procurement"] [data-preview-entry-meta="backend"] dd'),
-  ).toHaveText('Inspection only');
+  ).toHaveText('Connected');
   await expect(
     page.locator('[data-preview-route="procurement"] [data-preview-entry-meta="mode"] dd'),
   ).toHaveText('Operational page');
@@ -240,6 +256,7 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
 
   await page.locator('[data-filter="PUBLIC"]').click();
   await expect(page.locator('[data-preview-route]')).toHaveCount(4);
+  await page.locator('[data-preview-more-filters] summary').click();
   await page.locator('[data-filter="PREVIEW_ONLY"]').click();
   await expect(page.locator('[data-preview-route]')).toHaveCount(0);
   await page.locator('[data-filter="IN_PROGRESS"]').click();
@@ -267,6 +284,9 @@ test('P21 provides a fast keyboard QA launcher with runtime identity, fuzzy sear
 
   await page.goto('/#/__preview/index');
   await expect(page.locator('[data-preview-backend-health]')).toHaveText('Ready');
+  await expect(page.locator('[data-preview-runtime-details]')).not.toHaveAttribute('open', '');
+  await expect(page.locator('[data-preview-baseline]')).toBeHidden();
+  await page.locator('[data-preview-runtime-details] summary').click();
   await expect(page.locator('[data-preview-baseline]')).toHaveText('playground-clean-v2 · v2');
   await expect(page.locator('[data-preview-generation]')).toHaveText('6');
   await expect(page.getByRole('link', { name: 'Open authorized reset controls' })).toHaveAttribute(
@@ -293,6 +313,42 @@ test('P21 provides a fast keyboard QA launcher with runtime identity, fuzzy sear
   await expect(page.getByRole('heading', { name: 'Logistics services and records' })).toBeVisible();
   await page.goto('/#/__preview/index');
   await expect(page.locator('[data-preview-recent-route="landing"]')).toBeVisible();
+});
+
+test('U08 reports runtime truthfully and retries a transient QA read', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'frontend-390', 'One bounded recovery proof is sufficient.');
+  await installVersion(page, true);
+  await installEmptyFeed(page);
+  let unavailable = true;
+  let healthCalls = 0;
+  await page.route('**/api/health', (route) => {
+    healthCalls += 1;
+    return route.fulfill({
+      status: unavailable ? 503 : 200,
+      contentType: 'application/json',
+      body: unavailable ? '{"message":"Unavailable"}' : '{"ok":true}',
+    });
+  });
+  await page.route('**/api/readiness', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: '{"ok":true,"ready":true}',
+    }),
+  );
+  await page.route('**/api/playground/status', (route) =>
+    route.fulfill({ status: 404, contentType: 'application/json', body: '{"message":"Not found"}' }),
+  );
+
+  await page.goto('/#/__preview/index');
+  await expect(page.locator('[data-preview-backend-health]')).toHaveText('Unavailable');
+  unavailable = false;
+  await page.getByRole('button', { name: 'Retry runtime check' }).click();
+  await expect(page.locator('[data-preview-backend-health]')).toHaveText('Ready');
+  await page.locator('[data-preview-runtime-details] summary').click();
+  await expect(page.locator('[data-preview-baseline]')).toHaveText('Not reported');
+  await expect(page.locator('[data-preview-runtime-details]')).not.toContainText('Owner sign-in required');
+  expect(healthCalls).toBe(2);
 });
 
 test('opens a public real route from the index', async ({ page }) => {
