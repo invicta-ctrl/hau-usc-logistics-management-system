@@ -123,7 +123,7 @@ const sharedFixtureContracts = [
   ['src/frontend/app/request/InternalRequestHub.tsx', 'inspection ? PREVIEW_QUEUE : EMPTY_QUEUE'],
   ['src/frontend/app/lending/InternalLendingHub.tsx', 'inspection ? PREVIEW_QUEUE : EMPTY_QUEUE'],
   ['src/frontend/app/AdministrationRoute.tsx', 'inspection ? previewAccounts : []'],
-  ['src/frontend/app/SupplyRoutes.tsx', 'inspection ? previewEventManagement : null'],
+  ['src/frontend/app/events/EventReadinessRoute.tsx', 'inspection ? previewEventManagement : null'],
 ];
 
 for (const [path, fixtureExpression] of sharedFixtureContracts) {
@@ -169,14 +169,10 @@ if ((lendingHub.match(/if \(inspection\) \{/gu) ?? []).length < 3) {
   fail('InternalLendingHub inspection-only local demonstrations are no longer explicit');
 }
 
-const eventsRoute = read('src/frontend/app/SupplyRoutes.tsx');
-requireText(eventsRoute, 'if (!eventAllowed) {', 'ManagedEventsRoute capability gate');
-requireText(eventsRoute, 'setLoadState("denied")', 'ManagedEventsRoute denied state');
-requireText(
-  eventsRoute,
-  'setLoadState(error instanceof FrontendApiError',
-  'ManagedEventsRoute unavailable state',
-);
+const eventsRoute = read('src/frontend/app/events/EventReadinessRoute.tsx');
+requireText(eventsRoute, 'if (!eventAllowed) {', 'EventReadinessRoute capability gate');
+requireText(eventsRoute, "setLoadState('denied')", 'EventReadinessRoute denied state');
+requireText(eventsRoute, "? 'denied'", 'EventReadinessRoute unavailable state');
 
 console.log(
   'Frontend fixture boundary verified: normal routes are backend-backed; fixtures remain explicit-preview-only or unreachable legacy source.',

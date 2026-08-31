@@ -6,6 +6,10 @@ const supplyRoutesSource = readFileSync(
   new URL('../../src/frontend/app/SupplyRoutes.tsx', import.meta.url),
   'utf8',
 );
+const eventReadinessSource = readFileSync(
+  new URL('../../src/frontend/app/events/EventReadinessRoute.tsx', import.meta.url),
+  'utf8',
+);
 const appRouteRendererSource = readFileSync(
   new URL('../../src/frontend/app/AppRouteRenderer.tsx', import.meta.url),
   'utf8',
@@ -41,12 +45,13 @@ describe('FI-11 governed frontend projections', () => {
     expect(appRouteRendererSource).toContain(
       "eventAllowed={session.serverCapabilities.includes('event.manage')}",
     );
-    expect(supplyRoutesSource).toContain('if (!eventAllowed)');
-    expect(supplyRoutesSource).toContain('const abort = new AbortController()');
-    expect(supplyRoutesSource).toContain('[401, 403].includes(error.status) ? "denied" : "unavailable"');
-    expect(supplyRoutesSource).toContain('onClick={() => setReloadKey((value) => value + 1)}');
-    expect(supplyRoutesSource).toContain('Retry read-only load');
-    expect(supplyRoutesSource).toContain('inspection ? previewEventManagement : null');
+    expect(supplyRoutesSource).toContain('<EventReadinessRoute');
+    expect(eventReadinessSource).toContain('if (!eventAllowed)');
+    expect(eventReadinessSource).toContain('const abort = new AbortController()');
+    expect(eventReadinessSource).toContain("? 'denied'");
+    expect(eventReadinessSource).toContain('onClick={() => setReloadKey((value) => value + 1)}');
+    expect(eventReadinessSource).toContain('Retry read-only load');
+    expect(eventReadinessSource).toContain('inspection ? previewEventManagement : null');
   });
 
   it('projects only approved reference, brand, event, and system fields', async () => {

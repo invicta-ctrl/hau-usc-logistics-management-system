@@ -64,20 +64,23 @@ test('FI-11 exposes truthful sanitized Event and Administration inspection surfa
   await expect(
     page.locator('[data-preview-route="events"] [data-preview-entry-meta="backend"] dd'),
   ).toHaveText('Connected');
-  await expect(
-    page.locator('[data-preview-route="events"] [data-preview-entry-meta="mode"] dd'),
-  ).toHaveText('Operational page');
+  await expect(page.locator('[data-preview-route="events"] [data-preview-entry-meta="mode"] dd')).toHaveText(
+    'Operational page',
+  );
 
   await page.locator('[data-preview-route="events"] [data-action="open-preview"]').click();
   const events = page.locator('[data-fi11-events="true"]');
   await expect(events).toBeVisible();
-  await expect(events.getByRole('heading', { name: 'Read-only event relationships' })).toBeVisible();
+  await expect(events.getByRole('heading', { name: 'Event logistics readiness' })).toBeVisible();
+  await expect(events.getByRole('heading', { name: 'Activity logistics readiness' })).toBeVisible();
   await expect(events).toContainText('Sanitized event series');
   await expect(events.getByText('Sample data · Actions unavailable')).toBeVisible();
   await expect(events.getByRole('button', { name: 'New event' })).toHaveCount(0);
   await expect(events.locator('[role="dialog"]')).toHaveCount(0);
   await expect
-    .poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth))
+    .poll(() =>
+      page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+    )
     .toBeLessThanOrEqual(1);
   await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
 
@@ -92,13 +95,17 @@ test('FI-11 exposes truthful sanitized Event and Administration inspection surfa
   await expect(administration).toContainText('Internal link identifiers are not shown.');
   await selectAdministrationTab(page, administration, 'Brand & media');
   await expect(administration).toContainText('Sanitized brand slot');
-  await expect(administration).toContainText('Upload, replacement, publishing, and rollback are not available from this page.');
+  await expect(administration).toContainText(
+    'Upload, replacement, publishing, and rollback are not available from this page.',
+  );
   await selectAdministrationTab(page, administration, 'System status');
   await expect(administration).toContainText('Current system readiness is unavailable in inspection mode.');
   await expect(administration).toContainText('REDACTED · READ-ONLY');
   await expect(administration).not.toContainText('schema 30');
   await expect
-    .poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth))
+    .poll(() =>
+      page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+    )
     .toBeLessThanOrEqual(1);
 
   expect(protectedRequests).toEqual([]);
