@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "program": "HAU-USC-MFR-002",
+  "phase": "U06_REQUEST_HUB",
+  "base": {
+    "playgroundCommit": "a46dd54270359c0eb07e0a7f0aac76ee9f563357",
+    "playgroundTree": "a3848bae7f2fda58bf3cc3592fd3c66e55294373",
+    "localEquivalentCommit": "64c129060f1066752d5440b4e1cc75841cba0d70",
+    "branch": "work/playground-mfr002-request-hub",
+    "mainCommitPreserved": "f7e5bf83205dbe58b5fb72126a4456747d92e906",
+    "mainTreePreserved": "480cf65cb9ec07fbab729f0588023e120cf3f97a"
+  },
+  "designAuthority": {
+    "source": "Accepted MFR-002 U06 contract plus Figma Design nodes 300:280, 300:502, and 300:2035 for the desktop queue, request inspector, and 390 CSS-pixel queue-first mobile composition",
+    "crossCheck": "PASS_SERVER_SCOPED_QUEUE_MOBILE_DECISION_SEQUENCE_DESKTOP_QUEUE_PLUS_INSPECTOR",
+    "liveMakeRead": "UNRUN_CONNECTION_TIMEOUT_AFTER_READ_ONLY_BROWSER_ATTEMPT",
+    "writeMutation": "ZERO"
+  },
+  "change": {
+    "queue": "Server-owned search, archive scope, and pagination remain authoritative; compact status chips narrow only the loaded page and clearly report that boundary.",
+    "mobile": "At 320, 390, and 768 CSS pixels, request selection opens a fixed modal workbench in the required queue-to-request-to-line-decisions-to-consequence/action order.",
+    "desktop": "At 1024 and 1440 CSS pixels, the queue and persistent complementary inspector share one decision-dense workspace without modal background locking.",
+    "decisionConsequence": "Every legal route states its operational consequence before review submission. Issue from stock marks a line ready to reserve and explicitly does not reserve or release stock; procurement and restocking create their governed downstream records; reject and missing-information outcomes remain truthful.",
+    "truthBoundary": "The client neither calculates nor mutates stock, reservations, releases, procurement completion, request legality, or parent lifecycle. The existing CSRF, idempotency, capability, concurrency, authoritative refetch, denied, conflict, stale, and error contracts remain intact.",
+    "performance": "Reviewable lines are indexed once by request instead of repeatedly filtering the entire line collection for every queue record; review retry identity is derived only from the current request's effective line decisions.",
+    "backend": "UNCHANGED",
+    "newIndexOrMigration": 0,
+    "schemaChange": 0,
+    "dependencyChange": 0,
+    "lockfileSha256": "d874f080c0cb72a444929b84fb4710e71a619530dd9aa9999e43a0a23a6fff11"
+  },
+  "performance": {
+    "measurementProfile": "U05 and U06 canonical Vite application artifacts built from the same dependency graph; direct transfer uses entry HTML plus only its referenced CSS and JavaScript, compressed with Node zlib level 9.",
+    "canonicalDirectTransfer": {
+      "u05BytesIncludingHtml": 365194,
+      "u06BytesIncludingHtml": 371658,
+      "byteDelta": 6464,
+      "byteDeltaPercent": 1.77,
+      "u05GzipBytesIncludingHtml": 93953,
+      "u06GzipBytesIncludingHtml": 94401,
+      "gzipDelta": 448,
+      "gzipDeltaPercent": 0.4768,
+      "assessment": "PASS_BELOW_15_PERCENT_UNEXPLAINED_REGRESSION_ALARM"
+    },
+    "routeAssets": {
+      "u05CssBytes": 146977,
+      "u06CssBytes": 153441,
+      "cssByteDelta": 6464,
+      "cssByteDeltaPercent": 4.398,
+      "u05CssGzipBytes": 26973,
+      "u06CssGzipBytes": 27510,
+      "cssGzipDelta": 537,
+      "cssGzipDeltaPercent": 1.9909,
+      "u05PresentationChunkBytes": 256415,
+      "u06PresentationChunkBytes": 260382,
+      "presentationByteDelta": 3967,
+      "presentationByteDeltaPercent": 1.5471,
+      "u05PresentationChunkGzipBytes": 69819,
+      "u06PresentationChunkGzipBytes": 70618,
+      "presentationGzipDelta": 799,
+      "presentationGzipDeltaPercent": 1.1444,
+      "authenticatedRouteChunkBytes": 204580,
+      "assessment": "PASS_BOUNDED_RESPONSIVE_WORKBENCH_AND_ACCESSIBILITY_COST"
+    },
+    "requestLineProjectionProxy": {
+      "requestParents": 25,
+      "requestLines": 100,
+      "samples": 250,
+      "iterationsPerSample": 1000,
+      "beforeP50Ms": 0.012262,
+      "beforeP95Ms": 0.013882,
+      "afterP50Ms": 0.002818,
+      "afterP95Ms": 0.003419,
+      "p50ReductionPercent": 77.02,
+      "p95ReductionPercent": 75.37,
+      "scope": "Pure Node projection proxy for repeated filtering versus one-pass indexing; not browser INP, route-ready, rendering, network, or live D1 latency."
+    }
+  },
+  "d1Effect": {
+    "queryShape": "UNCHANGED",
+    "applicationBindingCalls": "UNCHANGED",
+    "rowsRead": "UNAVAILABLE_NO_LIVE_D1_MEASUREMENT",
+    "sqlDurationMs": "UNAVAILABLE_NO_LIVE_D1_MEASUREMENT",
+    "indexDecision": "NO_INDEX_OR_MIGRATION_IN_VISUAL_U06; U09_RETAINS_DATA_PATH_HARDENING_AUTHORITY"
+  },
+  "verification": {
+    "u06FocusedUnit": "PASS_1_FILE_30_TESTS",
+    "fullUnit": "PASS_174_FILES_1268_TESTS_1_INTENTIONAL_SKIP",
+    "lint": "PASS_0_ERRORS_2_PREEXISTING_WARNINGS",
+    "designChecks": "PASS_FOUNDATION_THEME_TRACKER_MAKE_THEME_MAKE_ROUTES_FIGMA_TRACKER_RESOLVED_CASCADE_AND_LANDING",
+    "contrast": "PASS_66_OF_66_LIGHT_DARK_PAIRS",
+    "fi06FiveWidthEnumeration": "PASS_60_CASES_ACROSS_FRONTEND_320_390_768_1024_1440",
+    "fullFrontendEnumeration": "PASS_475_TESTS_ACROSS_FIVE_PROJECTS",
+    "canonicalArtifact": "PASS_NORMAL_EXTERNAL_ASSET_ARCHITECTURE",
+    "stagingArtifact": "PASS_EXACT_STAGING_MARKER_NORMAL_ASSETS_AND_BYTE_IDENTICAL_HERO",
+    "fixtureBoundary": "PASS_NORMAL_ROUTES_BACKEND_BACKED",
+    "governance": "PASS_12_AGENT_FILES_AND_14_CONTINUATION_FIELDS",
+    "handoff": "PASS_CANONICAL_RECORDS_GIT_STATE_AND_SECRET_SCAN",
+    "changedContentSecretScan": "PASS_ZERO_HIGH_CONFIDENCE_FINDINGS",
+    "diffCheck": "PASS"
+  },
+  "canonicalArtifact": {
+    "fileCount": 9,
+    "totalBytes": 36888299,
+    "manifestSha256": "bce8d7bca7af47d69a13792d9eae3ff4758ebc943dbfc5c077e9597a2a509581",
+    "entryHtmlBytes": 1502,
+    "entryHtmlSha256": "7f57180def092839930fa55d258a590b9856ba8cc9faef38f67c955bbcf8dd41",
+    "directAssetRequests": 2,
+    "directRequestsIncludingHtml": 3,
+    "directBytesIncludingHtml": 371658,
+    "directGzipBytesIncludingHtml": 94401,
+    "cssBytes": 153441,
+    "cssGzipBytes": 27510,
+    "cssSha256": "f18f5c5787bba4e520114a6ccc43d0fa9beb5a01a118166dbdab9e2a943e2c31",
+    "entryJavaScriptBytes": 216715,
+    "entryJavaScriptGzipBytes": 66039,
+    "entryJavaScriptSha256": "3d8293545ab058c5fb57f6c395e4910f44ab312e367b2b7ccaeac52d35a7cb57",
+    "authenticatedRouteJavaScriptBytes": 204580,
+    "authenticatedRouteJavaScriptGzipBytes": 89443,
+    "authenticatedRouteJavaScriptSha256": "0143d0ddb1bf183876ffd8e731a9a50dfcfbe3c4e9baebb0482b4a08af551ac4",
+    "presentationJavaScriptBytes": 260382,
+    "presentationJavaScriptGzipBytes": 70618,
+    "presentationJavaScriptSha256": "4a191e6fdcaf7c2f578d66ed58fb9d6c9ee4250cd4c39be9f8e57ebe91ef7ea7",
+    "largestAssetBytes": 20000000
+  },
+  "stagingArtifact": {
+    "fileCount": 9,
+    "totalBytes": 36888353,
+    "manifestSha256": "9eb046c281d61b0fdfadcc4150d51aeb6a463c1bba2e51d814bfaa23d1ab8c11",
+    "entryHtmlBytes": 1556,
+    "entryHtmlSha256": "9bac000cff733b1c0e480d5fdb6ef349ba652f721c73424d34669b75dc2d7734",
+    "heroSourceBytes": 36018711,
+    "heroPartsBytes": [20000000, 16018711],
+    "heroSourceSha256": "657b38b82d452a234ab76c64a3c4312133279ec3d59b9923c84c5e24501e71d1"
+  },
+  "accessibility": {
+    "mobileInspector": "Modal dialog with initial focus, Tab and Shift+Tab containment, Escape close, inert queue background, body scroll restoration, and exact opener focus restoration at 320, 390, and 768 CSS pixels.",
+    "desktopInspector": "Persistent complementary landmark with no aria-modal state, focus trap, inert queue, or background scroll lock at 1024 and 1440 CSS pixels.",
+    "searchAndQueue": "Visible labels and result metadata, slash shortcut that ignores editable targets, 44 CSS-pixel interactive targets, selected-row semantics, and status/filter state communicated without color alone.",
+    "decisionSafety": "Every review line has an explicit labelled route; first invalid control receives focus; projected consequence is a live region immediately before the governed submit action.",
+    "themeAndMotion": "Semantic surface/status tokens preserve the six theme families and twelve Light/Dark appearances; reduced-motion and forced-colors behavior remain supported."
+  },
+  "renderedBrowser": {
+    "status": "UNRUN_ENVIRONMENT_BLOCKED",
+    "attempt": "The frontend-390 authoritative FI-06 review journey was launched after the local server became ready and stopped before rendering because the project-pinned Chromium executable is absent.",
+    "error": "browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+    "notClaimed": "No fresh rendered five-width, keyboard, 200 percent reflow, focus-obscuration, visual-regression, Web Vitals, INP, or route-ready PASS is claimed for U06.",
+    "fallbackEvidence": [
+      "The exact FI-06 matrix enumerates 60 cases across 320, 390, 768, 1024, and 1440 CSS-pixel projects; the complete frontend configuration enumerates 475 tests.",
+      "Unit contracts cover every route consequence and the incomplete, needs-information, rejected, and accepted projected review outcomes.",
+      "Source-level Playwright contracts assert mobile dialog versus desktop complementary semantics, inert background, focus trap and restoration, slash search, Escape, authoritative refetch, idempotency, conflict, denial, stale state, server paging, and no reserve or release invention.",
+      "Canonical and staging React artifacts compile through Vite and pass fixture-boundary, design, contrast, normal-asset, deploy-marker, and byte-identical hero gates."
+    ]
+  },
+  "result": "PASS_U06_COHERENT_REQUEST_REVIEW_WORKBENCH_WITH_RENDERED_BROWSER_RESIDUAL",
+  "rollback": "Revert the isolated U06 commit. No migration, index, backend, provider, deployment, or data rollback is required.",
+  "deploymentMutation": "ZERO",
+  "providerMutation": "ZERO",
+  "dataMutation": "ZERO",
+  "figmaMutation": "ZERO",
+  "productionMutation": "ZERO"
+}

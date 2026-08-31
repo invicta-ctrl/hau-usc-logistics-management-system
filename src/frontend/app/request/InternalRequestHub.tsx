@@ -41,6 +41,63 @@ const ROUTE_LABELS: Record<LineRoute, string> = {
   MISSING_INFORMATION: 'Missing information',
 };
 
+const ROUTE_CONSEQUENCES: Record<LineRoute, { title: string; detail: string }> = {
+  ISSUE_FROM_STOCK: {
+    title: 'Ready to reserve',
+    detail:
+      'Marks this line ready for the separate reservation step. This review does not reserve or release stock.',
+  },
+  PROCUREMENT: {
+    title: 'Procurement work created',
+    detail: 'Creates a canvass and deliverable record for this request line.',
+  },
+  RESTOCK: {
+    title: 'Restocking work created',
+    detail: 'Creates a governed catalog restocking record for this request line.',
+  },
+  REJECT: {
+    title: 'Line rejected',
+    detail: 'Rejects this line without creating downstream stock, restocking, or procurement work.',
+  },
+  MISSING_INFORMATION: {
+    title: 'Clarification required',
+    detail: 'Returns this line for more information and keeps the request in review.',
+  },
+};
+
+export function reviewRouteConsequence(route: LineRoute) {
+  return ROUTE_CONSEQUENCES[route];
+}
+
+export function projectedReviewOutcome(decisions: Record<string, LineRoute>, lineCount: number) {
+  const routes = Object.values(decisions);
+  if (!lineCount || routes.length < lineCount) {
+    const remaining = Math.max(0, lineCount - routes.length);
+    return {
+      status: 'INCOMPLETE',
+      detail: `${remaining} ${remaining === 1 ? 'line still needs' : 'lines still need'} an explicit route.`,
+    } as const;
+  }
+  if (routes.every((route) => route === 'REJECT')) {
+    return {
+      status: 'REJECTED',
+      detail: 'Recording this review rejects every remaining reviewable line and the request.',
+    } as const;
+  }
+  if (routes.includes('MISSING_INFORMATION')) {
+    return {
+      status: 'NEEDS_INFORMATION',
+      detail:
+        'Recording this review keeps the request in Needs clarification while preserving every completed line route.',
+    } as const;
+  }
+  return {
+    status: 'ACCEPTED',
+    detail:
+      'Recording this review routes the request. Stock-ready lines still require the separate reservation and release workflows.',
+  } as const;
+}
+
 const PREVIEW_QUEUE: FrontendRequestBootstrap = {
   requests: [
     {
@@ -132,6 +189,7 @@ const EMPTY_QUEUE: FrontendRequestBootstrap = {
   pagination: { page: 1, pageSize: 25, total: 0, hasMore: false },
   scopeRevision: null,
 };
+const EMPTY_REQUEST_LINES: FrontendRequestLine[] = [];
 
 type LoadState = 'loading' | 'refreshing' | 'ready' | 'error' | 'denied' | 'stale';
 type Notice = {
@@ -144,14 +202,14 @@ type Notice = {
 
 function palette(_dark: boolean) {
   return {
-    background: 'var(--paper-warm)',
-    surface: 'var(--paper-mid)',
-    inset: 'var(--paper-light)',
-    border: 'var(--border-paper)',
-    text: 'var(--ink-deep)',
-    muted: 'var(--ink-mid)',
-    selected: 'color-mix(in oklch, var(--gold-vivid) 14%, var(--paper-warm))',
-    zebra: 'color-mix(in oklch, var(--ink-deep) 3%, var(--paper-warm))',
+    background: 'var(--surface-page)',
+    surface: 'var(--surface-content)',
+    inset: 'var(--surface-inset)',
+    border: 'var(--border-subtle-role)',
+    text: 'var(--foreground)',
+    muted: 'var(--muted-foreground)',
+    selected: 'color-mix(in oklch, var(--gold-vivid) 14%, var(--surface-content))',
+    zebra: 'color-mix(in oklch, var(--foreground) 3%, var(--surface-content))',
   } as const;
 }
 
@@ -179,47 +237,47 @@ function statusStyle(status: string) {
   > = {
     FOR_REVIEW: {
       label: 'In DOL review',
-      color: '#7d5518',
-      background: 'color-mix(in oklch, var(--gold-vivid) 15%, transparent)',
-      border: 'rgba(200,153,47,0.32)',
-      dot: '#c8992f',
+      color: 'var(--request-progress-fg)',
+      background: 'var(--request-progress-bg)',
+      border: 'var(--request-progress-line)',
+      dot: 'var(--request-progress-dot)',
     },
     NEEDS_INFORMATION: {
       label: 'Needs clarification',
-      color: '#c8152a',
-      background: 'rgba(212,24,61,0.10)',
-      border: 'rgba(212,24,61,0.25)',
-      dot: '#d4183d',
+      color: 'var(--request-alert-fg)',
+      background: 'var(--request-alert-bg)',
+      border: 'var(--request-alert-line)',
+      dot: 'var(--request-alert-dot)',
     },
     ACCEPTED: {
       label: 'Route recorded',
-      color: '#1a5c38',
-      background: 'rgba(31,107,65,0.12)',
-      border: 'rgba(31,107,65,0.26)',
-      dot: '#1f6b41',
+      color: 'var(--request-done-fg)',
+      background: 'var(--request-done-bg)',
+      border: 'var(--request-done-line)',
+      dot: 'var(--request-done-dot)',
     },
     REJECTED: {
       label: 'Rejected',
-      color: '#c8152a',
-      background: 'rgba(212,24,61,0.10)',
-      border: 'rgba(212,24,61,0.25)',
-      dot: '#d4183d',
+      color: 'var(--request-alert-fg)',
+      background: 'var(--request-alert-bg)',
+      border: 'var(--request-alert-line)',
+      dot: 'var(--request-alert-dot)',
     },
     CLOSED: {
       label: 'Closed',
-      color: 'var(--ink-mid)',
-      background: 'color-mix(in oklch, var(--ink-mid) 10%, transparent)',
-      border: 'color-mix(in oklch, var(--ink-mid) 22%, transparent)',
-      dot: '#8a7278',
+      color: 'var(--request-neutral-fg)',
+      background: 'var(--request-neutral-bg)',
+      border: 'var(--request-neutral-line)',
+      dot: 'var(--request-neutral-dot)',
     },
   };
   return (
     styles[status] ?? {
       label: labelFor(status),
-      color: 'var(--ink-mid)',
-      background: 'color-mix(in oklch, var(--ink-mid) 10%, transparent)',
-      border: 'color-mix(in oklch, var(--ink-mid) 22%, transparent)',
-      dot: '#8a7278',
+      color: 'var(--request-neutral-fg)',
+      background: 'var(--request-neutral-bg)',
+      border: 'var(--request-neutral-line)',
+      dot: 'var(--request-neutral-dot)',
     }
   );
 }
@@ -298,11 +356,9 @@ function UrgencyBadge({ priority }: { priority: string }) {
         fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
         fontSize: 10,
         fontWeight: 500,
-        color: escalated ? '#7d5518' : '#c8152a',
-        background: escalated
-          ? 'color-mix(in oklch, var(--gold-vivid) 12%, transparent)'
-          : 'rgba(212,24,61,0.08)',
-        border: escalated ? '1px solid rgba(200,153,47,0.28)' : '1px solid rgba(212,24,61,0.20)',
+        color: escalated ? 'var(--request-progress-fg)' : 'var(--request-alert-fg)',
+        background: escalated ? 'var(--request-progress-bg)' : 'var(--request-alert-bg)',
+        border: `1px solid ${escalated ? 'var(--request-progress-line)' : 'var(--request-alert-line)'}`,
       }}
     >
       <AlertTriangle size={10} strokeWidth={2} />
@@ -367,31 +423,32 @@ function NoticeCard({
     notice.tone === 'success'
       ? {
           icon: CheckCircle2,
-          color: '#1f6b41',
-          background: 'rgba(31,107,65,0.07)',
-          border: 'rgba(31,107,65,0.22)',
+          color: 'var(--request-done-fg)',
+          background: 'var(--request-done-bg)',
+          border: 'var(--request-done-line)',
           role: 'status' as const,
         }
       : notice.tone === 'warning'
         ? {
             icon: AlertTriangle,
-            color: '#7d5518',
-            background: 'color-mix(in oklch, var(--gold-vivid) 10%, transparent)',
-            border: 'rgba(200,153,47,0.30)',
+            color: 'var(--request-progress-fg)',
+            background: 'var(--request-progress-bg)',
+            border: 'var(--request-progress-line)',
             role: 'alert' as const,
           }
         : {
             icon: CircleAlert,
-            color: '#c8152a',
-            background: 'rgba(212,24,61,0.07)',
-            border: 'rgba(212,24,61,0.22)',
+            color: 'var(--request-alert-fg)',
+            background: 'var(--request-alert-bg)',
+            border: 'var(--request-alert-line)',
             role: 'alert' as const,
           };
   const Icon = tone.icon;
   return (
     <section
       role={tone.role}
-      className="mb-5 flex items-start gap-3 rounded-xl px-4 py-3"
+      className="request-hub__notice mb-5 flex items-start gap-3 rounded-xl px-4 py-3"
+      data-request-modal-background
       style={{ background: tone.background, border: `1px solid ${tone.border}`, color: tone.color }}
     >
       <Icon className="mt-0.5 shrink-0" size={18} />
@@ -501,6 +558,7 @@ function lifecycleFor(status: string) {
 
 function RequestInspector({
   dark,
+  isMobile,
   item,
   lines,
   events,
@@ -521,6 +579,7 @@ function RequestInspector({
   onRefetch,
 }: {
   dark: boolean;
+  isMobile: boolean;
   item: FrontendRequest;
   lines: FrontendRequestLine[];
   events: FrontendRequestBootstrap['events'];
@@ -541,11 +600,21 @@ function RequestInspector({
   onRefetch: () => void;
 }) {
   const colors = palette(dark);
-  const dialogRef = useRef<HTMLDivElement>(null);
-  useDialogFocusTrap({ open: true, dialogRef });
+  const dialogRef = useRef<HTMLElement>(null);
+  useDialogFocusTrap({
+    open: isMobile,
+    dialogRef,
+    inertSelector: isMobile ? '[data-request-modal-background]' : undefined,
+  });
   const event = events.find((entry) => entry.id === item.eventId);
   const inventoryById = useMemo(() => new Map(inventory.map((entry) => [entry.id, entry])), [inventory]);
   const lifecycle = lifecycleFor(item.status);
+  const projectedOutcome = projectedReviewOutcome(
+    Object.fromEntries(
+      lines.filter((line) => decisions[line.id]).map((line) => [line.id, decisions[line.id]]),
+    ),
+    lines.length,
+  );
 
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
@@ -553,289 +622,314 @@ function RequestInspector({
       if (event.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', onKeyDown);
-    document.body.style.overflow = 'hidden';
+    if (isMobile) document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = originalOverflow;
+      if (isMobile) document.body.style.overflow = originalOverflow;
     };
-  }, [onClose]);
+  }, [isMobile, onClose]);
 
   return (
-    <>
-      <button
-        aria-label="Close request record"
-        className="fixed inset-0 z-40 hidden cursor-default md:block"
-        style={{ background: 'rgba(0,0,0,0.18)' }}
-        onClick={onClose}
-      />
-      <section
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="internal-request-record-title"
-        tabIndex={-1}
-        className="shell-sheet--viewport fixed inset-0 z-50 flex w-full flex-col overflow-y-auto overscroll-contain md:inset-y-0 md:left-auto md:w-[min(470px,100vw)]"
-        style={{
-          background: colors.surface,
-          color: colors.text,
-          borderLeft: `1px solid ${colors.border}`,
-          boxShadow: '-4px 0 28px rgba(0,0,0,0.16)',
-        }}
+    <section
+      ref={dialogRef}
+      role={isMobile ? 'dialog' : 'complementary'}
+      aria-modal={isMobile ? true : undefined}
+      aria-labelledby="internal-request-record-title"
+      tabIndex={isMobile ? -1 : undefined}
+      className={`request-inspector${isMobile ? ' request-inspector--mobile shell-sheet--viewport' : ''}`}
+      data-request-inspector
+      style={{ background: colors.surface, color: colors.text, borderColor: colors.border }}
+    >
+      <header
+        className="request-inspector__header shell-sheet__header flex shrink-0 items-center justify-between gap-3"
+        style={{ borderBottom: `1px solid ${colors.border}` }}
       >
-        <header
-          className="shell-sheet__header flex shrink-0 items-center justify-between gap-3 pb-3"
-          style={{ borderBottom: `1px solid ${colors.border}` }}
+        <button
+          type="button"
+          data-dialog-initial-focus={isMobile ? true : undefined}
+          aria-label={isMobile ? 'Back to requests' : 'Close inspector'}
+          className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--gold-vivid)]"
+          style={{ background: colors.inset, borderColor: colors.border, color: colors.muted }}
+          onClick={onClose}
         >
-          <button
-            type="button"
-            data-dialog-initial-focus
-            aria-label="Back to requests"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--gold-vivid)] md:border"
-            style={{ background: colors.inset, borderColor: colors.border, color: colors.muted }}
-            onClick={onClose}
-          >
-            <ArrowLeft className="md:hidden" size={15} />
-            <X className="hidden md:block" size={16} />
-            <span className="text-sm md:hidden">Back to requests</span>
-          </button>
-          <span className="font-mono text-[9px] uppercase tracking-[0.9px]" style={{ color: colors.muted }}>
-            request.record
+          {isMobile ? <ArrowLeft aria-hidden="true" size={15} /> : <X aria-hidden="true" size={16} />}
+          {isMobile ? <span className="text-sm">Back to requests</span> : null}
+        </button>
+        <span className="font-mono text-[9px] uppercase tracking-[0.9px]" style={{ color: colors.muted }}>
+          request.record
+        </span>
+      </header>
+      <div
+        className="request-inspector__identity shrink-0 px-5 pb-4 pt-5"
+        style={{ borderBottom: `1px solid ${colors.border}` }}
+      >
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <span className="font-mono text-[10px]" style={{ color: colors.muted }}>
+            {item.id}
           </span>
-        </header>
-        <div className="shrink-0 px-5 pb-4 pt-5" style={{ borderBottom: `1px solid ${colors.border}` }}>
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="font-mono text-[10px]" style={{ color: colors.muted }}>
-              {item.id}
-            </span>
-            <StatusBadge status={item.status} />
-            <UrgencyBadge priority={item.priority} />
-          </div>
-          <h2
-            id="internal-request-record-title"
-            className="font-bold tracking-tight"
-            style={{ fontFamily: "'Bricolage Grotesque', system-ui, sans-serif", fontSize: 18 }}
-          >
-            {item.purpose || 'No purpose recorded'}
-          </h2>
-          <p className="mt-1 text-xs leading-5" style={{ color: colors.muted }}>
-            {item.department || 'Department not reported'} · {lines.length} reviewable{' '}
-            {lines.length === 1 ? 'line' : 'lines'} · updated {shortDate(item.updatedAt)}
-          </p>
-          <p className="mt-1 text-xs leading-5" style={{ color: colors.muted }}>
-            {event
-              ? `Event: ${event.name}`
-              : item.eventId
-                ? `Event reference: ${item.eventId}`
-                : 'No event reference supplied'}
-          </p>
-          {inspection && (
-            <p
-              className="mt-3 inline-block rounded-md px-2 py-1 font-mono text-[9px] uppercase tracking-[0.8px]"
-              style={{ color: '#7d5518', background: '#fbeed2', border: '1px solid #dcbe8a' }}
-            >
-              Sample data · Actions unavailable
-            </p>
-          )}
+          <StatusBadge status={item.status} />
+          <UrgencyBadge priority={item.priority} />
         </div>
-        <section
-          className="shrink-0 px-5 py-4"
-          style={{ borderBottom: `1px solid ${colors.border}` }}
-          aria-label="Lifecycle"
+        <h2
+          id="internal-request-record-title"
+          className="font-bold tracking-tight"
+          style={{ fontFamily: "'Bricolage Grotesque', system-ui, sans-serif", fontSize: 18 }}
         >
-          <p className="mb-3 font-mono text-[9px] uppercase tracking-[0.9px]" style={{ color: colors.muted }}>
-            Lifecycle
+          {item.purpose || 'No purpose recorded'}
+        </h2>
+        <p className="mt-1 text-xs leading-5" style={{ color: colors.muted }}>
+          {item.department || 'Department not reported'} · {lines.length} reviewable{' '}
+          {lines.length === 1 ? 'line' : 'lines'} · updated {shortDate(item.updatedAt)}
+        </p>
+        <p className="mt-1 text-xs leading-5" style={{ color: colors.muted }}>
+          {event
+            ? `Event: ${event.name}`
+            : item.eventId
+              ? `Event reference: ${item.eventId}`
+              : 'No event reference supplied'}
+        </p>
+        {inspection && (
+          <p
+            className="mt-3 inline-block rounded-md px-2 py-1 font-mono text-[9px] uppercase tracking-[0.8px]"
+            style={{
+              color: 'var(--request-progress-fg)',
+              background: 'var(--request-progress-bg)',
+              border: '1px solid var(--request-progress-line)',
+            }}
+          >
+            Sample data · Actions unavailable
           </p>
-          {lifecycle.map((step, index) => (
-            <div key={step.label} className="flex gap-3">
-              <div className="flex flex-col items-center">
+        )}
+      </div>
+      <section
+        className="request-inspector__lifecycle shrink-0 px-5 py-4"
+        style={{ borderBottom: `1px solid ${colors.border}` }}
+        aria-label="Lifecycle"
+      >
+        <p className="mb-3 font-mono text-[9px] uppercase tracking-[0.9px]" style={{ color: colors.muted }}>
+          Lifecycle
+        </p>
+        {lifecycle.map((step, index) => (
+          <div key={step.label} className="flex gap-3">
+            <div className="flex flex-col items-center">
+              <span
+                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
+                style={{
+                  background: step.done
+                    ? 'var(--request-done-dot)'
+                    : step.current
+                      ? 'var(--request-progress-dot)'
+                      : 'transparent',
+                  border: step.done
+                    ? 'none'
+                    : `1.5px solid ${step.current ? 'var(--request-progress-dot)' : colors.border}`,
+                }}
+              >
+                {step.done && <CheckCircle2 size={10} color="#fff" strokeWidth={2.5} />}
+              </span>
+              {index < lifecycle.length - 1 && (
                 <span
-                  className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
+                  className="h-5 w-px"
+                  style={{ background: step.done ? 'var(--request-done-dot)' : colors.border }}
+                />
+              )}
+            </div>
+            <div className="min-h-10 pb-1">
+              <p
+                className="text-xs font-medium"
+                style={{ color: step.done || step.current ? colors.text : colors.muted }}
+              >
+                {step.label}
+              </p>
+              <p className="mt-0.5 text-[11px] leading-4" style={{ color: colors.muted }}>
+                {step.note}
+              </p>
+            </div>
+          </div>
+        ))}
+      </section>
+      <section
+        className="request-inspector__routing shrink-0 px-5 py-4"
+        style={{ borderBottom: `1px solid ${colors.border}` }}
+      >
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.9px]" style={{ color: colors.muted }}>
+            Explicit line routing
+          </p>
+          <span className="font-mono text-[10px]" style={{ color: colors.muted }}>
+            {lines.length} reviewable
+          </span>
+        </div>
+        {lines.length === 0 ? (
+          <p
+            className="rounded-lg px-3 py-3 text-sm"
+            style={{ color: colors.muted, background: colors.inset, border: `1px solid ${colors.border}` }}
+          >
+            No reviewable lines remain for this request.
+          </p>
+        ) : (
+          <div className="overflow-hidden rounded-lg" style={{ border: `1px solid ${colors.border}` }}>
+            {lines.map((line, index) => {
+              const catalogItem = inventoryById.get(line.itemId);
+              return (
+                <div
+                  key={line.id}
+                  className="request-inspector__line px-3 py-3"
                   style={{
-                    background: step.done ? '#1f6b41' : step.current ? '#c8992f' : 'transparent',
-                    border: step.done ? 'none' : `1.5px solid ${step.current ? '#c8992f' : colors.border}`,
+                    background: colors.surface,
+                    borderTop: index ? `1px solid ${colors.border}` : 'none',
                   }}
                 >
-                  {step.done && <CheckCircle2 size={10} color="#fff" strokeWidth={2.5} />}
-                </span>
-                {index < lifecycle.length - 1 && (
-                  <span className="h-5 w-px" style={{ background: step.done ? '#1f6b41' : colors.border }} />
-                )}
-              </div>
-              <div className="min-h-10 pb-1">
-                <p
-                  className="text-xs font-medium"
-                  style={{ color: step.done || step.current ? colors.text : colors.muted }}
-                >
-                  {step.label}
-                </p>
-                <p className="mt-0.5 text-[11px] leading-4" style={{ color: colors.muted }}>
-                  {step.note}
-                </p>
-              </div>
-            </div>
-          ))}
-        </section>
-        <section className="shrink-0 px-5 py-4" style={{ borderBottom: `1px solid ${colors.border}` }}>
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <p className="font-mono text-[9px] uppercase tracking-[0.9px]" style={{ color: colors.muted }}>
-              Explicit line routing
-            </p>
-            <span className="font-mono text-[10px]" style={{ color: colors.muted }}>
-              {lines.length} reviewable
-            </span>
-          </div>
-          {lines.length === 0 ? (
-            <p
-              className="rounded-lg px-3 py-3 text-sm"
-              style={{ color: colors.muted, background: colors.inset, border: `1px solid ${colors.border}` }}
-            >
-              No reviewable lines remain for this request.
-            </p>
-          ) : (
-            <div className="overflow-hidden rounded-lg" style={{ border: `1px solid ${colors.border}` }}>
-              {lines.map((line, index) => {
-                const catalogItem = inventoryById.get(line.itemId);
-                return (
-                  <div
-                    key={line.id}
-                    className="px-3 py-3"
-                    style={{
-                      background: colors.surface,
-                      borderTop: index ? `1px solid ${colors.border}` : 'none',
-                    }}
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{line.description}</p>
-                      <p className="mt-0.5 text-[11px] leading-4" style={{ color: colors.muted }}>
-                        {line.quantity} {line.unit} · {labelFor(line.status)}
-                        {line.neededAt ? ` · needed ${shortDate(line.neededAt)}` : ''}
-                      </p>
-                      <p className="mt-0.5 font-mono text-[10px]" style={{ color: colors.muted }}>
-                        {catalogItem
-                          ? `Catalog reference: ${catalogItem.name}`
-                          : line.itemId
-                            ? `Catalog reference: ${line.itemId}`
-                            : 'No exact catalog item'}
-                      </p>
-                    </div>
-                    {canWrite ? (
-                      <label className="mt-3 block text-[11px]" style={{ color: colors.muted }}>
-                        Route decision
-                        <select
-                          ref={(element) => {
-                            lineSelectRefs.current[line.id] = element;
-                          }}
-                          aria-label={`Route ${line.description}`}
-                          value={decisions[line.id] ?? ''}
-                          onChange={(event) => onSetDecision(line.id, event.target.value as LineRoute)}
-                          className="mt-1.5 w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--gold-vivid)]"
-                          style={{
-                            color: colors.text,
-                            background: colors.inset,
-                            border: `1px solid ${colors.border}`,
-                          }}
-                        >
-                          <option value="">Select a permitted route</option>
-                          {permittedReviewRoutes(item, line).map((route) => (
-                            <option key={route} value={route}>
-                              {ROUTE_LABELS[route]}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    ) : (
-                      <p
-                        className="mt-3 rounded-md px-3 py-2 text-xs"
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{line.description}</p>
+                    <p className="mt-0.5 text-[11px] leading-4" style={{ color: colors.muted }}>
+                      {line.quantity} {line.unit} · {labelFor(line.status)}
+                      {line.neededAt ? ` · needed ${shortDate(line.neededAt)}` : ''}
+                    </p>
+                    <p className="mt-0.5 font-mono text-[10px]" style={{ color: colors.muted }}>
+                      {catalogItem
+                        ? `Catalog reference: ${catalogItem.name}`
+                        : line.itemId
+                          ? `Catalog reference: ${line.itemId}`
+                          : 'No exact catalog item'}
+                    </p>
+                  </div>
+                  {canWrite ? (
+                    <label className="mt-3 block text-[11px]" style={{ color: colors.muted }}>
+                      Route decision
+                      <select
+                        ref={(element) => {
+                          lineSelectRefs.current[line.id] = element;
+                        }}
+                        aria-label={`Route ${line.description}`}
+                        value={decisions[line.id] ?? ''}
+                        onChange={(event) => onSetDecision(line.id, event.target.value as LineRoute)}
+                        className="mt-1.5 w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--gold-vivid)]"
                         style={{
-                          color: colors.muted,
+                          color: colors.text,
                           background: colors.inset,
                           border: `1px solid ${colors.border}`,
                         }}
                       >
-                        {readOnlyReason}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-        <section className="shrink-0 px-5 py-4" style={{ borderBottom: `1px solid ${colors.border}` }}>
-          <p className="mb-2 font-mono text-[9px] uppercase tracking-[0.9px]" style={{ color: colors.muted }}>
-            Context
-          </p>
-          <div className="space-y-2 text-xs leading-5" style={{ color: colors.muted }}>
-            <p>Committee scope reference: {item.ownerCommitteeId || 'not reported'}.</p>
-            <p>Request stage: {item.stage ? labelFor(item.stage) : 'not reported'}.</p>
-            <p>
-              Creation belongs to the authenticated External Request Center; this DOL surface only reads and
-              reviews the existing queue.
-            </p>
+                        <option value="">Select a permitted route</option>
+                        {permittedReviewRoutes(item, line).map((route) => (
+                          <option key={route} value={route}>
+                            {ROUTE_LABELS[route]}
+                          </option>
+                        ))}
+                      </select>
+                      {decisions[line.id] ? (
+                        <span className="request-inspector__line-consequence">
+                          <strong>{reviewRouteConsequence(decisions[line.id]).title}</strong>
+                          <span>{reviewRouteConsequence(decisions[line.id]).detail}</span>
+                        </span>
+                      ) : null}
+                    </label>
+                  ) : (
+                    <p
+                      className="mt-3 rounded-md px-3 py-2 text-xs"
+                      style={{
+                        color: colors.muted,
+                        background: colors.inset,
+                        border: `1px solid ${colors.border}`,
+                      }}
+                    >
+                      {readOnlyReason}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        </section>
-        {canWrite && lines.length > 0 && (
-          <section
-            className="shell-sheet__actions mt-auto shrink-0 px-5 pt-4"
-            style={{ borderTop: `1px solid ${colors.border}`, background: colors.surface }}
-          >
-            <label className="block text-xs" style={{ color: colors.muted }}>
-              Review note <span className="font-normal">(optional)</span>
-              <textarea
-                value={note}
-                onChange={(event) => onSetNote(event.target.value)}
-                maxLength={500}
-                rows={3}
-                placeholder="Recorded with this review command"
-                className="mt-1.5 w-full resize-y rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--gold-vivid)]"
-                style={{ color: colors.text, background: colors.inset, border: `1px solid ${colors.border}` }}
-              />
-            </label>
-            {inlineError && (
-              <div
-                role="alert"
-                className="mt-3 rounded-lg px-3 py-2 text-sm"
-                style={{
-                  color: '#c8152a',
-                  background: 'rgba(212,24,61,0.07)',
-                  border: '1px solid rgba(212,24,61,0.22)',
-                }}
-              >
-                <p>{inlineError}</p>
-                {canRecover && (
-                  <button
-                    type="button"
-                    className="mt-2 inline-flex items-center gap-1 text-sm font-semibold underline"
-                    style={{ color: '#7d5518' }}
-                    onClick={onRefetch}
-                  >
-                    Refresh request queue
-                    <RefreshCw size={13} />
-                  </button>
-                )}
-              </div>
-            )}
-            <button
-              type="button"
-              disabled={submitting}
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-              style={{ color: 'var(--gold-cream)', background: 'var(--oxblood-deep)' }}
-              onClick={onSubmit}
-            >
-              {submitting && <LoaderCircle className="animate-spin" size={15} />}
-              {submitting
-                ? 'Recording review…'
-                : inspection
-                  ? 'Check review action'
-                  : 'Record request review'}
-            </button>
-            <p className="mt-2 text-center font-mono text-[9px] leading-4" style={{ color: colors.muted }}>
-              Choose one route for every reviewable line.
-            </p>
-          </section>
         )}
       </section>
-    </>
+      {canWrite && lines.length > 0 ? (
+        <section
+          className="request-inspector__consequence shrink-0 px-5 py-4"
+          aria-labelledby="request-review-consequence-title"
+          aria-live="polite"
+          style={{ borderBottom: `1px solid ${colors.border}` }}
+        >
+          <p className="font-mono text-[9px] uppercase tracking-[0.9px]" style={{ color: colors.muted }}>
+            Before recording
+          </p>
+          <h3 id="request-review-consequence-title">Review consequence</h3>
+          <p>{projectedOutcome.detail}</p>
+        </section>
+      ) : null}
+      <section
+        className="request-inspector__context shrink-0 px-5 py-4"
+        style={{ borderBottom: `1px solid ${colors.border}` }}
+      >
+        <p className="mb-2 font-mono text-[9px] uppercase tracking-[0.9px]" style={{ color: colors.muted }}>
+          Context
+        </p>
+        <div className="space-y-2 text-xs leading-5" style={{ color: colors.muted }}>
+          <p>Committee scope reference: {item.ownerCommitteeId || 'not reported'}.</p>
+          <p>Request stage: {item.stage ? labelFor(item.stage) : 'not reported'}.</p>
+          <p>
+            Creation belongs to the authenticated External Request Center; this DOL surface only reads and
+            reviews the existing queue.
+          </p>
+        </div>
+      </section>
+      {canWrite && lines.length > 0 && (
+        <section
+          className="request-inspector__actions shell-sheet__actions mt-auto shrink-0 px-5 pt-4"
+          style={{ borderTop: `1px solid ${colors.border}`, background: colors.surface }}
+        >
+          <label className="block text-xs" style={{ color: colors.muted }}>
+            Review note <span className="font-normal">(optional)</span>
+            <textarea
+              value={note}
+              onChange={(event) => onSetNote(event.target.value)}
+              maxLength={500}
+              rows={3}
+              placeholder="Recorded with this review command"
+              className="mt-1.5 w-full resize-y rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--gold-vivid)]"
+              style={{ color: colors.text, background: colors.inset, border: `1px solid ${colors.border}` }}
+            />
+          </label>
+          {inlineError && (
+            <div
+              role="alert"
+              className="mt-3 rounded-lg px-3 py-2 text-sm"
+              style={{
+                color: 'var(--request-alert-fg)',
+                background: 'var(--request-alert-bg)',
+                border: '1px solid var(--request-alert-line)',
+              }}
+            >
+              <p>{inlineError}</p>
+              {canRecover && (
+                <button
+                  type="button"
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-semibold underline"
+                  style={{ color: 'var(--request-progress-fg)' }}
+                  onClick={onRefetch}
+                >
+                  Refresh request queue
+                  <RefreshCw size={13} />
+                </button>
+              )}
+            </div>
+          )}
+          <button
+            type="button"
+            disabled={submitting}
+            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+            style={{ color: 'var(--gold-cream)', background: 'var(--oxblood-deep)' }}
+            onClick={onSubmit}
+          >
+            {submitting && <LoaderCircle className="animate-spin" size={15} />}
+            {submitting ? 'Recording review…' : inspection ? 'Check review action' : 'Record request review'}
+          </button>
+          <p className="mt-2 text-center font-mono text-[9px] leading-4" style={{ color: colors.muted }}>
+            Choose one route for every reviewable line.
+          </p>
+        </section>
+      )}
+    </section>
   );
 }
 
@@ -861,6 +955,7 @@ export function InternalRequestHub({
   const [page, setPage] = useState(1);
   const [refreshEpoch, setRefreshEpoch] = useState(0);
   const [selected, setSelected] = useState<FrontendRequest | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const [decisions, setDecisions] = useState<Record<string, LineRoute>>({});
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -870,6 +965,7 @@ export function InternalRequestHub({
   const submissionInFlight = useRef(false);
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const lineSelectRefs = useRef<Record<string, HTMLSelectElement | null>>({});
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const refetch = useCallback(() => {
     if (!inspection) setRefreshEpoch((value) => value + 1);
@@ -880,6 +976,31 @@ export function InternalRequestHub({
     const timeout = window.setTimeout(() => setServerQuery(query.trim()), 220);
     return () => window.clearTimeout(timeout);
   }, [inspection, query]);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 59.99rem)');
+    const sync = () => setIsMobile(media.matches);
+    sync();
+    media.addEventListener('change', sync);
+    return () => media.removeEventListener('change', sync);
+  }, []);
+
+  useEffect(() => {
+    const focusSearch = (event: KeyboardEvent) => {
+      const target = event.target;
+      const isTyping =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        (target instanceof HTMLElement && target.isContentEditable);
+      if (event.key === '/' && !isTyping && !selected) {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', focusSearch);
+    return () => document.removeEventListener('keydown', focusSearch);
+  }, [selected]);
 
   useEffect(() => {
     if (inspection) return;
@@ -919,13 +1040,19 @@ export function InternalRequestHub({
     () => queue.requests.filter((request) => !statusFilters.length || statusFilters.includes(request.status)),
     [queue.requests, statusFilters],
   );
-  const reviewableLines = useMemo(
-    () =>
-      queue.requestLines.filter(
-        (line) => line.requestId === selected?.id && REVIEWABLE_LINE_STATUSES.has(line.status),
-      ),
-    [queue.requestLines, selected?.id],
-  );
+  const reviewableLinesByRequest = useMemo(() => {
+    const index = new Map<string, FrontendRequestLine[]>();
+    for (const line of queue.requestLines) {
+      if (!REVIEWABLE_LINE_STATUSES.has(line.status)) continue;
+      const lines = index.get(line.requestId);
+      if (lines) lines.push(line);
+      else index.set(line.requestId, [line]);
+    }
+    return index;
+  }, [queue.requestLines]);
+  const reviewableLines = selected
+    ? (reviewableLinesByRequest.get(selected.id) ?? EMPTY_REQUEST_LINES)
+    : EMPTY_REQUEST_LINES;
   const pageCount = Math.max(1, Math.ceil(queue.pagination.total / Math.max(1, queue.pagination.pageSize)));
   const writeEnabled = (inspection || canReviewRequests) && loadState === 'ready';
   const closeInspector = useCallback(() => {
@@ -959,6 +1086,9 @@ export function InternalRequestHub({
       return;
     }
     const normalizedNote = note.trim();
+    const effectiveDecisions = Object.fromEntries(
+      reviewableLines.map((line) => [line.id, decisions[line.id]]),
+    ) as Record<string, LineRoute>;
     submissionInFlight.current = true;
     setSubmitting(true);
     setInlineError('');
@@ -972,7 +1102,7 @@ export function InternalRequestHub({
         clientRequestId: reviewClientRequestId({
           requestId: selected.id,
           revision: selected.updatedAt,
-          decisions,
+          decisions: effectiveDecisions,
           note: normalizedNote,
         }),
       });
@@ -1039,12 +1169,11 @@ export function InternalRequestHub({
     );
 
   return (
-    <main
-      className="mx-auto max-w-[1440px] px-4 py-8 md:px-8"
-      style={{ color: colors.text }}
-      data-fi06-state={loadState}
-    >
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <main className="request-hub layout-container" style={{ color: colors.text }} data-fi06-state={loadState}>
+      <header
+        className="request-hub__header mb-6 flex flex-wrap items-start justify-between gap-4"
+        data-request-modal-background
+      >
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[1px]" style={{ color: colors.muted }}>
             DOL · Internal Request Hub
@@ -1065,7 +1194,7 @@ export function InternalRequestHub({
         <button
           type="button"
           disabled={loadState === 'loading' || inspection}
-          className="inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+          className="request-hub__refresh inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
           style={{ color: colors.text, background: colors.inset, border: `1px solid ${colors.border}` }}
           onClick={refetch}
         >
@@ -1076,14 +1205,20 @@ export function InternalRequestHub({
       {notice && <NoticeCard notice={notice} onDismiss={() => setNotice(null)} onRefetch={refetch} />}
       {inspection ? (
         <p
-          className="mb-4 rounded-lg px-3 py-2 text-xs"
-          style={{ color: '#7d5518', background: '#fbeed2', border: '1px solid #dcbe8a' }}
+          className="request-hub__mode mb-4 rounded-lg px-3 py-2 text-xs"
+          data-request-modal-background
+          style={{
+            color: 'var(--request-progress-fg)',
+            background: 'var(--request-progress-bg)',
+            border: '1px solid var(--request-progress-line)',
+          }}
         >
           Sample data · Actions unavailable.
         </p>
       ) : !canReviewRequests ? (
         <p
-          className="mb-4 rounded-lg px-3 py-2 text-xs"
+          className="request-hub__mode mb-4 rounded-lg px-3 py-2 text-xs"
+          data-request-modal-background
           style={{ color: colors.muted, background: colors.inset, border: `1px solid ${colors.border}` }}
         >
           Read-only queue: this account can view requests but cannot record reviews.
@@ -1092,11 +1227,12 @@ export function InternalRequestHub({
       {loadState === 'stale' && (
         <p
           role="alert"
-          className="mb-4 rounded-lg px-3 py-2 text-sm"
+          className="request-hub__mode mb-4 rounded-lg px-3 py-2 text-sm"
+          data-request-modal-background
           style={{
-            color: '#7d5518',
-            background: 'color-mix(in oklch, var(--gold-vivid) 10%, transparent)',
-            border: '1px solid rgba(200,153,47,0.30)',
+            color: 'var(--request-progress-fg)',
+            background: 'var(--request-progress-bg)',
+            border: '1px solid var(--request-progress-line)',
           }}
         >
           Last known queue shown. The refresh did not complete, so review controls remain disabled until a
@@ -1106,7 +1242,8 @@ export function InternalRequestHub({
       {loadState === 'refreshing' && (
         <p
           role="status"
-          className="mb-4 rounded-lg px-3 py-2 text-sm"
+          className="request-hub__mode mb-4 rounded-lg px-3 py-2 text-sm"
+          data-request-modal-background
           style={{
             color: colors.muted,
             background: colors.inset,
@@ -1119,14 +1256,15 @@ export function InternalRequestHub({
       {loadState === 'loading' ? (
         <QueueSkeleton dark={dark} />
       ) : (
-        <div className="flex items-start gap-5">
+        <div className={`request-hub__layout${selected ? ' request-hub__layout--inspecting' : ''}`}>
           <section
-            className="min-w-0 flex-1 overflow-hidden rounded-xl"
+            className="request-hub__queue min-w-0 overflow-hidden rounded-xl"
             style={{ background: colors.surface, border: `1px solid ${colors.border}` }}
             aria-label="Request queue"
+            data-request-modal-background
           >
             <div
-              className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+              className="request-hub__queue-header flex flex-wrap items-center justify-between gap-3 px-4 py-3"
               style={{ borderBottom: `1px solid ${colors.border}` }}
             >
               <p className="text-sm font-semibold">Queue</p>
@@ -1134,15 +1272,16 @@ export function InternalRequestHub({
                 {queue.pagination.total} authorized {queue.pagination.total === 1 ? 'request' : 'requests'}
               </span>
             </div>
-            <div className="border-b px-4 py-3" style={{ borderColor: colors.border }}>
+            <div className="request-hub__controls border-b px-4 py-3" style={{ borderColor: colors.border }}>
               <div className="flex flex-col gap-3">
-                <label className="relative block max-w-md">
+                <label className="request-hub__search relative block max-w-md">
                   <Search
                     className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
                     size={14}
                     style={{ color: colors.muted }}
                   />
                   <input
+                    ref={searchRef}
                     type="search"
                     value={query}
                     onChange={(event) => {
@@ -1157,8 +1296,9 @@ export function InternalRequestHub({
                       border: `1px solid ${colors.border}`,
                     }}
                   />
+                  <kbd aria-hidden="true">/</kbd>
                 </label>
-                <div className="flex flex-wrap items-center gap-1.5">
+                <div className="request-hub__filter-row flex flex-wrap items-center gap-1.5">
                   {ARCHIVE_FILTERS.map((filter) => {
                     const active = archiveFilter === filter.value;
                     return (
@@ -1168,15 +1308,14 @@ export function InternalRequestHub({
                         aria-pressed={active}
                         onClick={() => {
                           setArchiveFilter(filter.value);
+                          setStatusFilters([]);
                           setPage(1);
                         }}
-                        className="rounded-full px-3 py-1 text-[11px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--gold-vivid)]"
+                        className="request-hub__filter rounded-full px-3 text-[11px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--gold-vivid)]"
                         style={{
-                          color: active ? '#7d5518' : colors.muted,
-                          background: active
-                            ? 'color-mix(in oklch, var(--gold-vivid) 12%, transparent)'
-                            : 'transparent',
-                          border: `1px solid ${active ? 'rgba(200,153,47,0.30)' : colors.border}`,
+                          color: active ? 'var(--request-progress-fg)' : colors.muted,
+                          background: active ? 'var(--request-progress-bg)' : 'transparent',
+                          border: `1px solid ${active ? 'var(--request-progress-line)' : colors.border}`,
                         }}
                       >
                         {filter.label}
@@ -1184,12 +1323,12 @@ export function InternalRequestHub({
                     );
                   })}
                 </div>
-                <div className="flex flex-wrap items-center gap-1.5">
+                <div className="request-hub__filter-row flex flex-wrap items-center gap-1.5">
                   <span
                     className="mr-1 font-mono text-[9px] uppercase tracking-[0.7px]"
                     style={{ color: colors.muted }}
                   >
-                    This page
+                    Loaded page status
                   </span>
                   {STATUS_FILTERS.map((status) => {
                     const active = statusFilters.includes(status);
@@ -1204,7 +1343,7 @@ export function InternalRequestHub({
                             active ? current.filter((entry) => entry !== status) : [...current, status],
                           )
                         }
-                        className="rounded-full px-3 py-1 text-[11px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--gold-vivid)]"
+                        className="request-hub__filter rounded-full px-3 text-[11px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--gold-vivid)]"
                         style={{
                           color: active ? meta.color : colors.muted,
                           background: active ? meta.background : 'transparent',
@@ -1224,7 +1363,7 @@ export function InternalRequestHub({
                         setServerQuery('');
                         setPage(1);
                       }}
-                      className="rounded-full px-3 py-1 text-[11px] underline"
+                      className="request-hub__filter rounded-full px-3 text-[11px] underline"
                       style={{ color: colors.muted }}
                     >
                       Clear filters
@@ -1237,7 +1376,8 @@ export function InternalRequestHub({
               className="border-b px-4 py-2 text-[11px]"
               style={{ color: colors.muted, borderColor: colors.border }}
             >
-              Search and page controls define this queue. Status filters apply only to the loaded page.
+              Search, archive scope, and pagination are server-owned. Status chips narrow only this loaded
+              page.
             </p>
             {visible.length === 0 ? (
               <div className="flex min-h-56 flex-col items-center justify-center gap-3 px-5 py-12 text-center">
@@ -1266,12 +1406,10 @@ export function InternalRequestHub({
               </div>
             ) : (
               <>
-                <div className="md:hidden">
+                <div className="request-hub__cards">
                   {visible.map((request, index) => {
                     const selectedRow = selected?.id === request.id;
-                    const lineCount = queue.requestLines.filter(
-                      (line) => line.requestId === request.id && REVIEWABLE_LINE_STATUSES.has(line.status),
-                    ).length;
+                    const lineCount = reviewableLinesByRequest.get(request.id)?.length ?? 0;
                     return (
                       <button
                         key={request.id}
@@ -1281,7 +1419,7 @@ export function InternalRequestHub({
                         type="button"
                         onClick={() => selectRequest(request)}
                         aria-pressed={selectedRow}
-                        className="flex w-full flex-col gap-2 px-4 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[var(--gold-vivid)]"
+                        className="request-hub__card flex w-full flex-col gap-2 px-4 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[var(--gold-vivid)]"
                         style={{
                           background: selectedRow ? colors.selected : colors.surface,
                           borderTop: index ? `1px solid ${colors.border}` : 'none',
@@ -1310,7 +1448,7 @@ export function InternalRequestHub({
                     );
                   })}
                 </div>
-                <div className="hidden overflow-x-auto md:block">
+                <div className="request-hub__table overflow-x-auto">
                   <table
                     className="w-full tabular-nums"
                     style={{ borderCollapse: 'collapse', minWidth: 690 }}
@@ -1332,10 +1470,7 @@ export function InternalRequestHub({
                     <tbody>
                       {visible.map((request, index) => {
                         const selectedRow = selected?.id === request.id;
-                        const lines = queue.requestLines.filter(
-                          (line) =>
-                            line.requestId === request.id && REVIEWABLE_LINE_STATUSES.has(line.status),
-                        );
+                        const lines = reviewableLinesByRequest.get(request.id) ?? EMPTY_REQUEST_LINES;
                         return (
                           <tr
                             key={request.id}
@@ -1397,7 +1532,7 @@ export function InternalRequestHub({
               </>
             )}
             <footer
-              className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+              className="request-hub__pagination flex flex-wrap items-center justify-between gap-3 px-4 py-3"
               style={{ background: colors.inset, borderTop: `1px solid ${colors.border}` }}
             >
               <span className="font-mono text-[10px]" style={{ color: colors.muted }}>
@@ -1427,96 +1562,104 @@ export function InternalRequestHub({
               </div>
             </footer>
           </section>
-          <aside
-            className="hidden w-[320px] shrink-0 rounded-xl p-5 xl:block"
-            style={{ background: colors.surface, border: `1px solid ${colors.border}` }}
-          >
-            <p className="font-mono text-[9px] uppercase tracking-[0.9px]" style={{ color: colors.muted }}>
-              Queue context
-            </p>
-            <p className="mt-3 text-sm leading-5" style={{ color: colors.text }}>
-              Select one request to inspect its lifecycle, event reference, catalog references, and reviewable
-              line routes.
-            </p>
-            <dl className="mt-5 space-y-3 text-xs">
-              <div>
-                <dt
-                  className="font-mono text-[9px] uppercase tracking-[0.7px]"
-                  style={{ color: colors.muted }}
-                >
-                  Queue version
-                </dt>
-                <dd className="mt-1 break-all" style={{ color: colors.text }}>
-                  {queue.scopeRevision?.token || 'Not reported'}
-                </dd>
-              </div>
-              <div>
-                <dt
-                  className="font-mono text-[9px] uppercase tracking-[0.7px]"
-                  style={{ color: colors.muted }}
-                >
-                  Event references
-                </dt>
-                <dd className="mt-1" style={{ color: colors.text }}>
-                  {queue.events.length} available for this page
-                </dd>
-              </div>
-              <div>
-                <dt
-                  className="font-mono text-[9px] uppercase tracking-[0.7px]"
-                  style={{ color: colors.muted }}
-                >
-                  Catalog references
-                </dt>
-                <dd className="mt-1" style={{ color: colors.text }}>
-                  {queue.inventoryItems.length} listed; availability is not calculated here
-                </dd>
-              </div>
-            </dl>
-            <p
-              className="mt-6 rounded-lg px-3 py-3 text-xs leading-5"
-              style={{ color: colors.muted, background: colors.inset, border: `1px solid ${colors.border}` }}
+          {!selected ? (
+            <aside
+              className="request-hub__placeholder rounded-xl p-5"
+              aria-label="Request inspector"
+              data-request-modal-background
+              style={{ background: colors.surface, border: `1px solid ${colors.border}` }}
             >
-              Creation remains in the authenticated External Request Center. This internal DOL route neither
-              creates a request nor releases stock.
-            </p>
-          </aside>
+              <p className="font-mono text-[9px] uppercase tracking-[0.9px]" style={{ color: colors.muted }}>
+                Queue context
+              </p>
+              <p className="mt-3 text-sm leading-5" style={{ color: colors.text }}>
+                Select one request to inspect its lifecycle, event reference, catalog references, and
+                reviewable line routes.
+              </p>
+              <dl className="mt-5 space-y-3 text-xs">
+                <div>
+                  <dt
+                    className="font-mono text-[9px] uppercase tracking-[0.7px]"
+                    style={{ color: colors.muted }}
+                  >
+                    Queue version
+                  </dt>
+                  <dd className="mt-1 break-all" style={{ color: colors.text }}>
+                    {queue.scopeRevision?.token || 'Not reported'}
+                  </dd>
+                </div>
+                <div>
+                  <dt
+                    className="font-mono text-[9px] uppercase tracking-[0.7px]"
+                    style={{ color: colors.muted }}
+                  >
+                    Event references
+                  </dt>
+                  <dd className="mt-1" style={{ color: colors.text }}>
+                    {queue.events.length} available for this page
+                  </dd>
+                </div>
+                <div>
+                  <dt
+                    className="font-mono text-[9px] uppercase tracking-[0.7px]"
+                    style={{ color: colors.muted }}
+                  >
+                    Catalog references
+                  </dt>
+                  <dd className="mt-1" style={{ color: colors.text }}>
+                    {queue.inventoryItems.length} listed; availability is not calculated here
+                  </dd>
+                </div>
+              </dl>
+              <p
+                className="mt-6 rounded-lg px-3 py-3 text-xs leading-5"
+                style={{
+                  color: colors.muted,
+                  background: colors.inset,
+                  border: `1px solid ${colors.border}`,
+                }}
+              >
+                Creation remains in the authenticated External Request Center. This internal DOL route neither
+                creates a request nor releases stock.
+              </p>
+            </aside>
+          ) : (
+            <RequestInspector
+              dark={dark}
+              isMobile={isMobile}
+              item={selected}
+              lines={reviewableLines}
+              events={queue.events}
+              inventory={queue.inventoryItems}
+              decisions={decisions}
+              note={note}
+              canWrite={writeEnabled}
+              readOnlyReason={
+                loadState === 'refreshing'
+                  ? 'Review controls are temporarily disabled while the queue updates.'
+                  : loadState === 'stale'
+                    ? 'Review controls are disabled until the current page reloads.'
+                    : 'Read-only: this account cannot record request reviews.'
+              }
+              inspection={inspection}
+              submitting={submitting}
+              inlineError={inlineError}
+              canRecover={notice?.refetch === true}
+              lineSelectRefs={lineSelectRefs}
+              onSetDecision={(lineId, route) => {
+                setDecisions((current) => ({ ...current, [lineId]: route }));
+                setInlineError('');
+              }}
+              onSetNote={(value) => {
+                setNote(value);
+                setInlineError('');
+              }}
+              onClose={closeInspector}
+              onSubmit={() => void submitReview()}
+              onRefetch={refetch}
+            />
+          )}
         </div>
-      )}
-      {selected && (
-        <RequestInspector
-          dark={dark}
-          item={selected}
-          lines={reviewableLines}
-          events={queue.events}
-          inventory={queue.inventoryItems}
-          decisions={decisions}
-          note={note}
-          canWrite={writeEnabled}
-          readOnlyReason={
-            loadState === 'refreshing'
-              ? 'Review controls are temporarily disabled while the queue updates.'
-              : loadState === 'stale'
-                ? 'Review controls are disabled until the current page reloads.'
-                : 'Read-only: this account cannot record request reviews.'
-          }
-          inspection={inspection}
-          submitting={submitting}
-          inlineError={inlineError}
-          canRecover={notice?.refetch === true}
-          lineSelectRefs={lineSelectRefs}
-          onSetDecision={(lineId, route) => {
-            setDecisions((current) => ({ ...current, [lineId]: route }));
-            setInlineError('');
-          }}
-          onSetNote={(value) => {
-            setNote(value);
-            setInlineError('');
-          }}
-          onClose={closeInspector}
-          onSubmit={() => void submitReview()}
-          onRefetch={refetch}
-        />
       )}
     </main>
   );

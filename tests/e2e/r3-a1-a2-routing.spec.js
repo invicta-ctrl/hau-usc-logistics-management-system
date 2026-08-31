@@ -410,7 +410,7 @@ function usesMobileInventoryLayout(testInfo) {
 }
 
 function usesMobileRequestLayout(testInfo) {
-  return ['frontend-320', 'frontend-390'].includes(testInfo.project.name);
+  return ['frontend-320', 'frontend-390', 'frontend-768'].includes(testInfo.project.name);
 }
 
 async function workspaceSurface(page, testInfo) {
@@ -437,9 +437,9 @@ async function openRequestRecord(page, purpose = 'Authoritative event support') 
   const requestRecord = requestRecordButton(page, purpose);
   await expect(requestRecord).toHaveCount(1);
   await requestRecord.click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog).toBeVisible();
-  return dialog;
+  const inspector = page.locator('[data-request-inspector]');
+  await expect(inspector).toBeVisible();
+  return inspector;
 }
 
 /* ---- LEND-01 / LEND-02 / LEND-03 ---------------------------------------- */
@@ -746,6 +746,9 @@ test('FI-06 Internal Request Hub reads the scoped bootstrap, submits explicit ro
   await openInternalRequestHub(page, testInfo);
   const dialog = await openRequestRecord(page);
   await dialog.getByLabel('Route Authoritative chair').selectOption('ISSUE_FROM_STOCK');
+  await expect(dialog.getByRole('heading', { name: 'Review consequence' })).toBeVisible();
+  await expect(dialog.getByText('Ready to reserve', { exact: true })).toBeVisible();
+  await expect(dialog.getByText(/does not reserve or release stock/u)).toBeVisible();
   await dialog.getByRole('button', { name: 'Record request review' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Request review recorded' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -1134,18 +1137,32 @@ test('FI-06 presents one responsive queue, restores exact request focus, and sup
     await expect(queue.locator('table')).toBeVisible();
   }
 
+  await page.keyboard.press('/');
+  await expect(page.getByPlaceholder('Search request ID, purpose, or requester…')).toBeFocused();
+
   await opener.focus();
   await opener.click();
-  const dialog = page.getByRole('dialog');
-  const close = dialog.getByRole('button', { name: 'Back to requests' });
-  const record = dialog.getByRole('button', { name: 'Record request review' });
-  await expect(close).toBeFocused();
-  await page.keyboard.press('Shift+Tab');
-  await expect(record).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(close).toBeFocused();
+  const inspector = page.locator('[data-request-inspector]');
+  const record = inspector.getByRole('button', { name: 'Record request review' });
+  if (usesMobileRequestLayout(testInfo)) {
+    await expect(inspector).toHaveAttribute('role', 'dialog');
+    await expect(inspector).toHaveAttribute('aria-modal', 'true');
+    const close = inspector.getByRole('button', { name: 'Back to requests' });
+    await expect(close).toBeFocused();
+    await expect(queue).toHaveAttribute('aria-hidden', 'true');
+    await page.keyboard.press('Shift+Tab');
+    await expect(record).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(close).toBeFocused();
+  } else {
+    await expect(inspector).toHaveAttribute('role', 'complementary');
+    await expect(inspector).not.toHaveAttribute('aria-modal', 'true');
+    await expect(opener).toBeFocused();
+    await expect(inspector.getByRole('button', { name: 'Close inspector' })).toBeVisible();
+  }
   await page.keyboard.press('Escape');
-  await expect(dialog).toHaveCount(0);
+  await expect(inspector).toHaveCount(0);
+  await expect(queue).not.toHaveAttribute('aria-hidden', 'true');
   await expect(opener).toBeFocused();
 
   if (usesMobileShell(testInfo)) {

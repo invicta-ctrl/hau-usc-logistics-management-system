@@ -8,8 +8,10 @@ import {
 import { canReviewInternalRequests, isRouteAuthorized } from '../../src/frontend/integration/routeAccess.ts';
 import {
   permittedReviewRoutes,
+  projectedReviewOutcome,
   requestReviewSignature,
   reviewClientRequestId,
+  reviewRouteConsequence,
 } from '../../src/frontend/app/request/InternalRequestHub.tsx';
 import { projectSession } from '../../src/frontend/app/useAppController.ts';
 
@@ -657,6 +659,21 @@ describe('Figma frontend backend adapter', () => {
       'REJECT',
       'MISSING_INFORMATION',
     ]);
+    expect(reviewRouteConsequence('ISSUE_FROM_STOCK')).toEqual({
+      title: 'Ready to reserve',
+      detail:
+        'Marks this line ready for the separate reservation step. This review does not reserve or release stock.',
+    });
+    expect(projectedReviewOutcome({}, 2)).toMatchObject({ status: 'INCOMPLETE' });
+    expect(projectedReviewOutcome({ 'LINE-1': 'REJECT', 'LINE-2': 'REJECT' }, 2)).toMatchObject({
+      status: 'REJECTED',
+    });
+    expect(
+      projectedReviewOutcome({ 'LINE-1': 'PROCUREMENT', 'LINE-2': 'MISSING_INFORMATION' }, 2),
+    ).toMatchObject({ status: 'NEEDS_INFORMATION' });
+    expect(projectedReviewOutcome({ 'LINE-1': 'ISSUE_FROM_STOCK', 'LINE-2': 'RESTOCK' }, 2)).toMatchObject({
+      status: 'ACCEPTED',
+    });
 
     const base = {
       requestId: 'REQ-1',
