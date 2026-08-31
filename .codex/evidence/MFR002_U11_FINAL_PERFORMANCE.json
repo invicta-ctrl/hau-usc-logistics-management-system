@@ -1,0 +1,1990 @@
+{
+  "schemaVersion": 1,
+  "phase": "U11",
+  "measurementClass": "final-visual-recovery-local-lab",
+  "measuredAt": "2026-08-31T22:56:03.734Z",
+  "commit": "176f8ad04b90fbbb03a3579ba98eb076a525b4a7",
+  "environment": {
+    "node": "v26.3.0",
+    "platform": "win32",
+    "chromium": "149.0.7827.55",
+    "builtBaseUrl": "http://127.0.0.1:4184",
+    "inspectionBaseUrl": "http://127.0.0.1:4173",
+    "note": "Built-profile measurements use the deployment-shaped staging build. Protected workspace transitions use the exact-4173 deterministic inspection harness and sanitized sample data; no live operational records are read."
+  },
+  "artifacts": {
+    "deployment": {
+      "files": [
+        {
+          "path": ".wrangler/build/staging/assets/AppRouteRenderer-Bn5lZey6.js",
+          "bytes": 244166,
+          "gzipBytes": 97657
+        },
+        {
+          "path": ".wrangler/build/staging/assets/index-BdOTqgni.css",
+          "bytes": 213423,
+          "gzipBytes": 35928
+        },
+        {
+          "path": ".wrangler/build/staging/assets/index-BJ4A7aje.js",
+          "bytes": 218630,
+          "gzipBytes": 66466
+        },
+        {
+          "path": ".wrangler/build/staging/assets/presentation-CEoKYo2v.js",
+          "bytes": 268923,
+          "gzipBytes": 74748
+        },
+        {
+          "path": ".wrangler/build/staging/assets/PreviewInspectionRoute-CndngkN8.js",
+          "bytes": 32423,
+          "gzipBytes": 9612
+        },
+        {
+          "path": ".wrangler/build/staging/hero/hausc-institutional-logistics-hero.mp4.part0",
+          "bytes": 20000000,
+          "gzipBytes": 19963622
+        },
+        {
+          "path": ".wrangler/build/staging/hero/hausc-institutional-logistics-hero.mp4.part1",
+          "bytes": 16018711,
+          "gzipBytes": 16023619
+        },
+        {
+          "path": ".wrangler/build/staging/index.html",
+          "bytes": 1602,
+          "gzipBytes": 885
+        },
+        {
+          "path": ".wrangler/build/staging/_headers",
+          "bytes": 616,
+          "gzipBytes": 344
+        }
+      ],
+      "totalBytes": 36998494,
+      "totalGzipBytes": 36272881,
+      "initialHtmlBytes": 1602,
+      "initialHtmlGzipBytes": 885,
+      "inlineScriptCount": 1,
+      "inlineScriptBytes": 0,
+      "inlineStyleCount": 0,
+      "inlineStyleBytes": 0,
+      "emittedJavaScriptFiles": 4,
+      "emittedCssFiles": 1,
+      "routeChunkCount": 5
+    },
+    "canonicalApplication": {
+      "files": [
+        {
+          "path": "dist/assets/AppRouteRenderer-Bn5lZey6.js",
+          "bytes": 244166,
+          "gzipBytes": 97657
+        },
+        {
+          "path": "dist/assets/index-BdOTqgni.css",
+          "bytes": 213423,
+          "gzipBytes": 35928
+        },
+        {
+          "path": "dist/assets/index-BJ4A7aje.js",
+          "bytes": 218630,
+          "gzipBytes": 66466
+        },
+        {
+          "path": "dist/assets/presentation-CEoKYo2v.js",
+          "bytes": 268923,
+          "gzipBytes": 74748
+        },
+        {
+          "path": "dist/assets/PreviewInspectionRoute-CndngkN8.js",
+          "bytes": 32423,
+          "gzipBytes": 9612
+        },
+        {
+          "path": "dist/hero/hausc-institutional-logistics-hero.mp4.part0",
+          "bytes": 20000000,
+          "gzipBytes": 19963622
+        },
+        {
+          "path": "dist/hero/hausc-institutional-logistics-hero.mp4.part1",
+          "bytes": 16018711,
+          "gzipBytes": 16023619
+        },
+        {
+          "path": "dist/index.html",
+          "bytes": 1548,
+          "gzipBytes": 864
+        },
+        {
+          "path": "dist/_headers",
+          "bytes": 616,
+          "gzipBytes": 344
+        }
+      ],
+      "totalBytes": 36998440,
+      "totalGzipBytes": 36272860,
+      "initialHtmlBytes": 1548,
+      "initialHtmlGzipBytes": 864,
+      "inlineScriptCount": 1,
+      "inlineScriptBytes": 0,
+      "inlineStyleCount": 0,
+      "inlineStyleBytes": 0,
+      "emittedJavaScriptFiles": 4,
+      "emittedCssFiles": 1,
+      "routeChunkCount": 5
+    }
+  },
+  "builtProfiles": [
+    {
+      "profile": "desktop-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "cpuSlowdown": 1,
+      "network": {
+        "label": "local-unthrottled",
+        "latencyMs": 0,
+        "downloadMbps": 0,
+        "uploadMbps": 0
+      },
+      "indexReadyMs": 125,
+      "indexSearchMs": 20.3,
+      "initialNetwork": {
+        "requestCount": 7,
+        "transferBytes": 105347,
+        "resources": [
+          {
+            "path": "/",
+            "type": "Document",
+            "transferBytes": 1164
+          },
+          {
+            "path": "/assets/index-BdOTqgni.css",
+            "type": "Stylesheet",
+            "transferBytes": 36624
+          },
+          {
+            "path": "/assets/index-BJ4A7aje.js",
+            "type": "Script",
+            "transferBytes": 66962
+          },
+          {
+            "path": "/api/version",
+            "type": "Fetch",
+            "transferBytes": 125
+          },
+          {
+            "path": "/api/health",
+            "type": "Fetch",
+            "transferBytes": 76
+          },
+          {
+            "path": "/api/playground/status",
+            "type": "Fetch",
+            "transferBytes": 307
+          },
+          {
+            "path": "/api/readiness",
+            "type": "Fetch",
+            "transferBytes": 89
+          }
+        ]
+      },
+      "timing": {
+        "ttfbMs": 1.8,
+        "domContentLoadedMs": 39.1,
+        "loadEventMs": 41.1,
+        "firstContentfulPaintMs": 132,
+        "lcpMs": 132,
+        "cls": 0,
+        "clsSources": [
+          {
+            "value": 0.00010186351634837963,
+            "node": "div.preview-runtime-health",
+            "previous": {
+              "x": 1074.328125,
+              "y": 577.25,
+              "width": 280.890625,
+              "height": 37.984375
+            },
+            "current": {
+              "x": 1094.109375,
+              "y": 577.25,
+              "width": 260.890625,
+              "height": 37.984375
+            }
+          }
+        ],
+        "longestInteractionEventMs": 0
+      },
+      "consoleErrors": []
+    },
+    {
+      "profile": "older-laptop-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cpuSlowdown": 4,
+      "network": {
+        "label": "constrained-broadband",
+        "latencyMs": 40,
+        "downloadMbps": 20,
+        "uploadMbps": 5
+      },
+      "indexReadyMs": 636,
+      "indexSearchMs": 49.4,
+      "initialNetwork": {
+        "requestCount": 7,
+        "transferBytes": 105347,
+        "resources": [
+          {
+            "path": "/",
+            "type": "Document",
+            "transferBytes": 1164
+          },
+          {
+            "path": "/assets/index-BdOTqgni.css",
+            "type": "Stylesheet",
+            "transferBytes": 36624
+          },
+          {
+            "path": "/assets/index-BJ4A7aje.js",
+            "type": "Script",
+            "transferBytes": 66962
+          },
+          {
+            "path": "/api/version",
+            "type": "Fetch",
+            "transferBytes": 125
+          },
+          {
+            "path": "/api/health",
+            "type": "Fetch",
+            "transferBytes": 76
+          },
+          {
+            "path": "/api/playground/status",
+            "type": "Fetch",
+            "transferBytes": 307
+          },
+          {
+            "path": "/api/readiness",
+            "type": "Fetch",
+            "transferBytes": 89
+          }
+        ]
+      },
+      "timing": {
+        "ttfbMs": 1.8,
+        "domContentLoadedMs": 268.6,
+        "loadEventMs": 269,
+        "firstContentfulPaintMs": 612,
+        "lcpMs": 612,
+        "cls": 0,
+        "clsSources": [
+          {
+            "value": 0.00011318168483153293,
+            "node": "div.preview-runtime-health",
+            "previous": {
+              "x": 1074.328125,
+              "y": 577.25,
+              "width": 280.890625,
+              "height": 37.984375
+            },
+            "current": {
+              "x": 1094.109375,
+              "y": 577.25,
+              "width": 260.890625,
+              "height": 37.984375
+            }
+          }
+        ],
+        "longestInteractionEventMs": 0
+      },
+      "consoleErrors": []
+    },
+    {
+      "profile": "midrange-mobile-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuSlowdown": 4,
+      "network": {
+        "label": "midrange-mobile",
+        "latencyMs": 80,
+        "downloadMbps": 8,
+        "uploadMbps": 2
+      },
+      "indexReadyMs": 729,
+      "indexSearchMs": 47.8,
+      "initialNetwork": {
+        "requestCount": 7,
+        "transferBytes": 105347,
+        "resources": [
+          {
+            "path": "/",
+            "type": "Document",
+            "transferBytes": 1164
+          },
+          {
+            "path": "/assets/index-BdOTqgni.css",
+            "type": "Stylesheet",
+            "transferBytes": 36624
+          },
+          {
+            "path": "/assets/index-BJ4A7aje.js",
+            "type": "Script",
+            "transferBytes": 66962
+          },
+          {
+            "path": "/api/version",
+            "type": "Fetch",
+            "transferBytes": 125
+          },
+          {
+            "path": "/api/health",
+            "type": "Fetch",
+            "transferBytes": 76
+          },
+          {
+            "path": "/api/playground/status",
+            "type": "Fetch",
+            "transferBytes": 307
+          },
+          {
+            "path": "/api/readiness",
+            "type": "Fetch",
+            "transferBytes": 89
+          }
+        ]
+      },
+      "timing": {
+        "ttfbMs": 1.5,
+        "domContentLoadedMs": 381.2,
+        "loadEventMs": 381.5,
+        "firstContentfulPaintMs": 696,
+        "lcpMs": 696,
+        "cls": 0,
+        "clsSources": [],
+        "longestInteractionEventMs": 0
+      },
+      "consoleErrors": []
+    },
+    {
+      "profile": "slower-network-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuSlowdown": 4,
+      "network": {
+        "label": "slower-network",
+        "latencyMs": 150,
+        "downloadMbps": 4,
+        "uploadMbps": 1
+      },
+      "indexReadyMs": 1027,
+      "indexSearchMs": 60.7,
+      "initialNetwork": {
+        "requestCount": 7,
+        "transferBytes": 105347,
+        "resources": [
+          {
+            "path": "/",
+            "type": "Document",
+            "transferBytes": 1164
+          },
+          {
+            "path": "/assets/index-BdOTqgni.css",
+            "type": "Stylesheet",
+            "transferBytes": 36624
+          },
+          {
+            "path": "/assets/index-BJ4A7aje.js",
+            "type": "Script",
+            "transferBytes": 66962
+          },
+          {
+            "path": "/api/version",
+            "type": "Fetch",
+            "transferBytes": 125
+          },
+          {
+            "path": "/api/health",
+            "type": "Fetch",
+            "transferBytes": 76
+          },
+          {
+            "path": "/api/playground/status",
+            "type": "Fetch",
+            "transferBytes": 307
+          },
+          {
+            "path": "/api/readiness",
+            "type": "Fetch",
+            "transferBytes": 89
+          }
+        ]
+      },
+      "timing": {
+        "ttfbMs": 1.8,
+        "domContentLoadedMs": 612.7,
+        "loadEventMs": 612.9,
+        "firstContentfulPaintMs": 992,
+        "lcpMs": 992,
+        "cls": 0,
+        "clsSources": [],
+        "longestInteractionEventMs": 0
+      },
+      "consoleErrors": []
+    }
+  ],
+  "inspectionProfiles": [
+    {
+      "profile": "desktop-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "cpuSlowdown": 1,
+      "routeLoads": {
+        "inventoryLoadMs": 250.5,
+        "inventoryLoadMsNetwork": {
+          "requestCount": 45,
+          "transferBytes": 3428904,
+          "resources": [
+            {
+              "path": "/frontend/preview/index/PreviewInspectionRoute.tsx",
+              "type": "Script",
+              "transferBytes": 22523
+            },
+            {
+              "path": "/frontend/app/auth/AuthPlaceholderRoute.tsx",
+              "type": "Script",
+              "transferBytes": 9934
+            },
+            {
+              "path": "/frontend/app/profile/ProfileRoute.tsx",
+              "type": "Script",
+              "transferBytes": 141466
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryRoute.tsx",
+              "type": "Script",
+              "transferBytes": 108432
+            },
+            {
+              "path": "/frontend/app/request/InternalRequestHub.tsx",
+              "type": "Script",
+              "transferBytes": 281395
+            },
+            {
+              "path": "/frontend/app/lending/InternalLendingHub.tsx",
+              "type": "Script",
+              "transferBytes": 427382
+            },
+            {
+              "path": "/frontend/app/ReleaseDeskRoute.tsx",
+              "type": "Script",
+              "transferBytes": 121672
+            },
+            {
+              "path": "/frontend/app/SupplyRoutes.tsx",
+              "type": "Script",
+              "transferBytes": 163094
+            },
+            {
+              "path": "/frontend/app/AdministrationRoute.tsx",
+              "type": "Script",
+              "transferBytes": 284879
+            },
+            {
+              "path": "/frontend/app/overview/OverviewPreviewRoute.tsx",
+              "type": "Script",
+              "transferBytes": 60952
+            },
+            {
+              "path": "/frontend/app/request/ExternalRequestCenter.tsx",
+              "type": "Script",
+              "transferBytes": 170254
+            },
+            {
+              "path": "/frontend/app/shell/AuthenticatedShell.tsx",
+              "type": "Script",
+              "transferBytes": 28062
+            },
+            {
+              "path": "/frontend/app/shell/presentation.ts",
+              "type": "Script",
+              "transferBytes": 2720
+            },
+            {
+              "path": "/frontend/preview/index/previewData.ts",
+              "type": "Script",
+              "transferBytes": 10186
+            },
+            {
+              "path": "/@fs/D:/Documents/Codex/HAU-USC%20Logistics/worktrees/playground-master-reconciliation/node_modules/.vite/deps/lucide-react.js",
+              "type": "Script",
+              "transferBytes": 875831
+            },
+            {
+              "path": "/frontend/app/theme/palette.ts",
+              "type": "Script",
+              "transferBytes": 1856
+            },
+            {
+              "path": "/frontend/app/inventory/inventoryData.ts",
+              "type": "Script",
+              "transferBytes": 13392
+            },
+            {
+              "path": "/frontend/app/inventory/inventoryFixtures.ts",
+              "type": "Script",
+              "transferBytes": 9065
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryInspector.tsx",
+              "type": "Script",
+              "transferBytes": 75128
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryQtyCell.tsx",
+              "type": "Script",
+              "transferBytes": 4429
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryStateBadge.tsx",
+              "type": "Script",
+              "transferBytes": 13097
+            },
+            {
+              "path": "/frontend/app/hooks/useDialogFocusTrap.ts",
+              "type": "Script",
+              "transferBytes": 10581
+            },
+            {
+              "path": "/frontend/app/routeStyleScope.ts",
+              "type": "Script",
+              "transferBytes": 3612
+            },
+            {
+              "path": "/frontend/app/events/EventReadinessRoute.tsx",
+              "type": "Script",
+              "transferBytes": 61480
+            },
+            {
+              "path": "/ProductionAssets.ts",
+              "type": "Script",
+              "transferBytes": 1629
+            },
+            {
+              "path": "/frontend/app/administration/AdministrationRecordsPanel.tsx",
+              "type": "Script",
+              "transferBytes": 98938
+            },
+            {
+              "path": "/frontend/app/administration/administrationPresentation.ts",
+              "type": "Script",
+              "transferBytes": 6370
+            },
+            {
+              "path": "/frontend/app/overview/ExceptionInspector.tsx",
+              "type": "Script",
+              "transferBytes": 20719
+            },
+            {
+              "path": "/frontend/app/overview/overviewFixtures.ts",
+              "type": "Script",
+              "transferBytes": 13327
+            },
+            {
+              "path": "/frontend/app/overview/SkeletonBlock.tsx",
+              "type": "Script",
+              "transferBytes": 4131
+            },
+            {
+              "path": "/frontend/app/brand/ThemeToggle.tsx",
+              "type": "Script",
+              "transferBytes": 8928
+            },
+            {
+              "path": "/frontend/app/brand/BrandMarks.tsx",
+              "type": "Script",
+              "transferBytes": 10240
+            },
+            {
+              "path": "/frontend/app/hooks/useRouteFocus.ts",
+              "type": "Script",
+              "transferBytes": 4729
+            },
+            {
+              "path": "/frontend/app/shell/AuthMobileDrawer.tsx",
+              "type": "Script",
+              "transferBytes": 59924
+            },
+            {
+              "path": "/frontend/app/shell/AuthShellSidebar.tsx",
+              "type": "Script",
+              "transferBytes": 41838
+            },
+            {
+              "path": "/frontend/app/shell/AuthShellTopbar.tsx",
+              "type": "Script",
+              "transferBytes": 32026
+            },
+            {
+              "path": "/frontend/app/shell/navConfig.tsx",
+              "type": "Script",
+              "transferBytes": 6635
+            },
+            {
+              "path": "/frontend/assets/production/uscLogo.ts",
+              "type": "Script",
+              "transferBytes": 689
+            },
+            {
+              "path": "/frontend/assets/production/dolLogo.ts",
+              "type": "Script",
+              "transferBytes": 45097
+            },
+            {
+              "path": "/frontend/assets/production/combinedLockup.ts",
+              "type": "Script",
+              "transferBytes": 735
+            },
+            {
+              "path": "/frontend/assets/production/loginBackground.ts",
+              "type": "Script",
+              "transferBytes": 741
+            },
+            {
+              "path": "/frontend/assets/production/favicon.ts",
+              "type": "Script",
+              "transferBytes": 70117
+            },
+            {
+              "path": "/frontend/assets/production/defaultItemImage.ts",
+              "type": "Script",
+              "transferBytes": 91798
+            },
+            {
+              "path": "/frontend/app/shell/SidebarNavItem.tsx",
+              "type": "Script",
+              "transferBytes": 8871
+            },
+            {
+              "path": "/brand/usc-logo",
+              "type": "Image",
+              "transferBytes": 0
+            }
+          ]
+        },
+        "requestQueueLoadMs": 95.5,
+        "requestQueueLoadMsNetwork": {
+          "requestCount": 23,
+          "transferBytes": 1328812,
+          "resources": [
+            {
+              "path": "/frontend/app/auth/AccountRecoveryPanel.tsx",
+              "type": "Script",
+              "transferBytes": 52365
+            },
+            {
+              "path": "/frontend/app/auth/AccountAccessPanel.tsx",
+              "type": "Script",
+              "transferBytes": 93163
+            },
+            {
+              "path": "/frontend/app/overview/overviewData.ts",
+              "type": "Script",
+              "transferBytes": 25274
+            },
+            {
+              "path": "/frontend/app/landing/CurrentSection.tsx",
+              "type": "Script",
+              "transferBytes": 19680
+            },
+            {
+              "path": "/frontend/app/landing/HeroSection.tsx",
+              "type": "Script",
+              "transferBytes": 17092
+            },
+            {
+              "path": "/frontend/app/landing/LogisticsHubSection.tsx",
+              "type": "Script",
+              "transferBytes": 24296
+            },
+            {
+              "path": "/frontend/app/public/landingSectionNavigation.ts",
+              "type": "Script",
+              "transferBytes": 2842
+            },
+            {
+              "path": "/frontend/app/operations/ProcurementWorkspace.tsx",
+              "type": "Script",
+              "transferBytes": 68635
+            },
+            {
+              "path": "/frontend/app/operations/ReceivingHistory.tsx",
+              "type": "Script",
+              "transferBytes": 22784
+            },
+            {
+              "path": "/frontend/app/operations/ReceivingStation.tsx",
+              "type": "Script",
+              "transferBytes": 97956
+            },
+            {
+              "path": "/frontend/app/operations/ReleaseHistory.tsx",
+              "type": "Script",
+              "transferBytes": 33612
+            },
+            {
+              "path": "/frontend/app/operations/ReleaseStation.tsx",
+              "type": "Script",
+              "transferBytes": 99571
+            },
+            {
+              "path": "/frontend/app/operations/operationUtils.ts",
+              "type": "Script",
+              "transferBytes": 7826
+            },
+            {
+              "path": "/frontend/app/public/NavLink.tsx",
+              "type": "Script",
+              "transferBytes": 6363
+            },
+            {
+              "path": "/frontend/app/public/PublicMobileDrawer.tsx",
+              "type": "Script",
+              "transferBytes": 33590
+            },
+            {
+              "path": "/frontend/app/public/publicNavConfig.ts",
+              "type": "Script",
+              "transferBytes": 1000
+            },
+            {
+              "path": "/frontend/app/auth/VerificationCodeField.tsx",
+              "type": "Script",
+              "transferBytes": 16926
+            },
+            {
+              "path": "/frontend/app/landing/HeroMotion.tsx",
+              "type": "Script",
+              "transferBytes": 27130
+            },
+            {
+              "path": "/frontend/assets/hero/hausc-institutional-logistics-hero.mp4",
+              "type": "Script",
+              "transferBytes": 828
+            },
+            {
+              "path": "/frontend/app/landing/landingData.ts",
+              "type": "Script",
+              "transferBytes": 2338
+            },
+            {
+              "path": "/frontend/app/operations/supplyModel.ts",
+              "type": "Script",
+              "transferBytes": 40321
+            },
+            {
+              "path": "/frontend/app/operations/releaseModel.ts",
+              "type": "Script",
+              "transferBytes": 18435
+            },
+            {
+              "path": "/frontend/app/landing/heroPoster.ts",
+              "type": "Script",
+              "transferBytes": 73236
+            }
+          ]
+        },
+        "lendingLoadMs": 72.1,
+        "lendingLoadMsNetwork": {
+          "requestCount": 0,
+          "transferBytes": 0,
+          "resources": []
+        },
+        "eventsLoadMs": 72,
+        "eventsLoadMsNetwork": {
+          "requestCount": 0,
+          "transferBytes": 0,
+          "resources": []
+        },
+        "administrationLoadMs": 81.5,
+        "administrationLoadMsNetwork": {
+          "requestCount": 0,
+          "transferBytes": 0,
+          "resources": []
+        }
+      },
+      "inventorySearchMs": 30.5
+    },
+    {
+      "profile": "older-laptop-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cpuSlowdown": 4,
+      "routeLoads": {
+        "inventoryLoadMs": 709,
+        "inventoryLoadMsNetwork": {
+          "requestCount": 45,
+          "transferBytes": 3428904,
+          "resources": [
+            {
+              "path": "/frontend/preview/index/PreviewInspectionRoute.tsx",
+              "type": "Script",
+              "transferBytes": 22523
+            },
+            {
+              "path": "/frontend/app/auth/AuthPlaceholderRoute.tsx",
+              "type": "Script",
+              "transferBytes": 9934
+            },
+            {
+              "path": "/frontend/app/profile/ProfileRoute.tsx",
+              "type": "Script",
+              "transferBytes": 141466
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryRoute.tsx",
+              "type": "Script",
+              "transferBytes": 108432
+            },
+            {
+              "path": "/frontend/app/request/InternalRequestHub.tsx",
+              "type": "Script",
+              "transferBytes": 281395
+            },
+            {
+              "path": "/frontend/app/lending/InternalLendingHub.tsx",
+              "type": "Script",
+              "transferBytes": 427382
+            },
+            {
+              "path": "/frontend/app/ReleaseDeskRoute.tsx",
+              "type": "Script",
+              "transferBytes": 121672
+            },
+            {
+              "path": "/frontend/app/SupplyRoutes.tsx",
+              "type": "Script",
+              "transferBytes": 163094
+            },
+            {
+              "path": "/frontend/app/AdministrationRoute.tsx",
+              "type": "Script",
+              "transferBytes": 284879
+            },
+            {
+              "path": "/frontend/app/overview/OverviewPreviewRoute.tsx",
+              "type": "Script",
+              "transferBytes": 60952
+            },
+            {
+              "path": "/frontend/app/request/ExternalRequestCenter.tsx",
+              "type": "Script",
+              "transferBytes": 170254
+            },
+            {
+              "path": "/frontend/app/shell/AuthenticatedShell.tsx",
+              "type": "Script",
+              "transferBytes": 28062
+            },
+            {
+              "path": "/frontend/app/shell/presentation.ts",
+              "type": "Script",
+              "transferBytes": 2720
+            },
+            {
+              "path": "/frontend/preview/index/previewData.ts",
+              "type": "Script",
+              "transferBytes": 10186
+            },
+            {
+              "path": "/@fs/D:/Documents/Codex/HAU-USC%20Logistics/worktrees/playground-master-reconciliation/node_modules/.vite/deps/lucide-react.js",
+              "type": "Script",
+              "transferBytes": 875831
+            },
+            {
+              "path": "/frontend/app/theme/palette.ts",
+              "type": "Script",
+              "transferBytes": 1856
+            },
+            {
+              "path": "/frontend/app/inventory/inventoryData.ts",
+              "type": "Script",
+              "transferBytes": 13392
+            },
+            {
+              "path": "/frontend/app/inventory/inventoryFixtures.ts",
+              "type": "Script",
+              "transferBytes": 9065
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryInspector.tsx",
+              "type": "Script",
+              "transferBytes": 75128
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryQtyCell.tsx",
+              "type": "Script",
+              "transferBytes": 4429
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryStateBadge.tsx",
+              "type": "Script",
+              "transferBytes": 13097
+            },
+            {
+              "path": "/frontend/app/hooks/useDialogFocusTrap.ts",
+              "type": "Script",
+              "transferBytes": 10581
+            },
+            {
+              "path": "/frontend/app/routeStyleScope.ts",
+              "type": "Script",
+              "transferBytes": 3612
+            },
+            {
+              "path": "/frontend/app/events/EventReadinessRoute.tsx",
+              "type": "Script",
+              "transferBytes": 61480
+            },
+            {
+              "path": "/ProductionAssets.ts",
+              "type": "Script",
+              "transferBytes": 1629
+            },
+            {
+              "path": "/frontend/app/administration/AdministrationRecordsPanel.tsx",
+              "type": "Script",
+              "transferBytes": 98938
+            },
+            {
+              "path": "/frontend/app/administration/administrationPresentation.ts",
+              "type": "Script",
+              "transferBytes": 6370
+            },
+            {
+              "path": "/frontend/app/overview/ExceptionInspector.tsx",
+              "type": "Script",
+              "transferBytes": 20719
+            },
+            {
+              "path": "/frontend/app/overview/overviewFixtures.ts",
+              "type": "Script",
+              "transferBytes": 13327
+            },
+            {
+              "path": "/frontend/app/overview/SkeletonBlock.tsx",
+              "type": "Script",
+              "transferBytes": 4131
+            },
+            {
+              "path": "/frontend/app/hooks/useRouteFocus.ts",
+              "type": "Script",
+              "transferBytes": 4729
+            },
+            {
+              "path": "/frontend/app/shell/AuthMobileDrawer.tsx",
+              "type": "Script",
+              "transferBytes": 59924
+            },
+            {
+              "path": "/frontend/app/shell/AuthShellSidebar.tsx",
+              "type": "Script",
+              "transferBytes": 41838
+            },
+            {
+              "path": "/frontend/app/shell/AuthShellTopbar.tsx",
+              "type": "Script",
+              "transferBytes": 32026
+            },
+            {
+              "path": "/frontend/app/shell/navConfig.tsx",
+              "type": "Script",
+              "transferBytes": 6635
+            },
+            {
+              "path": "/frontend/app/brand/ThemeToggle.tsx",
+              "type": "Script",
+              "transferBytes": 8928
+            },
+            {
+              "path": "/frontend/app/brand/BrandMarks.tsx",
+              "type": "Script",
+              "transferBytes": 10240
+            },
+            {
+              "path": "/frontend/assets/production/uscLogo.ts",
+              "type": "Script",
+              "transferBytes": 689
+            },
+            {
+              "path": "/frontend/assets/production/dolLogo.ts",
+              "type": "Script",
+              "transferBytes": 45097
+            },
+            {
+              "path": "/frontend/assets/production/combinedLockup.ts",
+              "type": "Script",
+              "transferBytes": 735
+            },
+            {
+              "path": "/frontend/assets/production/loginBackground.ts",
+              "type": "Script",
+              "transferBytes": 741
+            },
+            {
+              "path": "/frontend/assets/production/favicon.ts",
+              "type": "Script",
+              "transferBytes": 70117
+            },
+            {
+              "path": "/frontend/assets/production/defaultItemImage.ts",
+              "type": "Script",
+              "transferBytes": 91798
+            },
+            {
+              "path": "/frontend/app/shell/SidebarNavItem.tsx",
+              "type": "Script",
+              "transferBytes": 8871
+            },
+            {
+              "path": "/brand/usc-logo",
+              "type": "Image",
+              "transferBytes": 3189732
+            }
+          ]
+        },
+        "requestQueueLoadMs": 374.2,
+        "requestQueueLoadMsNetwork": {
+          "requestCount": 24,
+          "transferBytes": 3974995,
+          "resources": [
+            {
+              "path": "/frontend/app/auth/AccountRecoveryPanel.tsx",
+              "type": "Script",
+              "transferBytes": 52365
+            },
+            {
+              "path": "/frontend/app/auth/AccountAccessPanel.tsx",
+              "type": "Script",
+              "transferBytes": 93163
+            },
+            {
+              "path": "/frontend/app/landing/CurrentSection.tsx",
+              "type": "Script",
+              "transferBytes": 19680
+            },
+            {
+              "path": "/frontend/app/landing/HeroSection.tsx",
+              "type": "Script",
+              "transferBytes": 17092
+            },
+            {
+              "path": "/frontend/app/landing/LogisticsHubSection.tsx",
+              "type": "Script",
+              "transferBytes": 24296
+            },
+            {
+              "path": "/frontend/app/overview/overviewData.ts",
+              "type": "Script",
+              "transferBytes": 25274
+            },
+            {
+              "path": "/frontend/app/public/landingSectionNavigation.ts",
+              "type": "Script",
+              "transferBytes": 2842
+            },
+            {
+              "path": "/frontend/app/operations/ProcurementWorkspace.tsx",
+              "type": "Script",
+              "transferBytes": 68635
+            },
+            {
+              "path": "/frontend/app/operations/ReceivingHistory.tsx",
+              "type": "Script",
+              "transferBytes": 22784
+            },
+            {
+              "path": "/frontend/app/operations/ReceivingStation.tsx",
+              "type": "Script",
+              "transferBytes": 97956
+            },
+            {
+              "path": "/frontend/app/operations/ReleaseHistory.tsx",
+              "type": "Script",
+              "transferBytes": 33612
+            },
+            {
+              "path": "/frontend/app/operations/ReleaseStation.tsx",
+              "type": "Script",
+              "transferBytes": 99571
+            },
+            {
+              "path": "/frontend/app/operations/operationUtils.ts",
+              "type": "Script",
+              "transferBytes": 7826
+            },
+            {
+              "path": "/frontend/app/public/NavLink.tsx",
+              "type": "Script",
+              "transferBytes": 6363
+            },
+            {
+              "path": "/frontend/app/public/PublicMobileDrawer.tsx",
+              "type": "Script",
+              "transferBytes": 33590
+            },
+            {
+              "path": "/frontend/app/public/publicNavConfig.ts",
+              "type": "Script",
+              "transferBytes": 1000
+            },
+            {
+              "path": "/frontend/app/auth/VerificationCodeField.tsx",
+              "type": "Script",
+              "transferBytes": 16926
+            },
+            {
+              "path": "/frontend/app/landing/HeroMotion.tsx",
+              "type": "Script",
+              "transferBytes": 27130
+            },
+            {
+              "path": "/frontend/assets/hero/hausc-institutional-logistics-hero.mp4",
+              "type": "Script",
+              "transferBytes": 828
+            },
+            {
+              "path": "/frontend/app/landing/landingData.ts",
+              "type": "Script",
+              "transferBytes": 2338
+            },
+            {
+              "path": "/frontend/app/operations/supplyModel.ts",
+              "type": "Script",
+              "transferBytes": 40321
+            },
+            {
+              "path": "/frontend/app/operations/releaseModel.ts",
+              "type": "Script",
+              "transferBytes": 18435
+            },
+            {
+              "path": "/frontend/app/landing/heroPoster.ts",
+              "type": "Script",
+              "transferBytes": 73236
+            },
+            {
+              "path": "/brand/usc-logo",
+              "type": "Image",
+              "transferBytes": 3189720
+            }
+          ]
+        },
+        "lendingLoadMs": 295.5,
+        "lendingLoadMsNetwork": {
+          "requestCount": 0,
+          "transferBytes": 3189720,
+          "resources": []
+        },
+        "eventsLoadMs": 166.4,
+        "eventsLoadMsNetwork": {
+          "requestCount": 0,
+          "transferBytes": 0,
+          "resources": []
+        },
+        "administrationLoadMs": 312.4,
+        "administrationLoadMsNetwork": {
+          "requestCount": 0,
+          "transferBytes": 3189728,
+          "resources": []
+        }
+      },
+      "inventorySearchMs": 75.4
+    },
+    {
+      "profile": "midrange-mobile-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuSlowdown": 4,
+      "routeLoads": {
+        "inventoryLoadMs": 680.7,
+        "inventoryLoadMsNetwork": {
+          "requestCount": 45,
+          "transferBytes": 3428904,
+          "resources": [
+            {
+              "path": "/frontend/preview/index/PreviewInspectionRoute.tsx",
+              "type": "Script",
+              "transferBytes": 22523
+            },
+            {
+              "path": "/frontend/app/auth/AuthPlaceholderRoute.tsx",
+              "type": "Script",
+              "transferBytes": 9934
+            },
+            {
+              "path": "/frontend/app/profile/ProfileRoute.tsx",
+              "type": "Script",
+              "transferBytes": 141466
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryRoute.tsx",
+              "type": "Script",
+              "transferBytes": 108432
+            },
+            {
+              "path": "/frontend/app/request/InternalRequestHub.tsx",
+              "type": "Script",
+              "transferBytes": 281395
+            },
+            {
+              "path": "/frontend/app/lending/InternalLendingHub.tsx",
+              "type": "Script",
+              "transferBytes": 427382
+            },
+            {
+              "path": "/frontend/app/ReleaseDeskRoute.tsx",
+              "type": "Script",
+              "transferBytes": 121672
+            },
+            {
+              "path": "/frontend/app/SupplyRoutes.tsx",
+              "type": "Script",
+              "transferBytes": 163094
+            },
+            {
+              "path": "/frontend/app/AdministrationRoute.tsx",
+              "type": "Script",
+              "transferBytes": 284879
+            },
+            {
+              "path": "/frontend/app/overview/OverviewPreviewRoute.tsx",
+              "type": "Script",
+              "transferBytes": 60952
+            },
+            {
+              "path": "/frontend/app/request/ExternalRequestCenter.tsx",
+              "type": "Script",
+              "transferBytes": 170254
+            },
+            {
+              "path": "/frontend/app/shell/AuthenticatedShell.tsx",
+              "type": "Script",
+              "transferBytes": 28062
+            },
+            {
+              "path": "/frontend/app/shell/presentation.ts",
+              "type": "Script",
+              "transferBytes": 2720
+            },
+            {
+              "path": "/frontend/preview/index/previewData.ts",
+              "type": "Script",
+              "transferBytes": 10186
+            },
+            {
+              "path": "/@fs/D:/Documents/Codex/HAU-USC%20Logistics/worktrees/playground-master-reconciliation/node_modules/.vite/deps/lucide-react.js",
+              "type": "Script",
+              "transferBytes": 875831
+            },
+            {
+              "path": "/frontend/app/theme/palette.ts",
+              "type": "Script",
+              "transferBytes": 1856
+            },
+            {
+              "path": "/frontend/app/inventory/inventoryData.ts",
+              "type": "Script",
+              "transferBytes": 13392
+            },
+            {
+              "path": "/frontend/app/inventory/inventoryFixtures.ts",
+              "type": "Script",
+              "transferBytes": 9065
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryInspector.tsx",
+              "type": "Script",
+              "transferBytes": 75128
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryQtyCell.tsx",
+              "type": "Script",
+              "transferBytes": 4429
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryStateBadge.tsx",
+              "type": "Script",
+              "transferBytes": 13097
+            },
+            {
+              "path": "/frontend/app/hooks/useDialogFocusTrap.ts",
+              "type": "Script",
+              "transferBytes": 10581
+            },
+            {
+              "path": "/frontend/app/routeStyleScope.ts",
+              "type": "Script",
+              "transferBytes": 3612
+            },
+            {
+              "path": "/frontend/app/events/EventReadinessRoute.tsx",
+              "type": "Script",
+              "transferBytes": 61480
+            },
+            {
+              "path": "/frontend/app/overview/ExceptionInspector.tsx",
+              "type": "Script",
+              "transferBytes": 20719
+            },
+            {
+              "path": "/frontend/app/overview/overviewFixtures.ts",
+              "type": "Script",
+              "transferBytes": 13327
+            },
+            {
+              "path": "/frontend/app/overview/SkeletonBlock.tsx",
+              "type": "Script",
+              "transferBytes": 4131
+            },
+            {
+              "path": "/ProductionAssets.ts",
+              "type": "Script",
+              "transferBytes": 1629
+            },
+            {
+              "path": "/frontend/app/administration/AdministrationRecordsPanel.tsx",
+              "type": "Script",
+              "transferBytes": 98938
+            },
+            {
+              "path": "/frontend/app/administration/administrationPresentation.ts",
+              "type": "Script",
+              "transferBytes": 6370
+            },
+            {
+              "path": "/frontend/app/hooks/useRouteFocus.ts",
+              "type": "Script",
+              "transferBytes": 4729
+            },
+            {
+              "path": "/frontend/app/shell/AuthMobileDrawer.tsx",
+              "type": "Script",
+              "transferBytes": 59924
+            },
+            {
+              "path": "/frontend/app/shell/AuthShellSidebar.tsx",
+              "type": "Script",
+              "transferBytes": 41838
+            },
+            {
+              "path": "/frontend/app/shell/AuthShellTopbar.tsx",
+              "type": "Script",
+              "transferBytes": 32026
+            },
+            {
+              "path": "/frontend/app/shell/navConfig.tsx",
+              "type": "Script",
+              "transferBytes": 6635
+            },
+            {
+              "path": "/frontend/app/brand/ThemeToggle.tsx",
+              "type": "Script",
+              "transferBytes": 8928
+            },
+            {
+              "path": "/frontend/app/brand/BrandMarks.tsx",
+              "type": "Script",
+              "transferBytes": 10240
+            },
+            {
+              "path": "/frontend/assets/production/uscLogo.ts",
+              "type": "Script",
+              "transferBytes": 689
+            },
+            {
+              "path": "/frontend/assets/production/dolLogo.ts",
+              "type": "Script",
+              "transferBytes": 45097
+            },
+            {
+              "path": "/frontend/assets/production/combinedLockup.ts",
+              "type": "Script",
+              "transferBytes": 735
+            },
+            {
+              "path": "/frontend/assets/production/loginBackground.ts",
+              "type": "Script",
+              "transferBytes": 741
+            },
+            {
+              "path": "/frontend/assets/production/favicon.ts",
+              "type": "Script",
+              "transferBytes": 70117
+            },
+            {
+              "path": "/frontend/assets/production/defaultItemImage.ts",
+              "type": "Script",
+              "transferBytes": 91798
+            },
+            {
+              "path": "/frontend/app/shell/SidebarNavItem.tsx",
+              "type": "Script",
+              "transferBytes": 8871
+            },
+            {
+              "path": "/brand/usc-logo",
+              "type": "Image",
+              "transferBytes": 0
+            }
+          ]
+        },
+        "requestQueueLoadMs": 366.7,
+        "requestQueueLoadMsNetwork": {
+          "requestCount": 23,
+          "transferBytes": 785263,
+          "resources": [
+            {
+              "path": "/frontend/app/auth/AccountRecoveryPanel.tsx",
+              "type": "Script",
+              "transferBytes": 52365
+            },
+            {
+              "path": "/frontend/app/auth/AccountAccessPanel.tsx",
+              "type": "Script",
+              "transferBytes": 93163
+            },
+            {
+              "path": "/frontend/app/landing/CurrentSection.tsx",
+              "type": "Script",
+              "transferBytes": 19680
+            },
+            {
+              "path": "/frontend/app/landing/HeroSection.tsx",
+              "type": "Script",
+              "transferBytes": 17092
+            },
+            {
+              "path": "/frontend/app/landing/LogisticsHubSection.tsx",
+              "type": "Script",
+              "transferBytes": 24296
+            },
+            {
+              "path": "/frontend/app/public/landingSectionNavigation.ts",
+              "type": "Script",
+              "transferBytes": 2842
+            },
+            {
+              "path": "/frontend/app/overview/overviewData.ts",
+              "type": "Script",
+              "transferBytes": 25274
+            },
+            {
+              "path": "/frontend/app/operations/ProcurementWorkspace.tsx",
+              "type": "Script",
+              "transferBytes": 68635
+            },
+            {
+              "path": "/frontend/app/operations/ReceivingHistory.tsx",
+              "type": "Script",
+              "transferBytes": 22784
+            },
+            {
+              "path": "/frontend/app/operations/ReceivingStation.tsx",
+              "type": "Script",
+              "transferBytes": 97956
+            },
+            {
+              "path": "/frontend/app/operations/ReleaseHistory.tsx",
+              "type": "Script",
+              "transferBytes": 33612
+            },
+            {
+              "path": "/frontend/app/operations/ReleaseStation.tsx",
+              "type": "Script",
+              "transferBytes": 99571
+            },
+            {
+              "path": "/frontend/app/operations/operationUtils.ts",
+              "type": "Script",
+              "transferBytes": 7826
+            },
+            {
+              "path": "/frontend/app/public/NavLink.tsx",
+              "type": "Script",
+              "transferBytes": 6363
+            },
+            {
+              "path": "/frontend/app/public/PublicMobileDrawer.tsx",
+              "type": "Script",
+              "transferBytes": 33590
+            },
+            {
+              "path": "/frontend/app/public/publicNavConfig.ts",
+              "type": "Script",
+              "transferBytes": 1000
+            },
+            {
+              "path": "/frontend/app/auth/VerificationCodeField.tsx",
+              "type": "Script",
+              "transferBytes": 16926
+            },
+            {
+              "path": "/frontend/app/landing/HeroMotion.tsx",
+              "type": "Script",
+              "transferBytes": 27130
+            },
+            {
+              "path": "/frontend/assets/hero/hausc-institutional-logistics-hero.mp4",
+              "type": "Script",
+              "transferBytes": 828
+            },
+            {
+              "path": "/frontend/app/landing/landingData.ts",
+              "type": "Script",
+              "transferBytes": 2338
+            },
+            {
+              "path": "/frontend/app/operations/supplyModel.ts",
+              "type": "Script",
+              "transferBytes": 40321
+            },
+            {
+              "path": "/frontend/app/operations/releaseModel.ts",
+              "type": "Script",
+              "transferBytes": 18435
+            },
+            {
+              "path": "/frontend/app/landing/heroPoster.ts",
+              "type": "Script",
+              "transferBytes": 73236
+            }
+          ]
+        },
+        "lendingLoadMs": 272.6,
+        "lendingLoadMsNetwork": {
+          "requestCount": 0,
+          "transferBytes": 0,
+          "resources": []
+        },
+        "eventsLoadMs": 167.6,
+        "eventsLoadMsNetwork": {
+          "requestCount": 0,
+          "transferBytes": 0,
+          "resources": []
+        },
+        "administrationLoadMs": 259.1,
+        "administrationLoadMsNetwork": {
+          "requestCount": 0,
+          "transferBytes": 0,
+          "resources": []
+        }
+      },
+      "inventorySearchMs": 79.3
+    },
+    {
+      "profile": "slower-network-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuSlowdown": 4,
+      "routeLoads": {
+        "inventoryLoadMs": 658.2,
+        "inventoryLoadMsNetwork": {
+          "requestCount": 45,
+          "transferBytes": 3428904,
+          "resources": [
+            {
+              "path": "/frontend/preview/index/PreviewInspectionRoute.tsx",
+              "type": "Script",
+              "transferBytes": 22523
+            },
+            {
+              "path": "/frontend/app/auth/AuthPlaceholderRoute.tsx",
+              "type": "Script",
+              "transferBytes": 9934
+            },
+            {
+              "path": "/frontend/app/profile/ProfileRoute.tsx",
+              "type": "Script",
+              "transferBytes": 141466
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryRoute.tsx",
+              "type": "Script",
+              "transferBytes": 108432
+            },
+            {
+              "path": "/frontend/app/request/InternalRequestHub.tsx",
+              "type": "Script",
+              "transferBytes": 281395
+            },
+            {
+              "path": "/frontend/app/lending/InternalLendingHub.tsx",
+              "type": "Script",
+              "transferBytes": 427382
+            },
+            {
+              "path": "/frontend/app/ReleaseDeskRoute.tsx",
+              "type": "Script",
+              "transferBytes": 121672
+            },
+            {
+              "path": "/frontend/app/SupplyRoutes.tsx",
+              "type": "Script",
+              "transferBytes": 163094
+            },
+            {
+              "path": "/frontend/app/AdministrationRoute.tsx",
+              "type": "Script",
+              "transferBytes": 284879
+            },
+            {
+              "path": "/frontend/app/overview/OverviewPreviewRoute.tsx",
+              "type": "Script",
+              "transferBytes": 60952
+            },
+            {
+              "path": "/frontend/app/request/ExternalRequestCenter.tsx",
+              "type": "Script",
+              "transferBytes": 170254
+            },
+            {
+              "path": "/frontend/app/shell/AuthenticatedShell.tsx",
+              "type": "Script",
+              "transferBytes": 28062
+            },
+            {
+              "path": "/frontend/app/shell/presentation.ts",
+              "type": "Script",
+              "transferBytes": 2720
+            },
+            {
+              "path": "/frontend/preview/index/previewData.ts",
+              "type": "Script",
+              "transferBytes": 10186
+            },
+            {
+              "path": "/@fs/D:/Documents/Codex/HAU-USC%20Logistics/worktrees/playground-master-reconciliation/node_modules/.vite/deps/lucide-react.js",
+              "type": "Script",
+              "transferBytes": 875831
+            },
+            {
+              "path": "/frontend/app/theme/palette.ts",
+              "type": "Script",
+              "transferBytes": 1856
+            },
+            {
+              "path": "/frontend/app/inventory/inventoryData.ts",
+              "type": "Script",
+              "transferBytes": 13392
+            },
+            {
+              "path": "/frontend/app/inventory/inventoryFixtures.ts",
+              "type": "Script",
+              "transferBytes": 9065
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryInspector.tsx",
+              "type": "Script",
+              "transferBytes": 75128
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryQtyCell.tsx",
+              "type": "Script",
+              "transferBytes": 4429
+            },
+            {
+              "path": "/frontend/app/inventory/InventoryStateBadge.tsx",
+              "type": "Script",
+              "transferBytes": 13097
+            },
+            {
+              "path": "/frontend/app/hooks/useDialogFocusTrap.ts",
+              "type": "Script",
+              "transferBytes": 10581
+            },
+            {
+              "path": "/frontend/app/routeStyleScope.ts",
+              "type": "Script",
+              "transferBytes": 3612
+            },
+            {
+              "path": "/frontend/app/events/EventReadinessRoute.tsx",
+              "type": "Script",
+              "transferBytes": 61480
+            },
+            {
+              "path": "/frontend/app/hooks/useRouteFocus.ts",
+              "type": "Script",
+              "transferBytes": 4729
+            },
+            {
+              "path": "/frontend/app/shell/AuthMobileDrawer.tsx",
+              "type": "Script",
+              "transferBytes": 59924
+            },
+            {
+              "path": "/frontend/app/shell/AuthShellSidebar.tsx",
+              "type": "Script",
+              "transferBytes": 41838
+            },
+            {
+              "path": "/frontend/app/shell/AuthShellTopbar.tsx",
+              "type": "Script",
+              "transferBytes": 32026
+            },
+            {
+              "path": "/frontend/app/shell/navConfig.tsx",
+              "type": "Script",
+              "transferBytes": 6635
+            },
+            {
+              "path": "/frontend/app/overview/ExceptionInspector.tsx",
+              "type": "Script",
+              "transferBytes": 20719
+            },
+            {
+              "path": "/frontend/app/overview/overviewFixtures.ts",
+              "type": "Script",
+              "transferBytes": 13327
+            },
+            {
+              "path": "/frontend/app/overview/SkeletonBlock.tsx",
+              "type": "Script",
+              "transferBytes": 4131
+            },
+            {
+              "path": "/ProductionAssets.ts",
+              "type": "Script",
+              "transferBytes": 1629
+            },
+            {
+              "path": "/frontend/app/administration/AdministrationRecordsPanel.tsx",
+              "type": "Script",
+              "transferBytes": 98938
+            },
+            {
+              "path": "/frontend/app/administration/administrationPresentation.ts",
+              "type": "Script",
+              "transferBytes": 6370
+            },
+            {
+              "path": "/frontend/app/brand/ThemeToggle.tsx",
+              "type": "Script",
+              "transferBytes": 8928
+            },
+            {
+              "path": "/frontend/app/brand/BrandMarks.tsx",
+              "type": "Script",
+              "transferBytes": 10240
+            },
+            {
+              "path": "/frontend/app/shell/SidebarNavItem.tsx",
+              "type": "Script",
+              "transferBytes": 8871
+            },
+            {
+              "path": "/frontend/assets/production/uscLogo.ts",
+              "type": "Script",
+              "transferBytes": 689
+            },
+            {
+              "path": "/frontend/assets/production/dolLogo.ts",
+              "type": "Script",
+              "transferBytes": 45097
+            },
+            {
+              "path": "/frontend/assets/production/combinedLockup.ts",
+              "type": "Script",
+              "transferBytes": 735
+            },
+            {
+              "path": "/frontend/assets/production/loginBackground.ts",
+              "type": "Script",
+              "transferBytes": 741
+            },
+            {
+              "path": "/frontend/assets/production/favicon.ts",
+              "type": "Script",
+              "transferBytes": 70117
+            },
+            {
+              "path": "/frontend/assets/production/defaultItemImage.ts",
+              "type": "Script",
+              "transferBytes": 91798
+            },
+            {
+              "path": "/brand/usc-logo",
+              "type": "Image",
+              "transferBytes": 3189724
+            }
+          ]
+        },
+        "requestQueueLoadMs": 430.5,
+        "requestQueueLoadMsNetwork": {
+          "requestCount": 23,
+          "transferBytes": 3974987,
+          "resources": [
+            {
+              "path": "/frontend/app/auth/AccountRecoveryPanel.tsx",
+              "type": "Script",
+              "transferBytes": 52365
+            },
+            {
+              "path": "/frontend/app/auth/AccountAccessPanel.tsx",
+              "type": "Script",
+              "transferBytes": 93163
+            },
+            {
+              "path": "/frontend/app/overview/overviewData.ts",
+              "type": "Script",
+              "transferBytes": 25274
+            },
+            {
+              "path": "/frontend/app/landing/CurrentSection.tsx",
+              "type": "Script",
+              "transferBytes": 19680
+            },
+            {
+              "path": "/frontend/app/landing/HeroSection.tsx",
+              "type": "Script",
+              "transferBytes": 17092
+            },
+            {
+              "path": "/frontend/app/landing/LogisticsHubSection.tsx",
+              "type": "Script",
+              "transferBytes": 24296
+            },
+            {
+              "path": "/frontend/app/public/landingSectionNavigation.ts",
+              "type": "Script",
+              "transferBytes": 2842
+            },
+            {
+              "path": "/frontend/app/public/NavLink.tsx",
+              "type": "Script",
+              "transferBytes": 6363
+            },
+            {
+              "path": "/frontend/app/public/PublicMobileDrawer.tsx",
+              "type": "Script",
+              "transferBytes": 33590
+            },
+            {
+              "path": "/frontend/app/public/publicNavConfig.ts",
+              "type": "Script",
+              "transferBytes": 1000
+            },
+            {
+              "path": "/frontend/app/operations/ProcurementWorkspace.tsx",
+              "type": "Script",
+              "transferBytes": 68635
+            },
+            {
+              "path": "/frontend/app/operations/ReceivingHistory.tsx",
+              "type": "Script",
+              "transferBytes": 22784
+            },
+            {
+              "path": "/frontend/app/operations/ReceivingStation.tsx",
+              "type": "Script",
+              "transferBytes": 97956
+            },
+            {
+              "path": "/frontend/app/operations/ReleaseHistory.tsx",
+              "type": "Script",
+              "transferBytes": 33612
+            },
+            {
+              "path": "/frontend/app/operations/ReleaseStation.tsx",
+              "type": "Script",
+              "transferBytes": 99571
+            },
+            {
+              "path": "/frontend/app/operations/operationUtils.ts",
+              "type": "Script",
+              "transferBytes": 7826
+            },
+            {
+              "path": "/frontend/app/auth/VerificationCodeField.tsx",
+              "type": "Script",
+              "transferBytes": 16926
+            },
+            {
+              "path": "/frontend/app/landing/HeroMotion.tsx",
+              "type": "Script",
+              "transferBytes": 27130
+            },
+            {
+              "path": "/frontend/assets/hero/hausc-institutional-logistics-hero.mp4",
+              "type": "Script",
+              "transferBytes": 828
+            },
+            {
+              "path": "/frontend/app/landing/landingData.ts",
+              "type": "Script",
+              "transferBytes": 2338
+            },
+            {
+              "path": "/frontend/app/operations/supplyModel.ts",
+              "type": "Script",
+              "transferBytes": 40321
+            },
+            {
+              "path": "/frontend/app/operations/releaseModel.ts",
+              "type": "Script",
+              "transferBytes": 18435
+            },
+            {
+              "path": "/frontend/app/landing/heroPoster.ts",
+              "type": "Script",
+              "transferBytes": 73236
+            }
+          ]
+        },
+        "lendingLoadMs": 265.8,
+        "lendingLoadMsNetwork": {
+          "requestCount": 0,
+          "transferBytes": 0,
+          "resources": []
+        },
+        "eventsLoadMs": 178.8,
+        "eventsLoadMsNetwork": {
+          "requestCount": 1,
+          "transferBytes": 0,
+          "resources": [
+            {
+              "path": "/brand/usc-logo",
+              "type": "Image",
+              "transferBytes": 0
+            }
+          ]
+        },
+        "administrationLoadMs": 268.9,
+        "administrationLoadMsNetwork": {
+          "requestCount": 0,
+          "transferBytes": 0,
+          "resources": []
+        }
+      },
+      "inventorySearchMs": 75.5
+    }
+  ]
+}
