@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "program": "HAU-USC-MFR-002",
+  "phase": "U10_WORKER_CACHE_SECURITY_REPOSITORY",
+  "base": {
+    "playgroundCommit": "6397780e3a22919cd5637507dd840e14465bf64a",
+    "playgroundTree": "67ddcc7d699026a09ce27ac5f8865a52ed3ee57f",
+    "branch": "work/playground-mfr002-worker-hardening",
+    "sourceEndingCommit": "d2bd6231bcdf0ade930d79d9182e7c2a69973b6d",
+    "sourceEndingTree": "ba9140ef2fd35f941b0e777beb768b20e9dbfc7b",
+    "mainCommitPreserved": "f7e5bf83205dbe58b5fb72126a4456747d92e906",
+    "mainTreePreserved": "480cf65cb9ec07fbab729f0588023e120cf3f97a"
+  },
+  "commits": [
+    {
+      "commit": "c15d1e288a95b3ceddd03a50080b3c765276d79b",
+      "tree": "611eb9f83aa5a9d715af2664d40e5f145e43b100",
+      "subject": "refactor(worker): extract public entry routes"
+    },
+    {
+      "commit": "e982f14cf5a9ed92d8e7bff3fcb198e9466551c9",
+      "tree": "127ea9340247eece5f2eb1b0d29d4c43b5a26f45",
+      "subject": "perf(static): harden cache and response headers"
+    },
+    {
+      "commit": "d2bd6231bcdf0ade930d79d9182e7c2a69973b6d",
+      "tree": "ba9140ef2fd35f941b0e777beb768b20e9dbfc7b",
+      "subject": "docs(mfr002): classify U10 cleanup candidates"
+    }
+  ],
+  "change": {
+    "workerModularity": {
+      "beforeEntryModuleLines": 1533,
+      "afterEntryModuleLines": 1490,
+      "extractedModule": "src/worker/public-entry-routes.js",
+      "scope": "Eight public request, lending, and advertisement entry routes were extracted as one bounded public-entry route family while retaining origin guards, body parsing, untrusted-network fallback, and correlation identifiers.",
+      "businessTruthChange": "ZERO"
+    },
+    "cacheAndSecurity": {
+      "fingerprintedAssets": "The /assets/* static contract is public, max-age=31556952, immutable.",
+      "html": "The /index.html contract is no-cache so browsers revalidate the document.",
+      "staticDocument": "X-Frame-Options is DENY; script-src is self-only; frame-ancestors is none; no broad wildcard was added. style-src unsafe-inline remains because the generated document contains the existing noscript inline style.",
+      "dynamicApi": "Dynamic JSON retains no-store and nosniff and now denies framing and document capabilities with default-src, frame-ancestors, base-uri, and form-action set to none.",
+      "publicSharedApiCache": "ZERO"
+    },
+    "repositoryCleanup": {
+      "manifest": ".codex/MFR002_U10_CLEANUP_ARCHIVE_MANIFEST.md",
+      "dependencyRemoval": "ZERO",
+      "scriptRemoval": "ZERO",
+      "packageJsonChange": "ZERO",
+      "lockfileChange": "ZERO",
+      "documentDeletionOrMove": "ZERO",
+      "unknownDeletion": "ZERO",
+      "fontBinaryCount": 0,
+      "protectedEvidenceChange": "ZERO",
+      "reason": "Every active package has direct use; current-named historical pointers remain referenced; the named loose-source candidates are absent; no candidate passed the required inventory, dependency, unique-content, replacement, and reference gates."
+    }
+  },
+  "verification": {
+    "workerFocused": {
+      "status": "PASS",
+      "testFiles": 6,
+      "tests": 60
+    },
+    "cacheSecurityFocused": {
+      "status": "PASS",
+      "testFiles": 6,
+      "tests": 89
+    },
+    "cleanupManifestFocused": {
+      "status": "PASS",
+      "testFiles": 1,
+      "tests": 2
+    },
+    "fullUnitIntegration": {
+      "status": "PASS",
+      "testFiles": 181,
+      "tests": 1304,
+      "durationSeconds": 237.55
+    },
+    "lint": {
+      "status": "PASS",
+      "errors": 0,
+      "preExistingUnrelatedWarnings": 1,
+      "warningLocation": "src/server/public-request-service.js:159:28"
+    },
+    "build": {
+      "status": "PASS",
+      "transformedModules": 1696
+    },
+    "appsScript": {
+      "status": "PASS",
+      "sources": 34,
+      "functions": 57,
+      "parity": "DETERMINISTIC"
+    },
+    "dist": {
+      "status": "PASS",
+      "files": 9,
+      "bytes": 36963114,
+      "directAssets": 2,
+      "manifestSha256Prefix": "836c40a06d18823a"
+    },
+    "cloudflareDryRun": {
+      "status": "PASS",
+      "deployPerformed": false,
+      "assets": 11,
+      "workerBundleKiB": 1109.63,
+      "workerBundleGzipKiB": 210.02,
+      "heroBytes": 36018711,
+      "heroParts": [20000000, 16018711],
+      "heroSha256": "657b38b82d452a234ab76c64a3c4312133279ec3d59b9923c84c5e24501e71d1"
+    },
+    "changedFileFormatting": "PASS_SUPPORTED_FILES_HEADERS_VERIFIED_BY_CONTRACT_TEST_BUILD_AND_DRY_RUN",
+    "repositoryWideFormatting": "PRESERVED_HISTORICAL_RED_OUTSIDE_CHANGED_FILES",
+    "diffCheck": "PASS",
+    "addedLineSecretScan": "PASS_NO_MATCHES",
+    "governance": "PASS_14_REQUIRED_FIELDS_AND_12_PROJECT_FILES",
+    "handoff": "PASS_CANONICAL_RECORDS_GIT_STATE_AND_SECRET_SCAN"
+  },
+  "externalState": {
+    "schemaMigrationIndexProviderOrDataMutation": "ZERO",
+    "deployment": "ZERO",
+    "playgroundProviderMutation": "ZERO",
+    "mainMutation": "ZERO",
+    "productionMutation": "ZERO"
+  },
+  "result": "PASS_READY_FOR_PLAYGROUND_INTEGRATION"
+}
