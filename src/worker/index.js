@@ -63,6 +63,7 @@ import {
 } from '../server/account-application/service.js';
 import { createProfileService } from '../server/profile/service.js';
 import { resolveHostRoute, responseForHostRoute } from './host-routing.js';
+import { handlePublicEntryRoute } from './public-entry-routes.js';
 
 const API_SECURITY_HEADERS = Object.freeze({
   'cache-control': 'no-store',
@@ -837,65 +838,18 @@ async function handleApi(request, env, requestId, executionContext) {
         correlationId: requestId,
       });
     }
-    if (url.pathname === '/api/public/request/options' && request.method === 'GET') {
-      return json({ ...(await publicRequests.options()), correlationId: requestId });
-    }
-    if (url.pathname === '/api/public/request' && request.method === 'POST') {
-      assertPublicMutationOrigin(request);
-      return json(
-        await publicRequests.submit({
-          command: await body(request),
-          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
-          correlationId: requestId,
-        }),
-      );
-    }
-    if (url.pathname === '/api/public/request/track' && request.method === 'POST') {
-      assertPublicMutationOrigin(request);
-      return json(
-        await publicRequests.track({
-          command: await body(request),
-          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
-          correlationId: requestId,
-        }),
-      );
-    }
-    if (url.pathname === '/api/public/request/related' && request.method === 'POST') {
-      assertPublicMutationOrigin(request);
-      return json(
-        await publicRequests.related({
-          command: await body(request),
-          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
-          correlationId: requestId,
-        }),
-      );
-    }
-    if (url.pathname === '/api/public/lending/catalog' && request.method === 'GET') {
-      return json({ ...(await publicLending.catalog()), correlationId: requestId });
-    }
-    if (url.pathname === '/api/public/advertisements' && request.method === 'GET') {
-      return json({ ...(await publicAdvertisements.list()), correlationId: requestId });
-    }
-    if (url.pathname === '/api/public/lending/track' && request.method === 'POST') {
-      assertPublicMutationOrigin(request);
-      return json(
-        await publicLending.track({
-          command: await body(request),
-          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
-          correlationId: requestId,
-        }),
-      );
-    }
-    if (url.pathname === '/api/public/lending' && request.method === 'POST') {
-      assertPublicMutationOrigin(request);
-      return json(
-        await publicLending.submit({
-          command: await body(request),
-          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
-          correlationId: requestId,
-        }),
-      );
-    }
+    const publicEntryResponse = await handlePublicEntryRoute({
+      request,
+      url,
+      requestId,
+      publicRequests,
+      publicLending,
+      publicAdvertisements,
+      json,
+      readBody: body,
+      assertMutationOrigin: assertPublicMutationOrigin,
+    });
+    if (publicEntryResponse) return publicEntryResponse;
     if (url.pathname === '/api/lending/usage' && request.method === 'POST') {
       const actor = await authorize(request, auth, CAPABILITIES.LENDING_USAGE_VIEW);
       return json(
