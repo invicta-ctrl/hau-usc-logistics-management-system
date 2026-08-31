@@ -69,7 +69,8 @@ describe('Figma frontend isolated-playground proxy guard', () => {
     expect(renderer).not.toContain('mode="restocking"');
     expect(renderer).not.toContain('mode="procurement"');
     expect(overview).not.toContain('overviewFixtures');
-    expect(overview).toContain('module="overview"');
+    expect(overview).toContain(".operationalModuleBootstrap('overview', abort.signal)");
+    expect(overview).toContain('projectOverview(bootstrap.data)');
   });
 
   it('keeps the deterministic fixture-boundary build gate callable from every frontend build', () => {

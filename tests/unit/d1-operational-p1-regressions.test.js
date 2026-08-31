@@ -325,16 +325,20 @@ describe('D1 operational P1 invariants', () => {
     expect(method).toContain('auditStatement(db');
   });
 
-  it('bounds every growing Inventory history projection to the contract maximum', () => {
+  it('pages Inventory in SQL and limits every growing history to visible parent IDs', () => {
     const branch = between("} else if (module === 'inventory')", "} else if (module === 'lending')");
     const catalogQuery = branch.slice(0, branch.indexOf('const classificationHistoryRows'));
 
-    expect(branch).toMatch(
-      /FROM inventory_classification_history[\s\S]*?ORDER BY history\.occurred_at DESC, history\.id DESC\s+LIMIT 500/u,
-    );
-    expect(branch).toMatch(/FROM inventory_ledger[\s\S]*?ORDER BY created_at DESC, id DESC\s+LIMIT 500/u);
-    expect(branch).toMatch(/FROM reservations[\s\S]*?ORDER BY created_at DESC, id DESC\s+LIMIT 500/u);
+    expect(branch).toContain('const relatedLimit = Math.min(100, Math.max(4, page.pageSize * 4))');
+    expect(branch).toMatch(/FROM inventory_classification_history[\s\S]*?WHERE history\.item_id IN/u);
+    expect(branch).toMatch(/FROM inventory_ledger[\s\S]*?WHERE item_id IN/u);
+    expect(branch).toMatch(/FROM reservations[\s\S]*?WHERE item_id IN/u);
+    expect(branch).toMatch(/FROM inventory_asset_maintenance[\s\S]*?WHERE asset_id IN/u);
+    expect(branch).toMatch(/FROM inventory_asset_movements[\s\S]*?WHERE asset_id IN/u);
     expect(catalogQuery).toContain('FROM inventory_items item');
+    expect(catalogQuery).toContain('LIMIT ?${inventoryLimitIndex} OFFSET ?${inventoryLimitIndex + 1}');
+    expect(catalogQuery).toContain('SELECT COUNT(*) AS count');
+    expect(catalogQuery).toContain('instr(lower(item.name)');
     expect(catalogQuery).not.toContain('LIMIT 500');
   });
 });

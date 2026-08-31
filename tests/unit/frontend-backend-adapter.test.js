@@ -412,8 +412,11 @@ describe('Figma frontend backend adapter', () => {
     const valid = {
       ok: true,
       contract: 'bootstrap-module',
+      contractVersion: 2,
+      requestOnly: false,
       module: 'inventory',
       scopeRevision: { token: 'inventory-r7', updatedAt: '2026-08-24T00:00:00.000Z' },
+      pagination: { page: 1, pageSize: 25, total: 1, hasMore: false },
       data: {
         inventoryItems: [
           {
@@ -433,8 +436,29 @@ describe('Figma frontend backend adapter', () => {
             conditionReviewState: 'ASSESSED',
             maintenanceReviewState: 'CURRENT',
             updatedAt: '2026-08-24T00:00:00.000Z',
+            classificationHistory: [],
           },
         ],
+        ledgerTransactions: [
+          {
+            id: 'TXN-1',
+            type: 'OPENING_BALANCE',
+            direction: 'IN',
+            itemId: 'ITM-1',
+            quantity: 8,
+            signedQuantity: 8,
+            unit: 'piece',
+            relatedEntityType: 'INVENTORY_ITEM',
+            relatedId: 'ITM-1',
+            status: 'POSTED',
+            notes: '',
+            createdAt: '2026-08-24T00:00:00.000Z',
+          },
+        ],
+        reservations: [],
+        inventoryAssets: [],
+        assetMaintenanceHistory: [],
+        assetMovementHistory: [],
       },
     };
     const partial = structuredClone(valid);
@@ -447,6 +471,12 @@ describe('Figma frontend backend adapter', () => {
       inventoryItems: [
         expect.objectContaining({ id: 'ITM-1', availableToPromise: 5, onHand: 8, reserved: 3 }),
       ],
+      ledgerTransactions: [expect.objectContaining({ id: 'TXN-1', signedQuantity: 8 })],
+      reservations: [],
+      inventoryAssets: [],
+      assetMaintenanceHistory: [],
+      assetMovementHistory: [],
+      pagination: { page: 1, pageSize: 25, total: 1, hasMore: false },
       scopeRevision: { token: 'inventory-r7', updatedAt: '2026-08-24T00:00:00.000Z' },
     });
     await expect(backend.inventoryBootstrap()).rejects.toMatchObject({
@@ -454,7 +484,7 @@ describe('Figma frontend backend adapter', () => {
       status: 502,
     });
     expect(fetchMock.mock.calls[0]).toEqual([
-      '/api/bootstrap/inventory',
+      '/api/bootstrap/inventory?page=1&pageSize=25',
       expect.objectContaining({ method: 'GET', credentials: 'include' }),
     ]);
   });

@@ -19,7 +19,7 @@ describe('post-FI17 Overview and hero-motion recovery', () => {
     const overviewPreview = readSource('src/frontend/app/overview/OverviewPreviewRoute.tsx');
 
     expect(renderer).toMatch(
-      /session && isAuthRoute\(route\)[\s\S]*route === 'overview'[\s\S]*<OverviewRoute session=\{session\} \/>/,
+      /session && isAuthRoute\(route\)[\s\S]*route === 'overview'[\s\S]*<OverviewRoute session=\{session\} navigate=\{navigate\} \/>/,
     );
     expect(inspection).toMatch(
       /authRoute === 'overview'[\s\S]*<OverviewPreviewRoute session=\{LOCAL_PREVIEW_SESSION\} dark=\{dark\} \/>/,
@@ -30,7 +30,10 @@ describe('post-FI17 Overview and hero-motion recovery', () => {
     expect(previewData).toMatch(/capabilities:\s*\[\s*'overview'/);
     expect(overview).not.toContain('This workspace route is reserved and has not yet been built.');
     expect(overview).not.toContain('Route reserved · not yet built');
-    expect(overview).toContain('<OperationalModuleRoute module="overview"');
+    expect(overview).toContain(".operationalModuleBootstrap('overview', abort.signal)");
+    expect(overview).toContain('projectOverview(bootstrap.data)');
+    expect(overview).toContain('Needs attention');
+    expect(overview).not.toContain('OverviewPreviewRoute');
     expect(overviewPreview).toContain('Operations overview');
     expect(overviewPreview).toContain('Signed in as {session.displayName}');
     expect(overviewPreview).not.toContain('frontendBackend');
@@ -46,9 +49,11 @@ describe('post-FI17 Overview and hero-motion recovery', () => {
     );
     expect(section).toContain('<HeroMotion videoSrc={heroVideoSrc} />');
     expect(hero).toContain('const [motionRequested, setMotionRequested] = useState(false)');
-    expect(hero).toMatch(/if \(!motionAllowed \|\| !motionRequested\)[\s\S]*setResolvedVideoSrc\(undefined\)/);
+    expect(hero).toMatch(
+      /if \(!motionAllowed \|\| !motionRequested\)[\s\S]*setResolvedVideoSrc\(undefined\)/,
+    );
     expect(hero).toMatch(/else if \(!resolvedVideoSrc \|\| failed\)[\s\S]*setMotionRequested\(true\)/);
-    expect(hero).toContain("fetch(chunkUrl, { signal: controller.signal })");
+    expect(hero).toContain('fetch(chunkUrl, { signal: controller.signal })');
     expect(hero).toContain('controller.abort()');
     expect(hero).toContain('muted');
     expect(hero).toContain('loop');

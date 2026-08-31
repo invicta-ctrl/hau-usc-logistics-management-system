@@ -1,8 +1,4 @@
-import {
-  isThemeFamily,
-  isThemeMode,
-  type AppearancePreference,
-} from '../app/theme/themeContract';
+import { isThemeFamily, isThemeMode, type AppearancePreference } from '../app/theme/themeContract';
 
 type Json = Record<string, unknown>;
 
@@ -167,11 +163,85 @@ export type FrontendInventoryItem = {
   conditionReviewState: string;
   maintenanceReviewState: string;
   updatedAt: string;
+  classificationHistory: FrontendInventoryClassificationHistory[];
+};
+
+export type FrontendInventoryClassificationHistory = {
+  id: string;
+  previousStatus: string;
+  newStatus: string;
+  previousKind: string;
+  newKind: string;
+  occurredAt: string;
+};
+
+export type FrontendInventoryLedgerTransaction = {
+  id: string;
+  type: string;
+  direction: string;
+  itemId: string;
+  quantity: number;
+  signedQuantity: number;
+  unit: string;
+  relatedEntityType: string;
+  relatedId: string;
+  status: string;
+  notes: string;
+  createdAt: string;
+};
+
+export type FrontendInventoryReservation = {
+  id: string;
+  itemId: string;
+  quantity: number;
+  unit: string;
+  requestLineId: string;
+  lendingTicketId: string;
+  status: string;
+  clearedAt: string;
+  clearReason: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FrontendInventoryAsset = {
+  id: string;
+  itemId: string;
+  assetTag: string;
+  condition: string;
+  lifecycleStatus: string;
+};
+
+export type FrontendInventoryAssetHistory = {
+  id: string;
+  assetId: string;
+  eventType: string;
+  previousStatus: string;
+  newStatus: string;
+  condition: string;
+  occurredAt: string;
+  notes: string;
+};
+
+export type InventoryBootstrapFilter = 'ALL' | 'BELOW' | 'OUT' | 'UNCONFIRMED';
+
+export type InventoryBootstrapOptions = {
+  page?: number;
+  pageSize?: number;
+  query?: string;
+  filter?: InventoryBootstrapFilter;
+  signal?: AbortSignal;
 };
 
 export type FrontendInventoryBootstrap = {
   inventoryItems: FrontendInventoryItem[];
-  scopeRevision: { token: string; updatedAt: string } | null;
+  ledgerTransactions: FrontendInventoryLedgerTransaction[];
+  reservations: FrontendInventoryReservation[];
+  inventoryAssets: FrontendInventoryAsset[];
+  assetMaintenanceHistory: FrontendInventoryAssetHistory[];
+  assetMovementHistory: FrontendInventoryAssetHistory[];
+  pagination: { page: number; pageSize: number; total: number; hasMore: boolean };
+  scopeRevision: { token: string; updatedAt: string };
 };
 
 export type FrontendOperationalModuleName = 'overview' | 'release' | 'restocking' | 'procurement';
@@ -752,6 +822,23 @@ export function buildLendingBootstrapPath({ page, pageSize }: LendingBootstrapOp
     pageSize: String(Math.min(positiveInteger(pageSize, 25), 50)),
   });
   return `/api/bootstrap/lending?${params.toString()}`;
+}
+
+/** Builds one purpose-limited Inventory page; stock quantities remain server-derived. */
+export function buildInventoryBootstrapPath({
+  page,
+  pageSize,
+  query,
+  filter,
+}: InventoryBootstrapOptions = {}) {
+  const params = new URLSearchParams({
+    page: String(positiveInteger(page, 1)),
+    pageSize: String(Math.min(positiveInteger(pageSize, 25), 50)),
+  });
+  const normalizedQuery = asString(query).slice(0, 100);
+  if (normalizedQuery) params.set('query', normalizedQuery);
+  if (filter && filter !== 'ALL') params.set('filter', filter);
+  return `/api/bootstrap/inventory?${params.toString()}`;
 }
 
 const OPERATIONAL_MODULE_COLLECTIONS: Record<FrontendOperationalModuleName, string[]> = {
@@ -1361,39 +1448,128 @@ export class FrontendBackend {
    * session, `view.inventory` capability, operational scope, and ledger-derived
    * quantities; this adapter supplies no identity, capability, or stock values.
    */
-  async inventoryBootstrap(signal?: AbortSignal): Promise<FrontendInventoryBootstrap> {
-    const payload = await this.request('/api/bootstrap/inventory', { method: 'GET', signal });
-    if (asString(payload.contract) !== 'bootstrap-module' || asString(payload.module) !== 'inventory') {
-      incomplete('The inventory response did not match the supported module bootstrap contract.');
+  async inventoryBootstrap(options: InventoryBootstrapOptions = {}): Promise<FrontendInventoryBootstrap> {
+    const payload = await this.request(buildInventoryBootstrapPath(options), {
+      method: 'GET',
+      signal: options.signal,
+    });
+    if (
+      payload.ok !== true ||
+      asString(payload.contract) !== 'bootstrap-module' ||
+      asString(payload.module) !== 'inventory' ||
+      requiredNumber(payload.contractVersion, 'inventory bootstrap contractVersion') !== 2 ||
+      payload.requestOnly !== false
+    ) {
+      incomplete('The inventory response did not match the authenticated inventory bootstrap v2 contract.');
     }
-    const data = asRecord(payload.data);
-    if (!Array.isArray(data.inventoryItems)) {
-      incomplete('The inventory response did not include inventoryItems.');
-    }
-    const revision = asRecord(payload.scopeRevision);
-    return {
-      inventoryItems: records(data.inventoryItems).map((item) => ({
-        id: requiredString(item.id, 'inventoryItems.id'),
-        name: requiredString(item.name, 'inventoryItems.name'),
-        category: requiredString(item.category, 'inventoryItems.category'),
-        unit: requiredString(item.unit, 'inventoryItems.unit'),
-        onHand: requiredNumber(item.onHand, 'inventoryItems.onHand'),
-        reserved: requiredNumber(item.reserved, 'inventoryItems.reserved'),
-        availableToPromise: requiredNumber(item.availableToPromise, 'inventoryItems.availableToPromise'),
-        reorderThreshold: requiredNumber(item.reorderThreshold, 'inventoryItems.reorderThreshold'),
-        lowStockState: asString(item.lowStockState) as FrontendInventoryItem['lowStockState'],
-        isLendable: item.isLendable === true,
-        lendingStatus: asString(item.lendingStatus),
-        inventoryKind: asString(item.inventoryKind),
-        classificationStatus: asString(item.classificationStatus),
-        conditionReviewState: asString(item.conditionReviewState),
-        maintenanceReviewState: asString(item.maintenanceReviewState),
-        updatedAt: requiredString(item.updatedAt, 'inventoryItems.updatedAt'),
+    const data = requiredRecord(payload.data, 'inventory bootstrap data');
+    const inventoryItems = requiredRecords(data.inventoryItems, 'inventory.inventoryItems').map((item) => ({
+      id: requiredString(item.id, 'inventoryItems.id'),
+      name: requiredString(item.name, 'inventoryItems.name'),
+      category: requiredString(item.category, 'inventoryItems.category'),
+      unit: requiredString(item.unit, 'inventoryItems.unit'),
+      onHand: requiredNumber(item.onHand, 'inventoryItems.onHand'),
+      reserved: requiredNumber(item.reserved, 'inventoryItems.reserved'),
+      availableToPromise: requiredNumber(item.availableToPromise, 'inventoryItems.availableToPromise'),
+      reorderThreshold: requiredNumber(item.reorderThreshold, 'inventoryItems.reorderThreshold'),
+      lowStockState: requiredString(
+        item.lowStockState,
+        'inventoryItems.lowStockState',
+      ) as FrontendInventoryItem['lowStockState'],
+      isLendable: requiredBoolean(item.isLendable, 'inventoryItems.isLendable'),
+      lendingStatus: asString(item.lendingStatus),
+      inventoryKind: requiredString(item.inventoryKind, 'inventoryItems.inventoryKind'),
+      classificationStatus: requiredString(item.classificationStatus, 'inventoryItems.classificationStatus'),
+      conditionReviewState: requiredString(item.conditionReviewState, 'inventoryItems.conditionReviewState'),
+      maintenanceReviewState: requiredString(
+        item.maintenanceReviewState,
+        'inventoryItems.maintenanceReviewState',
+      ),
+      updatedAt: requiredString(item.updatedAt, 'inventoryItems.updatedAt'),
+      classificationHistory: requiredRecords(
+        item.classificationHistory,
+        'inventoryItems.classificationHistory',
+      ).map((entry) => ({
+        id: requiredString(entry.id, 'classificationHistory.id'),
+        previousStatus: asString(entry.previousStatus),
+        newStatus: requiredString(entry.newStatus, 'classificationHistory.newStatus'),
+        previousKind: asString(entry.previousKind),
+        newKind: requiredString(entry.newKind, 'classificationHistory.newKind'),
+        occurredAt: requiredString(entry.occurredAt, 'classificationHistory.occurredAt'),
       })),
-      scopeRevision:
-        revision.token && revision.updatedAt
-          ? { token: asString(revision.token), updatedAt: asString(revision.updatedAt) }
-          : null,
+    }));
+    const ledgerTransactions = requiredRecords(data.ledgerTransactions, 'inventory.ledgerTransactions').map(
+      (entry) => ({
+        id: requiredString(entry.id, 'ledgerTransactions.id'),
+        type: requiredString(entry.type ?? entry.transactionType, 'ledgerTransactions.type'),
+        direction: requiredString(entry.direction, 'ledgerTransactions.direction'),
+        itemId: requiredString(entry.itemId, 'ledgerTransactions.itemId'),
+        quantity: requiredNumber(entry.quantity, 'ledgerTransactions.quantity'),
+        signedQuantity: requiredNumber(entry.signedQuantity, 'ledgerTransactions.signedQuantity'),
+        unit: requiredString(entry.unit, 'ledgerTransactions.unit'),
+        relatedEntityType: asString(entry.relatedEntityType),
+        relatedId: asString(entry.relatedId),
+        status: requiredString(entry.status, 'ledgerTransactions.status'),
+        notes: asString(entry.notes),
+        createdAt: requiredString(entry.createdAt, 'ledgerTransactions.createdAt'),
+      }),
+    );
+    const reservations = requiredRecords(data.reservations, 'inventory.reservations').map((entry) => ({
+      id: requiredString(entry.id, 'reservations.id'),
+      itemId: requiredString(entry.itemId, 'reservations.itemId'),
+      quantity: requiredNumber(entry.quantity, 'reservations.quantity'),
+      unit: requiredString(entry.unit, 'reservations.unit'),
+      requestLineId: asString(entry.requestLineId),
+      lendingTicketId: asString(entry.lendingTicketId),
+      status: requiredString(entry.status, 'reservations.status'),
+      clearedAt: asString(entry.clearedAt),
+      clearReason: asString(entry.clearReason),
+      createdAt: requiredString(entry.createdAt, 'reservations.createdAt'),
+      updatedAt: requiredString(entry.updatedAt, 'reservations.updatedAt'),
+    }));
+    const inventoryAssets = requiredRecords(data.inventoryAssets, 'inventory.inventoryAssets').map(
+      (entry) => ({
+        id: requiredString(entry.id, 'inventoryAssets.id'),
+        itemId: requiredString(entry.item_id ?? entry.itemId, 'inventoryAssets.itemId'),
+        assetTag: requiredString(entry.asset_tag ?? entry.assetTag, 'inventoryAssets.assetTag'),
+        condition: asString(entry.condition_label ?? entry.condition),
+        lifecycleStatus: requiredString(
+          entry.lifecycle_status ?? entry.lifecycleStatus,
+          'inventoryAssets.lifecycleStatus',
+        ),
+      }),
+    );
+    const projectAssetHistory = (value: unknown, field: string) =>
+      requiredRecords(value, field).map((entry) => ({
+        id: requiredString(entry.id, `${field}.id`),
+        assetId: requiredString(entry.asset_id ?? entry.assetId, `${field}.assetId`),
+        eventType: requiredString(
+          entry.event_type ?? entry.movement_type ?? entry.eventType,
+          `${field}.eventType`,
+        ),
+        previousStatus: asString(entry.previous_status ?? entry.previousStatus),
+        newStatus: asString(entry.new_status ?? entry.newStatus),
+        condition: asString(entry.condition_label ?? entry.condition),
+        occurredAt: requiredString(entry.occurred_at ?? entry.occurredAt, `${field}.occurredAt`),
+        notes: asString(entry.notes),
+      }));
+    const pagination = requiredRecord(payload.pagination, 'inventory pagination');
+    const scopeRevision = projectScopeRevision(payload.scopeRevision, 'inventory scopeRevision');
+    if (!scopeRevision) incomplete('The response did not include inventory scopeRevision.');
+    return {
+      inventoryItems,
+      ledgerTransactions,
+      reservations,
+      inventoryAssets,
+      assetMaintenanceHistory: projectAssetHistory(data.assetMaintenanceHistory, 'assetMaintenanceHistory'),
+      assetMovementHistory: projectAssetHistory(data.assetMovementHistory, 'assetMovementHistory'),
+      pagination: {
+        page: requiredPositiveInteger(pagination.page, 'inventory pagination.page'),
+        pageSize: requiredPositiveInteger(pagination.pageSize, 'inventory pagination.pageSize', 50),
+        total: requiredNonNegativeInteger(pagination.total, 'inventory pagination.total'),
+        hasMore: requiredBoolean(pagination.hasMore, 'inventory pagination.hasMore'),
+      },
+      scopeRevision,
     };
   }
 

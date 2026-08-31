@@ -1,389 +1,308 @@
-import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
-import { ArrowLeft, X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { ArrowLeft, ArrowRight, X } from 'lucide-react';
+import type { Route } from '../appTypes';
 import { useDialogFocusTrap } from '../hooks/useDialogFocusTrap';
-import { ap } from '../theme/palette';
 import type { InvItem, InvQty } from './inventoryTypes';
 import { InventoryStateBadge } from './InventoryStateBadge';
 
+function formatTimestamp(value: string | undefined) {
+  if (!value) return 'Not reported';
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? 'Not reported'
+    : new Intl.DateTimeFormat('en-PH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(parsed);
+}
+
+function presentStatus(value: string | undefined) {
+  return (value || 'Not reported')
+    .toLowerCase()
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function quantity(value: InvQty, unit = '') {
+  return value === '—' ? '—' : `${value} ${unit}`.trim();
+}
+
 export function InventoryInspector({
   item,
-  dark,
   isMobile,
+  availableRoutes,
+  onNavigate,
   onClose,
 }: {
   item: InvItem;
   dark: boolean;
   isMobile: boolean;
+  availableRoutes: Route[];
+  onNavigate: (route: Route) => void;
   onClose: () => void;
 }) {
-  const c = ap(dark);
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
-
-  useDialogFocusTrap({ open: true, dialogRef });
+  const panelRef = useRef<HTMLElement>(null);
+  useDialogFocusTrap({
+    open: isMobile,
+    dialogRef: panelRef,
+    inertSelector: isMobile ? '[data-inventory-modal-background]' : undefined,
+  });
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    const previousOverflow = document.body.style.overflow;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
     };
-    document.addEventListener('keydown', handler);
+    document.addEventListener('keydown', handleEscape);
     if (isMobile) document.body.style.overflow = 'hidden';
     return () => {
-      document.removeEventListener('keydown', handler);
-      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleEscape);
+      if (isMobile) document.body.style.overflow = previousOverflow;
     };
-  }, [onClose, isMobile]);
+  }, [isMobile, onClose]);
 
-  function Field({ label, children }: { label: string; children: ReactNode }) {
-    return (
-      <div className="flex flex-col gap-1">
-        <p
-          style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 9,
-            color: c.muted,
-            letterSpacing: '0.9px',
-            textTransform: 'uppercase',
-          }}
-        >
-          {label}
-        </p>
-        <div
-          style={{
-            fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-            fontSize: 13,
-            color: c.text,
-            letterSpacing: -0.15,
-            lineHeight: '20px',
-          }}
-        >
-          {children}
-        </div>
-      </div>
-    );
+  const routes = new Set<Route>(availableRoutes);
+  const actions: Array<{ route: Route; label: string; detail: string }> = [];
+  if ((item.belowThreshold || item.outOfStock) && routes.has('restocking')) {
+    actions.push({
+      route: 'restocking',
+      label: 'Open restocking',
+      detail: 'Continue through the governed replenishment workflow.',
+    });
+  }
+  if (item.lending === 'lendable' && routes.has('lending')) {
+    actions.push({
+      route: 'lending',
+      label: 'Open lending',
+      detail: 'Review circulation and current lending work.',
+    });
+  }
+  if (typeof item.reserved === 'number' && item.reserved > 0 && routes.has('release')) {
+    actions.push({
+      route: 'release',
+      label: 'Open Release Desk',
+      detail: 'Review authorized release work linked to reservations.',
+    });
   }
 
-  const panelStyle: CSSProperties = isMobile
-    ? {
-        position: 'fixed',
-        inset: 0,
-        zIndex: 60,
-        display: 'flex',
-        flexDirection: 'column',
-        background: c.m1,
-        overflowY: 'auto',
-      }
-    : {
-        position: 'fixed',
-        top: 0,
-        right: 0,
-        bottom: 0,
-        width: 'min(480px, 100vw)',
-        zIndex: 60,
-        display: 'flex',
-        flexDirection: 'column',
-        background: c.m1,
-        borderLeft: `1px solid ${c.border}`,
-        boxShadow: '-4px 0 24px rgba(0,0,0,0.18)',
-        overflowY: 'auto',
-      };
-
-  const isEm = (v: InvQty) => v === '—';
-  const isPreviewFixture = item.dataOrigin !== 'REAL_BOOTSTRAP';
-
   return (
-    <>
-      {/* Backdrop (desktop only) */}
-      {!isMobile && (
-        <div
-          className="fixed inset-0 z-50"
-          style={{ background: 'rgba(0,0,0,0.32)' }}
+    <aside
+      ref={panelRef}
+      className={`inventory-inspector${isMobile ? ' inventory-inspector--mobile shell-sheet--viewport' : ''}`}
+      role={isMobile ? 'dialog' : 'complementary'}
+      aria-modal={isMobile ? true : undefined}
+      aria-labelledby="inventory-inspector-title"
+      tabIndex={isMobile ? -1 : undefined}
+    >
+      <header className="inventory-inspector__header shell-sheet__header">
+        <button
+          type="button"
           onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="inv-inspector-title"
-        tabIndex={-1}
-        className="shell-sheet--viewport"
-        style={panelStyle}
-      >
-        {/* Header */}
-        <div
-          className="shell-sheet__header flex items-center justify-between pb-4 shrink-0"
-          style={{ borderBottom: `1px solid ${c.border}` }}
+          aria-label={isMobile ? 'Back to inventory' : 'Close inspector'}
+          data-dialog-initial-focus={isMobile ? true : undefined}
         >
-          {isMobile ? (
-            <button
-              ref={closeRef}
-              type="button"
-              onClick={onClose}
-              className="flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c] rounded-[6px]"
-              style={{
-                minHeight: 44,
-                minWidth: 44,
-                color: c.muted,
-                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                fontSize: 13,
-              }}
-              aria-label="Back to inventory"
-              data-dialog-initial-focus
-            >
-              <ArrowLeft size={14} strokeWidth={1.5} />
-              <span>Back to inventory</span>
-            </button>
-          ) : (
-            <button
-              ref={closeRef}
-              type="button"
-              onClick={onClose}
-              className="flex items-center justify-center rounded-[8px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
-              style={{
-                width: 44,
-                height: 44,
-                color: c.muted,
-                background: c.m2,
-                border: `1px solid ${c.border}`,
-              }}
-              aria-label="Close inspector"
-              data-dialog-initial-focus
-            >
-              <X size={16} strokeWidth={1.5} />
-            </button>
-          )}
-          <span
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 9,
-              color: c.muted,
-              letterSpacing: '0.8px',
-              textTransform: 'uppercase',
-            }}
-          >
-            inventory.item
-          </span>
-        </div>
+          {isMobile ? <ArrowLeft aria-hidden="true" size={17} /> : <X aria-hidden="true" size={17} />}
+          {isMobile ? <span>Back to inventory</span> : null}
+        </button>
+        <span>inventory.item</span>
+      </header>
 
-        {/* Identity */}
-        <div className="px-5 py-5 shrink-0" style={{ borderBottom: `1px solid ${c.border}` }}>
-          <p
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 10,
-              color: c.muted,
-              letterSpacing: '0.8px',
-              textTransform: 'uppercase',
-              marginBottom: 6,
-            }}
-          >
-            RECORD
-          </p>
-          <p
-            id="inv-inspector-title"
-            style={{
-              fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
-              fontWeight: 700,
-              fontSize: 20,
-              color: c.text,
-              letterSpacing: -0.5,
-              fontVariationSettings: '"opsz" 14, "wdth" 100',
-            }}
-          >
-            {item.name}
-          </p>
-          <p
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 11,
-              color: c.muted,
-              marginTop: 4,
-              letterSpacing: -0.1,
-            }}
-          >
-            {item.id} · {item.category}
-          </p>
-          <div className="mt-3">
-            <InventoryStateBadge item={item} />
-          </div>
-          {/* A4 fixture and authenticated bootstrap are intentionally never conflated. */}
-          <div
-            className="mt-3 rounded-[6px] px-3 py-1.5"
-            style={{ background: dark ? 'rgba(232,185,60,0.08)' : '#fbeed2', border: '1px solid #dcbe8a' }}
-          >
-            <p
-              style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 9,
-                color: '#7d5518',
-                letterSpacing: '0.9px',
-                textTransform: 'uppercase',
-              }}
-            >
-              {isPreviewFixture
-                ? 'Inspection sample · actions unavailable'
-                : 'Current authorized inventory records'}
-            </p>
-          </div>
-        </div>
-
-        {/* Fields */}
-        <div className="px-5 py-5 flex flex-col gap-5 flex-1">
-          {/* STATE */}
-          <Field label="STATE">
-            <InventoryStateBadge item={item} />
-          </Field>
-
-          {/* QUANTITY TRUTH */}
-          <Field label="QUANTITY TRUTH">
-            {item.unconfirmed ? (
-              <p style={{ color: c.muted, fontStyle: 'italic' }}>
-                {isPreviewFixture
-                  ? 'Not confirmed in this inspection sample.'
-                  : 'Not confirmed in the current inventory record.'}
-              </p>
-            ) : (
-              <div className="flex gap-6 mt-1">
-                {(['On hand', 'Reserved', 'Available'] as const).map((lbl, i) => {
-                  const vals: InvQty[] = [item.onHand, item.reserved, item.available];
-                  const isLow =
-                    lbl === 'Available' &&
-                    !isEm(item.available) &&
-                    typeof item.available === 'number' &&
-                    typeof item.threshold === 'number' &&
-                    (item.available as number) < (item.threshold as number);
-                  return (
-                    <div key={lbl} className="flex flex-col gap-0.5 items-end">
-                      <span
-                        style={{
-                          fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                          fontSize: 9,
-                          color: c.muted,
-                          letterSpacing: '0.9px',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {lbl}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: "'IBM Plex Mono', monospace",
-                          fontSize: 18,
-                          fontWeight: 600,
-                          letterSpacing: -0.2,
-                          color: isLow ? '#9c2630' : c.text,
-                        }}
-                      >
-                        {vals[i]}
-                      </span>
-                    </div>
-                  );
-                })}
-                <div className="flex flex-col gap-0.5 items-end">
-                  <span
-                    style={{
-                      fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                      fontSize: 9,
-                      color: c.muted,
-                      letterSpacing: '0.9px',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    Threshold
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      fontSize: 18,
-                      fontWeight: 600,
-                      letterSpacing: -0.2,
-                      color: c.muted,
-                    }}
-                  >
-                    {item.threshold}
-                  </span>
-                </div>
-              </div>
-            )}
-          </Field>
-
-          {/* Record history */}
-          <Field label="RECORD HISTORY">
-            {isPreviewFixture ? (
-              <p style={{ color: c.muted, fontStyle: 'italic' }}>
-                No movement entries are included in this inspection sample.
-              </p>
-            ) : (
-              <>
-                <p>
-                  Classification:{' '}
-                  <span style={{ color: c.muted }}>{item.classificationStatus || 'Not reported'}</span>
-                </p>
-                <p style={{ marginTop: 4 }}>
-                  Last inventory update:{' '}
-                  <span style={{ color: c.muted }}>{item.updatedAt || 'Not reported'}</span>
-                </p>
-              </>
-            )}
-          </Field>
-
-          {!isPreviewFixture ? (
-            <Field label="CONDITION / MAINTENANCE">
-              <p>
-                Condition:{' '}
-                <span style={{ color: c.muted }}>{item.conditionReviewState || 'Not reported'}</span>
-              </p>
-              <p style={{ marginTop: 4 }}>
-                Maintenance:{' '}
-                <span style={{ color: c.muted }}>{item.maintenanceReviewState || 'Not reported'}</span>
-              </p>
-            </Field>
-          ) : null}
-
-          {/* CONSEQUENCE */}
-          <Field label="CONSEQUENCE">
-            <p style={{ lineHeight: '20px' }}>{item.consequence}</p>
-          </Field>
-
-          {/* NEXT ACTION */}
-          <Field label="NEXT ACTION">
-            <p style={{ lineHeight: '20px' }}>{item.nextAction}</p>
-          </Field>
-
-          {/* Read-only presentation boundary */}
-          <div
-            className="rounded-[8px] px-4 py-3 mt-2"
-            style={{ background: c.m2, border: `1px solid ${c.border}` }}
-          >
-            <p
-              style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 9,
-                color: c.muted,
-                letterSpacing: '0.7px',
-                textTransform: 'uppercase',
-                marginBottom: 4,
-              }}
-            >
-              {isPreviewFixture ? 'Inspection sample' : 'Read-only inventory record'}
-            </p>
-            <p
-              style={{
-                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                fontSize: 12,
-                color: c.muted,
-                lineHeight: '18px',
-              }}
-            >
-              {isPreviewFixture
-                ? 'Sample data · Actions unavailable.'
-                : 'This page is read-only. Quantities reflect current inventory records and reservations.'}
-            </p>
-          </div>
-        </div>
+      <div className="inventory-inspector__identity">
+        <p>Record</p>
+        <h2 id="inventory-inspector-title">{item.name}</h2>
+        <span>
+          {item.id} · {item.category}
+        </span>
+        <InventoryStateBadge item={item} />
+        <small>
+          {item.dataOrigin === 'REAL_BOOTSTRAP'
+            ? 'Current authorized inventory records'
+            : 'Inspection sample · actions unavailable'}
+        </small>
       </div>
-    </>
+
+      <div className="inventory-inspector__body">
+        <section aria-labelledby="inventory-quantity-title">
+          <div className="inventory-inspector__section-head">
+            <div>
+              <p>Ledger-derived balance</p>
+              <h3 id="inventory-quantity-title">Quantity truth</h3>
+            </div>
+          </div>
+          {item.unconfirmed ? (
+            <p className="inventory-inspector__empty">
+              Quantities are guarded until this record is confirmed.
+            </p>
+          ) : (
+            <dl className="inventory-inspector__quantities">
+              <div>
+                <dt>On hand</dt>
+                <dd>{quantity(item.onHand, item.unit)}</dd>
+              </div>
+              <div>
+                <dt>Reserved</dt>
+                <dd>{quantity(item.reserved, item.unit)}</dd>
+              </div>
+              <div>
+                <dt>Available</dt>
+                <dd>{quantity(item.available, item.unit)}</dd>
+              </div>
+            </dl>
+          )}
+          <dl className="inventory-inspector__metadata">
+            <div>
+              <dt>Threshold</dt>
+              <dd>{quantity(item.threshold, item.unit)}</dd>
+            </div>
+            <div>
+              <dt>Classification</dt>
+              <dd>{presentStatus(item.classificationStatus)}</dd>
+            </div>
+            <div>
+              <dt>Condition review</dt>
+              <dd>{presentStatus(item.conditionReviewState)}</dd>
+            </div>
+            <div>
+              <dt>Maintenance review</dt>
+              <dd>{presentStatus(item.maintenanceReviewState)}</dd>
+            </div>
+            <div>
+              <dt>Record updated</dt>
+              <dd>{formatTimestamp(item.updatedAt)}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section aria-labelledby="inventory-ledger-title">
+          <div className="inventory-inspector__section-head">
+            <div>
+              <p>Append-only context</p>
+              <h3 id="inventory-ledger-title">Recent ledger movements</h3>
+            </div>
+            <span>{item.recentLedger.length}</span>
+          </div>
+          {item.recentLedger.length ? (
+            <ol className="inventory-inspector__timeline">
+              {item.recentLedger.map((entry) => (
+                <li key={entry.id}>
+                  <div>
+                    <strong>{presentStatus(entry.type)}</strong>
+                    <span className={entry.signedQuantity < 0 ? 'is-negative' : 'is-positive'}>
+                      {entry.signedQuantity > 0 ? '+' : ''}
+                      {entry.signedQuantity} {entry.unit}
+                    </span>
+                  </div>
+                  <p>{entry.relatedId || entry.relatedEntityType || 'No related record reported'}</p>
+                  <time dateTime={entry.createdAt}>{formatTimestamp(entry.createdAt)}</time>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="inventory-inspector__empty">
+              No recent ledger movements were returned for this item.
+            </p>
+          )}
+        </section>
+
+        <section aria-labelledby="inventory-reservations-title">
+          <div className="inventory-inspector__section-head">
+            <div>
+              <p>Allocation context</p>
+              <h3 id="inventory-reservations-title">Reservations</h3>
+            </div>
+            <span>{item.reservations.length}</span>
+          </div>
+          {item.reservations.length ? (
+            <ol className="inventory-inspector__records">
+              {item.reservations.map((reservation) => (
+                <li key={reservation.id}>
+                  <div>
+                    <strong>{reservation.id}</strong>
+                    <span>{presentStatus(reservation.status)}</span>
+                  </div>
+                  <p>
+                    {reservation.quantity} {reservation.unit} ·{' '}
+                    {reservation.link || 'No linked request reported'}
+                  </p>
+                  <time dateTime={reservation.updatedAt}>{formatTimestamp(reservation.updatedAt)}</time>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="inventory-inspector__empty">No reservations were returned for this item.</p>
+          )}
+        </section>
+
+        {item.assets.length || item.assetMovementHistory.length || item.assetMaintenanceHistory.length ? (
+          <section aria-labelledby="inventory-assets-title">
+            <div className="inventory-inspector__section-head">
+              <div>
+                <p>Traceable equipment</p>
+                <h3 id="inventory-assets-title">Asset context</h3>
+              </div>
+              <span>{item.assets.length}</span>
+            </div>
+            <ul className="inventory-inspector__assets">
+              {item.assets.map((asset) => (
+                <li key={asset.id}>
+                  <strong>{asset.assetTag}</strong>
+                  <span>
+                    {presentStatus(asset.lifecycleStatus)} · {presentStatus(asset.condition)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {[...item.assetMovementHistory, ...item.assetMaintenanceHistory]
+              .sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt))
+              .slice(0, 6)
+              .map((entry) => (
+                <div key={entry.id} className="inventory-inspector__asset-event">
+                  <strong>{presentStatus(entry.eventType)}</strong>
+                  <span>
+                    {entry.newStatus ? presentStatus(entry.newStatus) : presentStatus(entry.condition)}
+                  </span>
+                  <time dateTime={entry.occurredAt}>{formatTimestamp(entry.occurredAt)}</time>
+                </div>
+              ))}
+          </section>
+        ) : null}
+
+        <section aria-labelledby="inventory-action-title">
+          <div className="inventory-inspector__section-head">
+            <div>
+              <p>Governed next steps</p>
+              <h3 id="inventory-action-title">Continue work</h3>
+            </div>
+          </div>
+          <p className="inventory-inspector__consequence">{item.consequence}</p>
+          {item.dataOrigin === 'REAL_BOOTSTRAP' && actions.length ? (
+            <ul className="inventory-inspector__actions">
+              {actions.map((action) => (
+                <li key={action.route}>
+                  <button type="button" onClick={() => onNavigate(action.route)}>
+                    <span>
+                      <strong>{action.label}</strong>
+                      <small>{action.detail}</small>
+                    </span>
+                    <ArrowRight aria-hidden="true" size={16} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="inventory-inspector__empty">{item.nextAction}</p>
+          )}
+        </section>
+
+        <p className="inventory-inspector__boundary">
+          Stock balances are read-only here. Changes must enter through an authorized ledger-backed workflow.
+          The service limits history to records related to the current result page.
+        </p>
+      </div>
+    </aside>
   );
 }

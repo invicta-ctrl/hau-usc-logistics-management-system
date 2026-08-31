@@ -93,9 +93,9 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
             onSessionRevoked={handleSessionRevoked}
           />
         ) : route === 'overview' ? (
-          <OverviewRoute session={session} />
+          <OverviewRoute session={session} navigate={navigate} />
         ) : route === 'inventory' ? (
-          <InventoryRoute dark={dark} navigate={navigate} />
+          <InventoryRoute dark={dark} navigate={navigate} availableRoutes={session.capabilities} />
         ) : route === 'request-center' ? (
           <InternalRequestHub dark={dark} navigate={navigate} canReviewRequests={session.canReviewRequests} />
         ) : route === 'lending' ? (
@@ -174,11 +174,7 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
       <PublicNavbar route={route} dark={dark} onToggle={toggleTheme} onNavigate={navigate} onHome={goHome} />
 
       {route !== 'landing' ? (
-        <PublicFlows
-          key={route}
-          route={route as PublicSubRoute}
-          dark={dark}
-        />
+        <PublicFlows key={route} route={route as PublicSubRoute} dark={dark} />
       ) : (
         <LandingPage onNavigate={navigate} onRequireExternalRequest={requireExternalRequest} />
       )}

@@ -70,8 +70,8 @@ for (const forbidden of [
 }
 
 for (const expected of [
-  '<OverviewRoute session={session} />',
-  '<InventoryRoute dark={dark} navigate={navigate} />',
+  '<OverviewRoute session={session} navigate={navigate} />',
+  '<InventoryRoute dark={dark} navigate={navigate} availableRoutes={session.capabilities} />',
   '<InternalRequestHub dark={dark} navigate={navigate} canReviewRequests={session.canReviewRequests} />',
   'module="release"',
   "session.serverCapabilities.includes('fulfillment.release')",
@@ -133,11 +133,7 @@ for (const [path, fixtureExpression] of sharedFixtureContracts) {
 }
 
 const requestHub = read('src/frontend/app/request/InternalRequestHub.tsx');
-requireText(
-  requestHub,
-  "title: 'Request review recorded'",
-  'InternalRequestHub inspection branch',
-);
+requireText(requestHub, "title: 'Request review recorded'", 'InternalRequestHub inspection branch');
 if (
   requestHub.indexOf('if (inspection) {', requestHub.indexOf('const submitReview')) >
   requestHub.indexOf('frontendBackend.reviewRequest')

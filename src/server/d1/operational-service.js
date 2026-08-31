@@ -956,9 +956,13 @@ function pageInput(command = {}) {
   return { page, pageSize, offset: (page - 1) * pageSize };
 }
 
-async function rows(db, sql, bindings = []) {
+function boundStatement(db, sql, bindings = []) {
   const statement = db.prepare(sql);
-  return (await (bindings.length ? statement.bind(...bindings) : statement).all()).results;
+  return bindings.length ? statement.bind(...bindings) : statement;
+}
+
+async function rows(db, sql, bindings = []) {
+  return (await boundStatement(db, sql, bindings).all()).results;
 }
 
 const INVENTORY_CLASSIFICATION_ROLES = new Set(['SYSTEM_OWNER', 'ADMINISTRATOR', 'DIRECTOR']);
@@ -1498,7 +1502,10 @@ export function createD1OperationalService({
       FROM inventory_items item
       JOIN lending_catalog_availability availability ON availability.item_id = item.id
       WHERE item.status = 'ACTIVE' ORDER BY item.name LIMIT ?1 OFFSET ?2`;
-    let itemRows = await rows(db, itemSql, [page.pageSize, page.offset]);
+    // Inventory owns a filtered catalog page below. Skipping this generic page
+    // removes a redundant read and keeps search/filter totals tied to one SQL
+    // predicate. Other modules retain their existing catalog projection.
+    let itemRows = module === 'inventory' ? [] : await rows(db, itemSql, [page.pageSize, page.offset]);
     let data;
     // Set by a module that owns its own pagination total. Null keeps the
     // legacy Inventory-derived count for modules not yet migrated.
@@ -1697,7 +1704,50 @@ export function createD1OperationalService({
         data.requestLines = queueLineRows.map(lineDto);
       }
     } else if (module === 'inventory') {
-      itemRows = await rows(
+      const inventoryFilters = ["item.status = 'ACTIVE'"];
+      const inventoryFilterValues = [];
+      const bindInventoryFilter = (value) => {
+        inventoryFilterValues.push(value);
+        return `?${inventoryFilterValues.length}`;
+      };
+      if (operationalContext.selected?.kind === 'LOCATION') {
+        const locationParameter = bindInventoryFilter(operationalContext.selected.id);
+        inventoryFilters.push(`item.storage_location = ${locationParameter}`);
+      }
+      const inventoryQuery = String(command.query ?? '')
+        .trim()
+        .toLowerCase()
+        .slice(0, 100);
+      if (inventoryQuery) {
+        const searchParameter = bindInventoryFilter(inventoryQuery);
+        inventoryFilters.push(`(
+          instr(lower(item.id), ${searchParameter}) > 0 OR
+          instr(lower(item.name), ${searchParameter}) > 0 OR
+          instr(lower(item.category), ${searchParameter}) > 0 OR
+          EXISTS (
+            SELECT 1 FROM item_aliases alias_search
+            WHERE alias_search.item_id = item.id
+              AND instr(lower(alias_search.display_alias), ${searchParameter}) > 0
+          )
+        )`);
+      }
+      const inventoryFilter = String(command.filter ?? 'ALL')
+        .trim()
+        .toUpperCase();
+      if (inventoryFilter === 'BELOW') {
+        inventoryFilters.push(
+          'item.low_stock_alert_enabled = 1',
+          'item.low_stock_threshold IS NOT NULL',
+          'availability.on_hand <= item.low_stock_threshold',
+        );
+      } else if (inventoryFilter === 'OUT') {
+        inventoryFilters.push('availability.available_to_promise <= 0');
+      } else if (inventoryFilter === 'UNCONFIRMED') {
+        inventoryFilters.push("COALESCE(item.classification_status, 'NEEDS_CLASSIFICATION') <> 'CLASSIFIED'");
+      }
+      const inventoryWhere = inventoryFilters.join(' AND ');
+      const inventoryLimitIndex = inventoryFilterValues.length + 1;
+      const inventoryPageStatement = boundStatement(
         db,
         `SELECT item.*, availability.on_hand, availability.reserved,
            availability.available_to_promise, availability.ready_to_claim, availability.on_loan,
@@ -1707,23 +1757,94 @@ export function createD1OperationalService({
            (SELECT GROUP_CONCAT(display_alias, '|') FROM item_aliases alias WHERE alias.item_id = item.id) AS aliases
          FROM inventory_items item
          JOIN lending_catalog_availability availability ON availability.item_id = item.id
-         WHERE item.status = 'ACTIVE'
-         ORDER BY item.name, item.id`,
+         WHERE ${inventoryWhere}
+         ORDER BY item.name, item.id
+         LIMIT ?${inventoryLimitIndex} OFFSET ?${inventoryLimitIndex + 1}`,
+        [...inventoryFilterValues, page.pageSize, page.offset],
       );
-      const classificationHistoryRows = await rows(
+      const inventoryCountStatement = boundStatement(
         db,
-        `SELECT history.id, history.item_id, history.revision, history.previous_status,
-           history.new_status, history.previous_kind, history.new_kind, history.lendable_enabled,
-           history.lending_audience, history.condition_review_state,
-           history.maintenance_review_state, history.asset_instance_count,
-           history.classification_notes, history.evidence_id, history.bulk_group_id,
-           history.occurred_at, history.actor_account_id, history.correlation_id
-         FROM inventory_classification_history history
-         JOIN inventory_items item ON item.id = history.item_id
-         WHERE item.status = 'ACTIVE'
-         ORDER BY history.occurred_at DESC, history.id DESC
-         LIMIT 500`,
+        `SELECT COUNT(*) AS count
+         FROM inventory_items item
+         JOIN lending_catalog_availability availability ON availability.item_id = item.id
+         WHERE ${inventoryWhere}`,
+        inventoryFilterValues,
       );
+      const [inventoryPageResult, inventoryCountResult] = await db.batch([
+        inventoryPageStatement,
+        inventoryCountStatement,
+      ]);
+      itemRows = inventoryPageResult.results;
+      const inventoryCountRow = inventoryCountResult.results[0];
+      moduleTotal = Number(inventoryCountRow?.count ?? 0);
+      modulePageSize = page.pageSize;
+      moduleOffset = page.offset;
+
+      // History/reference collections are purpose-limited to visible parents.
+      // Four related rows per requested item, capped at 100, keeps the detail
+      // inspector useful without returning whole operational ledgers.
+      const relatedLimit = Math.min(100, Math.max(4, page.pageSize * 4));
+      const itemIds = itemRows.map((row) => row.id);
+      const itemIdPlaceholders = itemIds.map((_, index) => `?${index + 1}`).join(', ');
+      const relatedLimitIndex = itemIds.length + 1;
+      let classificationHistoryRows = [];
+      let inventoryAssetRows = [];
+      let ledgerRows = [];
+      let reservationRows = [];
+      if (itemIds.length) {
+        const relatedBindings = [...itemIds, relatedLimit];
+        const relatedResults = await db.batch([
+          boundStatement(
+            db,
+            `SELECT history.id, history.item_id, history.revision, history.previous_status,
+               history.new_status, history.previous_kind, history.new_kind, history.lendable_enabled,
+               history.lending_audience, history.condition_review_state,
+               history.maintenance_review_state, history.asset_instance_count,
+               history.classification_notes, history.evidence_id, history.bulk_group_id,
+               history.occurred_at, history.actor_account_id, history.correlation_id
+             FROM inventory_classification_history history
+             WHERE history.item_id IN (${itemIdPlaceholders})
+             ORDER BY history.occurred_at DESC, history.id DESC
+             LIMIT ?${relatedLimitIndex}`,
+            relatedBindings,
+          ),
+          boundStatement(
+            db,
+            `SELECT id, item_id, asset_tag, serial_number, condition_label, lifecycle_status,
+                    current_lending_ticket_id, expected_return_at, handoff_condition, return_condition,
+                    created_at, updated_at
+             FROM inventory_asset_instances
+             WHERE item_id IN (${itemIdPlaceholders})
+             ORDER BY item_id, asset_tag, id
+             LIMIT ?${relatedLimitIndex}`,
+            relatedBindings,
+          ),
+          boundStatement(
+            db,
+            `SELECT id, transaction_type, direction, item_id, event_item_id, quantity, unit,
+                    signed_quantity, related_entity_type, related_entity_id, request_id, event_id,
+                    reversal_of, status, notes, created_at
+             FROM inventory_ledger
+             WHERE item_id IN (${itemIdPlaceholders})
+             ORDER BY created_at DESC, id DESC
+             LIMIT ?${relatedLimitIndex}`,
+            relatedBindings,
+          ),
+          boundStatement(
+            db,
+            `SELECT id, item_id, quantity, unit, request_line_id, lending_ticket_id,
+                    status, cleared_at, clear_reason, notes, created_at, updated_at, created_by
+             FROM reservations
+             WHERE item_id IN (${itemIdPlaceholders})
+             ORDER BY created_at DESC, id DESC
+             LIMIT ?${relatedLimitIndex}`,
+            relatedBindings,
+          ),
+        ]);
+        [classificationHistoryRows, inventoryAssetRows, ledgerRows, reservationRows] = relatedResults.map(
+          (result) => result.results,
+        );
+      }
       const classificationHistoryByItem = new Map();
       for (const entry of classificationHistoryRows) {
         if (!classificationHistoryByItem.has(entry.item_id))
@@ -1748,46 +1869,48 @@ export function createD1OperationalService({
           correlationId: entry.correlation_id,
         });
       }
+      const assetIds = inventoryAssetRows.map((row) => row.id);
+      const assetIdPlaceholders = assetIds.map((_, index) => `?${index + 1}`).join(', ');
+      const assetRelatedLimitIndex = assetIds.length + 1;
+      let assetMaintenanceRows = [];
+      let assetMovementRows = [];
+      if (assetIds.length) {
+        const assetRelatedBindings = [...assetIds, relatedLimit];
+        const assetRelatedResults = await db.batch([
+          boundStatement(
+            db,
+            `SELECT id, asset_id, event_type, condition_label, evidence_asset_key,
+                    occurred_at, recorded_by, notes
+             FROM inventory_asset_maintenance
+             WHERE asset_id IN (${assetIdPlaceholders})
+             ORDER BY occurred_at DESC, id DESC
+             LIMIT ?${assetRelatedLimitIndex}`,
+            assetRelatedBindings,
+          ),
+          boundStatement(
+            db,
+            `SELECT id, asset_id, movement_type, previous_status, new_status,
+                    lending_ticket_id, condition_label, evidence_asset_key,
+                    occurred_at, recorded_by, notes
+             FROM inventory_asset_movements
+             WHERE asset_id IN (${assetIdPlaceholders})
+             ORDER BY occurred_at DESC, id DESC
+             LIMIT ?${assetRelatedLimitIndex}`,
+            assetRelatedBindings,
+          ),
+        ]);
+        [assetMaintenanceRows, assetMovementRows] = assetRelatedResults.map((result) => result.results);
+      }
       data = {
         inventoryItems: itemRows.map((row) => ({
           ...itemDto(row),
           assetInstanceCount: Number(row.traceable_assets ?? 0),
           classificationHistory: classificationHistoryByItem.get(row.id) ?? [],
         })),
-        inventoryAssets: await rows(
-          db,
-          `SELECT id, item_id, asset_tag, serial_number, condition_label, lifecycle_status,
-                  current_lending_ticket_id, expected_return_at, handoff_condition, return_condition,
-                  created_at, updated_at
-           FROM inventory_asset_instances
-           ORDER BY item_id, asset_tag LIMIT 100`,
-        ),
-        assetMaintenanceHistory: await rows(
-          db,
-          `SELECT id, asset_id, event_type, condition_label, evidence_asset_key,
-                  occurred_at, recorded_by, notes
-           FROM inventory_asset_maintenance
-           ORDER BY occurred_at DESC LIMIT 100`,
-        ),
-        assetMovementHistory: await rows(
-          db,
-          `SELECT id, asset_id, movement_type, previous_status, new_status,
-                  lending_ticket_id, condition_label, evidence_asset_key,
-                  occurred_at, recorded_by, notes
-           FROM inventory_asset_movements
-           ORDER BY occurred_at DESC LIMIT 100`,
-        ),
-        ledgerTransactions: (
-          await rows(
-            db,
-            `SELECT id, transaction_type, direction, item_id, event_item_id, quantity, unit, signed_quantity,
-                    related_entity_type, related_entity_id, request_id, event_id, reversal_of,
-                    status, notes, created_at
-             FROM inventory_ledger
-             ORDER BY created_at DESC, id DESC
-             LIMIT 500`,
-          )
-        ).map((row) => ({
+        inventoryAssets: inventoryAssetRows,
+        assetMaintenanceHistory: assetMaintenanceRows,
+        assetMovementHistory: assetMovementRows,
+        ledgerTransactions: ledgerRows.map((row) => ({
           id: row.id,
           type: row.transaction_type,
           transactionType: row.transaction_type,
@@ -1806,16 +1929,7 @@ export function createD1OperationalService({
           notes: row.notes,
           createdAt: row.created_at,
         })),
-        reservations: (
-          await rows(
-            db,
-            `SELECT id, item_id, quantity, unit, request_line_id, lending_ticket_id,
-                    status, cleared_at, clear_reason, notes, created_at, updated_at, created_by
-             FROM reservations
-             ORDER BY created_at DESC, id DESC
-             LIMIT 500`,
-          )
-        ).map((row) => ({
+        reservations: reservationRows.map((row) => ({
           id: row.id,
           itemId: row.item_id,
           quantity: Number(row.quantity),
@@ -2254,10 +2368,13 @@ export function createD1OperationalService({
     data = filterOperationalData(data, operationalContext.selected, {
       sqlScoped: module === 'request' ? ['requests', 'requestLines'] : [],
     });
-    const totalRow = await db
-      .prepare('SELECT COUNT(*) AS count FROM inventory_items WHERE status = ?1')
-      .bind('ACTIVE')
-      .first();
+    const totalRow =
+      moduleTotal === null
+        ? await db
+            .prepare('SELECT COUNT(*) AS count FROM inventory_items WHERE status = ?1')
+            .bind('ACTIVE')
+            .first()
+        : { count: moduleTotal };
     const globalRevision = await revision(db);
     const scopeRevision = requestOnly ? null : await revision(db, module);
     return {
@@ -2272,25 +2389,17 @@ export function createD1OperationalService({
       requestOnly,
       module,
       data,
-      pagination:
-        module === 'inventory'
-          ? {
-              page: 1,
-              pageSize: data.inventoryItems.length,
-              total: data.inventoryItems.length,
-              hasMore: false,
-            }
-          : (() => {
-              const effectivePageSize = modulePageSize ?? page.pageSize;
-              const effectiveTotal = moduleTotal ?? Number(totalRow?.count ?? 0);
-              const effectiveOffset = moduleOffset ?? page.offset;
-              return {
-                page: page.page,
-                pageSize: effectivePageSize,
-                total: effectiveTotal,
-                hasMore: effectiveOffset + effectivePageSize < effectiveTotal,
-              };
-            })(),
+      pagination: (() => {
+        const effectivePageSize = modulePageSize ?? page.pageSize;
+        const effectiveTotal = moduleTotal ?? Number(totalRow?.count ?? 0);
+        const effectiveOffset = moduleOffset ?? page.offset;
+        return {
+          page: page.page,
+          pageSize: effectivePageSize,
+          total: effectiveTotal,
+          hasMore: effectiveOffset + effectivePageSize < effectiveTotal,
+        };
+      })(),
       revision: globalRevision,
       scopeRevision: scopeRevision
         ? { scope: module, token: scopeRevision.revision, updatedAt: scopeRevision.updatedAt }

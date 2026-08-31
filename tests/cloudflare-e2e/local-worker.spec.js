@@ -555,7 +555,7 @@ test('inventory classification is protected, audited, idempotent, and fail-close
   }
 });
 
-test('inventory bulk classification is atomic and bootstrap projects the complete governed catalog', async ({
+test('inventory bulk classification is atomic and bootstrap projects a searched governed page', async ({
   baseURL,
   page,
 }) => {
@@ -717,17 +717,17 @@ test('inventory bulk classification is atomic and bootstrap projects the complet
     await expect(replay.json()).resolves.toMatchObject(bulkResult);
 
     const moduleResponse = await owner.post('/api/getBootstrapModule', {
-      data: { module: 'inventory', page: 1, pageSize: 1 },
+      data: { module: 'inventory', page: 1, pageSize: 10, query: marker },
     });
     expect(moduleResponse.status()).toBe(200);
     const moduleData = await moduleResponse.json();
     expect(moduleData.pagination).toEqual({
       page: 1,
-      pageSize: moduleData.data.inventoryItems.length,
-      total: moduleData.data.inventoryItems.length,
+      pageSize: 10,
+      total: 2,
       hasMore: false,
     });
-    expect(moduleData.data.inventoryItems.length).toBeGreaterThan(1);
+    expect(moduleData.data.inventoryItems).toHaveLength(2);
     expect(moduleData.data).toMatchObject({
       reservations: expect.any(Array),
       ledgerTransactions: expect.any(Array),
@@ -887,7 +887,7 @@ test('D1 catalog mutations enforce authority, quantity, revision, dependency, an
     });
 
     const moduleResponse = await owner.post('/api/getBootstrapModule', {
-      data: { module: 'inventory', page: 1, pageSize: 50 },
+      data: { module: 'inventory', page: 1, pageSize: 50, query: marker },
     });
     expect(moduleResponse.status()).toBe(200);
     const moduleData = await moduleResponse.json();
@@ -1774,10 +1774,10 @@ test('Inventory operator receives authoritative D1 balances and bounded movement
       assetMovementHistory: expect.any(Array),
     },
   });
-  expect(moduleData.data.ledgerTransactions.length).toBeLessThanOrEqual(500);
-  expect(moduleData.data.inventoryAssets.length).toBeLessThanOrEqual(100);
-  expect(moduleData.data.assetMaintenanceHistory.length).toBeLessThanOrEqual(100);
-  expect(moduleData.data.assetMovementHistory.length).toBeLessThanOrEqual(100);
+  expect(moduleData.data.ledgerTransactions.length).toBeLessThanOrEqual(40);
+  expect(moduleData.data.inventoryAssets.length).toBeLessThanOrEqual(40);
+  expect(moduleData.data.assetMaintenanceHistory.length).toBeLessThanOrEqual(40);
+  expect(moduleData.data.assetMovementHistory.length).toBeLessThanOrEqual(40);
   const authoritative = moduleData.data.inventoryItems.find((item) => item.id === 'ITM-LOCAL-001');
   expect(authoritative).toEqual(
     expect.objectContaining({

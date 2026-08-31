@@ -1,40 +1,104 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { AlertTriangle, ArrowLeft, RefreshCw, Search } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, Search } from 'lucide-react';
+import type { InventoryBootstrapFilter } from '../../integration/backend';
+import { FrontendApiError, frontendBackend } from '../../integration/backend';
 import type { Route } from '../appTypes';
 import { ap } from '../theme/palette';
-import { FrontendApiError, frontendBackend } from '../../integration/backend';
-import { inventoryItemFromBootstrap } from './inventoryData';
+import { inventoryItemsFromBootstrap } from './inventoryData';
 import { INV_FIXTURE } from './inventoryFixtures';
 import { InventoryInspector } from './InventoryInspector';
 import { InventoryQtyCell } from './InventoryQtyCell';
 import { InventoryStateBadge } from './InventoryStateBadge';
 import type { InvItem } from './inventoryTypes';
 
-type InventoryLoadState = 'loading' | 'ready' | 'error' | 'denied' | 'stale';
+type InventoryLoadState = 'loading' | 'ready' | 'refreshing' | 'error' | 'denied' | 'stale';
+type PreviewState = 'default' | 'error' | 'stale' | 'permission';
+
+const PAGE_SIZE = 25;
+const FILTERS: Array<{ value: InventoryBootstrapFilter; label: string }> = [
+  { value: 'ALL', label: 'All records' },
+  { value: 'BELOW', label: 'Below threshold' },
+  { value: 'OUT', label: 'Out of stock' },
+  { value: 'UNCONFIRMED', label: 'Unconfirmed' },
+];
+
+function formatRevisionTime(value: string) {
+  if (!value) return 'Time not reported';
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? 'Time not reported'
+    : new Intl.DateTimeFormat('en-PH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(parsed);
+}
+
+function previewRows(items: InvItem[], query: string, filter: InventoryBootstrapFilter) {
+  const normalizedQuery = query.trim().toLowerCase();
+  return items.filter((item) => {
+    const matchesQuery =
+      !normalizedQuery ||
+      item.name.toLowerCase().includes(normalizedQuery) ||
+      item.id.toLowerCase().includes(normalizedQuery) ||
+      item.category.toLowerCase().includes(normalizedQuery);
+    const matchesFilter =
+      filter === 'ALL' ||
+      (filter === 'BELOW' && item.belowThreshold) ||
+      (filter === 'OUT' && item.outOfStock) ||
+      (filter === 'UNCONFIRMED' && item.unconfirmed);
+    return matchesQuery && matchesFilter;
+  });
+}
 
 export function InventoryRoute({
   dark,
   navigate,
+  availableRoutes = [],
   inspection = false,
 }: {
   dark: boolean;
-  navigate: (r: Route) => void;
+  navigate: (route: Route) => void;
+  availableRoutes?: Route[];
   /** A4-only fixture mode. It never asks the protected bootstrap endpoint for data. */
   inspection?: boolean;
 }) {
   const c = ap(dark);
-
   const [loadState, setLoadState] = useState<InventoryLoadState>(inspection ? 'ready' : 'loading');
   const [items, setItems] = useState<InvItem[]>(inspection ? INV_FIXTURE : []);
+  const [pagination, setPagination] = useState({ page: 1, pageSize: PAGE_SIZE, total: 0, hasMore: false });
+  const [revision, setRevision] = useState<{ token: string; updatedAt: string } | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'below' | 'out' | 'unconfirmed'>('all');
+  const [searchInput, setSearchInput] = useState('');
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<InventoryBootstrapFilter>('ALL');
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<InvItem | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [previewState, setPreviewState] = useState<'default' | 'error' | 'stale' | 'permission'>('default');
-  const [staleAcknowledged, setStaleAcknowledged] = useState(false);
-
+  const [previewState, setPreviewState] = useState<PreviewState>('default');
+  const [errorMessage, setErrorMessage] = useState('');
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const searchRef = useRef<HTMLInputElement>(null);
+  const itemsRef = useRef(items);
+  const requestKeyRef = useRef('');
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
+  useEffect(() => {
+    if (inspection) {
+      setQuery(searchInput.trim());
+      return;
+    }
+    const timeout = window.setTimeout(() => {
+      setPage(1);
+      setQuery(searchInput.trim());
+    }, 250);
+    return () => window.clearTimeout(timeout);
+  }, [inspection, searchInput]);
 
   useEffect(() => {
     if (inspection) {
@@ -43,12 +107,24 @@ export function InventoryRoute({
       return;
     }
     const abort = new AbortController();
-    setLoadState((previous) => (previous === 'ready' && items.length > 0 ? 'stale' : 'loading'));
+    const requestKey = `${page}|${filter}|${query}`;
+    const sameProjection = requestKeyRef.current === requestKey;
+    if (!sameProjection) {
+      setItems([]);
+      setSelected(null);
+    }
+    setLoadState(sameProjection && itemsRef.current.length > 0 ? 'refreshing' : 'loading');
+    setErrorMessage('');
     void frontendBackend
-      .inventoryBootstrap(abort.signal)
+      .inventoryBootstrap({ page, pageSize: PAGE_SIZE, query, filter, signal: abort.signal })
       .then((result) => {
         if (abort.signal.aborted) return;
-        setItems(result.inventoryItems.map(inventoryItemFromBootstrap));
+        const nextItems = inventoryItemsFromBootstrap(result);
+        requestKeyRef.current = requestKey;
+        setItems(nextItems);
+        setPagination(result.pagination);
+        setRevision(result.scopeRevision);
+        setSelected((current) => nextItems.find((item) => item.id === current?.id) ?? null);
         setLoadState('ready');
       })
       .catch((error: unknown) => {
@@ -57,61 +133,81 @@ export function InventoryRoute({
           setLoadState('denied');
           return;
         }
-        setLoadState(items.length > 0 ? 'stale' : 'error');
+        setErrorMessage(error instanceof Error ? error.message : 'Inventory is temporarily unavailable.');
+        setLoadState(sameProjection && itemsRef.current.length > 0 ? 'stale' : 'error');
       });
     return () => abort.abort();
-  }, [inspection, reloadKey]);
+  }, [filter, inspection, page, query, reloadKey]);
 
   useEffect(() => {
-    function check() {
-      setIsMobile(window.innerWidth < 768);
-    }
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    const media = window.matchMedia('(max-width: 59.99rem)');
+    const sync = () => setIsMobile(media.matches);
+    sync();
+    media.addEventListener('change', sync);
+    return () => media.removeEventListener('change', sync);
   }, []);
 
-  const rows = items.filter((item) => {
-    const q = search.toLowerCase();
-    const matchSearch =
-      !q ||
-      item.name.toLowerCase().includes(q) ||
-      item.id.toLowerCase().includes(q) ||
-      item.category.toLowerCase().includes(q);
-    const matchFilter =
-      filter === 'all'
-        ? true
-        : filter === 'below'
-          ? item.belowThreshold
-          : filter === 'out'
-            ? item.outOfStock
-            : filter === 'unconfirmed'
-              ? item.unconfirmed
-              : true;
-    return matchSearch && matchFilter;
-  });
+  useEffect(() => {
+    const focusSearch = (event: KeyboardEvent) => {
+      const target = event.target;
+      const isTyping =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        (target instanceof HTMLElement && target.isContentEditable);
+      if (event.key === '/' && !isTyping) {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', focusSearch);
+    return () => document.removeEventListener('keydown', focusSearch);
+  }, []);
 
-  function handleSelect(item: InvItem) {
-    setSelected(item);
+  const rows = useMemo(
+    () => (inspection ? previewRows(items, query, filter) : items),
+    [filter, inspection, items, query],
+  );
+  const visibleState: InventoryLoadState | 'permission' =
+    inspection && previewState !== 'default'
+      ? previewState === 'permission'
+        ? 'permission'
+        : previewState
+      : loadState;
+  const showRecords = ['ready', 'refreshing', 'stale'].includes(visibleState);
+  const total = inspection ? rows.length : pagination.total;
+  const pageCount = Math.max(1, Math.ceil(total / Math.max(1, pagination.pageSize)));
+  const authorizedEmpty =
+    showRecords && total === 0 && !searchInput.trim() && filter === 'ALL' && visibleState !== 'refreshing';
+  const filteredEmpty =
+    showRecords &&
+    total === 0 &&
+    (Boolean(searchInput.trim()) || filter !== 'ALL') &&
+    visibleState !== 'refreshing';
+
+  const handleSelect = useCallback((item: InvItem) => setSelected(item), []);
+  const handleClose = useCallback(() => {
+    setSelected((current) => {
+      const id = current?.id;
+      window.requestAnimationFrame(() => {
+        if (id) triggerRefs.current[id]?.focus();
+      });
+      return null;
+    });
+  }, []);
+
+  function updateFilter(next: InventoryBootstrapFilter) {
+    setFilter(next);
+    setPage(1);
   }
 
-  function handleClose() {
-    const id = selected?.id;
-    setSelected(null);
-    if (id) triggerRefs.current[id]?.focus();
+  function clearFilters() {
+    setSearchInput('');
+    setQuery('');
+    setFilter('ALL');
+    setPage(1);
+    searchRef.current?.focus();
   }
-
-  const mono = "'IBM Plex Mono', monospace";
-  const sans = "'IBM Plex Sans', system-ui, sans-serif";
-  const display = "'Bricolage Grotesque', system-ui, sans-serif";
-
-  const thBg = dark ? '#242120' : '#f7f0e2';
-  const tdStyle: CSSProperties = { padding: '14px 16px', verticalAlign: 'middle' };
-
-  const demonstrationState = inspection ? previewState : 'default';
-  const visibleState = demonstrationState === 'default' ? loadState : demonstrationState;
-  const showTable = visibleState === 'ready' || visibleState === 'stale' || visibleState === 'loading';
-  const hasNoBootstrapRecords = visibleState !== 'loading' && items.length === 0;
 
   function retry() {
     if (inspection) {
@@ -122,640 +218,305 @@ export function InventoryRoute({
   }
 
   return (
-    <div className="px-4 md:px-8 py-8 max-w-[1280px] mx-auto">
-      {/* Heading + inspection-only state selector */}
-      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+    <main className="inventory-workspace layout-container" aria-labelledby="inventory-title">
+      <header className="inventory-workspace__header" data-inventory-modal-background>
         <div>
-          <p
-            style={{
-              fontFamily: mono,
-              fontSize: 10,
-              color: c.muted,
-              letterSpacing: '1px',
-              textTransform: 'uppercase',
-              marginBottom: 4,
-            }}
-          >
-            Inventory
-          </p>
-          <h1
-            style={{
-              fontFamily: display,
-              fontWeight: 700,
-              fontSize: 'clamp(22px, 3vw, 30px)',
-              color: c.text,
-              letterSpacing: '-0.8px',
-              fontVariationSettings: '"opsz" 14, "wdth" 100',
-            }}
-          >
-            Inventory
-          </h1>
-          <p style={{ fontFamily: sans, fontSize: 13, color: c.muted, marginTop: 4, letterSpacing: -0.1 }}>
-            Search stock truth and inspect a record.
-          </p>
+          <p className="inventory-workspace__kicker">Inventory records</p>
+          <h1 id="inventory-title">Inventory</h1>
+          <p>Search canonical stock truth, then inspect the movements and reservations behind one record.</p>
         </div>
         {inspection ? (
-          <div className="flex flex-col gap-1 shrink-0">
-            <label
-              htmlFor="inv-preview-state"
-              style={{
-                fontFamily: mono,
-                fontSize: 9,
-                color: c.muted,
-                letterSpacing: '0.9px',
-                textTransform: 'uppercase',
-              }}
-            >
-              Inspection state
-            </label>
+          <label className="inventory-workspace__preview-control" htmlFor="inv-preview-state">
+            <span>Inspection state</span>
             <select
               id="inv-preview-state"
               value={previewState}
-              onChange={(e) => {
-                setPreviewState(e.target.value as typeof previewState);
-                setStaleAcknowledged(false);
-              }}
-              className="rounded-[8px] px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#e8b93c]"
-              style={{
-                background: dark ? '#2d2927' : '#ffffff',
-                border: `1px solid ${c.border}`,
-                color: c.text,
-                fontFamily: mono,
-                minWidth: 164,
-              }}
+              onChange={(event) => setPreviewState(event.target.value as PreviewState)}
             >
               <option value="default">Default</option>
               <option value="error">Page error</option>
               <option value="stale">Stale data</option>
               <option value="permission">Permission limited</option>
             </select>
-          </div>
+          </label>
         ) : (
           <button
             type="button"
+            className="inventory-workspace__refresh"
             onClick={retry}
-            className="inline-flex items-center gap-2 rounded-[8px] px-3 py-2 text-[12px] font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
-            style={{
-              background: dark ? '#2d2927' : '#ffffff',
-              border: `1px solid ${c.border}`,
-              color: c.text,
-              fontFamily: sans,
-            }}
+            disabled={visibleState === 'loading' || visibleState === 'refreshing'}
           >
-            <RefreshCw size={13} strokeWidth={1.6} />
-            Refresh inventory
+            <RefreshCw aria-hidden="true" size={16} />
+            {visibleState === 'refreshing' ? 'Refreshing…' : 'Refresh inventory'}
           </button>
         )}
-      </div>
+      </header>
 
-      {/* Error state */}
-      {visibleState === 'error' && (
-        <div
-          className="rounded-[12px] flex flex-col items-center justify-center gap-5 px-6 py-16"
-          style={{ border: `1px solid ${c.border}`, background: c.m1, minHeight: 320 }}
-        >
-          <div
-            className="flex items-center justify-center rounded-full"
-            style={{
-              width: 48,
-              height: 48,
-              background: 'rgba(212,24,61,0.08)',
-              border: '1px solid rgba(212,24,61,0.22)',
-            }}
-          >
-            <AlertTriangle size={20} strokeWidth={1.5} color="#d4183d" />
-          </div>
-          <div className="text-center flex flex-col gap-2 max-w-[360px]">
-            <p
-              style={{
-                fontFamily: display,
-                fontWeight: 700,
-                fontSize: 18,
-                color: c.text,
-                letterSpacing: '-0.4px',
-                fontVariationSettings: '"opsz" 14, "wdth" 100',
-              }}
-            >
-              This page could not be loaded
-            </p>
-            <p
-              style={{
-                fontFamily: sans,
-                fontSize: 13,
-                color: c.muted,
-                letterSpacing: -0.1,
-                lineHeight: '20px',
-              }}
-            >
-              An error occurred while preparing this view. No data has been changed. Try again or return to a
-              previous view.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={retry}
-            className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-[13px] font-semibold transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
-            style={{
-              background: dark ? '#e8b93c' : '#40070a',
-              color: dark ? '#40070a' : '#faeecb',
-              fontFamily: sans,
-            }}
-          >
-            <RefreshCw size={13} strokeWidth={1.6} />
+      {visibleState === 'error' ? (
+        <section className="inventory-workspace__state surface-content" role="alert">
+          <AlertTriangle aria-hidden="true" size={24} />
+          <h2>This page could not be loaded</h2>
+          <p>
+            {errorMessage ||
+              'No data has been changed. Try loading the authorized inventory projection again.'}
+          </p>
+          <button type="button" onClick={retry}>
+            <RefreshCw aria-hidden="true" size={16} />
             Retry
           </button>
-        </div>
-      )}
+        </section>
+      ) : null}
 
-      {/* Permission limited */}
-      {(visibleState === 'permission' || visibleState === 'denied') && (
-        <div
-          className="rounded-[12px] flex flex-col items-center justify-center gap-5 px-6 py-16"
-          style={{ border: `1px solid ${c.border}`, background: c.m1, minHeight: 320 }}
-        >
-          <div className="flex flex-col items-center gap-4 max-w-[340px] text-center">
-            <p
-              style={{
-                fontFamily: display,
-                fontWeight: 700,
-                fontSize: 18,
-                color: c.text,
-                letterSpacing: '-0.4px',
-                fontVariationSettings: '"opsz" 14, "wdth" 100',
-              }}
-            >
-              Access limited
-            </p>
-            <p
-              style={{
-                fontFamily: sans,
-                fontSize: 13,
-                color: c.muted,
-                letterSpacing: -0.1,
-                lineHeight: '20px',
-              }}
-            >
-              This view is not available for your current session.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate('overview')}
-            className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-[13px] font-semibold transition-opacity hover:opacity-90 active:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b93c]"
-            style={{
-              background: dark ? '#e8b93c' : '#40070a',
-              color: dark ? '#40070a' : '#faeecb',
-              fontFamily: sans,
-            }}
-          >
-            <ArrowLeft size={13} strokeWidth={1.6} />
+      {visibleState === 'denied' || visibleState === 'permission' ? (
+        <section className="inventory-workspace__state surface-content">
+          <h2>Access limited</h2>
+          <p>This view is not available for your current session.</p>
+          <button type="button" onClick={() => navigate('overview')}>
+            <ArrowLeft aria-hidden="true" size={16} />
             Return to overview
           </button>
-        </div>
-      )}
+        </section>
+      ) : null}
 
-      {/* Default + Stale: normal table view */}
-      {showTable && (
+      {visibleState === 'loading' ? (
+        <section className="inventory-workspace__state surface-content" role="status">
+          <span className="inventory-workspace__pulse" aria-hidden="true" />
+          <h2>Loading inventory</h2>
+          <p>Preparing one bounded page of authorized records and recent context…</p>
+        </section>
+      ) : null}
+
+      {showRecords ? (
         <>
-          {/* Stale warning banner */}
-          {visibleState === 'stale' && (
-            <div
-              className="rounded-[10px] mb-4 px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3"
-              style={{ background: 'rgba(232,185,60,0.08)', border: '1px solid rgba(232,185,60,0.32)' }}
-              role="status"
-            >
-              <div className="flex items-start gap-3 flex-1 min-w-0">
-                <AlertTriangle
-                  size={15}
-                  strokeWidth={1.5}
-                  color="#c8992f"
-                  style={{ marginTop: 1, flexShrink: 0 }}
-                />
-                <div>
-                  <p
-                    style={{
-                      fontFamily: sans,
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: dark ? '#e8b93c' : '#7d5518',
-                      letterSpacing: -0.1,
-                    }}
-                  >
-                    Data may be out of date
-                  </p>
-                  {staleAcknowledged ? (
-                    <p
-                      style={{
-                        fontFamily: mono,
-                        fontSize: 10,
-                        color: dark ? 'rgba(232,185,60,0.6)' : '#a07828',
-                        letterSpacing: '0.1px',
-                        marginTop: 2,
-                      }}
-                    >
-                      Outdated record acknowledged
-                    </p>
-                  ) : (
-                    <p
-                      style={{
-                        fontFamily: sans,
-                        fontSize: 12,
-                        color: dark ? 'rgba(232,185,60,0.65)' : '#a07828',
-                        letterSpacing: -0.1,
-                        lineHeight: '18px',
-                        marginTop: 2,
-                      }}
-                    >
-                      Values shown are from a previous load and may not reflect current state.
-                    </p>
-                  )}
-                </div>
-              </div>
-              {!staleAcknowledged && (
-                <div className="flex items-center gap-2 shrink-0 pl-6 sm:pl-0">
-                  <button
-                    type="button"
-                    onClick={retry}
-                    className="rounded-[8px] px-3 py-1.5 text-[12px] font-semibold transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
-                    style={{
-                      background: dark ? 'rgba(232,185,60,0.18)' : 'rgba(200,153,47,0.15)',
-                      color: dark ? '#e8b93c' : '#7d5518',
-                      fontFamily: sans,
-                      border: `1px solid ${dark ? 'rgba(232,185,60,0.3)' : 'rgba(200,153,47,0.3)'}`,
-                    }}
-                  >
-                    Reload
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStaleAcknowledged(true)}
-                    className="rounded-[8px] px-3 py-1.5 text-[12px] transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
-                    style={{
-                      background: 'transparent',
-                      color: dark ? 'rgba(232,185,60,0.65)' : '#a07828',
-                      fontFamily: sans,
-                      border: `1px solid ${dark ? 'rgba(232,185,60,0.18)' : 'rgba(200,153,47,0.2)'}`,
-                    }}
-                  >
-                    Review
-                  </button>
-                </div>
-              )}
+          {visibleState === 'stale' ? (
+            <div className="inventory-workspace__notice" role="status" data-inventory-modal-background>
+              <AlertTriangle aria-hidden="true" size={17} />
+              <span>Data may be out of date. The last authoritative projection remains visible.</span>
+              <button type="button" onClick={retry}>
+                Try again
+              </button>
             </div>
-          )}
+          ) : null}
 
-          {/* Search + Filter bar */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-5">
-            <div className="relative flex-1">
-              <Search
-                size={14}
-                strokeWidth={1.5}
-                color={c.muted}
-                style={{
-                  position: 'absolute',
-                  left: 12,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  pointerEvents: 'none',
-                }}
-              />
-              <input
-                type="search"
-                aria-label="Search inventory"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by item name, ID, or category…"
-                className="w-full rounded-[8px] pl-9 pr-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#e8b93c]"
-                style={{
-                  background: dark ? '#2d2927' : '#ffffff',
-                  border: `1px solid ${c.border}`,
-                  color: c.text,
-                  fontFamily: sans,
-                }}
-              />
-            </div>
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value as typeof filter)}
-              className="rounded-[8px] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#e8b93c]"
-              style={{
-                background: dark ? '#2d2927' : '#ffffff',
-                border: `1px solid ${c.border}`,
-                color: c.text,
-                fontFamily: sans,
-                minWidth: 170,
-              }}
-              aria-label="Filter inventory"
-            >
-              <option value="all">All items</option>
-              <option value="below">Below threshold</option>
-              <option value="out">Out of stock</option>
-              <option value="unconfirmed">Unconfirmed</option>
-            </select>
+          <section
+            className="inventory-workspace__controls surface-content"
+            aria-label="Inventory search and filters"
+            data-inventory-modal-background
+          >
+            <label className="inventory-workspace__search" htmlFor="inventory-search">
+              <span>Search inventory</span>
+              <div>
+                <Search aria-hidden="true" size={17} />
+                <input
+                  ref={searchRef}
+                  id="inventory-search"
+                  type="search"
+                  value={searchInput}
+                  onChange={(event) => setSearchInput(event.target.value)}
+                  placeholder="Item name, ID, category, or alias"
+                  autoComplete="off"
+                />
+                <kbd aria-hidden="true">/</kbd>
+              </div>
+            </label>
+            <fieldset className="inventory-workspace__filters">
+              <legend>Filter inventory</legend>
+              <div>
+                {FILTERS.map((entry) => (
+                  <button
+                    key={entry.value}
+                    type="button"
+                    aria-pressed={filter === entry.value}
+                    onClick={() => updateFilter(entry.value)}
+                  >
+                    {entry.label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          </section>
+
+          <div
+            className="inventory-workspace__result-meta"
+            role="status"
+            aria-live="polite"
+            data-inventory-modal-background
+          >
+            <p>
+              <strong>{total}</strong> {total === 1 ? 'record' : 'records'} in this authorized result
+              {!inspection && total > 0 ? ` · page ${pagination.page} of ${pageCount}` : ''}
+            </p>
+            {revision ? (
+              <p>
+                Revision {revision.token} ·{' '}
+                <time dateTime={revision.updatedAt}>{formatRevisionTime(revision.updatedAt)}</time>
+              </p>
+            ) : null}
           </div>
 
-          {/* The real runtime and local inspection fixture remain explicitly separate. */}
-          <div className="flex items-center gap-2 mb-4">
-            <span
-              className="rounded-[5px] px-2 py-0.5"
-              style={{
-                fontFamily: mono,
-                fontSize: 9,
-                color: '#7d5518',
-                background: '#fbeed2',
-                border: '1px solid #dcbe8a',
-                letterSpacing: '0.8px',
-                textTransform: 'uppercase',
-              }}
+          <div
+            className={`inventory-workspace__layout${selected ? ' inventory-workspace__layout--inspecting' : ''}`}
+          >
+            <section
+              className="inventory-workspace__records surface-content"
+              aria-label="Inventory result records"
+              data-inventory-modal-background
             >
-              {inspection
-                ? 'Inspection sample · actions unavailable'
-                : 'Current authorized inventory records'}
-            </span>
-            <span style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>{items.length} records</span>
-          </div>
+              {authorizedEmpty ? (
+                <div className="inventory-workspace__empty">
+                  <h2>No inventory records are available in this authorized scope</h2>
+                  <p>The service returned an empty canonical inventory projection.</p>
+                </div>
+              ) : null}
+              {filteredEmpty ? (
+                <div className="inventory-workspace__empty">
+                  <h2>No records match this filter</h2>
+                  <p>Clear the current search and filter to return to the full authorized result.</p>
+                  <button type="button" onClick={clearFilters}>
+                    Clear filter
+                  </button>
+                </div>
+              ) : null}
 
-          {/* Table */}
-          {visibleState === 'loading' ? (
-            <div className="rounded-[12px] overflow-hidden" style={{ border: `1px solid ${c.border}` }}>
-              {[0, 1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="animate-pulse"
-                  style={{
-                    height: 56,
-                    background: i % 2 === 0 ? c.m1 : dark ? '#222120' : '#f9f5ee',
-                    borderTop: i > 0 ? `1px solid ${c.border}` : 'none',
-                  }}
-                />
-              ))}
-            </div>
-          ) : hasNoBootstrapRecords ? (
-            <div
-              className="rounded-[12px] flex items-center justify-center"
-              style={{ border: `1px solid ${c.border}`, background: c.m1, minHeight: 180 }}
-            >
-              <div className="text-center max-w-[360px] px-4">
-                <p
-                  style={{
-                    fontFamily: mono,
-                    fontSize: 10,
-                    color: c.muted,
-                    letterSpacing: '0.8px',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  No inventory records are available in this authorized scope
-                </p>
-                <p
-                  style={{ fontFamily: sans, fontSize: 12, color: c.muted, marginTop: 8, lineHeight: '18px' }}
-                >
-                  No records were returned for this account. Search and filters cannot add inventory data.
-                </p>
-              </div>
-            </div>
-          ) : rows.length === 0 ? (
-            <div
-              className="rounded-[12px] flex items-center justify-center"
-              style={{ border: `1px solid ${c.border}`, background: c.m1, minHeight: 180 }}
-            >
-              <div className="text-center">
-                <p
-                  style={{
-                    fontFamily: mono,
-                    fontSize: 10,
-                    color: c.muted,
-                    letterSpacing: '0.8px',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  No records match this filter
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearch('');
-                    setFilter('all');
-                  }}
-                  style={{
-                    fontFamily: sans,
-                    fontSize: 12,
-                    color: '#e8b93c',
-                    marginTop: 8,
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Clear filter
-                </button>
-              </div>
-            </div>
-          ) : isMobile ? (
-            <div className="grid gap-3" role="list" aria-label="Inventory records">
-              {rows.map((item) => {
-                const isSelected = selected?.id === item.id;
-                return (
-                  <article
-                    key={item.id}
-                    role="listitem"
-                    className="rounded-[12px] p-4"
-                    style={{
-                      background: isSelected ? (dark ? '#2d2520' : '#fcf2cf') : c.m1,
-                      border: `1px solid ${isSelected ? '#c8992f' : c.border}`,
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p style={{ fontFamily: sans, fontWeight: 650, fontSize: 14, color: c.text }}>
-                          {item.name}
-                        </p>
-                        <p style={{ fontFamily: mono, fontSize: 11, color: c.muted, marginTop: 3 }}>
-                          {item.id} · {item.category}
-                        </p>
-                      </div>
-                      <InventoryStateBadge item={item} />
-                    </div>
-                    <dl className="grid grid-cols-2 gap-x-4 gap-y-2 my-4">
-                      <div>
-                        <dt style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>AVAILABLE</dt>
-                        <dd style={{ fontFamily: sans, color: c.text, margin: 0 }}>
-                          {String(item.available)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>RESERVED</dt>
-                        <dd style={{ fontFamily: sans, color: c.text, margin: 0 }}>
-                          {String(item.reserved)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>ON HAND</dt>
-                        <dd style={{ fontFamily: sans, color: c.text, margin: 0 }}>{String(item.onHand)}</dd>
-                      </div>
-                      <div>
-                        <dt style={{ fontFamily: mono, fontSize: 10, color: c.muted }}>THRESHOLD</dt>
-                        <dd style={{ fontFamily: sans, color: c.text, margin: 0 }}>
-                          {String(item.threshold)}
-                        </dd>
-                      </div>
-                    </dl>
-                    <button
-                      ref={(el) => {
-                        triggerRefs.current[item.id] = el;
-                      }}
-                      type="button"
-                      onClick={() => handleSelect(item)}
-                      className="w-full rounded-[8px] px-4 py-3 text-[13px] font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c]"
-                      style={{
-                        minHeight: 48,
-                        background: isSelected ? '#e8b93c' : 'transparent',
-                        color: isSelected ? '#40070a' : c.text,
-                        border: `1px solid ${isSelected ? '#d1b478' : c.border}`,
-                        fontFamily: sans,
-                      }}
-                      aria-pressed={isSelected}
-                    >
-                      Open item record
-                    </button>
-                  </article>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="rounded-[12px] overflow-hidden" style={{ border: `1px solid ${c.border}` }}>
-              <div className="overflow-x-auto">
-                <table className="w-full tabular-nums" style={{ borderCollapse: 'collapse', minWidth: 680 }}>
-                  <thead>
-                    <tr style={{ background: thBg, borderBottom: `1px solid ${c.border}` }}>
-                      {['Item', 'Category', 'On hand', 'Reserved', 'Available', 'Threshold', 'Lending'].map(
-                        (h) => (
-                          <th
-                            key={h}
-                            scope="col"
-                            style={{
-                              ...thStyle(thBg, c, mono),
-                              textAlign:
-                                h === 'On hand' || h === 'Reserved' || h === 'Available' || h === 'Threshold'
-                                  ? 'right'
-                                  : 'left',
-                            }}
-                          >
-                            {h}
-                          </th>
-                        ),
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((item, i) => {
-                      const isSelected = selected?.id === item.id;
-                      const rowBg = isSelected
-                        ? dark
-                          ? '#2d2520'
-                          : '#fcf2cf'
-                        : dark
-                          ? i % 2 === 0
-                            ? c.m1
-                            : '#222120'
-                          : i % 2 === 0
-                            ? '#ffffff'
-                            : '#faf7f2';
-                      const leftBorder = isSelected ? '3px solid #c8992f' : '3px solid transparent';
-                      return (
-                        <tr
-                          key={item.id}
-                          style={{ background: rowBg, borderTop: i > 0 ? `1px solid ${c.border}` : 'none' }}
+              {rows.length > 0 ? (
+                <>
+                  <div className="inventory-workspace__cards">
+                    {rows.map((item) => (
+                      <article key={item.id} className={selected?.id === item.id ? 'is-selected' : ''}>
+                        <div className="inventory-workspace__record-head">
+                          <div>
+                            <p>{item.id}</p>
+                            <h2>{item.name}</h2>
+                            <span>{item.category}</span>
+                          </div>
+                          <InventoryStateBadge item={item} />
+                        </div>
+                        <dl className="inventory-workspace__quantities">
+                          <div>
+                            <dt>On hand</dt>
+                            <dd>{item.onHand}</dd>
+                          </div>
+                          <div>
+                            <dt>Reserved</dt>
+                            <dd>{item.reserved}</dd>
+                          </div>
+                          <div>
+                            <dt>Available</dt>
+                            <dd>{item.available}</dd>
+                          </div>
+                        </dl>
+                        <button
+                          ref={(node) => {
+                            triggerRefs.current[item.id] = node;
+                          }}
+                          type="button"
+                          onClick={() => handleSelect(item)}
+                          aria-label={`Open item record ${item.name}`}
                         >
-                          <td style={{ ...tdStyle, borderLeft: leftBorder, maxWidth: 220 }}>
-                            <button
-                              ref={(el) => {
-                                triggerRefs.current[item.id] = el;
-                              }}
-                              type="button"
-                              onClick={() => handleSelect(item)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault();
-                                  handleSelect(item);
-                                }
-                              }}
-                              className="text-left w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b93c] rounded-[4px]"
-                              aria-pressed={isSelected}
-                            >
-                              <p
-                                style={{
-                                  fontFamily: sans,
-                                  fontWeight: 600,
-                                  fontSize: 13,
-                                  color: c.text,
-                                  letterSpacing: -0.15,
-                                  lineHeight: '17px',
-                                }}
-                              >
-                                {item.name}
-                              </p>
-                              <p style={{ fontFamily: mono, fontSize: 10, color: c.muted, marginTop: 2 }}>
-                                {item.id}
-                              </p>
-                            </button>
-                          </td>
-                          <td style={{ ...tdStyle, fontFamily: sans, fontSize: 13, color: c.text }}>
-                            {item.category}
-                          </td>
-                          <td style={{ ...tdStyle, textAlign: 'right' }}>
-                            <InventoryQtyCell val={item.onHand} c={c} />
-                          </td>
-                          <td style={{ ...tdStyle, textAlign: 'right' }}>
-                            <InventoryQtyCell val={item.reserved} c={c} />
-                          </td>
-                          <td style={{ ...tdStyle, textAlign: 'right' }}>
-                            <InventoryQtyCell
-                              val={item.available}
-                              low={
-                                typeof item.available === 'number' &&
-                                typeof item.threshold === 'number' &&
-                                (item.available as number) < (item.threshold as number)
-                              }
-                              c={c}
-                            />
-                          </td>
-                          <td style={{ ...tdStyle, textAlign: 'right' }}>
-                            <InventoryQtyCell val={item.threshold} c={c} />
-                          </td>
-                          <td style={tdStyle}>
-                            <InventoryStateBadge item={item} />
-                          </td>
+                          Open item record
+                          <ChevronRight aria-hidden="true" size={16} />
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+
+                  <div className="inventory-workspace__table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th scope="col">Item</th>
+                          <th scope="col">State</th>
+                          <th scope="col" className="inventory-workspace__numeric">
+                            On hand
+                          </th>
+                          <th scope="col" className="inventory-workspace__numeric">
+                            Reserved
+                          </th>
+                          <th scope="col" className="inventory-workspace__numeric">
+                            Available
+                          </th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+                      </thead>
+                      <tbody>
+                        {rows.map((item) => (
+                          <tr key={item.id} aria-selected={selected?.id === item.id}>
+                            <th scope="row">
+                              <button
+                                ref={(node) => {
+                                  triggerRefs.current[item.id] = node;
+                                }}
+                                type="button"
+                                onClick={() => handleSelect(item)}
+                                aria-label={`${item.name}, ${item.id}. Open item record`}
+                              >
+                                <strong>{item.name}</strong>
+                                <span>
+                                  {item.id} · {item.category}
+                                </span>
+                              </button>
+                            </th>
+                            <td>
+                              <InventoryStateBadge item={item} />
+                            </td>
+                            <td className="inventory-workspace__numeric">
+                              <InventoryQtyCell val={item.onHand} c={c} />
+                            </td>
+                            <td className="inventory-workspace__numeric">
+                              <InventoryQtyCell val={item.reserved} c={c} />
+                            </td>
+                            <td className="inventory-workspace__numeric">
+                              <InventoryQtyCell
+                                val={item.available}
+                                low={item.belowThreshold || item.outOfStock}
+                                c={c}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              ) : null}
+
+              {!inspection && total > 0 ? (
+                <nav className="inventory-workspace__pagination" aria-label="Inventory result pages">
+                  <button
+                    type="button"
+                    disabled={pagination.page <= 1 || visibleState === 'refreshing'}
+                    onClick={() => setPage((value) => Math.max(1, value - 1))}
+                  >
+                    <ChevronLeft aria-hidden="true" size={16} />
+                    Previous
+                  </button>
+                  <span>
+                    Page {pagination.page} of {pageCount}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={!pagination.hasMore || visibleState === 'refreshing'}
+                    onClick={() => setPage((value) => value + 1)}
+                  >
+                    Next
+                    <ChevronRight aria-hidden="true" size={16} />
+                  </button>
+                </nav>
+              ) : null}
+            </section>
+
+            {selected ? (
+              <InventoryInspector
+                item={selected}
+                dark={dark}
+                isMobile={isMobile}
+                availableRoutes={availableRoutes}
+                onNavigate={navigate}
+                onClose={handleClose}
+              />
+            ) : null}
+          </div>
         </>
-      )}
-
-      {/* Inspector */}
-      {selected && (
-        <InventoryInspector item={selected} dark={dark} isMobile={isMobile} onClose={handleClose} />
-      )}
-    </div>
+      ) : null}
+    </main>
   );
-}
-
-// Helper used inside InventoryRoute table header
-function thStyle(bg: string, c: ReturnType<typeof ap>, mono: string): CSSProperties {
-  return {
-    fontFamily: mono,
-    fontWeight: 600,
-    fontSize: 10,
-    color: c.muted,
-    letterSpacing: '1px',
-    textTransform: 'uppercase',
-    padding: '10px 16px',
-    whiteSpace: 'nowrap',
-    background: bg,
-  };
 }

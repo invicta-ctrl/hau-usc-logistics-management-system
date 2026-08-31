@@ -17,6 +17,7 @@ export default defineConfig({
     'playground-theme-accessibility.spec.js',
     'mfr002-shell.spec.js',
     'mfr002-entry-flows.spec.js',
+    'mfr002-overview-inventory.spec.js',
   ],
   timeout: 30_000,
   fullyParallel: false,

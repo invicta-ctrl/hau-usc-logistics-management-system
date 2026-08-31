@@ -6,6 +6,8 @@
 @import './shell.css';
 @import './entry-flows.css';
 @import './atrium-motion.css';
+@import './operations-overview.css';
+@import './inventory-workspace.css';
 
 html,body,#root{max-width:100%;overflow-x:clip}
 /* Removes the 300ms double-tap zoom delay on touch without disabling pinch zoom. */

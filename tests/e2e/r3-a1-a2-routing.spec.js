@@ -95,10 +95,10 @@ function installLogin(page, { accountId, displayName, roleId, capabilities }) {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-      body: JSON.stringify({
-        ok: true,
-        appearance: { family: 'HAU_INSTITUTIONAL', mode: 'SYSTEM' },
-      }),
+        body: JSON.stringify({
+          ok: true,
+          appearance: { family: 'HAU_INSTITUTIONAL', mode: 'SYSTEM' },
+        }),
       }),
     ),
   ]);
@@ -136,7 +136,7 @@ function profileFixture() {
       credentialVersion: 3,
       updatedAt: '2026-08-24T00:00:00.000Z',
       avatar: { available: false, initials: 'DP', fallback: 'INITIALS', url: '', updatedAt: '' },
-    appearance: { family: 'HAU_INSTITUTIONAL', mode: 'SYSTEM' },
+      appearance: { family: 'HAU_INSTITUTIONAL', mode: 'SYSTEM' },
     },
   };
 }
@@ -181,8 +181,11 @@ function installInventoryBootstrap(page, { status = 200, body } = {}) {
   const payload = body ?? {
     ok: true,
     contract: 'bootstrap-module',
+    contractVersion: 2,
+    requestOnly: false,
     module: 'inventory',
     scopeRevision: { token: 'inventory-r1', updatedAt: '2026-08-24T00:00:00.000Z' },
+    pagination: { page: 1, pageSize: 25, total: 1, hasMore: false },
     data: {
       inventoryItems: [
         {
@@ -202,11 +205,32 @@ function installInventoryBootstrap(page, { status = 200, body } = {}) {
           conditionReviewState: 'ASSESSED',
           maintenanceReviewState: 'CURRENT',
           updatedAt: '2026-08-24T00:00:00.000Z',
+          classificationHistory: [],
         },
       ],
+      ledgerTransactions: [
+        {
+          id: 'TXN-REAL-1',
+          type: 'OPENING_BALANCE',
+          direction: 'IN',
+          itemId: 'ITM-REAL-1',
+          quantity: 24,
+          signedQuantity: 24,
+          unit: 'piece',
+          relatedEntityType: 'INVENTORY_ITEM',
+          relatedId: 'ITM-REAL-1',
+          status: 'POSTED',
+          notes: '',
+          createdAt: '2026-08-24T00:00:00.000Z',
+        },
+      ],
+      reservations: [],
+      inventoryAssets: [],
+      assetMaintenanceHistory: [],
+      assetMovementHistory: [],
     },
   };
-  return page.route('**/api/bootstrap/inventory', (route) =>
+  return page.route('**/api/bootstrap/inventory?**', (route) =>
     route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(payload) }),
   );
 }
@@ -382,7 +406,7 @@ function usesMobileShell(testInfo) {
 }
 
 function usesMobileInventoryLayout(testInfo) {
-  return ['frontend-320', 'frontend-390'].includes(testInfo.project.name);
+  return ['frontend-320', 'frontend-390', 'frontend-768'].includes(testInfo.project.name);
 }
 
 function usesMobileRequestLayout(testInfo) {
@@ -401,11 +425,7 @@ async function openInternalRequestHub(page, testInfo, { waitForQueue = true } = 
   await page.goto('/');
   await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
-  await (
-    await workspaceSurface(page, testInfo)
-  )
-    .getByRole('link', { name: 'Internal Request Hub' })
-    .click();
+  await (await workspaceSurface(page, testInfo)).getByRole('link', { name: 'Internal Request Hub' }).click();
   if (waitForQueue) await expect(page.getByRole('heading', { name: 'Request review queue' })).toBeVisible();
 }
 
@@ -1192,15 +1212,18 @@ test('FI-05 Inventory uses the authenticated bootstrap, restores inspector focus
     : page.getByRole('button', { name: /Authoritative folding chair/u });
   await expect(opener).toBeVisible();
   await opener.click();
-  await expect(page.getByRole('dialog')).toContainText('Current authorized inventory records');
-  const closeInspector = usesMobileInventoryLayout(testInfo)
-    ? page.getByRole('button', { name: 'Back to inventory' })
-    : page.getByRole('button', { name: 'Close inspector' });
-  await expect(closeInspector).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(closeInspector).toBeFocused();
-  await page.keyboard.press('Shift+Tab');
-  await expect(closeInspector).toBeFocused();
+  if (usesMobileInventoryLayout(testInfo)) {
+    await expect(page.getByRole('dialog')).toContainText('Current authorized inventory records');
+    const closeInspector = page.getByRole('button', { name: 'Back to inventory' });
+    await expect(closeInspector).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(closeInspector).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(closeInspector).toBeFocused();
+  } else {
+    await expect(page.getByRole('complementary')).toContainText('Current authorized inventory records');
+    await expect(page.getByRole('button', { name: 'Close inspector' })).toBeVisible();
+  }
   await page.keyboard.press('Escape');
   await expect(opener).toBeFocused();
 });
@@ -1232,9 +1255,19 @@ test('FI-05 Inventory reports a genuinely empty authorized bootstrap without imp
     body: {
       ok: true,
       contract: 'bootstrap-module',
+      contractVersion: 2,
+      requestOnly: false,
       module: 'inventory',
       scopeRevision: { token: 'inventory-empty', updatedAt: '2026-08-24T00:00:00.000Z' },
-      data: { inventoryItems: [] },
+      pagination: { page: 1, pageSize: 25, total: 0, hasMore: false },
+      data: {
+        inventoryItems: [],
+        ledgerTransactions: [],
+        reservations: [],
+        inventoryAssets: [],
+        assetMaintenanceHistory: [],
+        assetMovementHistory: [],
+      },
     },
   });
 
@@ -1259,8 +1292,8 @@ test('FI-05 Inventory retains the last authoritative projection and labels it st
   await signIn(page, 'dol.staff');
   await (await workspaceSurface(page, testInfo)).getByRole('link', { name: 'Inventory' }).click();
   await expect(page.getByText('Authoritative folding chair')).toBeVisible();
-  await page.unroute('**/api/bootstrap/inventory');
-  await page.route('**/api/bootstrap/inventory', (route) =>
+  await page.unroute('**/api/bootstrap/inventory?**');
+  await page.route('**/api/bootstrap/inventory?**', (route) =>
     route.fulfill({
       status: 503,
       contentType: 'application/json',
@@ -1354,10 +1387,12 @@ test('P18 Profile persists theme family separately from Light, Dark, and System 
     { family: 'EMERALD_OPERATIONS', mode: 'DARK' },
   ]);
   await expect
-    .poll(() => page.evaluate(() => ({
-      family: localStorage.getItem('hau-usc-theme-family'),
-      mode: localStorage.getItem('hau-usc-theme'),
-    })))
+    .poll(() =>
+      page.evaluate(() => ({
+        family: localStorage.getItem('hau-usc-theme-family'),
+        mode: localStorage.getItem('hau-usc-theme'),
+      })),
+    )
     .toEqual({ family: 'EMERALD_OPERATIONS', mode: 'dark' });
   await expect
     .poll(() =>
@@ -1615,7 +1650,7 @@ test('CTX-02 every public surface states the staff gate before the user commits'
   if (testInfo.project.name === 'frontend-320' || testInfo.project.name === 'frontend-390') {
     await page.getByRole('button', { name: 'Open navigation menu' }).click();
     const drawer = page.getByRole('dialog', { name: 'Navigation menu' });
-  await drawer.getByRole('link', { name: 'Start a logistics request', exact: true }).click();
+    await drawer.getByRole('link', { name: 'Start a logistics request', exact: true }).click();
     await expect(page.getByRole('heading', { name: /Sign in/u }).first()).toBeVisible();
   }
 });
