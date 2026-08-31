@@ -5,16 +5,12 @@ import {
   type FrontendOperationalModuleBootstrap,
   type FrontendOperationalModuleName,
 } from '../../integration/backend';
+import { ProcurementWorkspace } from './ProcurementWorkspace';
+import { ReceivingHistory } from './ReceivingHistory';
+import { ReceivingStation } from './ReceivingStation';
 import { ReleaseHistory } from './ReleaseHistory';
 import { ReleaseStation } from './ReleaseStation';
-import {
-  evidenceError,
-  numberValue,
-  operationalClientRequestId,
-  readAsDataUrl,
-  readable,
-  textValue,
-} from './operationUtils';
+import { readable } from './operationUtils';
 
 export { operationalClientRequestId } from './operationUtils';
 
@@ -40,14 +36,15 @@ const ROUTE_COPY: Record<
     collections: ['releaseConfirmations', 'requests', 'lendingTickets', 'releaseCorrections'],
   },
   restocking: {
-    title: 'Restocking and receiving',
-    summary: 'Review restock requests, receipts, and canvass references from the current authorized records.',
+    title: 'Receiving Desk',
+    summary:
+      'Record one evidence-backed inventory receipt against current cumulative restock truth, then verify the resulting receipt history.',
     collections: ['restockRequests', 'restockRecords', 'canvassReferences', 'inventoryItems'],
   },
   procurement: {
-    title: 'Procurement lifecycle',
+    title: 'Procurement Workspace',
     summary:
-      'Review deliverables, canvass references, and linked requests without simulating an unsupported write.',
+      'Trace each authorized deliverable through canvass references, supplier context, cumulative receiving, and its next governed consequence.',
     collections: ['deliverables', 'canvassReferences', 'requests', 'requestLines'],
   },
 };
@@ -168,9 +165,11 @@ function Collection({ name, rows }: { name: string; rows: RecordRow[] }) {
 function MutationNotice({
   notice,
   releaseBackground = false,
+  receivingBackground = false,
 }: {
   notice: CommitNotice | null;
   releaseBackground?: boolean;
+  receivingBackground?: boolean;
 }) {
   if (!notice) return null;
   return (
@@ -178,227 +177,10 @@ function MutationNotice({
       className={`custody-notice custody-notice--${notice.tone} mb-5 px-4 py-3 text-sm`}
       role={notice.tone === 'error' ? 'alert' : 'status'}
       data-release-station-background={releaseBackground ? true : undefined}
+      data-receiving-station-background={receivingBackground ? true : undefined}
     >
       {notice.message}
     </div>
-  );
-}
-
-function RestockWorkflow({
-  bootstrap,
-  enabled,
-  onCommitted,
-}: {
-  bootstrap: FrontendOperationalModuleBootstrap;
-  enabled: boolean;
-  onCommitted: (message: string) => void;
-}) {
-  const candidates = useMemo(
-    () =>
-      (bootstrap.data.restockRequests ?? [])
-        .filter((row) =>
-          ['TO_BE_PROCURED', 'PROCURED', 'PARTIALLY_RECEIVED'].includes(textValue(row, ['status'])),
-        )
-        .map((row) => {
-          const requested = numberValue(row, ['requested_quantity', 'requestedQuantity', 'quantity']);
-          const received = numberValue(row, ['received_quantity', 'receivedQuantity']);
-          return {
-            id: textValue(row, ['id']),
-            itemId: textValue(row, ['item_id', 'itemId']),
-            reason: textValue(row, ['reason']),
-            unit: textValue(row, ['unit']),
-            remaining: Math.max(0, requested - received),
-          };
-        })
-        .filter((row) => row.id && row.remaining > 0),
-    [bootstrap],
-  );
-  const itemNames = useMemo(
-    () =>
-      new Map(
-        (bootstrap.data.inventoryItems ?? []).map((row) => [
-          textValue(row, ['id']),
-          textValue(row, ['name']),
-        ]),
-      ),
-    [bootstrap],
-  );
-  const [selectedId, setSelectedId] = useState('');
-  const selected = candidates.find((row) => row.id === selectedId) ?? candidates[0] ?? null;
-  const [quantity, setQuantity] = useState('');
-  const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [notes, setNotes] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [notice, setNotice] = useState<CommitNotice | null>(null);
-
-  useEffect(() => {
-    if (selected) setQuantity(String(selected.remaining));
-  }, [selected?.id, selected?.remaining]);
-
-  const submit = async () => {
-    if (!selected || submitting) return;
-    const amount = Number(quantity);
-    const fileProblem = evidenceError(file);
-    if (!Number.isFinite(amount) || amount <= 0 || amount > selected.remaining) {
-      setNotice({
-        tone: 'error',
-        message: `Enter a receiving quantity from 1 through ${selected.remaining}.`,
-      });
-      return;
-    }
-    if (fileProblem || !file) {
-      setNotice({ tone: 'error', message: fileProblem });
-      return;
-    }
-    setSubmitting(true);
-    setNotice(null);
-    try {
-      const evidence = await frontendBackend.uploadOperationalEvidence({
-        evidenceType: 'RESTOCK_RECEIPT',
-        relatedEntityType: 'RESTOCK',
-        relatedEntityId: selected.id,
-        restockId: selected.id,
-        originalFileName: file.name,
-        mimeType: file.type,
-        base64: await readAsDataUrl(file),
-        clientRequestId: operationalClientRequestId('restock-evidence', [
-          selected.id,
-          file.name,
-          file.size,
-          file.lastModified,
-        ]),
-      });
-      const receipt = await frontendBackend.receiveRestock({
-        restockRequestId: selected.id,
-        quantity: amount,
-        unit: selected.unit,
-        evidenceId: evidence.evidenceId,
-        invoiceStatus: invoiceNumber.trim() ? 'RECORDED' : 'NOT_REPORTED',
-        invoiceNumber: invoiceNumber.trim(),
-        notes: notes.trim(),
-        clientRequestId: operationalClientRequestId('restock', [
-          bootstrap.scopeRevision.token,
-          selected.id,
-          amount,
-          selected.unit,
-          evidence.evidenceId,
-          invoiceNumber.trim(),
-          notes.trim(),
-        ]),
-      });
-      onCommitted(
-        `${receipt.status === 'RECEIVED' ? 'Full' : 'Partial'} receipt recorded. Cumulative receiving and the linked inventory movement were reloaded.`,
-      );
-    } catch (error) {
-      const conflict = error instanceof FrontendApiError && error.status === 409;
-      setNotice({
-        tone: conflict ? 'warning' : 'error',
-        message: conflict
-          ? 'The receiving record changed or the cumulative quantity conflicts with the current state. Reload before trying again.'
-          : error instanceof FrontendApiError
-            ? error.message
-            : 'The receipt could not be recorded. No local success was assumed.',
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <section
-      className="mb-6 border-y border-border bg-card/40 px-4 py-5"
-      aria-labelledby="restock-operation-title"
-    >
-      <p className="text-xs font-bold uppercase tracking-[.14em]">Receiving operation</p>
-      <h2 id="restock-operation-title" className="mt-1 font-serif text-2xl">
-        Record an inventory receipt
-      </h2>
-      {!enabled ? (
-        <p className="mt-3 text-sm opacity-75">
-          This account can view restocking data but cannot record receipts or upload the required evidence.
-        </p>
-      ) : !candidates.length ? (
-        <p className="mt-3 text-sm opacity-75">
-          No restock record in this authorized page is open for receiving.
-        </p>
-      ) : (
-        <div className="mt-4 grid gap-3 lg:grid-cols-2">
-          <label className="grid gap-1 text-sm font-semibold">
-            Open restock record
-            <select
-              className="min-h-11 border border-border bg-background px-3"
-              value={selected?.id ?? ''}
-              onChange={(event) => setSelectedId(event.target.value)}
-            >
-              {candidates.map((row) => (
-                <option key={row.id} value={row.id}>
-                  {itemNames.get(row.itemId) || row.itemId || row.reason || row.id} · {row.remaining}{' '}
-                  {row.unit} remaining
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-1 text-sm font-semibold">
-            Quantity received
-            <input
-              className="min-h-11 border border-border bg-background px-3"
-              type="number"
-              min="1"
-              max={selected?.remaining ?? 1}
-              step="1"
-              value={quantity}
-              onChange={(event) => setQuantity(event.target.value)}
-            />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold">
-            Invoice number (optional)
-            <input
-              className="min-h-11 border border-border bg-background px-3"
-              value={invoiceNumber}
-              onChange={(event) => setInvoiceNumber(event.target.value)}
-            />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold">
-            Receiving evidence
-            <input
-              className="min-h-11 border border-border bg-background px-3 py-2"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,application/pdf"
-              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-            />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold lg:col-span-2">
-            Receiving note
-            <textarea
-              className="min-h-20 border border-border bg-background px-3 py-2"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-            />
-          </label>
-          <div className="flex flex-wrap gap-2 lg:col-span-2">
-            <button
-              type="button"
-              className="min-h-11 border border-border px-4 font-semibold"
-              onClick={() => selected && setQuantity(String(selected.remaining))}
-            >
-              Record full remaining quantity
-            </button>
-            <button
-              type="button"
-              className="min-h-11 bg-primary px-4 font-semibold text-primary-foreground disabled:opacity-60"
-              disabled={submitting}
-              onClick={() => void submit()}
-            >
-              {submitting ? 'Recording receipt…' : 'Confirm receiving'}
-            </button>
-          </div>
-          <div className="lg:col-span-2">
-            <MutationNotice notice={notice} />
-          </div>
-        </div>
-      )}
-    </section>
   );
 }
 
@@ -458,6 +240,7 @@ export function OperationalModuleRoute({
       <header
         className="mb-6 border-b border-border pb-6"
         data-release-station-background={module === 'release' ? true : undefined}
+        data-receiving-station-background={module === 'restocking' ? true : undefined}
       >
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-3xl">
@@ -466,12 +249,20 @@ export function OperationalModuleRoute({
           </div>
           <div className="text-right text-xs opacity-70">
             <p className="font-bold uppercase tracking-[.12em]">
-              {module === 'release' ? 'Focused station' : 'Current records'} ·{' '}
+              {module === 'release'
+                ? 'Focused release station'
+                : module === 'restocking'
+                  ? 'Focused receiving station'
+                  : module === 'procurement'
+                    ? 'Consequence review'
+                    : 'Current records'}{' '}
+              ·{' '}
               {mutationEnabled && ['release', 'restocking'].includes(module)
                 ? 'operational writes enabled'
                 : 'read-only'}
             </p>
             {sessionName ? <p className="mt-1">Authorized for {sessionName}</p> : null}
+            {bootstrap ? <p className="mt-1">Record version {bootstrap.scopeRevision.token}</p> : null}
           </div>
         </div>
       </header>
@@ -507,8 +298,12 @@ export function OperationalModuleRoute({
         </section>
       ) : (
         <>
-          <MutationNotice notice={commitNotice} releaseBackground={module === 'release'} />
-          {module !== 'release' ? (
+          <MutationNotice
+            notice={commitNotice}
+            releaseBackground={module === 'release'}
+            receivingBackground={module === 'restocking'}
+          />
+          {module === 'overview' ? (
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-y border-border bg-muted/40 px-4 py-3 text-sm">
               <span>
                 <strong>{totalRows}</strong> authorized rows across {collections.length} operational
@@ -522,11 +317,15 @@ export function OperationalModuleRoute({
           {module === 'release' && bootstrap ? (
             <ReleaseStation bootstrap={bootstrap} enabled={mutationEnabled} onCommitted={commit} />
           ) : module === 'restocking' && bootstrap ? (
-            <RestockWorkflow bootstrap={bootstrap} enabled={mutationEnabled} onCommitted={commit} />
+            <ReceivingStation bootstrap={bootstrap} enabled={mutationEnabled} onCommitted={commit} />
+          ) : module === 'procurement' && bootstrap ? (
+            <ProcurementWorkspace bootstrap={bootstrap} />
           ) : null}
           {module === 'release' && bootstrap ? (
             <ReleaseHistory bootstrap={bootstrap} />
-          ) : (
+          ) : module === 'restocking' && bootstrap ? (
+            <ReceivingHistory bootstrap={bootstrap} />
+          ) : module === 'procurement' ? null : (
             <div className="grid gap-4 xl:grid-cols-2">
               {collections.map((collection) => (
                 <Collection key={collection.name} name={collection.name} rows={collection.rows} />

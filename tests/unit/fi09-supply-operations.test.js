@@ -16,14 +16,20 @@ describe('FI-09 Supply operations frontend integration', () => {
   it('uses Worker/D1 routes for normal supply operations and reserves SupplyRoutes for Events', () => {
     const renderer = readSource('src/frontend/app/AppRouteRenderer.tsx');
     const operational = readSource('src/frontend/app/operations/OperationalModuleRoute.tsx');
+    const receiving = readSource('src/frontend/app/operations/ReceivingStation.tsx');
+    const procurement = readSource('src/frontend/app/operations/ProcurementWorkspace.tsx');
 
     expect(renderer).toContain("import SupplyRoutes from './SupplyRoutes';");
     expect(renderer).toContain('module="restocking"');
     expect(renderer).toContain('<OperationalModuleRoute module="procurement" />');
     expect(renderer).toContain("session.serverCapabilities.includes('fulfillment.receive')");
-    expect(operational).toContain('frontendBackend.receiveRestock');
-    expect(operational).toContain('RESTOCK_RECEIPT');
-    expect(operational).toContain('Record full remaining quantity');
+    expect(operational).toContain('<ReceivingStation');
+    expect(operational).toContain('<ProcurementWorkspace');
+    expect(receiving).toContain('frontendBackend.receiveRestock');
+    expect(receiving).toContain('RESTOCK_RECEIPT');
+    expect(receiving).toContain('Use full outstanding quantity');
+    expect(receiving).toContain("frontendBackend.operationalModuleBootstrap('restocking')");
+    expect(procurement).toContain('Next governed consequence');
     expect(renderer).toContain('mode="events"');
     expect(renderer).not.toContain('mode="restocking"');
     expect(renderer).not.toContain('mode="procurement"');
@@ -76,7 +82,7 @@ describe('FI-09 Supply operations frontend integration', () => {
   it('retains synthetic, cumulative, and no-write supply truth', () => {
     const supplyRoutes = readSource('src/frontend/app/SupplyRoutes.tsx');
 
-  expect(supplyRoutes).toContain('Sample data · Actions unavailable');
+    expect(supplyRoutes).toContain('Sample data · Actions unavailable');
     expect(supplyRoutes).toContain('PO-2026-0031');
     expect(supplyRoutes).toContain('<dt>Ordered</dt>');
     expect(supplyRoutes).toContain('<dd>12</dd>');

@@ -1,46 +1,46 @@
-# MFR-002 U07 Lending + Release Handoff
+# MFR-002 U08 Operations + Administration + Index Handoff
 
-FROM: HAU-USC-MFR-002 U06 integrated Internal Request Hub
-TO: HAU-USC-MFR-002 U07 Lending + Release
+FROM: HAU-USC-MFR-002 U07 integrated Lending + Release
+TO: HAU-USC-MFR-002 U08 Operations + Administration + Index
 PROGRAM: HAU-USC Logistics MFR-002
-BRANCH: work/playground-mfr002-custody
+BRANCH: work/playground-mfr002-operations
 BASE_BRANCH: Playground
-STARTING_SHA: a1afede6004b44cad3c633209483d61635589681
-STARTING_TREE: 692759c4e489b877371cd5376905d32aec75939c
-LOCAL_EQUIVALENT_STARTING_SHA: 83b3cecb9892cb944aa2b79fb9f2f2e6981099b4
+STARTING_SHA: 8f9ea464410434ea11499bef194545d6025dcb1b
+STARTING_TREE: a546b79be00f5ae5a3f2b7b62e3a9acd4c83cbe7
+LOCAL_EQUIVALENT_STARTING_SHA: 71accded7c2241b8319454b804fc829a2e416df9
 HEAD: GIT_HEAD
 UPSTREAM: origin/Playground
 WORKTREE: /workspace/scratch/9d88b058f45e/repo
 WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: SOL_ULTRA:/root
-WRITER_LOCK: ACTIVE_MFR002_U07
+WRITER_LOCK: ACTIVE_MFR002_U08
 ROUTE: SOLO
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-31-mfr002-unified-mobile-first-fullstack-performance-transformation.md
 
-PHASE: U07_LENDING_RELEASE
-BASE_PLAYGROUND_SHA: a1afede6004b44cad3c633209483d61635589681
+PHASE: U08_OPERATIONS_ADMIN_INDEX
+BASE_PLAYGROUND_SHA: 8f9ea464410434ea11499bef194545d6025dcb1b
 ENDING_SHA: GIT_HEAD
 TREE: GIT_TREE
-OBJECTIVE: Make authenticated lending custody and physical release precise and fast without changing the authoritative backend contracts.
-COMPLETED: Reworked the authenticated Lending Hub with loaded lifecycle navigation and exact custody summaries for review, issue/handoff, and return. Replaced the generic Release collections with a focused ready-record station, authoritative pre-write recheck, SHA-256 evidence identity, exact-state command identity, and purpose-built receipt/correction history. Exact evidence is .codex/evidence/MFR002_U07_CUSTODY.json.
-FILES_CHANGED: Lending workspace and responsive/action contracts; focused Release station, model, history, and shared operational utilities; semantic custody stylesheet and entrypoint; fixture-boundary and five-width Playwright configuration; focused unit/E2E contracts; U07 evidence and continuity.
-FACTS_INVALIDATED: U06 frontend CSS, authenticated-route, presentation, and canonical/staging artifact hashes are superseded by U07. U06 Request Hub behavior, U05 Overview/Inventory, U04 entry flow, U03 shell, P24 no-index, schema-32, and P34 runtime/reset facts remain reusable.
-VALIDATION: 174 unit files / 1,270 tests pass with one intentional skip; 50 focused custody tests pass; lint has zero errors and two pre-existing warnings; 66/66 contrast pairs and all current design checks pass; 45 U07 cases and 485 complete frontend tests enumerate across five widths; canonical/staging normal-asset, marker, fixture-boundary, and byte-identical hero checks pass.
-BROWSER_EVIDENCE: UNRUN_ENVIRONMENT_BLOCKED. The frontend-390 U07 Release journey reached browser launch but the project-pinned Chromium executable is absent. No rendered, Web Vitals, route-ready, INP, or visual-regression PASS is claimed.
-PERFORMANCE_EFFECT: Direct entry transfer is 375,876 bytes / 94,937 gzip bytes, up 4,218 bytes / 1.1349 percent and 536 gzip bytes / 0.5678 percent from U06. The authenticated route chunk grows 3,683 gzip bytes / 4.1177 percent; all measured deltas remain below the accepted 15 percent alarm.
-D1_EFFECT: Zero query, binding-call, schema, migration, index, provider, or data change. Live rows_read and SQL duration remain unmeasured; U09 retains data-path hardening authority.
-ACCESSIBILITY_EFFECT: Lending selection is modal with focus containment, inert background, Escape, scroll restoration, and opener restoration at 320/390/768, and a nonmodal complementary inspector at 1024/1440. Consequential Lending and Release dialogs show record/person/item/quantity/consequence before action; Release acknowledgement receives initial focus and final action remains disabled until acknowledged.
+OBJECTIVE: Make receiving, procurement, events, administration, and the Playground Index focused, truthful, responsive operational workspaces.
+COMPLETED: U07 was published to remote commit 8f9ea464410434ea11499bef194545d6025dcb1b and non-force integrated to Playground with exact tree a546b79be00f5ae5a3f2b7b62e3a9acd4c83cbe7; main remained unchanged. U08 receiving/procurement now uses focused, authoritative workspaces with cumulative quantity consequence, cryptographic evidence identity, fresh pre-upload recheck, bounded history, preferred supplier context, and no generic collection clutter or invented procurement write.
+FILES_CHANGED: Current-chain records; OperationalModuleRoute; new receiving/procurement models and workspaces; custody workspace styles; fixture-boundary guard; FI-09/U08 unit and browser journey coverage; frontend Playwright enumeration.
+FACTS_INVALIDATED: U07 is no longer pending integration. Its artifact and verification evidence remain the U08 baseline until U08 source changes invalidate them.
+VALIDATION: Receiving/procurement focused units pass (9 tests); the application build, fixture boundary, foundation check, quiet lint, governance checks, and diff check pass; 15 browser cases enumerate across 320/390/768/1024/1440.
+BROWSER_EVIDENCE: A fresh frontend-390 launch was attempted and stopped before page execution because Playwright Chromium headless shell 1228 is absent. No rendered pass is claimed.
+PERFORMANCE_EFFECT: U08 baseline is U07 direct entry transfer 375,876 bytes / 94,937 gzip bytes; no U08 measurement exists yet.
+D1_EFFECT: Visual U08 slices must remain query- and schema-neutral. Accepted measured data-path work is reserved for U09.
+ACCESSIBILITY_EFFECT: Receiving now uses mobile list/detail, desktop persistent context, an exact final-confirmation dialog with inert background, focus trap, Escape, opener restoration, whole-number constraints, and pre-upload recheck. Procurement uses one responsive semantic record representation and no false write controls.
 PLAYGROUND_DEPLOYMENT: ZERO; source integration only.
-EXTERNAL_WRITES: GitHub publication of U06 only: remote temporary U06 branch and non-force Playground update to a1afede6004b44cad3c633209483d61635589681. No deployment, provider, D1/R2/reset/data, Google, email, Figma, main, or Production write.
-EXTERNAL_ACTIONS: Read-only live Figma Design and Make context inspection for U07; U06 GitHub publication described above.
-KNOWN_RESIDUALS: Fresh rendered five-width, keyboard, 200 percent reflow, focus-obscuration, visual-regression, Web Vitals, route-ready, INP, live API latency, and live D1 rows_read remain unclaimed; exact deterministic fallback evidence is recorded. U07 remote integration remains owner-gated.
-NEXT_BRANCH: work/playground-mfr002-operations
-DO_NOT_REPEAT: Do not re-publish U06, derive stock or custody truth in the browser, bypass governed evidence, change command identity on retry, or claim rendered acceptance without a browser.
-PRESERVED: Public Lending separation; protected borrower identity and governed evidence; partial/cumulative release and return semantics; server-owned stock/reservation/custody/ledger/audit truth; U03 shell, U04 entry flows, U05 Overview/Inventory, U06 Request Hub; six theme families and twelve Light/Dark contracts; P23 build architecture; P34 runtime/data/reset evidence.
+EXTERNAL_WRITES: U07 remote temporary branch creation and non-force Playground update to 8f9ea464410434ea11499bef194545d6025dcb1b only. No provider, D1/R2/reset/data, Google, email, Figma, main, or Production write.
+EXTERNAL_ACTIONS: U07 GitHub publication described above; no other external action in U08.
+KNOWN_RESIDUALS: U08 Events, Administration, Index, final evidence, integration, artifact/performance comparison, and rendered-browser execution remain open.
+NEXT_BRANCH: work/playground-mfr002-data-path
+DO_NOT_REPEAT: Do not re-publish U07, mix U09 query repair into U08 visual diffs, fabricate readiness or privileged actions, or claim rendered acceptance without a browser.
+PRESERVED: U03-U07 product behavior; public/authenticated context separation; capability and privacy boundaries; cumulative receiving, custody, ledger, audit, reset, and evidence truth; six theme families and twelve Light/Dark contracts; P23 build architecture; P34 runtime/data/reset evidence.
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Finalize the isolated U07 commit, then stop before remote publication until the owner gives the exact integration command.
-RESUME_COMMANDS: Verify branch/status and base tree; parse .codex/evidence/MFR002_U07_CUSTODY.json; verify the isolated U07 commit and main preservation; do not publish until the owner gives the exact integration command.
-PROHIBITED_ACTIONS: Mutate main or Production; deploy; change D1/R2/reset/schema/migration/index/provider data; write Figma; invent stock/custody/receipt truth; weaken capability, evidence, idempotency, partial/cumulative, refetch, ledger, audit, or U03-U06 contracts; begin U08 before U07 integration.
-HANDOFF_STATUS: READY_FOR_INTEGRATION
+NEXT_EXACT_ACTION: Replace the managed Events branch with an activity-first logistics-readiness workspace while preserving capability gates, sanitized projections, abort/retry behavior, and zero-traffic inspection.
+RESUME_COMMANDS: Verify branch/status and exact U07 base tree; run the focused supply units/build if its source changed; inspect accepted U08/FI-11 event contracts; continue only the Events frontend source and tests; keep U09 query changes separate.
+PROHIBITED_ACTIONS: Mutate main or Production; deploy outside isolated Playground; change D1/R2/reset/schema/migration/index/provider data in visual U08; write Figma; invent receiving/procurement/event/admin truth; weaken capability, privacy, cumulative, evidence, idempotency, ledger, audit, or U03-U07 contracts.
+HANDOFF_STATUS: ACTIVE
