@@ -73,6 +73,9 @@ const API_SECURITY_HEADERS = Object.freeze({
   'permissions-policy': 'camera=(), geolocation=(), microphone=()',
   'cross-origin-opener-policy': 'same-origin',
   'cross-origin-resource-policy': 'same-origin',
+  'content-security-policy':
+    "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  'x-frame-options': 'DENY',
 });
 
 const BRAND_ASSET_KEYS = Object.freeze({
