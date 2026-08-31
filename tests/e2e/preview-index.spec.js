@@ -144,9 +144,7 @@ test('fails closed on every spoofed version signal regardless of hash, query, or
     await page.unroute(VERSION);
     await installDeniedVersion(page, scenario.payload);
     await page.goto('/?preview=1#/__preview/index');
-    await expect(
-    page.getByRole('heading', { name: 'Logistics services and records' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Logistics services and records' })).toBeVisible();
     await expect(page.locator('[data-preview-index]')).toHaveCount(0);
     await expect(page.locator('[data-preview-index-launcher]')).toHaveCount(0);
     await expect(page.locator('[data-preview-surface]')).toHaveCount(0);
@@ -210,9 +208,9 @@ test('renders exactly 15 registry entries, groups, and drives search and all fil
   await expect(
     page.locator('[data-preview-route="release"] [data-preview-entry-meta="backend"] dd'),
   ).toHaveText('Inspection only');
-  await expect(
-    page.locator('[data-preview-route="release"] [data-preview-entry-meta="mode"] dd'),
-  ).toHaveText('Operational page');
+  await expect(page.locator('[data-preview-route="release"] [data-preview-entry-meta="mode"] dd')).toHaveText(
+    'Operational page',
+  );
   await expect(
     page.locator('[data-preview-route="restocking"] [data-preview-entry-meta="status"] dd'),
   ).toHaveText('Accepted');
@@ -380,9 +378,7 @@ test('INDEX-INSPECT opens exact-4173 protected modules without real auth or oper
 
   await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
   await page.locator('[data-preview-route="release"] [data-action="open-preview"]').click();
-  await expect(
-    page.locator('[data-preview-inspection="true"][data-preview-route="release"]'),
-  ).toBeVisible();
+  await expect(page.locator('[data-preview-inspection="true"][data-preview-route="release"]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Confirm physical release' })).toBeVisible();
   await expect(page.getByText('Sample data · Actions unavailable')).toBeVisible();
 
@@ -485,9 +481,7 @@ test('FI-08R keeps focused-task preview and both dialog focus lifecycles inside 
 
   await page.goto('/#/__preview/index');
   await page.locator('[data-preview-route="release"] [data-action="open-preview"]').click();
-  await expect(
-    page.locator('[data-preview-inspection="true"][data-preview-route="release"]'),
-  ).toBeVisible();
+  await expect(page.locator('[data-preview-inspection="true"][data-preview-route="release"]')).toBeVisible();
 
   const previewState = page.getByLabel('Preview state');
   const task = page.locator('.task[role="dialog"]');
@@ -501,9 +495,7 @@ test('FI-08R keeps focused-task preview and both dialog focus lifecycles inside 
   await expect(previewState).toBeFocused();
 
   await previewState.selectOption('Populated');
-  const releaseTrigger = page.locator(
-    '[data-release-trigger="REQ-2026-0136"]:visible',
-  );
+  const releaseTrigger = page.locator('[data-release-trigger="REQ-2026-0136"]:visible');
   await expect(releaseTrigger).toBeVisible();
   await releaseTrigger.click();
 
@@ -591,9 +583,7 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   const confirm = supplyTask.getByRole('button', { name: 'Check sample action' });
   await expect(supplyTask).toBeVisible();
   await expect(supplyTask).toHaveAttribute('aria-labelledby', 'supply-task-title');
-  await expect(
-    supplyTask.getByRole('heading', { name: 'Update selected supply record' }),
-  ).toBeVisible();
+  await expect(supplyTask.getByRole('heading', { name: 'Update selected supply record' })).toBeVisible();
   await expect(quantity).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(supplyTask).toHaveCount(0);
@@ -678,9 +668,7 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   await procurement.getByRole('button', { name: 'Deliverables' }).click();
   await expect(procurement.getByRole('heading', { name: 'Delivery relationships' })).toBeVisible();
   const desktopDeliverable = procurement.locator('table').filter({ hasText: 'DLV-2026-0022' });
-  const mobileDeliverable = procurement
-    .locator('.cards article')
-    .filter({ hasText: 'DLV-2026-0022' });
+  const mobileDeliverable = procurement.locator('.cards article').filter({ hasText: 'DLV-2026-0022' });
   if (await desktopDeliverable.isVisible()) {
     await expect(desktopDeliverable).toContainText('DLV-2026-0022');
   } else {
@@ -695,7 +683,9 @@ test('FI-09 opens deterministic Restocking and Procurement modules with cumulati
   expect(consoleErrors).toEqual([]);
 });
 
-test('FI-10 renders the bounded Administration inspection safely at every accepted viewport', async ({ page }) => {
+test('FI-10 renders the bounded Administration inspection safely at every accepted viewport', async ({
+  page,
+}) => {
   test.setTimeout(90_000);
   test.skip(!exactInspectionPort, 'Run explicitly against the accepted 4173 supervisor.');
   await installVersion(page, true);
@@ -719,7 +709,7 @@ test('FI-10 renders the bounded Administration inspection safely at every accept
   await page.goto('/#/__preview/index');
   for (const width of [320, 390, 768, 1024, 1440]) {
     if (width !== 320) {
-  await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
+      await page.getByRole('link', { name: 'Back to Playground Index' }).first().click();
       await expect(page.locator('[data-preview-index]')).toBeVisible();
     }
     await page.setViewportSize({ width, height: 1000 });
@@ -756,19 +746,12 @@ test('FI-10 renders the bounded Administration inspection safely at every accept
       await sectionSelect.selectOption('Staff directory');
       await expect(sectionSelect).toHaveValue('Staff directory');
     }
-    const desktopStaffRow = administration.locator('tbody tr').filter({
-      hasText: 'Identity withheld by directory policy',
-    }).first();
-    const mobileStaffCard = administration.locator('.cards article').filter({
-      hasText: 'Identity withheld by directory policy',
-    }).first();
-    if (await desktopStaffRow.isVisible()) {
-      await expect(desktopStaffRow).toContainText('Identity withheld by directory policy');
-    } else {
-      await expect(mobileStaffCard).toContainText('Identity withheld by directory policy');
-    }
+    const staffRecord = administration.locator('[data-administration-staff-record]').first();
+    await expect(staffRecord).toContainText('Identity withheld by directory policy');
+    await staffRecord.locator('[data-administration-staff-open]').click();
     await administration
-      .locator('button[aria-label="Review activity for directory record 1"]:visible')
+      .locator('.administration-records-inspector:visible')
+      .getByRole('button', { name: 'Review retained activity' })
       .click();
     await expect(administration.locator('[data-fi10-activity="true"]')).toBeVisible();
     await expect(
@@ -777,7 +760,9 @@ test('FI-10 renders the bounded Administration inspection safely at every accept
 
     await previewState.selectOption('Empty');
     await expect(
-      administration.getByRole('heading', { name: 'No administration records are shown in this preview state' }),
+      administration.getByRole('heading', {
+        name: 'No administration records are shown in this preview state',
+      }),
     ).toBeVisible();
     await previewState.selectOption('Populated');
     expect(
@@ -818,7 +803,12 @@ test('shows no obsolete surface-preview action or speculative per-route preload 
   await expect(page.locator('[data-action="surface"]')).toHaveCount(0);
   await expect(page.locator('[data-preview-surface]')).toHaveCount(0);
 
-  const allowedQaRequests = new Set(['/api/version', '/api/health', '/api/readiness', '/api/playground/status']);
+  const allowedQaRequests = new Set([
+    '/api/version',
+    '/api/health',
+    '/api/readiness',
+    '/api/playground/status',
+  ]);
   expect(requests.filter((request) => !allowedQaRequests.has(request.pathname))).toEqual([]);
   expect(requests.filter((request) => request.method !== 'GET')).toEqual([]);
 });

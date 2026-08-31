@@ -21,6 +21,7 @@ export default defineConfig({
     'mfr002-custody.spec.js',
     'mfr002-supply-workspaces.spec.js',
     'mfr002-event-readiness.spec.js',
+    'mfr002-administration.spec.js',
   ],
   timeout: 30_000,
   fullyParallel: false,

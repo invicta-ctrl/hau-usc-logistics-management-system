@@ -11,6 +11,7 @@
 @import './request-hub.css';
 @import './custody-workspaces.css';
 @import './events-workspace.css';
+@import './administration-workspace.css';
 
 html,
 body,

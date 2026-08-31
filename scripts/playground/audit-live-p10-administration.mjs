@@ -213,10 +213,14 @@ try {
   await selectTab('Staff directory');
   await screenshotTab('Staff directory');
 
-  const reviewActivity = page.getByRole('button', { name: /review activity for directory record/iu }).first();
-  const reviewActivityVisible = await reviewActivity.isVisible().catch(() => false);
+  const openStaffRecord = page.locator('[data-administration-staff-open]').first();
+  const openStaffRecordVisible = await openStaffRecord.isVisible().catch(() => false);
   let activityResponse = null;
-  if (reviewActivityVisible) {
+  if (openStaffRecordVisible) {
+    await openStaffRecord.click();
+    const reviewActivity = page
+      .locator('.administration-records-inspector:visible')
+      .getByRole('button', { name: 'Review retained activity' });
     const activityResponsePromise = page.waitForResponse(
       (response) => new URL(response.url()).pathname === '/api/admin/staff-account-activity-history',
       { timeout: 30_000 },
@@ -228,7 +232,7 @@ try {
   }
   const activityPayload = activityResponse ? await activityResponse.json().catch(() => null) : null;
   report.endpointCounts.activity = {
-    triggerVisible: reviewActivityVisible,
+    triggerVisible: openStaffRecordVisible,
     status: activityResponse?.status() ?? 0,
     total: Number(activityPayload?.total ?? 0),
     items: Array.isArray(activityPayload?.items) ? activityPayload.items.length : 0,

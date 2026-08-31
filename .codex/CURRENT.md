@@ -58,5 +58,5 @@ U06_STATUS: PASS_INTEGRATED_TO_PLAYGROUND_WITH_RENDERED_BROWSER_RESIDUAL
 U07_STATUS: PASS_INTEGRATED_TO_PLAYGROUND_WITH_RENDERED_BROWSER_RESIDUAL
 U08_STATUS: IN_PROGRESS
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Recompose the backend-backed Administration records surface into responsive master/detail with page-bounded search, independent source states, safe identity projection, and visually explicit privileged-action boundaries.
+NEXT_EXACT_ACTION: Recompose the Playground Index into a search-first QA launcher with compact environment health and selection-disclosed technical contract detail.
 HANDOFF_STATUS: ACTIVE

@@ -17,6 +17,15 @@ import {
   favicon,
   defaultItemImage,
 } from "../../ProductionAssets";
+import {
+  AdministrationRecordsPanel,
+  type Fi10LoadState,
+  type Fi10Tab,
+} from "./administration/AdministrationRecordsPanel";
+import {
+  dateLabel,
+  humanize,
+} from "./administration/administrationPresentation";
 import { scopeRouteCss } from "./routeStyleScope";
 type Tab =
   | "Accounts & access"
@@ -46,10 +55,8 @@ const tabs: Tab[] = [
   "System status",
   "Activity",
 ];
-type Fi10Tab = "Accounts & access" | "Staff directory" | "Activity";
 type Fi11Tab = "Reference administration" | "Link registry" | "Brand & media" | "System status";
 type AdminTab = Fi10Tab | Fi11Tab;
-type Fi10LoadState = "loading" | "ready" | "denied" | "unavailable";
 type Fi10PreviewState = "Populated" | "Loading" | "Empty" | "Denied" | "Unavailable";
 
 const fi10Tabs: Fi10Tab[] = ["Accounts & access", "Staff directory", "Activity"];
@@ -127,29 +134,6 @@ const previewSystemStatus: FrontendSystemStatus = {
   playground: null,
 };
 
-function humanize(value: string) {
-  return value
-    ? value
-        .replaceAll("_", " ")
-        .toLowerCase()
-        .replace(/\b\w/g, (letter) => letter.toUpperCase())
-    : "Not reported";
-}
-
-function dateLabel(value: string) {
-  if (!value) return "Not reported";
-  const date = new Date(value);
-  return Number.isNaN(date.valueOf())
-    ? value
-    : new Intl.DateTimeFormat("en-PH", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(date);
-}
-
 export default function AdministrationRoute({
   dark,
   navigate,
@@ -193,6 +177,22 @@ export default function AdministrationRoute({
   const [resetNotice, setResetNotice] = useState("");
   const [fi11ReloadKey, setFi11ReloadKey] = useState(0);
   const hasCapability = (capability: string) => inspection || capabilities.includes(capability);
+  const visibleTabs: AdminTab[] = inspection
+    ? administrationTabs
+    : [
+        ...(accessAllowed ? fi10Tabs : []),
+        ...(hasCapability("reference.manage")
+          ? (["Reference administration", "Link registry"] as Fi11Tab[])
+          : []),
+        ...(hasCapability("brand.manage") ? (["Brand & media"] as Fi11Tab[]) : []),
+        ...(hasCapability("system.admin") ? (["System status"] as Fi11Tab[]) : []),
+      ];
+  const visibleTabsKey = visibleTabs.join("|");
+
+  useEffect(() => {
+    if (visibleTabs.includes(tab)) return;
+    setTab(visibleTabs[0] ?? "Accounts & access");
+  }, [tab, visibleTabsKey]);
 
   useEffect(() => {
     if (inspection) {
@@ -216,7 +216,12 @@ export default function AdministrationRoute({
       .then((accountResult) => {
         if (abort.signal.aborted) return;
         setAccounts(accountResult.items);
-        setSelectedAccount(accountResult.items[0] ?? null);
+        setSelectedAccount(
+          (current) =>
+            accountResult.items.find((account) => account.accessId === current?.accessId) ??
+            accountResult.items[0] ??
+            null,
+        );
         setAccountState("ready");
       })
       .catch((error: unknown) => {
@@ -228,6 +233,14 @@ export default function AdministrationRoute({
       .then((directoryResult) => {
         if (abort.signal.aborted) return;
         setDirectory(directoryResult.items);
+        setSelectedStaff(
+          (current) =>
+            directoryResult.items.find(
+              (staff) => staff.opaquePersonId === current?.opaquePersonId,
+            ) ??
+            directoryResult.items[0] ??
+            null,
+        );
         setDirectoryState("ready");
       })
       .catch((error: unknown) => {
@@ -462,7 +475,7 @@ export default function AdministrationRoute({
     );
   } else {
     content = (
-      <Fi10Panel
+      <AdministrationRecordsPanel
         tab={tab}
         accounts={accounts}
         directory={directory}
@@ -472,6 +485,7 @@ export default function AdministrationRoute({
         activityState={inspection ? "selection" : activityState}
         inspection={inspection}
         onSelectAccount={setSelectedAccount}
+        onSelectStaff={setSelectedStaff}
         onReviewActivity={reviewStaffActivity}
         onRetryActivity={() => setActivityReloadKey((value) => value + 1)}
       />
@@ -479,10 +493,10 @@ export default function AdministrationRoute({
   }
 
   return (
-    <div className={"adm " + (dark ? "dark" : "light")} data-fi10-administration="true" data-fi11-administration="true">
+    <div className={"adm administration-workspace " + (dark ? "dark" : "light")} data-fi10-administration="true" data-fi11-administration="true">
       <style>{scopeRouteCss(".adm", css)}</style>
       {inspection ? (
-        <section className="sandbox" data-fi10-inspection="true">
+        <section className="sandbox" data-fi10-inspection="true" data-administration-modal-background>
             <b>Inspection mode</b>
             <span>Sample data · Actions unavailable</span>
           <label>
@@ -499,16 +513,16 @@ export default function AdministrationRoute({
           </label>
         </section>
       ) : null}
-      <header>
+      <header data-administration-modal-background>
         <div>
-          <p className="eye">Administration + governance</p>
-          <h1>Authorized system controls</h1>
-          <p>Review the current authorized records. Changes are available only in their assigned workflows.</p>
+          <p className="eye">Administration records</p>
+          <h1>Authorized records and system boundaries</h1>
+          <p>Find an authorized record quickly, then inspect only the fields and controls assigned to this workspace.</p>
         </div>
             <small>{inspection ? "Sample data" : "Current authorized records"}</small>
       </header>
-      <nav className="tabs" aria-label="Administration sections" data-fi10-tabs="true" data-fi11-tabs="true">
-        {administrationTabs.map((item) => (
+      <nav className="tabs" aria-label="Administration sections" data-fi10-tabs="true" data-fi11-tabs="true" data-administration-modal-background>
+        {visibleTabs.map((item) => (
           <button
             className={tab === item ? "active" : ""}
             key={item}
@@ -524,312 +538,15 @@ export default function AdministrationRoute({
         className="tab-select"
         value={tab}
         aria-label="Administration section"
+        data-administration-modal-background
         onChange={(event) => setTab(event.target.value as AdminTab)}
       >
-        {administrationTabs.map((item) => (
+        {visibleTabs.map((item) => (
           <option key={item}>{item}</option>
         ))}
       </select>
       {content}
     </div>
-  );
-}
-
-function Fi10Panel({
-  tab,
-  accounts,
-  directory,
-  selectedAccount,
-  selectedStaff,
-  activity,
-  activityState,
-  inspection,
-  onSelectAccount,
-  onReviewActivity,
-  onRetryActivity,
-}: {
-  tab: Fi10Tab;
-  accounts: FrontendAdminAccount[];
-  directory: FrontendStaffDirectoryItem[];
-  selectedAccount: FrontendAdminAccount | null;
-  selectedStaff: FrontendStaffDirectoryItem | null;
-  activity: FrontendStaffActivityHistory | null;
-  activityState: Fi10LoadState | "selection";
-  inspection: boolean;
-  onSelectAccount: (account: FrontendAdminAccount) => void;
-  onReviewActivity: (staff: FrontendStaffDirectoryItem) => void;
-  onRetryActivity: () => void;
-}) {
-  if (tab === "Accounts & access") {
-    return (
-      <div className="grid">
-        <section className="plane">
-          <div className="head">
-            <div>
-              <p className="eye">Account access</p>
-              <h2>Assigned identity and access</h2>
-            </div>
-            <b>Current authorized records</b>
-          </div>
-          {accounts.length === 0 ? (
-            <p className="note">No account records are available in the current response.</p>
-          ) : (
-            <>
-              <table>
-                <thead>
-                  <tr>
-                    <th scope="col">Account</th>
-                    <th scope="col">Access ID</th>
-                    <th scope="col">Role</th>
-                    <th scope="col">State</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {accounts.map((account) => (
-                    <tr key={account.accessId}>
-                      <td>
-                        <button className="row" type="button" onClick={() => onSelectAccount(account)}>
-                          <b>{account.displayName}</b>
-                          <span>Authorized display identity</span>
-                        </button>
-                      </td>
-                      <td>{account.accessId}</td>
-                      <td>{humanize(account.roleId)}</td>
-                      <td>
-                        <em>{account.locked ? "Locked" : account.firstLoginPending ? "Pending activation" : humanize(account.status)}</em>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="cards">
-                {accounts.map((account) => (
-                  <article key={account.accessId}>
-                    <div>
-                      <b>{account.displayName}</b>
-                      <em>{account.locked ? "Locked" : humanize(account.status)}</em>
-                    </div>
-                    <p>{account.accessId} · {humanize(account.roleId)}</p>
-                    <button className="primary" type="button" onClick={() => onSelectAccount(account)}>
-                      Inspect account
-                    </button>
-                  </article>
-                ))}
-              </div>
-            </>
-          )}
-        </section>
-        <aside className="detail">
-          <p className="eye">Read-only account record</p>
-          <h2>{selectedAccount?.displayName || "No account selected"}</h2>
-          {selectedAccount ? (
-            <dl>
-              <div>
-                <dt>Access ID</dt>
-                <dd>{selectedAccount.accessId}</dd>
-              </div>
-              <div>
-                <dt>Role</dt>
-                <dd>{humanize(selectedAccount.roleId)}</dd>
-              </div>
-              <div>
-                <dt>Account state</dt>
-                <dd>{selectedAccount.locked ? "Locked" : humanize(selectedAccount.status)}</dd>
-              </div>
-              <div>
-                <dt>Activation</dt>
-                <dd>{selectedAccount.firstLoginPending ? "Pending activation" : "No pending activation reported"}</dd>
-              </div>
-            </dl>
-          ) : (
-            <p className="note">Select an account record to inspect the supported read-only fields.</p>
-          )}
-          <section className="gate">
-            <b>Read-only account record</b>
-            <p>Changes to access, roles, approval, or account state remain in their existing authorized workflow.</p>
-            <button disabled type="button">Modify access unavailable</button>
-          </section>
-        </aside>
-      </div>
-    );
-  }
-
-  if (tab === "Staff directory") {
-    return (
-      <div className="grid">
-        <section className="plane">
-          <div className="head">
-            <div>
-              <p className="eye">Staff directory</p>
-              <h2>Authorized staff records</h2>
-            </div>
-            <b>{inspection ? "Sample data" : "Protected identity fields"}</b>
-          </div>
-          {directory.length === 0 ? (
-            <p className="note">No staff records are available for this account.</p>
-          ) : (
-            <>
-              <table>
-                <thead>
-                  <tr>
-                    <th scope="col">Person</th>
-                    <th scope="col">Access identity</th>
-                    <th scope="col">Link state</th>
-                    <th scope="col">Assignment summary</th>
-                    <th scope="col">Activity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {directory.map((staff, index) => (
-                    <tr key={staff.opaquePersonId}>
-                      <td>{staff.displayName || "Identity withheld by directory policy"}</td>
-                      <td>{staff.accessId || "Withheld"}</td>
-                      <td><em>{humanize(staff.linkState)}</em></td>
-                      <td>{staff.assignmentSummary.activeCount} current · {staff.assignmentSummary.historicalCount} retained</td>
-                      <td>
-                        <button
-                          className="row"
-                          type="button"
-                          aria-label={"Review activity for directory record " + (index + 1)}
-                          onClick={() => onReviewActivity(staff)}
-                        >
-                          <b>Review activity</b>
-                          <span>Read-only retained history</span>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="cards">
-                {directory.map((staff, index) => (
-                  <article key={staff.opaquePersonId}>
-                    <div>
-                      <b>{staff.displayName || "Identity withheld by directory policy"}</b>
-                      <em>{humanize(staff.linkState)}</em>
-                    </div>
-                    <p>{staff.accessId || "Access identity withheld"} · {staff.assignmentSummary.activeCount} current assignment(s)</p>
-                    <button
-                      className="primary"
-                      type="button"
-                      aria-label={"Review activity for directory record " + (index + 1)}
-                      onClick={() => onReviewActivity(staff)}
-                    >
-                      Review activity
-                    </button>
-                  </article>
-                ))}
-              </div>
-            </>
-          )}
-        </section>
-        <aside className="detail">
-          <p className="eye">Directory privacy</p>
-          <h2>{selectedStaff?.displayName || "Select a staff record"}</h2>
-          {selectedStaff ? (
-            <dl>
-              <div>
-                <dt>Access identity</dt>
-                <dd>{selectedStaff.accessId || "Withheld by directory policy"}</dd>
-              </div>
-              <div>
-                <dt>Link state</dt>
-                <dd>{humanize(selectedStaff.linkState)}</dd>
-              </div>
-              <div>
-                <dt>Email state</dt>
-                <dd>{humanize(selectedStaff.emailState)}</dd>
-              </div>
-              <div>
-                <dt>Assignment provenance</dt>
-                <dd>{humanize(selectedStaff.assignmentSummary.provenanceState)}</dd>
-              </div>
-            </dl>
-          ) : (
-            <p className="note">Select a record to review retained activity without exposing protected identifiers.</p>
-          )}
-          <section className="gate">
-            <b>PRIVACY-BOUND · READ-ONLY</b>
-            <p>Contact details, birthdays, raw person identifiers, and roster editing are not exposed here.</p>
-            <button disabled type="button">Edit directory unavailable</button>
-          </section>
-        </aside>
-      </div>
-    );
-  }
-
-  return (
-    <section className="plane" data-fi10-activity="true">
-      <div className="head">
-        <div>
-          <p className="eye">Append-only activity</p>
-          <h2>Retained staff account activity</h2>
-        </div>
-        <b>{inspection ? "Sanitized preview · no live history" : "One row per retained event"}</b>
-      </div>
-      {inspection ? (
-              <p className="note">Staff activity is unavailable in inspection mode. Use Administration to review authorized account activity.</p>
-      ) : !selectedStaff || activityState === "selection" ? (
-        <p className="note">Select a staff directory record to review its retained activity.</p>
-      ) : activityState === "loading" ? (
-        <div className="skeleton" aria-busy="true" aria-label="Loading selected staff activity" />
-      ) : activityState === "denied" ? (
-        <State
-          k="Denied"
-          h="Activity history is not available to your account"
-          p="This message does not confirm whether an activity record exists."
-        >
-          <button className="primary" type="button" onClick={onRetryActivity}>Retry read-only load</button>
-        </State>
-      ) : activityState === "unavailable" ? (
-        <State
-          k="Unavailable"
-          h="Retained activity is temporarily unavailable"
-          p="No history was changed or removed."
-        >
-          <button className="primary" type="button" onClick={onRetryActivity}>Retry read-only load</button>
-        </State>
-      ) : !activity || activity.items.length === 0 ? (
-        <p className="note">No retained activity is available in the current response. The history remains append-only and read-only.</p>
-      ) : (
-        <>
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Occurred</th>
-                <th scope="col">Event</th>
-                <th scope="col">Action</th>
-                <th scope="col">State transition</th>
-                <th scope="col">Effective window</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activity.items.map((entry, index) => (
-                <tr key={entry.occurredAt + entry.eventType + entry.actionCode + index}>
-                  <td>{dateLabel(entry.occurredAt)}</td>
-                  <td>{humanize(entry.eventType)}</td>
-                  <td>{humanize(entry.actionCode)}</td>
-                  <td>{humanize(entry.previousLinkState || entry.previousAssignmentState)} → {humanize(entry.linkState || entry.assignmentState)}</td>
-                  <td>{dateLabel(entry.newEffectiveFrom || entry.oldEffectiveFrom)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="cards">
-            {activity.items.map((entry, index) => (
-              <article key={entry.occurredAt + entry.eventType + entry.actionCode + index}>
-                <div>
-                  <b>{humanize(entry.actionCode)}</b>
-                  <em>{humanize(entry.eventType)}</em>
-                </div>
-                <p>{dateLabel(entry.occurredAt)} · {humanize(entry.linkState || entry.assignmentState)}</p>
-              </article>
-            ))}
-          </div>
-        </>
-      )}
-      <p className="note">This view includes only authorized activity details.</p>
-    </section>
   );
 }
 
@@ -1048,9 +765,13 @@ function Fi11Panel({
         <p className="note">No current technical response is available to present.</p>
       )}
       {systemStatus?.playground ? (
-        <section className="gate" data-playground-reset-center="true">
+        <section
+          className="administration-privileged-zone"
+          data-playground-reset-center="true"
+          aria-labelledby="playground-controls-title"
+        >
           <b>ISOLATED STAGING PLAYGROUND · SYSTEM OWNER</b>
-          <h3>Playground controls</h3>
+          <h3 id="playground-controls-title">Playground controls</h3>
           <dl>
             <div><dt>Baseline</dt><dd>{systemStatus.playground.baselineId} · v{systemStatus.playground.baselineVersion}</dd></div>
             <div><dt>Reset generation</dt><dd>{systemStatus.playground.generation}</dd></div>
@@ -1077,7 +798,7 @@ function Fi11Panel({
             disabled={resetBusy || !systemStatus.playground.resetAvailable}
           />
           <button
-            className="primary"
+            className="administration-reset-action"
             type="button"
             onClick={onRequestReset}
             disabled={
