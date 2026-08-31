@@ -96,6 +96,7 @@ export function usePreviewIndex() {
           indexAllowed: allowed,
           indexOpen,
           explicitIndexAction: true,
+          directInspectionRoute: inspection.mode === 'INDEX_INSPECTION',
         })
       ) {
         return false;
@@ -109,7 +110,7 @@ export function usePreviewIndex() {
       }
       return true;
     },
-    [allowed, indexOpen],
+    [allowed, indexOpen, inspection.mode],
   );
 
   const returnToIndex = useCallback(() => {
@@ -126,7 +127,8 @@ export function usePreviewIndex() {
     allowed,
     gatePendingForRequestedRoute:
       gateState === 'CHECKING' &&
-      (isPreviewIndexHash(window.location.hash) || previewInspectionRouteFromHash(window.location.hash) !== null),
+      (isPreviewIndexHash(window.location.hash) ||
+        previewInspectionRouteFromHash(window.location.hash) !== null),
     indexOpen,
     returnFocusRequestedRef,
     openIndex,

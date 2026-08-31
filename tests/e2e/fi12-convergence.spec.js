@@ -32,17 +32,13 @@ test('FI-12 keeps all scoped route header styles out of the authenticated shell'
     }),
   );
 
-  for (const [index, target] of scopedRoutes.entries()) {
+  for (const target of scopedRoutes) {
     await test.step(target.route, async () => {
-      if (index === 0) {
-        await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
-      } else {
-        await page.reload({ waitUntil: 'domcontentloaded' });
-      }
+      await page.goto('/#/__preview/index', { waitUntil: 'domcontentloaded' });
       await page.locator(`[data-preview-route="${target.route}"] [data-action="open-preview"]`).click();
       const routeRoot = page.locator(target.root);
       await expect(routeRoot).toBeVisible();
-      const shellTopbar = page.locator('header[class~="sticky"][class~="top-0"][class~="z-10"]');
+      const shellTopbar = page.locator('.auth-shell__topbar');
       await expect(shellTopbar).toBeVisible();
       const routeHeader = routeRoot.locator(':scope > header');
       await expect(routeHeader).toBeVisible();

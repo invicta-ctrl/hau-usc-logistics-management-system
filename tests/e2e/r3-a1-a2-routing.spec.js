@@ -464,7 +464,7 @@ test('LEND-01 browsing public lending requires no sign-in and probes no session'
   expect(sessionProbes).toBe(0);
 });
 
-test('LEND-02 the Public Lending Hub keeps site exits in one public shell', async ({ page }) => {
+test('LEND-02 the Public Lending Hub keeps site exits in one public shell', async ({ page }, testInfo) => {
   await installPublicFeed(page);
   await installLendingCatalog(page);
   await openPublicLending(page);
@@ -477,7 +477,14 @@ test('LEND-02 the Public Lending Hub keeps site exits in one public shell', asyn
   }
   await expect(nav.getByRole('link')).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'HAU-USC home', exact: true })).toHaveCount(1);
-  await expect(page.getByRole('link', { name: 'Staff sign in', exact: true }).first()).toBeVisible();
+  if (usesMobileShell(testInfo)) {
+    await page.getByRole('button', { name: 'Open navigation menu' }).click();
+    await expect(
+      page.getByRole('dialog', { name: 'Navigation menu' }).getByRole('link', { name: 'Staff sign in' }),
+    ).toBeVisible();
+  } else {
+    await expect(page.getByRole('link', { name: 'Staff sign in', exact: true })).toBeVisible();
+  }
 });
 
 test('LEND-02A hash navigation remounts the correct public lending view', async ({ page }) => {
@@ -588,7 +595,7 @@ test('REQ-05 an ineligible identity cannot reach the External Request Center and
   await expect(page.getByRole('heading', { name: 'External Request Center', level: 1 })).toHaveCount(0);
   // Truthful denial: no enumeration, and a way out.
   await expect(page.getByText(/Public Lending remains open to you/u)).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Home', exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Home', exact: true }).first()).toBeVisible();
 });
 
 test('REQ-06 submission goes to the authenticated portal contract and carries no browser-supplied requester identity', async ({
@@ -720,9 +727,12 @@ test('AUTH-01 generic staff sign-in sends a DOL account to its capability-approp
   await expect(page.getByText('Not available for this account')).toHaveCount(0);
 
   await operations.getByRole('link', { name: 'Inventory' }).click();
-  await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible();
-  await expect(page.getByText('Current authorized inventory records')).toBeVisible();
-  await expect(page.getByText('Authoritative folding chair')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Inventory', exact: true })).toBeVisible();
+  await expect(page.getByText('Inventory records')).toBeVisible();
+  const inventoryRecord = usesMobileInventoryLayout(testInfo)
+    ? page.getByRole('button', { name: 'Open item record' })
+    : page.getByRole('button', { name: /Authoritative folding chair/u });
+  await expect(inventoryRecord).toBeVisible();
   await expect(page.getByText('This workspace route is reserved and has not yet been built.')).toHaveCount(0);
 });
 
@@ -868,9 +878,9 @@ test('FI-06 reports conflict and denied review receipts without inventing local 
   const routeSelect = dialog.getByLabel('Route Authoritative chair');
   await routeSelect.selectOption('ISSUE_FROM_STOCK');
   await dialog.getByRole('button', { name: 'Record request review' }).click();
-  await expect(page.getByRole('alert').filter({ hasText: 'Review changed on the server' })).toBeVisible();
+  await expect(page.getByRole('alert').filter({ hasText: 'The request review changed' })).toBeVisible();
   await expect(page.getByText('Request review recorded')).toHaveCount(0);
-  const recovery = dialog.getByRole('button', { name: 'Refresh authoritative queue' });
+  const recovery = dialog.getByRole('button', { name: 'Refresh request queue' });
   await expect(recovery).toBeVisible();
   useFreshProjection = true;
   await recovery.click();
@@ -883,7 +893,7 @@ test('FI-06 reports conflict and denied review receipts without inventing local 
   expect(commands[1].clientRequestId).not.toBe(commands[0].clientRequestId);
   await expect(page.getByRole('alert').filter({ hasText: 'Review is not permitted' })).toBeVisible();
   await expect(page.getByText('Request review recorded')).toHaveCount(0);
-  await expect(dialog.getByRole('button', { name: 'Refresh authoritative queue' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Refresh request queue' })).toBeVisible();
 });
 
 test('FI-06 keeps DOL read-only capability presentation separate from server mutation authority', async ({
@@ -1026,9 +1036,7 @@ test('FI-06 labels retained data refreshing before success and stale only after 
   mode = 'hold';
   await page.getByRole('button', { name: 'Refresh queue' }).click();
   await expect(page.locator('[data-fi06-state="refreshing"]')).toBeVisible();
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Updating the authoritative queue' }),
-  ).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Updating the request queue' })).toBeVisible();
   const dialog = await openRequestRecord(page);
   await expect(dialog.getByRole('button', { name: /Record request review/u })).toHaveCount(0);
   releaseRefreshing();
@@ -1204,12 +1212,10 @@ test('FI-06 preview inspection records only a local action and never contacts re
   await expect(
     page.locator('[data-preview-inspection="true"][data-preview-route="request-center"]'),
   ).toBeVisible();
-  const dialog = await openRequestRecord(page, 'Inspection-only request fixture');
+  const dialog = await openRequestRecord(page, 'Sample logistics request');
   await dialog.getByLabel('Route Preview folding chair').selectOption('ISSUE_FROM_STOCK');
   await dialog.getByRole('button', { name: 'Check review action' }).click();
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Local review demonstration recorded' }),
-  ).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Review action checked' })).toBeVisible();
   expect(protectedRequests).toEqual([]);
 });
 
@@ -1234,11 +1240,17 @@ test('FI-05 Inventory uses the authenticated bootstrap, restores inspector focus
     const closeInspector = page.getByRole('button', { name: 'Back to inventory' });
     await expect(closeInspector).toBeFocused();
     await page.keyboard.press('Tab');
-    await expect(closeInspector).toBeFocused();
+    expect(
+      await page.getByRole('dialog').evaluate((element) => element.contains(document.activeElement)),
+    ).toBe(true);
     await page.keyboard.press('Shift+Tab');
-    await expect(closeInspector).toBeFocused();
+    expect(
+      await page.getByRole('dialog').evaluate((element) => element.contains(document.activeElement)),
+    ).toBe(true);
   } else {
-    await expect(page.getByRole('complementary')).toContainText('Current authorized inventory records');
+    await expect(page.getByRole('complementary', { name: 'Authoritative folding chair' })).toContainText(
+      'Current authorized inventory records',
+    );
     await expect(page.getByRole('button', { name: 'Close inspector' })).toBeVisible();
   }
   await page.keyboard.press('Escape');
@@ -1308,7 +1320,10 @@ test('FI-05 Inventory retains the last authoritative projection and labels it st
   await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
   await (await workspaceSurface(page, testInfo)).getByRole('link', { name: 'Inventory' }).click();
-  await expect(page.getByText('Authoritative folding chair')).toBeVisible();
+  const inventoryRecord = usesMobileInventoryLayout(testInfo)
+    ? page.getByRole('button', { name: 'Open item record' })
+    : page.getByRole('button', { name: /Authoritative folding chair/u });
+  await expect(inventoryRecord).toBeVisible();
   await page.unroute('**/api/bootstrap/inventory?**');
   await page.route('**/api/bootstrap/inventory?**', (route) =>
     route.fulfill({
@@ -1319,7 +1334,7 @@ test('FI-05 Inventory retains the last authoritative projection and labels it st
   );
   await page.getByRole('button', { name: 'Refresh inventory' }).click();
   await expect(page.getByText('Data may be out of date')).toBeVisible();
-  await expect(page.getByText('Authoritative folding chair')).toBeVisible();
+  await expect(inventoryRecord).toBeVisible();
 });
 
 test('AUTH-01 generic zero-capability sign-in remains denied even though Profile is projected for an authenticated account', async ({
@@ -1349,6 +1364,7 @@ test('P14 profile uses authenticated identity data and exposes the accepted self
   await page.goto('/');
   await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
+  await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
   await page.evaluate(() => {
     window.location.hash = '#/route/profile';
   });
@@ -1379,6 +1395,7 @@ test('P18 Profile persists theme family separately from Light, Dark, and System 
   await page.goto('/');
   await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
+  await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
   await page.evaluate(() => {
     window.location.hash = '#/route/profile';
   });
@@ -1446,6 +1463,7 @@ test('FI-04 profile surfaces a failed profile response and retries only after th
   await page.goto('/');
   await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
+  await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
   await page.evaluate(() => {
     window.location.hash = '#/route/profile';
   });
@@ -1638,7 +1656,7 @@ test('HOME-03 and AUTH-06 Home preserves the session — Home is not sign-out', 
   await signIn(page, 'usc.officer');
   await expect(page.getByRole('heading', { name: 'External Request Center', level: 1 })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Home', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Home', exact: true }).first().click();
   await expect(page.getByRole('heading', { name: HERO_HEADING })).toBeVisible();
   expect(logouts).toBe(0);
 
@@ -1661,8 +1679,8 @@ test('CTX-02 every public surface states the staff gate before the user commits'
   await page.goto('/');
 
   await expect(page.getByText('USC staff sign-in required').first()).toBeVisible();
-  const hubTile = page.getByRole('button', { name: /^Start a request/u }).first();
-  await expect(hubTile).toContainText('Staff sign-in required');
+  const hubTile = page.getByRole('link', { name: /^Start a logistics request/u }).first();
+  await expect(hubTile).toContainText('USC staff sign-in required');
 
   if (testInfo.project.name === 'frontend-320' || testInfo.project.name === 'frontend-390') {
     await page.getByRole('button', { name: 'Open navigation menu' }).click();

@@ -23,6 +23,34 @@ function installEmptyFeed(page) {
   );
 }
 
+async function installQaStatus(page) {
+  await page.route('**/api/health', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }),
+  );
+  await page.route('**/api/readiness', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true,"ready":true}' }),
+  );
+  await page.route('**/api/playground/status', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        resetCenter: {
+          baselineId: 'playground-clean-v2',
+          baselineVersion: '2',
+          generation: 6,
+          workingState: 'CLEAN',
+          activeTestSession: false,
+          resetAvailable: true,
+          confirmationPhrase: 'RESET PLAYGROUND',
+          pendingOperation: null,
+          lastReset: null,
+        },
+      }),
+    }),
+  );
+}
+
 async function selectAdministrationTab(page, administration, label) {
   const viewport = page.viewportSize();
   if (viewport && viewport.width <= 768) {
@@ -38,6 +66,7 @@ test('FI-11 exposes truthful sanitized Event and Administration inspection surfa
   test.skip(!exactInspectionPort, 'Run explicitly against the accepted 4173 supervisor.');
   await installVersion(page);
   await installEmptyFeed(page);
+  await installQaStatus(page);
   const protectedRequests = [];
   const consoleErrors = [];
   page.on('request', (request) => {
@@ -45,7 +74,10 @@ test('FI-11 exposes truthful sanitized Event and Administration inspection surfa
     if (
       pathname.startsWith('/api/') &&
       pathname !== '/api/version' &&
-      pathname !== '/api/public/advertisements'
+      pathname !== '/api/public/advertisements' &&
+      pathname !== '/api/health' &&
+      pathname !== '/api/readiness' &&
+      pathname !== '/api/playground/status'
     ) {
       protectedRequests.push({ method: request.method(), pathname });
     }

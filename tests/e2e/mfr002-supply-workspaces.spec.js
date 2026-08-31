@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { navigateAuthenticatedRoute } from './navigation.js';
 
 function fulfill(route, body, status = 200) {
   return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
@@ -52,7 +53,7 @@ async function installSupplyWorkspace(page, state, { shrinkOnRecheck = false } =
   );
   await page.route('**/api/bootstrap/restocking?**', (route) => {
     state.restockBootstrapCalls += 1;
-    const changed = shrinkOnRecheck && state.restockBootstrapCalls >= 2;
+    const changed = shrinkOnRecheck && state.authoritativeChange;
     const received = state.recorded ? 8 : changed ? 11 : 6;
     return fulfill(route, {
       ok: true,
@@ -226,13 +227,13 @@ async function signIn(page) {
 
 async function openReceiving(page) {
   await signIn(page);
-  await page.locator('a[aria-label="Restocking"]:visible').first().click();
+  await navigateAuthenticatedRoute(page, 'Restocking');
   await expect(page.getByRole('heading', { name: 'Receiving Desk', exact: true })).toBeVisible();
 }
 
 async function openProcurement(page) {
   await signIn(page);
-  await page.locator('a[aria-label="Procurement"]:visible').first().click();
+  await navigateAuthenticatedRoute(page, 'Procurement');
   await expect(page.getByRole('heading', { name: 'Procurement Workspace', exact: true })).toBeVisible();
 }
 
@@ -323,9 +324,11 @@ test('MFR-002 U08 stops a stale receipt before evidence upload', async ({ page }
   await prepareReceipt(page, '2');
 
   const confirmation = page.getByRole('dialog', { name: 'Recheck and record receipt' });
+  await expect(confirmation).toBeVisible();
   await confirmation
     .getByRole('checkbox', { name: /I verified the record, item, quantity, prior cumulative total/u })
     .check();
+  state.authoritativeChange = true;
   await confirmation.getByRole('button', { name: 'Recheck and record receipt' }).click();
 
   await expect(page.getByText(/Authoritative recheck stopped this receipt/u)).toBeVisible();

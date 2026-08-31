@@ -16,17 +16,16 @@ export function useRouteFocus({
   enabled?: boolean;
   focusOnMount?: boolean;
 }) {
-  const initialRoute = useRef(true);
+  const initialRouteKey = useRef(routeKey);
 
   useEffect(() => {
     if (!enabled) return;
     document.title = `${label} · HAU-USC Logistics`;
 
-    if (initialRoute.current && !focusOnMount) {
-      initialRoute.current = false;
-      return;
-    }
-    initialRoute.current = false;
+    // Compare the route identity instead of consuming a boolean. React
+    // StrictMode replays mount effects in development; a one-shot boolean makes
+    // that replay look like a client-side route change and steals restored focus.
+    if (!focusOnMount && routeKey === initialRouteKey.current) return;
 
     let focusFrame = 0;
     const routeFrame = requestAnimationFrame(() => {

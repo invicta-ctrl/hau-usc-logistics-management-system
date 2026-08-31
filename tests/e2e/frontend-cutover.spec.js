@@ -103,6 +103,35 @@ function installPublicIntakeContracts(page) {
   );
 }
 
+function installOverviewBootstrap(page) {
+  return page.route('**/api/bootstrap/overview?**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        contract: 'bootstrap-module',
+        contractVersion: 2,
+        requestOnly: false,
+        module: 'overview',
+        scopeRevision: { token: 'overview-fvr-001', updatedAt: '2026-08-31T09:00:00.000Z' },
+        pagination: { page: 1, pageSize: 25, total: 0, hasMore: false },
+        data: {
+          eventSeries: [],
+          eventDays: [],
+          events: [],
+          requests: [],
+          requestLines: [],
+          inventoryItems: [],
+          lendingTickets: [],
+          restockRequests: [],
+          deliverables: [],
+        },
+      }),
+    }),
+  );
+}
+
 function usesMobileShell(testInfo) {
   return ['frontend-320', 'frontend-390', 'frontend-768'].includes(testInfo.project.name);
 }
@@ -184,6 +213,7 @@ test('FVR-001 confirms sign-in mounts the operational shell without fixture-only
   page,
 }, testInfo) => {
   await installPublicFeed(page, 'empty');
+  await installOverviewBootstrap(page);
   let logoutCsrf;
   await page.route('**/api/auth/login', (route) =>
     route.fulfill({
@@ -217,7 +247,9 @@ test('FVR-001 confirms sign-in mounts the operational shell without fixture-only
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
   await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Current operational picture', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Good work starts with the next clear action.', exact: true }),
+  ).toBeVisible();
   await expect(page.getByText('Route reserved · not yet built')).toHaveCount(0);
   await expect(page.getByText('Access authorized')).toHaveCount(0);
   await expect(page.getByText(/Design fixture|Synthetic prototype|Simulated save/u)).toHaveCount(0);
@@ -228,6 +260,7 @@ test('FVR-001 confirms sign-in mounts the operational shell without fixture-only
 
 test('FVR-001 completes the server-owned starter activation lifecycle', async ({ page }) => {
   await installPublicFeed(page, 'empty');
+  await installOverviewBootstrap(page);
   let activationRequest;
   let activationCsrf;
   await page.route('**/api/auth/login', (route) =>
@@ -278,7 +311,9 @@ test('FVR-001 completes the server-owned starter activation lifecycle', async ({
   await page.getByRole('button', { name: 'Activate account', exact: true }).click();
 
   await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Current operational picture', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Good work starts with the next clear action.', exact: true }),
+  ).toBeVisible();
   await expect(page.getByText('Route reserved · not yet built')).toHaveCount(0);
   await expect(page.getByText('Access authorized')).toHaveCount(0);
   expect(activationCsrf).toBe('activation-csrf-token');
@@ -327,9 +362,7 @@ test('FVR-001 preserves keyboard focus, theme behavior, and 200 percent reflow',
 
   if (testInfo.project.name === 'frontend-1440') {
     await page.setViewportSize({ width: 720, height: 500 });
-    await expect(
-    page.getByRole('heading', { name: 'Logistics services and records' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Logistics services and records' })).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
@@ -384,7 +417,7 @@ test('FVR-001 public lending submits only through the real adapter and shows the
   await page.getByLabel('Contact number *').fill('09171234567');
   await page.getByLabel('Email address *').fill('borrower@example.edu.ph');
   await page.getByLabel('Requested pickup date *').fill('2026-12-01');
-  await page.getByLabel('Borrowing until Conditional').fill('2026-12-08');
+  await page.getByLabel(/Requested due date/u).fill('2026-12-08');
   await page.getByLabel('Purpose *').fill('Council activity seating');
   for (const checkbox of await page.locator('form input[type="checkbox"]').all()) await checkbox.check();
   await page.getByRole('button', { name: 'Submit borrowing request for review' }).click();

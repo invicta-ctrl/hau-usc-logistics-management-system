@@ -345,7 +345,7 @@
 
   .administration-records-inspector--mobile {
     position: fixed;
-    z-index: 70;
+    z-index: var(--z-modal);
     inset: 0;
     min-height: 100dvh;
     max-height: 100dvh;

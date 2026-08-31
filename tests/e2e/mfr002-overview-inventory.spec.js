@@ -234,12 +234,14 @@ test('MFR-002 U05 prioritizes real operational signals and a record-first Invent
   await expect(
     page.getByRole('heading', { name: 'Good work starts with the next clear action.' }),
   ).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
-  await expect(page.getByText('Urgent assembly support')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Ready' })).toBeVisible();
-  await expect(page.getByText('Folding chairs')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Blocked' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'What changed' })).toBeVisible();
+  const needsAttention = page.getByRole('region', { name: 'Needs attention' });
+  const ready = page.getByRole('region', { name: 'Ready' });
+  const blocked = page.getByRole('region', { name: 'Blocked' });
+  const whatChanged = page.getByRole('region', { name: 'What changed' });
+  await expect(needsAttention.getByRole('heading', { name: 'Urgent assembly support' })).toBeVisible();
+  await expect(ready.getByRole('heading', { name: 'Folding chairs' })).toBeVisible();
+  await expect(blocked).toBeVisible();
+  await expect(whatChanged).toBeVisible();
   expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
 
   await openInventory(page, testInfo);
@@ -252,11 +254,10 @@ test('MFR-002 U05 prioritizes real operational signals and a record-first Invent
   await expect
     .poll(() => inventoryRequests.some((url) => url.searchParams.get('filter') === 'OUT'))
     .toBe(true);
-  await expect(page.getByText('Wireless microphone')).toBeVisible();
-
   const opener = isInventoryDesktop(testInfo)
     ? page.getByRole('button', { name: /Wireless microphone, ITM-U05/u })
     : page.getByRole('button', { name: /Open item record Wireless microphone/u });
+  await expect(opener).toBeVisible();
   await opener.click();
   const inspector = isInventoryDesktop(testInfo)
     ? page.getByRole('complementary', { name: 'Wireless microphone' })

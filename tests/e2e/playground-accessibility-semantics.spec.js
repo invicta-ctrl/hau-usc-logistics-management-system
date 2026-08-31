@@ -40,78 +40,104 @@ function installEmptyPublicFeed(page) {
 }
 
 async function visibleSemanticAudit(page) {
-  return page.getByRole('main').first().evaluate((main) => {
-    const visible = (element) => {
-      const style = getComputedStyle(element);
-      const rect = element.getBoundingClientRect();
-      return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
-    };
-    const nameFrom = (element) => {
-      const labelledBy = element.getAttribute('aria-labelledby');
-      const referenced = labelledBy
-        ? labelledBy
-            .split(/\s+/u)
-            .map((id) => document.getElementById(id)?.textContent?.trim() ?? '')
-            .filter(Boolean)
-            .join(' ')
-        : '';
-      return (
-        element.getAttribute('aria-label')?.trim() ||
-        referenced ||
-        element.getAttribute('title')?.trim() ||
-        element.textContent?.trim() ||
-        ''
-      );
-    };
+  return page
+    .getByRole('main')
+    .first()
+    .evaluate((main) => {
+      const visible = (element) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+      };
+      const nameFrom = (element) => {
+        const labelledBy = element.getAttribute('aria-labelledby');
+        const referenced = labelledBy
+          ? labelledBy
+              .split(/\s+/u)
+              .map((id) => document.getElementById(id)?.textContent?.trim() ?? '')
+              .filter(Boolean)
+              .join(' ')
+          : '';
+        return (
+          element.getAttribute('aria-label')?.trim() ||
+          referenced ||
+          element.getAttribute('title')?.trim() ||
+          element.textContent?.trim() ||
+          ''
+        );
+      };
 
-    const headings = [...main.querySelectorAll('h1,h2,h3,h4,h5,h6')]
-      .filter(visible)
-      .map((element) => ({ level: Number(element.tagName.slice(1)), text: element.textContent?.trim() ?? '' }));
-    const headingSkips = headings
-      .slice(1)
-      .filter((heading, index) => heading.level > headings[index].level + 1)
-      .map((heading) => heading.text);
-    const unlabeledFields = [...main.querySelectorAll('input,select,textarea')]
-      .filter(visible)
-      .filter((element) => element.getAttribute('type') !== 'hidden')
-      .filter((element) => {
-        const labels = 'labels' in element ? element.labels : null;
-        return !labels?.length && !element.getAttribute('aria-label') && !element.getAttribute('aria-labelledby');
-      })
-      .map((element) => `${element.tagName.toLowerCase()}#${element.id || '(no-id)'}`);
-    const unnamedInteractive = [...main.querySelectorAll('button,a[href]')]
-      .filter(visible)
-      .filter((element) => !nameFrom(element))
-      .map((element) => `${element.tagName.toLowerCase()}#${element.id || '(no-id)'}`);
-    const unscopedHeaders = [...main.querySelectorAll('th')]
-      .filter(visible)
-      .filter((element) => !element.getAttribute('scope'))
-      .map((element) => element.textContent?.trim() || '(blank header)');
-    const duplicateIds = [...main.querySelectorAll('[id]')]
-      .map((element) => element.id)
-      .filter((id, index, ids) => id && ids.indexOf(id) !== index);
+      const headings = [...main.querySelectorAll('h1,h2,h3,h4,h5,h6')].filter(visible).map((element) => ({
+        level: Number(element.tagName.slice(1)),
+        text: element.textContent?.trim() ?? '',
+      }));
+      const headingSkips = headings
+        .slice(1)
+        .filter((heading, index) => heading.level > headings[index].level + 1)
+        .map((heading) => heading.text);
+      const unlabeledFields = [...main.querySelectorAll('input,select,textarea')]
+        .filter(visible)
+        .filter((element) => element.getAttribute('type') !== 'hidden')
+        .filter((element) => {
+          const labels = 'labels' in element ? element.labels : null;
+          return (
+            !labels?.length && !element.getAttribute('aria-label') && !element.getAttribute('aria-labelledby')
+          );
+        })
+        .map((element) => `${element.tagName.toLowerCase()}#${element.id || '(no-id)'}`);
+      const unnamedInteractive = [...main.querySelectorAll('button,a[href]')]
+        .filter(visible)
+        .filter((element) => !nameFrom(element))
+        .map((element) => `${element.tagName.toLowerCase()}#${element.id || '(no-id)'}`);
+      const unscopedHeaders = [...main.querySelectorAll('th')]
+        .filter(visible)
+        .filter((element) => !element.getAttribute('scope'))
+        .map((element) => element.textContent?.trim() || '(blank header)');
+      const duplicateIds = [...main.querySelectorAll('[id]')]
+        .map((element) => element.id)
+        .filter((id, index, ids) => id && ids.indexOf(id) !== index);
 
-    return {
-      h1Count: headings.filter((heading) => heading.level === 1).length,
-      firstHeading: headings[0] ?? null,
-      headingSkips,
-      unlabeledFields,
-      unnamedInteractive,
-      unscopedHeaders,
-      duplicateIds: [...new Set(duplicateIds)],
-    };
-  });
+      return {
+        h1Count: headings.filter((heading) => heading.level === 1).length,
+        firstHeading: headings[0] ?? null,
+        headingSkips,
+        unlabeledFields,
+        unnamedInteractive,
+        unscopedHeaders,
+        duplicateIds: [...new Set(duplicateIds)],
+      };
+    });
 }
 
-test('P20 keeps every Playground workspace natively named and structurally coherent', async ({ page }, testInfo) => {
-  test.skip(!['frontend-390', 'frontend-1440'].includes(testInfo.project.name), 'P20 samples mobile and desktop.');
+test('P20 keeps every Playground workspace natively named and structurally coherent', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !['frontend-390', 'frontend-1440'].includes(testInfo.project.name),
+    'P20 samples mobile and desktop.',
+  );
   test.setTimeout(120_000);
   await installPlaygroundCapability(page);
   await installEmptyPublicFeed(page);
 
   for (const [hash, label] of ROUTES) {
     await page.goto(`/${hash}`);
-    await expect(page.getByRole('main').first(), `${label}: main landmark`).toBeVisible();
+    if (hash === '#/__preview/index') {
+      await expect(page.locator('[data-preview-index]'), `${label}: settled preview index`).toBeVisible();
+    } else if (hash.startsWith('#/__preview/inspect/')) {
+      const route = hash.slice('#/__preview/inspect/'.length);
+      await expect(
+        page.locator(`[data-preview-inspection="true"][data-preview-route="${route}"]`),
+        `${label}: settled inspection route`,
+      ).toBeVisible();
+    }
+    await expect(
+      page.locator('[data-route-loading="true"],[data-preview-gate-loading="true"]'),
+      `${label}: lazy route settled`,
+    ).toHaveCount(0);
+    const main = page.getByRole('main').first();
+    await expect(main, `${label}: main landmark`).toBeVisible();
+    await expect(main.getByRole('heading', { level: 1 }), `${label}: settled H1`).toBeVisible();
     const audit = await visibleSemanticAudit(page);
     expect(audit.h1Count, `${label}: one visible H1`).toBe(1);
     expect(audit.firstHeading?.level, `${label}: H1 starts the content hierarchy`).toBe(1);
@@ -123,7 +149,9 @@ test('P20 keeps every Playground workspace natively named and structurally coher
   }
 });
 
-test('P20 keeps critical landing actions reachable at a 200 percent desktop zoom equivalent', async ({ page }, testInfo) => {
+test('P20 keeps critical landing actions reachable at a 200 percent desktop zoom equivalent', async ({
+  page,
+}, testInfo) => {
   test.skip(testInfo.project.name !== 'frontend-1440', 'Desktop zoom-equivalent check only.');
   await installPlaygroundCapability(page);
   await installEmptyPublicFeed(page);
@@ -133,6 +161,70 @@ test('P20 keeps critical landing actions reachable at a 200 percent desktop zoom
   await expect(page.getByRole('heading', { level: 1, name: 'Logistics services and records' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Start a logistics request/ }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: /Browse public lending/ }).first()).toBeVisible();
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
   expect(overflow).toBeLessThanOrEqual(1);
+});
+
+test('U11 Hallmark floor reflows every primary route at 375 and 414 CSS pixels', async ({
+  page,
+  baseURL,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'frontend-390', 'One mobile project owns the Hallmark floor audit.');
+  test.skip(new URL(baseURL).port !== '4173', 'Protected Playground routes require the exact local origin.');
+  test.setTimeout(180_000);
+  await installPlaygroundCapability(page);
+  await installEmptyPublicFeed(page);
+
+  for (const width of [375, 414]) {
+    await page.setViewportSize({ width, height: 844 });
+
+    for (const [hash, label] of ROUTES) {
+      await page.goto(`/${hash}`);
+      if (hash === '#/__preview/index') {
+        await expect(
+          page.locator('[data-preview-index]'),
+          `${width}px ${label}: settled preview index`,
+        ).toBeVisible();
+      } else if (hash.startsWith('#/__preview/inspect/')) {
+        const route = hash.slice('#/__preview/inspect/'.length);
+        await expect(
+          page.locator(`[data-preview-inspection="true"][data-preview-route="${route}"]`),
+          `${width}px ${label}: settled inspection route`,
+        ).toBeVisible();
+      }
+
+      await expect(
+        page.locator('[data-route-loading="true"],[data-preview-gate-loading="true"]'),
+        `${width}px ${label}: lazy route settled`,
+      ).toHaveCount(0);
+
+      const main = page.getByRole('main').first();
+      await expect(main, `${width}px ${label}: main landmark`).toBeVisible();
+      await expect(main.getByRole('heading', { level: 1 }), `${width}px ${label}: settled H1`).toBeVisible();
+
+      const audit = await page.evaluate(() => {
+        const visible = (element) => {
+          const style = getComputedStyle(element);
+          const rect = element.getBoundingClientRect();
+          return (
+            style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0
+          );
+        };
+
+        return {
+          bodyOverflowX: getComputedStyle(document.body).overflowX,
+          documentOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          h1Count: [...document.querySelectorAll('main h1')].filter(visible).length,
+          htmlOverflowX: getComputedStyle(document.documentElement).overflowX,
+        };
+      });
+
+      expect(audit.htmlOverflowX, `${width}px ${label}: root overflow guard`).toBe('clip');
+      expect(audit.bodyOverflowX, `${width}px ${label}: body overflow guard`).toBe('clip');
+      expect(audit.documentOverflow, `${width}px ${label}: no horizontal overflow`).toBeLessThanOrEqual(1);
+      expect(audit.h1Count, `${width}px ${label}: one visible H1`).toBe(1);
+    }
+  }
 });

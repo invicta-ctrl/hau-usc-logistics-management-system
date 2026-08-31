@@ -231,6 +231,8 @@ export default function PublicFlows({
     <main
       id="main-content"
       className={`pub route-focus-target ${dark ? "dark" : "light"}`}
+      data-visual-route={route}
+      data-view={view}
       tabIndex={-1}
     >
       <style>{css}</style>
@@ -243,9 +245,10 @@ export default function PublicFlows({
 
       {/* This local navigation switches only between Lending views. Site-level
           Home and Staff sign in remain in the single persistent public shell. */}
-      <nav aria-label="Public lending navigation">
+      <nav className="pub__ledger-nav" aria-label="Public lending navigation">
         {(["Lending Center", "Track lending", "Lending policy"] as View[]).map((next) => (
           <button type="button" key={next} className={view === next ? "active" : ""}
+            aria-pressed={view === next}
             onClick={() => { setView(next); setLendReceipt(null); setTrackingResult(null); setAlert(""); }}>
             {next}
           </button>

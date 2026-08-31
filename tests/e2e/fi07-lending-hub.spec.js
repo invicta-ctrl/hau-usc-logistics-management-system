@@ -2,6 +2,26 @@ import { expect, test } from '@playwright/test';
 
 const exactInspectionPort = process.env.HAU_FRONTEND_E2E_PORT === '4173';
 
+async function installQaStatus(page) {
+  await page.route('**/api/health', (route) => fulfill(route, { ok: true }));
+  await page.route('**/api/readiness', (route) => fulfill(route, { ok: true, ready: true }));
+  await page.route('**/api/playground/status', (route) =>
+    fulfill(route, {
+      resetCenter: {
+        baselineId: 'playground-clean-v2',
+        baselineVersion: '2',
+        generation: 6,
+        workingState: 'CLEAN',
+        activeTestSession: false,
+        resetAvailable: true,
+        confirmationPhrase: 'RESET PLAYGROUND',
+        pendingOperation: null,
+        lastReset: null,
+      },
+    }),
+  );
+}
+
 function fulfill(route, body, status = 200) {
   return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 }
@@ -691,13 +711,17 @@ test('FI-07 A4 Preview Index inspection is local-only and sends no protected len
     fulfill(route, { ok: true, playground: true, correlationId: 'fi07-preview' }),
   );
   await installPublicFeed(page);
+  await installQaStatus(page);
   const protectedRequests = [];
   page.on('request', (request) => {
     const pathname = new URL(request.url()).pathname;
     if (
       pathname.startsWith('/api/') &&
       pathname !== '/api/version' &&
-      pathname !== '/api/public/advertisements'
+      pathname !== '/api/public/advertisements' &&
+      pathname !== '/api/health' &&
+      pathname !== '/api/readiness' &&
+      pathname !== '/api/playground/status'
     ) {
       protectedRequests.push({ method: request.method(), pathname });
     }
@@ -707,14 +731,14 @@ test('FI-07 A4 Preview Index inspection is local-only and sends no protected len
   await page.locator('[data-preview-route="lending"] [data-action="open-preview"]').click();
   await expect(page.locator('[data-preview-inspection="true"][data-preview-route="lending"]')).toBeVisible();
   await expect(page.locator('[data-fi07-lending-hub][data-fi07-mode="preview"]')).toBeVisible();
-  await expect(page.getByText(/Actions are unavailable in inspection mode/u)).toBeVisible();
+  await expect(page.getByText('Sample data · Actions unavailable').first()).toBeVisible();
   await page.locator('[data-ticket-trigger="LEND-PREVIEW-REVIEW"]:visible').click();
-  await page.getByRole('button', { name: 'Demonstrate review', exact: true }).click();
+  await page.getByRole('button', { name: 'Check sample review', exact: true }).click();
   const review = page.getByRole('dialog', { name: 'Review LEND-PREVIEW-REVIEW' });
   await review.locator('select').selectOption('REJECT');
   await review.locator('textarea').first().fill('Local fixture rejection only');
-  await review.getByRole('button', { name: 'Record local demonstration', exact: true }).click();
-  await expect(page.getByText('Local lending review demonstrated', { exact: true })).toBeVisible();
+  await review.getByRole('button', { name: 'Check review action', exact: true }).click();
+  await expect(page.getByText('Review action checked', { exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'Close lending ticket details' }).click();
   await page.locator('[data-ticket-trigger="LEND-PREVIEW-CLAIM"]:visible').click();
@@ -723,8 +747,8 @@ test('FI-07 A4 Preview Index inspection is local-only and sends no protected len
   await issue
     .getByRole('checkbox', { name: /I understand this records the physical custody consequence/u })
     .check();
-  await issue.getByRole('button', { name: 'Record local demonstration', exact: true }).click();
-  await expect(page.getByText('Local custody action demonstrated', { exact: true })).toBeVisible();
+  await issue.getByRole('button', { name: 'Check sample handoff', exact: true }).click();
+  await expect(page.getByText('Custody action checked', { exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'Close lending ticket details' }).click();
   await page.locator('[data-ticket-trigger="LEND-PREVIEW-RETURN"]:visible').click();
@@ -734,6 +758,6 @@ test('FI-07 A4 Preview Index inspection is local-only and sends no protected len
     .getByRole('checkbox', { name: /I confirm the inspected quantities and condition/u })
     .check();
   await returnDialog.getByRole('button', { name: 'Record local demonstration', exact: true }).click();
-  await expect(page.getByText('Local return demonstrated', { exact: true })).toBeVisible();
+  await expect(page.getByText('Return action checked', { exact: true })).toBeVisible();
   expect(protectedRequests).toEqual([]);
 });

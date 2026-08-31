@@ -27,3 +27,20 @@ export async function navigateToAdminView(page, view) {
   }
   await page.locator(`[data-admin-view="${view}"]`).click();
 }
+
+export async function navigateAuthenticatedRoute(page, label) {
+  const desktopViewport = (page.viewportSize()?.width ?? 1024) >= 1024;
+  if (desktopViewport) {
+    await page
+      .getByRole('complementary', { name: 'Workspace navigation' })
+      .getByRole('link', { name: label, exact: true })
+      .click();
+    return;
+  }
+
+  await page.getByRole('button', { name: 'Open navigation' }).click();
+  await page
+    .getByRole('dialog', { name: 'Workspace navigation' })
+    .getByRole('link', { name: label, exact: true })
+    .click();
+}

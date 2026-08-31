@@ -40,6 +40,7 @@ export function AuthenticatedShell({
   return (
     <div
       className="auth-shell"
+      data-auth-route={route}
       data-has-mobile-dock={mobileDock.length > 0}
       data-preview-inspection={inspection ? 'true' : undefined}
       data-preview-route={inspection ? route : undefined}
@@ -74,7 +75,7 @@ export function AuthenticatedShell({
           >
             {inspection ? (
               <section
-                className="mx-4 mt-4 rounded-[8px] px-4 py-3 flex flex-wrap items-center justify-between gap-3"
+                className="preview-inspection-banner mx-4 mt-4 rounded-[8px] px-4 py-3 flex flex-wrap items-center justify-between gap-3"
                 style={{
                   background: 'var(--theme-warning)',
                   border: '1px solid var(--border)',

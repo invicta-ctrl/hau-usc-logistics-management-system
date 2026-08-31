@@ -98,6 +98,7 @@ export function useAppController() {
         setDenialReason(decision.reason);
         setRequesterMode(false);
         setAuthState('denied');
+        window.history.replaceState(null, '', appRouteHash('staff-signin'));
         moveTo('staff-signin');
         return;
       }
@@ -180,16 +181,20 @@ export function useAppController() {
         // Generic identity gateway: no pre-committed destination. Binding it to a
         // capability-gated route would deny otherwise-valid accounts that merely
         // lack that one capability.
-        setEntryIntent('GENERIC_STAFF_SIGN_IN');
-        setIntendedRoute(null);
-        setDenialReason(null);
-        setAuthError(null);
-        setActivationExpiresAt('');
-        setAuthState(session ? 'authorized' : 'signed-out');
+        // A post-auth denial also owns this route. Hash synchronization must not
+        // erase that stable, recoverable result after the session projection lands.
+        if (!denialReason) {
+          setEntryIntent('GENERIC_STAFF_SIGN_IN');
+          setIntendedRoute(null);
+          setDenialReason(null);
+          setAuthError(null);
+          setActivationExpiresAt('');
+          setAuthState(session ? 'authorized' : 'signed-out');
+        }
       }
       moveTo(next);
     },
-    [moveTo, requireAuth, requireExternalRequest, session],
+    [denialReason, moveTo, requireAuth, requireExternalRequest, session],
   );
 
   useEffect(() => {

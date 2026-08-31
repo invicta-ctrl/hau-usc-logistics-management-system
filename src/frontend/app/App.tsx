@@ -17,8 +17,8 @@ function RouteLoading({ dark, previewGate = false }: { dark: boolean; previewGat
   if (previewGate) {
     return (
       <main
-        className="min-h-screen"
-        style={{ background: dark ? '#40070a' : '#f2eae5' }}
+        className="route-loading min-h-screen"
+        data-dark={dark ? 'true' : 'false'}
         role="status"
         aria-label="Validating Playground access"
         aria-busy="true"
@@ -29,17 +29,15 @@ function RouteLoading({ dark, previewGate = false }: { dark: boolean; previewGat
 
   return (
     <main
-      className="min-h-screen grid place-items-center px-6"
-      style={{ background: dark ? '#40070a' : '#f2eae5', color: dark ? '#fff8ef' : '#40070a' }}
+      className="route-loading min-h-screen grid place-items-center px-6"
+      data-dark={dark ? 'true' : 'false'}
       aria-live="polite"
       aria-busy="true"
       data-route-loading="true"
     >
       <div className="max-w-md text-center">
         <p className="text-xs uppercase tracking-[0.2em] font-semibold">HAU–USC Logistics</p>
-        <h1 className="mt-3 text-xl font-semibold">
-          Loading logistics workspace
-        </h1>
+        <h1 className="mt-3 text-xl font-semibold">Loading logistics workspace</h1>
       </div>
     </main>
   );
@@ -86,16 +84,18 @@ export default function App() {
   }
 
   return (
-    <>
+    <div className="preview-enabled-route" data-preview-enabled>
       <Suspense fallback={<RouteLoading dark={controller.dark} />}>
         <AppRouteRenderer controller={controller} />
       </Suspense>
       {preview.allowed ? (
-        <PreviewIndexLauncher
-          onOpen={preview.openIndex}
-          returnFocusRequestedRef={preview.returnFocusRequestedRef}
-        />
+        <div className="preview-launcher-rail" aria-label="Playground tools">
+          <PreviewIndexLauncher
+            onOpen={preview.openIndex}
+            returnFocusRequestedRef={preview.returnFocusRequestedRef}
+          />
+        </div>
       ) : null}
-    </>
+    </div>
   );
 }

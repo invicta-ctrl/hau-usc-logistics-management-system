@@ -19,6 +19,24 @@
     min-inline-size: var(--control-hit-area-min);
   }
 
+  .route-loading {
+    background: var(--theme-page, var(--paper-warm));
+    color: var(--theme-text, var(--ink-deep));
+  }
+
+  .route-loading[data-dark='true'] {
+    background: var(--theme-nav, var(--oxblood-deep));
+    color: var(--theme-nav-text, var(--gold-cream));
+  }
+
+  .public-shell {
+    background: var(--theme-page, var(--paper-warm));
+  }
+
+  .public-shell[data-dark='true'] {
+    background: var(--theme-nav, var(--oxblood-deep));
+  }
+
   .auth-shell {
     min-block-size: var(--viewport-block);
     min-inline-size: 0;
@@ -194,6 +212,89 @@
 
   .public-shell__footer {
     padding-block-end: var(--safe-area-bottom);
+    border-block-start: 1px solid color-mix(in oklch, var(--theme-nav-text) 16%, transparent);
+    background: var(--theme-nav, var(--oxblood-deep));
+    color: var(--theme-nav-text, var(--gold-cream));
+  }
+
+  .public-shell__footer-council {
+    color: var(--theme-nav-text, var(--gold-cream));
+    font-family: var(--font-wordmark);
+    font-size: var(--type-label-size);
+    font-weight: 700;
+    letter-spacing: -0.006em;
+    line-height: 1.125rem;
+  }
+
+  .public-shell__footer-campus {
+    color: color-mix(in oklch, var(--theme-nav-text) 78%, var(--theme-accent));
+    font-family: var(--font-body);
+    font-size: var(--type-caption-size);
+    letter-spacing: 0.022em;
+  }
+
+  .public-shell__footer-motto {
+    color: var(--theme-nav-text, var(--gold-cream));
+    font-family: var(--font-wordmark);
+    font-size: var(--type-caption-size);
+    font-style: italic;
+    letter-spacing: -0.014em;
+  }
+
+  .public-shell__footer-label {
+    color: color-mix(in oklch, var(--theme-nav-text) 72%, var(--theme-accent));
+    font-family: var(--font-record);
+    font-size: var(--type-mono-reference-size);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .public-shell__footer-link,
+  .public-shell__footer-action {
+    color: var(--theme-nav-text, var(--gold-cream));
+    font-family: var(--font-body);
+    font-size: var(--type-label-size);
+    letter-spacing: -0.012em;
+  }
+
+  .public-shell__footer-link:focus-visible,
+  .public-shell__footer-action:focus-visible {
+    outline: 2px solid var(--theme-nav-text, var(--gold-cream));
+    outline-offset: 2px;
+  }
+
+  .public-shell__footer-badge {
+    background: color-mix(in oklch, var(--theme-accent) 18%, transparent);
+    color: var(--theme-nav-text, var(--gold-cream));
+    font-family: var(--font-record);
+    font-size: var(--type-mono-reference-size);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .public-shell__footer-action {
+    min-block-size: var(--control-hit-area-min);
+    padding-inline: var(--space-md);
+    border: 1px solid color-mix(in oklch, var(--theme-nav-text) 44%, var(--theme-nav));
+    font-weight: 600;
+  }
+
+  .public-shell__footer-action--primary {
+    border-color: color-mix(in oklch, var(--theme-accent) 74%, var(--theme-nav-text));
+    background: var(--theme-accent, var(--gold-vivid));
+    color: var(--theme-accent-text, var(--oxblood-deep));
+  }
+
+  .public-shell__footer-rule {
+    border-block-start: 1px solid color-mix(in oklch, var(--theme-nav-text) 14%, transparent);
+  }
+
+  .public-shell__footer-legal {
+    color: color-mix(in oklch, var(--theme-nav-text) 62%, transparent);
+    font-family: var(--font-record);
+    font-size: var(--type-mono-reference-size);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   .shell-sheet--viewport {
@@ -269,7 +370,7 @@
     }
 
     .auth-shell__dock-label {
-      font-size: 0.625rem;
+      font-size: var(--type-caption-size);
     }
   }
 

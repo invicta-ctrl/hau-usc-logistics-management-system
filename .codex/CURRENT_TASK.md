@@ -1,25 +1,32 @@
-# Current Bounded Task — MFR-002 U11 Final Acceptance and Freeze
+# Current Bounded Task — MFR-002 U11 Visual Transformation Recovery
 
 STATUS: IN_PROGRESS
-INTENT: TESTING
-SECONDARY_INTENTS: CODE_REVIEW;BUG_FIX;DEPLOYMENT;MIGRATION;SECURITY_HARDENING;ARTIFACT
+INTENT: FRONTEND_REDESIGN
+SECONDARY_INTENTS: UI_UX_TRANSFORMATION;MOTION_DESIGN;RESPONSIVE_DESIGN;ACCESSIBILITY;PRODUCT_DESIGN;TESTING;FINAL_ACCEPTANCE
 MODE: EXECUTE
-OBJECTIVE: Prove the complete transformed product once, perform only one evidence-backed final repair batch and hardening pass, reset and deploy only the isolated Playground, freeze exact identities and results, and stop at READY_FOR_EARL_MOBILE_FIRST_ANNOTATION.
+OBJECTIVE: Materially redesign the real Playground visual and interaction layer across every primary route family while preserving U00-U10 engineering and functional truth, then complete final acceptance, isolated reset/deploy, exact freeze, and stop at READY_FOR_EARL_MOBILE_FIRST_ANNOTATION.
 TARGET: work/playground-mfr002-final -> Playground -> isolated Playground runtime
 SKILLS: sol-advisor:orchestration;hallmark;impeccable;playwright-cli;cloudflare-deploy
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-31-mfr002-unified-mobile-first-fullstack-performance-transformation.md
-AUTHORITY: Earl's current continuation instruction -> accepted MFR-002 U11 specification -> root AGENTS.md -> .agents/PROJECT_POLICY.md -> verified origin/Playground U10 commit/tree -> docs/ISOLATED_STAGING_PLAYGROUND.md
-REQUIRED_MODEL: GPT-5.6 SOL HIGH
-ACTIVE_WRITER: SOL_HIGH:/root
-ROUTE: SOLO
+AUTHORITY: Earl's HAU-USC-MFR002-U11-VISUAL-RECOVERY-A1 steering amendment -> accepted MFR-002 U11 specification where not visually superseded -> root AGENTS.md -> .agents/PROJECT_POLICY.md -> verified origin/Playground U10 commit/tree -> docs/ISOLATED_STAGING_PLAYGROUND.md
+REQUIRED_MODEL: GPT-5.6 SOL ULTRA
+ACTIVE_WRITER: SOL_ULTRA:/root
+ROUTE: FULL
+ROUTING_AUTHORITY: EARL_U11_ULTRA_OVERRIDE
+ORCHESTRATION: MAX_USEFUL_PARALLELISM
+SOL_ADVISOR_ROUTING: SUPERSEDED_FOR_U11
+DIRECT_AUXILIARIES: DYNAMIC_UP_TO_PLATFORM_SAFETY_CEILING
+DELEGATION_DEPTH: 1
+RECURSIVE_SPAWN: FORBIDDEN
+CANONICAL_WRITER: SOL_ULTRA_ROOT
 RISK: CRITICAL
-SCOPE: U11 only: one Hallmark read-only review; one bounded repair batch; one Impeccable hardening pass; at most one confirmation if source changes materially; every supported route at 390 and 1440; structural/accessibility automation at 320, 390, 768, 1024, and 1440; required workflow states; one full release-candidate gate; accepted isolated Playground reset/recovery; exact isolated deployment and post-deploy acceptance; final evidence/freeze.
-OUT_OF_SCOPE: Repeating the P26/P27 redesign; more than one repair batch; open-ended polish; new product scope; business-policy changes; migration 0033 or other unaccepted schema work; provider-resource creation; protected-evidence transformation; main or Production mutation; Figma/Google/email write; automatic fallback or background continuation.
-CONSTRAINTS: One writer; exact U10 remote base; Hallmark direction before Impeccable refinement; preserve DESIGN.md/tokens and accepted route/business truth; deploy only after exact commit/tree/artifact, binding, backup, rollback, auth, and target proof; run reset only through the accepted runbook; verify whether any consequential action already succeeded before retry; keep secrets/private identifiers out of logs/evidence; stop after final state.
-DELIVERABLE: Exact GitHub Playground parity plus an isolated Playground runtime at the frozen accepted commit, schema 32/current accepted successor, known reset baseline and incremented generation, invalidated old sessions, clean transient state, recovered critical routes, no Production crossover, complete route/accessibility/performance/security evidence, and final state READY_FOR_EARL_MOBILE_FIRST_ANNOTATION.
-VERIFICATION: Hallmark report; bounded repair and Impeccable closeout; focused checks if source changes; full release-candidate gate once; two-width route matrix; five-width structure/accessibility matrix; keyboard/focus and required states; exact Git branch/commit/tree/lockfile/artifact hashes; Cloudflare auth/target/binding/backup/rollback preflight; reset reconciliation; deployment identity; live route/API/cache/security smokes; unchanged main and Production proof.
-STOP_CONDITIONS: Authority conflict; remote divergence or unknown dirty work; writer conflict; secret/private value; unbounded design or source change; second repair batch need; unaccepted schema/index/provider need; ambiguous Cloudflare target/binding/backup/rollback/auth; prior reset/deploy outcome uncertainty; non-fast-forward integration; main or Production crossover; failed acceptance; READY_FOR_EARL_MOBILE_FIRST_ANNOTATION reached.
-COMPLETED_SO_FAR: U10 is integrated non-force on GitHub Playground at de2bc3b032550763d86345cfdfd9458a56a7a03e / tree d40d7ced406845e9c39b6975c436b23a616e11ea. The temporary U10 branch has exact commit/tree parity, protected main remains f7e5bf83205dbe58b5fb72126a4456747d92e906 / tree 480cf65cb9ec07fbab729f0588023e120cf3f97a, and this U11 branch starts clean from that exact remote identity. No U11 source, provider, reset, deployment, main, or Production mutation has occurred.
-NEXT_EXACT_ACTION: Run the one read-only Hallmark final-product audit against the accepted design system and current source, record a ranked bounded repair batch, then run the one Impeccable hardening pass without redesigning the accepted product.
+SCOPE: U11 only: preserve the pre-amendment candidate as BEFORE evidence; classify and materially redesign or evidence-backed refine all sixteen primary route families; establish one coherent institutional editorial-workbench system; add purposeful motion; continuously inspect real 390/1440 renders; verify 320/768/1024 structure and WCAG 2.2 AA; run one final invalidated release/performance/security gate; then accepted isolated Playground reset/recovery, exact deployment, evidence/freeze, and stop.
+OUT_OF_SCOPE: New product scope; business-policy changes; authorization/data/workflow changes; migration 0033 or other schema/index work; provider-resource creation; protected-evidence transformation; main or Production mutation; Figma/Google/email write; automatic fallback, recursive spawning, unattended continuation, or freezing/deploying the pre-amendment visual candidate.
+CONSTRAINTS: One writer; exact U10 remote base; preserve current U11 uncommitted hardening and BEFORE evidence; Hallmark direction before Impeccable refinement; old Figma/Make/Playground are reference rather than ceiling; preserve accepted route/business truth; no freeze/reset/deploy until rendered visual recovery passes; keep secrets/private identifiers out of screenshots/logs/evidence; stop after final state.
+DELIVERABLE: An immediately and materially stronger HAU-USC Playground across mobile and desktop, with coherent shell, typography, route composition, workbenches, forms, data surfaces, states, and motion; exact GitHub Playground parity and isolated runtime evidence at the final accepted commit; no main/Production mutation; final state READY_FOR_EARL_MOBILE_FIRST_ANNOTATION.
+VERIFICATION: Preserved 390/1440 BEFORE evidence and rendered AFTER pairs for every major route family; five-width structural/accessibility review; motion/reduced-motion; required states; Hallmark structural review and one Impeccable closeout; full release-candidate gate after transformed source freeze; measured performance; security/privacy; exact Git/artifact/runtime/reset identities; unchanged main and Production proof.
+STOP_CONDITIONS: Authority conflict; remote divergence or unknown dirty work; writer conflict; secret/private value; unbounded design or source change; unaccepted schema/index/provider need; ambiguous Cloudflare target/binding/backup/rollback/auth; prior reset/deploy outcome uncertainty; non-fast-forward integration; main or Production crossover; failed acceptance requiring out-of-scope work; READY_FOR_EARL_MOBILE_FIRST_ANNOTATION reached.
+COMPLETED_SO_FAR: U10 is integrated non-force on GitHub Playground at de2bc3b032550763d86345cfdfd9458a56a7a03e / tree d40d7ced406845e9c39b6975c436b23a616e11ea. Current U11 hardening remains preserved and uncommitted. Owner steering HAU-USC-MFR002-U11-VISUAL-RECOVERY-A1 is active, the old final visual freeze is paused, and the current candidate is now BEFORE evidence rather than final authority. No U11 provider, reset, deployment, main, or Production mutation has occurred.
+NEXT_EXACT_ACTION: Capture the current candidate as private 390/1440 BEFORE evidence, complete parallel read-only visual/product critiques, classify all route families, lock one coherent stronger direction, and implement it in the real frontend before any final gate or external mutation.

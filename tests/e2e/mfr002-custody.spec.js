@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { navigateAuthenticatedRoute } from './navigation.js';
 
 function fulfill(route, body, status = 200) {
   return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
@@ -52,7 +53,7 @@ async function installAuthenticatedRelease(page, state, { shrinkOnRecheck = fals
   );
   await page.route('**/api/bootstrap/release?**', (route) => {
     state.bootstrapCalls += 1;
-    const recheckRemaining = shrinkOnRecheck && state.bootstrapCalls >= 2 ? 1 : 3;
+    const recheckRemaining = shrinkOnRecheck && state.authoritativeChange ? 1 : 3;
     const ready = !state.recorded;
     return fulfill(route, {
       ok: true,
@@ -131,7 +132,7 @@ async function signInAndOpenRelease(page) {
   await page.getByLabel('Identifier').fill('u07.operator');
   await page.getByLabel('Password', { exact: true }).fill('service-verified-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.locator('a[aria-label="Release"]:visible').first().click();
+  await navigateAuthenticatedRoute(page, 'Release');
   await expect(page.getByRole('heading', { name: 'Release Desk', exact: true })).toBeVisible();
 }
 
@@ -230,9 +231,11 @@ test('MFR-002 U07 stops a stale release before evidence upload when the ready qu
   await completeReleaseDraft(page);
 
   const confirmation = page.getByRole('dialog', { name: 'Recheck and record release' });
+  await expect(confirmation).toBeVisible();
   await confirmation
     .getByRole('checkbox', { name: /I verified the record, recipient, item, and quantity/u })
     .check();
+  state.authoritativeChange = true;
   await confirmation.getByRole('button', { name: 'Recheck and record release' }).click();
 
   await expect(page.getByText(/Authoritative recheck stopped this release/u)).toBeVisible();

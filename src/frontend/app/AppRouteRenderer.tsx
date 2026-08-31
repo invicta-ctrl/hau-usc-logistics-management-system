@@ -167,9 +167,10 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="public-shell min-h-screen flex flex-col"
       data-public-shell
-      style={{ background: dark ? '#40070a' : '#f2eae5' }}
+      data-public-route={route}
+      data-dark={dark ? 'true' : 'false'}
     >
       <PublicNavbar route={route} dark={dark} onToggle={toggleTheme} onNavigate={navigate} onHome={goHome} />
 

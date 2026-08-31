@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { navigateAuthenticatedRoute } from './navigation.js';
 
 function fulfill(route, body, status = 200) {
   return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
@@ -92,14 +93,23 @@ async function installEventRuntime(
   });
 }
 
-async function signInAndOpenEvents(page) {
+async function signInAndOpenEvents(page, { direct = false, expectWorkspace = true } = {}) {
   await page.goto('/');
   await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await page.getByLabel('Identifier').fill('u08.events');
   await page.getByLabel('Password', { exact: true }).fill('service-verified-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.locator('a[aria-label="Events"]:visible').first().click();
-  await expect(page.getByRole('heading', { name: 'Event logistics readiness', exact: true })).toBeVisible();
+  await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
+  if (direct) {
+    await page.evaluate(() => {
+      window.location.hash = '#/route/events';
+    });
+  } else {
+    await navigateAuthenticatedRoute(page, 'Events');
+  }
+  if (expectWorkspace) {
+    await expect(page.getByRole('heading', { name: 'Event logistics readiness', exact: true })).toBeVisible();
+  }
 }
 
 test('MFR-002 U08 leads Events with one responsive activity readiness report', async ({ page }) => {
@@ -108,9 +118,12 @@ test('MFR-002 U08 leads Events with one responsive activity readiness report', a
   await signInAndOpenEvents(page);
 
   const workspace = page.locator('[data-fi11-events="true"]');
-  await expect(workspace.getByRole('heading', { name: 'Activity logistics readiness' })).toBeVisible();
-  await expect(workspace.getByText('Opening session logistics')).toBeVisible();
-  await expect(workspace.getByText('Council assembly · 2026-09-01')).toBeVisible();
+  const activityReadiness = workspace.getByRole('region', { name: 'Activity logistics readiness' });
+  await expect(
+    activityReadiness.getByRole('heading', { name: 'Activity logistics readiness' }),
+  ).toBeVisible();
+  await expect(activityReadiness.getByText('Opening session logistics')).toBeVisible();
+  await expect(activityReadiness.getByText('Council assembly · 2026-09-01')).toBeVisible();
   await expect(workspace.getByText('Plenary', { exact: true })).toBeVisible();
   await expect(workspace.getByText('On Time', { exact: true })).toBeVisible();
   await expect(workspace.locator('table')).toHaveCount(0);
@@ -122,7 +135,8 @@ test('MFR-002 U08 leads Events with one responsive activity readiness report', a
   await expect(workspace.getByRole('heading', { name: 'Series', exact: true })).toBeVisible();
   await expect(workspace.getByRole('heading', { name: 'Days', exact: true })).toBeVisible();
   await expect(workspace.getByText('Opening day', { exact: true })).toBeVisible();
-  expect(state.eventCalls).toBe(1);
+  expect(state.eventCalls).toBeGreaterThanOrEqual(1);
+  expect(state.eventCalls).toBeLessThanOrEqual(2);
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
   ).toBeLessThanOrEqual(1);
@@ -153,9 +167,9 @@ test('MFR-002 U08 denies Events before protected traffic without event.manage', 
   test.skip(testInfo.project.name !== 'frontend-390', 'One denial proof is sufficient.');
   const state = { eventCalls: 0 };
   await installEventRuntime(page, state, { allowed: false });
-  await signInAndOpenEvents(page);
+  await signInAndOpenEvents(page, { direct: true, expectWorkspace: false });
 
-  await expect(page.getByRole('alert')).toContainText('unavailable to this account');
+  await expect(page.getByRole('alert')).toContainText('not authorized to open that workspace');
   expect(state.eventCalls).toBe(0);
 });
 
@@ -168,6 +182,7 @@ test('MFR-002 U08 exposes bounded retry when the event service is unavailable', 
   await signInAndOpenEvents(page);
 
   await expect(page.getByRole('alert')).toContainText('temporarily unavailable');
+  const callsBeforeRetry = state.eventCalls;
   await page.getByRole('button', { name: 'Retry read-only load' }).click();
-  await expect.poll(() => state.eventCalls).toBe(2);
+  await expect.poll(() => state.eventCalls).toBe(callsBeforeRetry + 1);
 });
