@@ -246,7 +246,8 @@ describe('D1 operational P1 invariants', () => {
     expect(lending).toContain('linkedItemIds');
     expect(lending).toContain('requested_item_id');
     expect(lending).toContain('linkedItemRows');
-    expect(lending).toMatch(/inventoryItems:\s*\[\.\.\.itemRows, \.\.\.linkedItemRows\]/u);
+    expect(lending).toContain('const lendingItemRows = [...itemRows, ...linkedItemRows]');
+    expect(lending).toMatch(/inventoryItems:\s*lendingItemRows\.map/u);
   });
 
   it('atomically refuses receiving against cancelled or concurrently changed procurement records', () => {

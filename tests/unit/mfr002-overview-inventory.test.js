@@ -155,7 +155,9 @@ describe('MFR-002 U05 Overview and Inventory transformation', () => {
       service.indexOf("} else if (module === 'inventory')"),
       service.indexOf("} else if (module === 'lending')"),
     );
-    expect(service).toContain("module === 'inventory' ? [] : await rows(db, itemSql");
+    expect(service).toMatch(
+      /module === 'inventory' \|\| module === 'procurement'[\s\S]*?\? \[\][\s\S]*?: await rows\(db, itemSql/u,
+    );
     expect(branch).toContain('LIMIT ?${inventoryLimitIndex} OFFSET ?${inventoryLimitIndex + 1}');
     expect(branch).toContain('const relatedLimit = Math.min(100, Math.max(4, page.pageSize * 4))');
     for (const table of ['inventory_classification_history', 'inventory_ledger', 'reservations']) {

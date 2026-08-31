@@ -92,6 +92,10 @@ async function database({
       avatar_asset_key TEXT,
       avatar_updated_at TEXT
     ) STRICT`,
+    `CREATE TABLE requester_departments (
+      id TEXT PRIMARY KEY,
+      display_name TEXT NOT NULL
+    ) STRICT`,
     `CREATE TABLE account_committees (
       account_id TEXT NOT NULL,
       committee_id TEXT NOT NULL,
@@ -357,6 +361,19 @@ function account(overrides = {}) {
   };
 }
 
+function recordingPreparedReads(database) {
+  const statements = [];
+  return {
+    statements,
+    binding: {
+      prepare(sql) {
+        statements.push(String(sql));
+        return database.prepare(sql);
+      },
+    },
+  };
+}
+
 function nextAccount(overrides = {}) {
   return account({
     roleId: 'DOL_STAFF',
@@ -507,6 +524,67 @@ async function update(repository, current, proposed = nextAccount()) {
 }
 
 describe('D1 access-management repository guards', () => {
+  it('hydrates a 25-account Administration page in four reads and at most one department expansion', async () => {
+    const db = await database();
+    const accountStatement = db.prepare(
+      `INSERT INTO accounts (
+         id, access_id_normalized, role_id, status, locked_at, default_committee_id,
+         profile_full_name, credential_version, onboarding_completed_at, created_at, updated_at
+       ) VALUES (?1, ?2, 'DOL_STAFF', 'ACTIVE', NULL, 'COM_FOOD', ?3, 1, ?4, ?4, ?4)`,
+    );
+    const committeeStatement = db.prepare(
+      `INSERT INTO account_committees (account_id, committee_id, membership_type, active, source)
+       VALUES (?1, 'COM_FOOD', 'ASSIGNED', 1, 'SERVER')`,
+    );
+    const profileStatement = db.prepare(
+      `INSERT INTO account_access_profiles (
+         account_id, preset_id, workspace_ids_json, default_workspace_id,
+         location_scope_ids_json, event_series_scope_ids_json, event_scope_ids_json,
+         capability_grants_json, capability_denies_json, updated_at, updated_by_account_id
+       ) VALUES (?1, 'FOOD_OPERATOR', '["food"]', 'food', '[]', '[]', '[]', '[]', '[]', ?2, 'OWNER-1')`,
+    );
+    const seedStatements = [];
+    for (let index = 2; index <= 25; index += 1) {
+      const suffix = String(index).padStart(3, '0');
+      const accountId = `ACCOUNT-${index}`;
+      seedStatements.push(
+        accountStatement.bind(accountId, `HAU.STAFF.${suffix}`, `Staff ${suffix}`, BEFORE),
+        committeeStatement.bind(accountId),
+        profileStatement.bind(accountId, BEFORE),
+      );
+    }
+    await db.batch(seedStatements);
+
+    const input = {
+      query: '',
+      role: '',
+      committee: '',
+      status: 'ALL',
+      sort: 'accessId',
+      direction: 'asc',
+      page: 1,
+      pageSize: 25,
+    };
+    const flatRecorder = recordingPreparedReads(db);
+    const flatPage = await createD1AccessManagementRepository(flatRecorder.binding).listAccounts(input);
+    expect(flatPage.items).toHaveLength(25);
+    expect(flatRecorder.statements).toHaveLength(4);
+    expect(flatRecorder.statements.join('\n')).not.toMatch(/SELECT a\.\*/u);
+    expect(flatRecorder.statements.join('\n')).not.toMatch(/credential_json/u);
+
+    await db.prepare("INSERT INTO requester_departments VALUES ('DEPT-ENG', 'Engineering')").run();
+    await db.prepare("UPDATE accounts SET profile_department_id = 'DEPT-ENG' WHERE id = 'ACCOUNT-2'").run();
+    const departmentRecorder = recordingPreparedReads(db);
+    const departmentPage = await createD1AccessManagementRepository(departmentRecorder.binding).listAccounts(
+      input,
+    );
+    expect(departmentRecorder.statements).toHaveLength(5);
+    expect(departmentPage.items.find((item) => item.accountId === 'ACCOUNT-2')).toMatchObject({
+      departmentId: '',
+      departmentDisplayName: 'Engineering',
+    });
+  });
+
   it('rolls back all policy dependents when the credential/update guard is stale', async () => {
     const db = await database({ credentialVersion: 2 });
     const repository = createD1AccessManagementRepository(db);

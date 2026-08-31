@@ -21,6 +21,8 @@ const MODULES = Object.freeze([
   'inventory',
 ]);
 
+const LENDING_HISTORY_PER_TICKET = 20;
+
 const MODULE_CAPABILITIES = Object.freeze({
   overview: CAPABILITIES.VIEW_INTERNAL,
   request: CAPABILITIES.VIEW_REQUEST,
@@ -1502,10 +1504,13 @@ export function createD1OperationalService({
       FROM inventory_items item
       JOIN lending_catalog_availability availability ON availability.item_id = item.id
       WHERE item.status = 'ACTIVE' ORDER BY item.name LIMIT ?1 OFFSET ?2`;
-    // Inventory owns a filtered catalog page below. Skipping this generic page
-    // removes a redundant read and keeps search/filter totals tied to one SQL
-    // predicate. Other modules retain their existing catalog projection.
-    let itemRows = module === 'inventory' ? [] : await rows(db, itemSql, [page.pageSize, page.offset]);
+    // Inventory owns a filtered catalog page below, while Procurement does not
+    // return catalog rows at all. Skipping the generic page in both cases removes
+    // a redundant read; every other module retains its existing projection.
+    let itemRows =
+      module === 'inventory' || module === 'procurement'
+        ? []
+        : await rows(db, itemSql, [page.pageSize, page.offset]);
     let data;
     // Set by a module that owns its own pagination total. Null keeps the
     // legacy Inventory-derived count for modules not yet migrated.
@@ -2001,66 +2006,89 @@ export function createD1OperationalService({
             linkedItemIds,
           )
         : [];
-      const availableAssets = await rows(
-        db,
-        `SELECT id, item_id, asset_tag, serial_number, condition_label, lifecycle_status
-         FROM inventory_asset_instances
-         WHERE lifecycle_status = 'AVAILABLE' AND current_lending_ticket_id IS NULL
-         ORDER BY item_id, asset_tag, id`,
-      );
-      const ticketHistory = await rows(
-        db,
-        `SELECT history.entity_id, history.previous_status, history.new_status,
-                history.changed_at, history.changed_by, history.reason, history.metadata_json
-         FROM status_history history
-         JOIN lending_tickets ticket ON ticket.id = history.entity_id
-         WHERE history.entity_type = 'LENDING' AND ${scope.sql}
-         ORDER BY history.changed_at, history.id`,
-        scope.values,
-      );
+      const lendingItemRows = [...itemRows, ...linkedItemRows];
+      const lendingItemIds = [...new Set(lendingItemRows.map((row) => row.id))];
+      const availableAssets = lendingItemIds.length
+        ? await rows(
+            db,
+            `SELECT id, item_id, asset_tag, serial_number, condition_label, lifecycle_status
+             FROM inventory_asset_instances
+             WHERE lifecycle_status = 'AVAILABLE'
+               AND current_lending_ticket_id IS NULL
+               AND item_id IN (${lendingItemIds.map((_, index) => `?${index + 1}`).join(', ')})
+             ORDER BY item_id, asset_tag, id`,
+            lendingItemIds,
+          )
+        : [];
+      const ticketIds = tickets.map((row) => row.id);
+      const ticketHistory = ticketIds.length
+        ? await rows(
+            db,
+            `WITH ranked_history AS (
+               SELECT history.entity_id, history.previous_status, history.new_status,
+                      history.changed_at, history.changed_by, history.reason, history.metadata_json,
+                      ROW_NUMBER() OVER (
+                        PARTITION BY history.entity_id
+                        ORDER BY history.changed_at DESC, history.id DESC
+                      ) AS history_rank
+               FROM status_history history
+               WHERE history.entity_type = 'LENDING'
+                 AND history.entity_id IN (${ticketIds.map((_, index) => `?${index + 1}`).join(', ')})
+             )
+             SELECT entity_id, previous_status, new_status, changed_at,
+                    changed_by, reason, metadata_json, history_rank
+             FROM ranked_history
+             WHERE history_rank <= ${LENDING_HISTORY_PER_TICKET + 1}
+             ORDER BY entity_id, history_rank DESC`,
+            ticketIds,
+          )
+        : [];
+      const ticketHistoryById = new Map(ticketIds.map((ticketId) => [ticketId, []]));
+      for (const entry of ticketHistory) ticketHistoryById.get(entry.entity_id)?.push(entry);
       data = {
-        inventoryItems: [...itemRows, ...linkedItemRows].map((row) =>
+        inventoryItems: lendingItemRows.map((row) =>
           itemDto(row, protectCatalogAvailability, hideStorageLocation),
         ),
-        lendingTickets: tickets.map((row) => ({
-          id: row.id,
-          itemId: row.item_id,
-          requestedItemId: row.requested_item_id ?? row.item_id,
-          quantity: Number(row.quantity),
-          requestedQuantity: Number(row.requested_quantity ?? row.quantity),
-          unit: row.unit,
-          studentIdNumber: row.borrower_reference,
-          borrowerName: row.borrower_name,
-          borrowerType: row.borrower_type,
-          department: row.department_organization,
-          contact: row.contact_number || row.contact,
-          email: row.borrower_email || '',
-          courseYear: row.course_year || '',
-          positionRole: row.position_role || '',
-          purpose: row.purpose,
-          dueAt: row.due_at,
-          requestedStartAt: row.requested_start_at,
-          requestedEndAt: row.requested_end_at,
-          ticketType: row.ticket_type,
-          status: row.status,
-          reviewDecision: row.review_decision,
-          reviewNotes: row.review_notes,
-          rejectionReason: row.rejection_reason,
-          substitutionNote: row.substitution_note,
-          eligibilitySource: row.eligibility_source,
-          eligibilityReviewedBy: row.eligibility_reviewed_by,
-          eligibilityReviewedAt: row.eligibility_reviewed_at,
-          assetOptions: availableAssets.map((asset) => ({
-            id: asset.id,
-            itemId: asset.item_id,
-            assetTag: asset.asset_tag,
-            serialNumber: asset.serial_number,
-            condition: asset.condition_label,
-            status: asset.lifecycle_status,
-          })),
-          history: ticketHistory
-            .filter((entry) => entry.entity_id === row.id)
-            .map((entry) => ({
+        lendingTickets: tickets.map((row) => {
+          const boundedHistory = ticketHistoryById.get(row.id) ?? [];
+          return {
+            id: row.id,
+            itemId: row.item_id,
+            requestedItemId: row.requested_item_id ?? row.item_id,
+            quantity: Number(row.quantity),
+            requestedQuantity: Number(row.requested_quantity ?? row.quantity),
+            unit: row.unit,
+            studentIdNumber: row.borrower_reference,
+            borrowerName: row.borrower_name,
+            borrowerType: row.borrower_type,
+            department: row.department_organization,
+            contact: row.contact_number || row.contact,
+            email: row.borrower_email || '',
+            courseYear: row.course_year || '',
+            positionRole: row.position_role || '',
+            purpose: row.purpose,
+            dueAt: row.due_at,
+            requestedStartAt: row.requested_start_at,
+            requestedEndAt: row.requested_end_at,
+            ticketType: row.ticket_type,
+            status: row.status,
+            reviewDecision: row.review_decision,
+            reviewNotes: row.review_notes,
+            rejectionReason: row.rejection_reason,
+            substitutionNote: row.substitution_note,
+            eligibilitySource: row.eligibility_source,
+            eligibilityReviewedBy: row.eligibility_reviewed_by,
+            eligibilityReviewedAt: row.eligibility_reviewed_at,
+            assetOptions: availableAssets.map((asset) => ({
+              id: asset.id,
+              itemId: asset.item_id,
+              assetTag: asset.asset_tag,
+              serialNumber: asset.serial_number,
+              condition: asset.condition_label,
+              status: asset.lifecycle_status,
+            })),
+            historyHasMore: boundedHistory.length > LENDING_HISTORY_PER_TICKET,
+            history: boundedHistory.slice(-LENDING_HISTORY_PER_TICKET).map((entry) => ({
               previousStatus: entry.previous_status,
               newStatus: entry.new_status,
               changedAt: entry.changed_at,
@@ -2068,9 +2096,10 @@ export function createD1OperationalService({
               reason: entry.reason,
               metadata: parseHistoryMetadata(entry.metadata_json),
             })),
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
-        })),
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+          };
+        }),
       };
     } else {
       const requestScope = scopedWhere(account, {
@@ -2079,20 +2108,25 @@ export function createD1OperationalService({
         alias: 'request',
       });
       const limitIndex = requestScope.values.length + 1;
-      const requestRows = await rows(
-        db,
-        `SELECT request.* FROM requests request WHERE ${requestScope.sql}
-         ORDER BY request.updated_at DESC LIMIT ?${limitIndex} OFFSET ?${limitIndex + 1}`,
-        [...requestScope.values, page.pageSize, page.offset],
-      );
-      const requestLines = await rows(
-        db,
-        `SELECT line.* FROM request_lines line
-         JOIN requests request ON request.id = line.request_id
-         WHERE ${requestScope.sql}
-         ORDER BY line.updated_at DESC LIMIT ?${limitIndex} OFFSET ?${limitIndex + 1}`,
-        [...requestScope.values, page.pageSize, page.offset],
-      );
+      const includeGenericRequests = module !== 'restocking';
+      const requestRows = includeGenericRequests
+        ? await rows(
+            db,
+            `SELECT request.* FROM requests request WHERE ${requestScope.sql}
+             ORDER BY request.updated_at DESC LIMIT ?${limitIndex} OFFSET ?${limitIndex + 1}`,
+            [...requestScope.values, page.pageSize, page.offset],
+          )
+        : [];
+      const requestLines = includeGenericRequests
+        ? await rows(
+            db,
+            `SELECT line.* FROM request_lines line
+             JOIN requests request ON request.id = line.request_id
+             WHERE ${requestScope.sql}
+             ORDER BY line.updated_at DESC LIMIT ?${limitIndex} OFFSET ?${limitIndex + 1}`,
+            [...requestScope.values, page.pageSize, page.offset],
+          )
+        : [];
       if (module === 'release') {
         const releaseScope = multiScopeWhere(account, {
           committeeColumns: ['request.owner_committee_id', 'ticket.owner_committee_id'],

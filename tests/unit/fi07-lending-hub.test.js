@@ -67,6 +67,7 @@ function lendingBootstrapPayload() {
           eligibilityReviewedBy: 'DOL',
           eligibilityReviewedAt: '2026-08-24T00:00:00.000Z',
           assetOptions: [],
+          historyHasMore: true,
           history: [
             {
               previousStatus: 'READY_TO_CLAIM',
@@ -120,6 +121,8 @@ describe('FI-07 internal lending frontend contract', () => {
     requestOnly.requestOnly = true;
     const malformedAvailability = structuredClone(valid);
     malformedAvailability.data.inventoryItems[0].lendableAvailable = 'not-a-number';
+    const malformedHistoryBound = structuredClone(valid);
+    malformedHistoryBound.data.lendingTickets[0].historyHasMore = 'true';
     const nonAvailableCandidate = structuredClone(valid);
     nonAvailableCandidate.data.lendingTickets[0].assetOptions = [
       {
@@ -139,18 +142,31 @@ describe('FI-07 internal lending frontend contract', () => {
       .mockResolvedValueOnce(response(partial))
       .mockResolvedValueOnce(response(requestOnly))
       .mockResolvedValueOnce(response(malformedAvailability))
+      .mockResolvedValueOnce(response(malformedHistoryBound))
       .mockResolvedValueOnce(response(nonAvailableCandidate));
     vi.stubGlobal('fetch', fetchMock);
     const backend = new FrontendBackend();
 
     const projected = await backend.lendingBootstrap({ page: 2, pageSize: 25 });
     expect(projected).toMatchObject({
-      lendingTickets: [{ id: 'LEND-1', requestedItemId: 'ITM-1', borrowerName: '', assetOptions: [] }],
+      lendingTickets: [
+        {
+          id: 'LEND-1',
+          requestedItemId: 'ITM-1',
+          borrowerName: '',
+          assetOptions: [],
+          historyHasMore: true,
+        },
+      ],
       pagination: { page: 2, pageSize: 25, total: 51, hasMore: true },
       scopeRevision: { token: '7', updatedAt: '2026-08-24T00:00:00.000Z' },
     });
     expect(projected.inventoryItems[0].lendableAvailable).toBeUndefined();
     expect(Object.hasOwn(projected.inventoryItems[0], 'lendableAvailable')).toBe(false);
+    await expect(backend.lendingBootstrap()).rejects.toMatchObject({
+      code: 'INCOMPLETE_RESPONSE',
+      status: 502,
+    });
     await expect(backend.lendingBootstrap()).rejects.toMatchObject({
       code: 'INCOMPLETE_RESPONSE',
       status: 502,
@@ -205,7 +221,7 @@ describe('FI-07 internal lending frontend contract', () => {
     }
     vi.stubGlobal('fetch', fetchMock);
     const backend = new FrontendBackend();
-    for (const _pagination of invalidPayloads) {
+    for (let index = 0; index < invalidPayloads.length; index += 1) {
       await expect(backend.lendingBootstrap()).rejects.toMatchObject({
         code: 'INCOMPLETE_RESPONSE',
         status: 502,

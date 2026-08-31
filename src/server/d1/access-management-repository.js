@@ -54,6 +54,10 @@ async function accessProfile(db, accountId) {
     .prepare('SELECT * FROM account_access_profiles WHERE account_id = ?1')
     .bind(accountId)
     .first();
+  return accessProfileFromRow(row);
+}
+
+function accessProfileFromRow(row) {
   return row
     ? {
         presetId: row.preset_id,
@@ -68,22 +72,18 @@ async function accessProfile(db, accountId) {
     : null;
 }
 
-async function accountFromRow(db, row) {
+function accountFromHydratedRow(
+  row,
+  { committeeIds: hydratedCommitteeIds = [], hydratedAccessProfile = null, departmentDisplayName = '' } = {},
+) {
   if (!row) return undefined;
-  const profileDepartmentId = row.profile_department_id ?? row.department_id ?? '';
-  const department = profileDepartmentId
-    ? await db
-        .prepare('SELECT display_name FROM requester_departments WHERE id = ?1')
-        .bind(profileDepartmentId)
-        .first()
-    : null;
   return {
     id: row.id,
     accessIdNormalized: row.access_id_normalized,
     status: row.status,
     roleId: row.role_id,
-    committeeIds: await committeeIds(db, row.id),
-    accessProfile: await accessProfile(db, row.id),
+    committeeIds: hydratedCommitteeIds,
+    accessProfile: hydratedAccessProfile,
     defaultCommitteeId: row.default_committee_id ?? '',
     profile: row.profile_full_name
       ? {
@@ -105,7 +105,7 @@ async function accountFromRow(db, row) {
     institutionId: row.institution_id ?? '',
     departmentId: row.department_id ?? '',
     profileDepartmentId: row.profile_department_id ?? '',
-    departmentDisplayName: department?.display_name ?? '',
+    departmentDisplayName,
     passwordChangedAt: row.password_changed_at ?? '',
     lastPasswordResetAt: row.last_password_reset_at ?? '',
     usernameNormalized: row.username_normalized ?? '',
@@ -113,6 +113,84 @@ async function accountFromRow(db, row) {
     profileEmail: row.profile_email ?? '',
     revision: `${Number(row.credential_version ?? 1)}:${String(row.updated_at ?? '')}`,
   };
+}
+
+async function accountFromRow(db, row) {
+  if (!row) return undefined;
+  const profileDepartmentId = row.profile_department_id ?? row.department_id ?? '';
+  const [hydratedCommitteeIds, hydratedAccessProfile, department] = await Promise.all([
+    committeeIds(db, row.id),
+    accessProfile(db, row.id),
+    profileDepartmentId
+      ? db
+          .prepare('SELECT display_name FROM requester_departments WHERE id = ?1')
+          .bind(profileDepartmentId)
+          .first()
+      : null,
+  ]);
+  return accountFromHydratedRow(row, {
+    committeeIds: hydratedCommitteeIds,
+    hydratedAccessProfile,
+    departmentDisplayName: department?.display_name ?? '',
+  });
+}
+
+async function hydrateAccountPage(db, accountRows) {
+  const accountIds = [...new Set(accountRows.map((row) => row.id).filter(Boolean))];
+  if (!accountIds.length) {
+    return {
+      committeeIdsByAccount: new Map(),
+      accessProfilesByAccount: new Map(),
+      departmentNamesById: new Map(),
+    };
+  }
+  const accountPlaceholders = accountIds.map((_, index) => `?${index + 1}`).join(', ');
+  const [committeeResult, profileResult] = await Promise.all([
+    db
+      .prepare(
+        `SELECT account_id, committee_id
+         FROM account_committees
+         WHERE active = 1 AND account_id IN (${accountPlaceholders})
+         ORDER BY account_id, committee_id`,
+      )
+      .bind(...accountIds)
+      .all(),
+    db
+      .prepare(
+        `SELECT account_id, preset_id, workspace_ids_json, default_workspace_id,
+                location_scope_ids_json, event_series_scope_ids_json, event_scope_ids_json,
+                capability_grants_json, capability_denies_json
+         FROM account_access_profiles
+         WHERE account_id IN (${accountPlaceholders})`,
+      )
+      .bind(...accountIds)
+      .all(),
+  ]);
+  const committeeIdsByAccount = new Map(accountIds.map((accountId) => [accountId, []]));
+  for (const row of committeeResult.results)
+    committeeIdsByAccount.get(row.account_id)?.push(row.committee_id);
+  const accessProfilesByAccount = new Map(
+    profileResult.results.map((row) => [row.account_id, accessProfileFromRow(row)]),
+  );
+  const departmentIds = [
+    ...new Set(
+      accountRows.map((row) => row.profile_department_id ?? row.department_id ?? '').filter(Boolean),
+    ),
+  ];
+  const departmentNamesById = new Map();
+  if (departmentIds.length) {
+    const departmentPlaceholders = departmentIds.map((_, index) => `?${index + 1}`).join(', ');
+    const departmentResult = await db
+      .prepare(
+        `SELECT id, display_name
+         FROM requester_departments
+         WHERE id IN (${departmentPlaceholders})`,
+      )
+      .bind(...departmentIds)
+      .all();
+    for (const row of departmentResult.results) departmentNamesById.set(row.id, row.display_name);
+  }
+  return { committeeIdsByAccount, accessProfilesByAccount, departmentNamesById };
 }
 
 function auditStatement(
@@ -525,7 +603,11 @@ export function createD1AccessManagementRepository(db) {
       const pageBindings = [...bindings, pageSize, offset];
       const result = await db
         .prepare(
-          `SELECT a.*,
+          `SELECT a.id, a.access_id_normalized, a.status, a.role_id,
+                  a.default_committee_id, a.profile_full_name, a.credential_version,
+                  a.onboarding_completed_at, a.created_at, a.updated_at, a.locked_at,
+                  a.last_access_id_changed_at, a.lending_eligible, a.department_id,
+                  a.profile_department_id, a.password_changed_at, a.last_password_reset_at,
              COALESCE((
                SELECT MAX(log.created_at)
                FROM audit_log log
@@ -538,10 +620,16 @@ export function createD1AccessManagementRepository(db) {
         )
         .bind(...pageBindings)
         .all();
-      const items = [];
-      for (const row of result.results) {
-        const account = await accountFromRow(db, row);
-        items.push({
+      const { committeeIdsByAccount, accessProfilesByAccount, departmentNamesById } =
+        await hydrateAccountPage(db, result.results);
+      const items = result.results.map((row) => {
+        const departmentId = row.profile_department_id ?? row.department_id ?? '';
+        const account = accountFromHydratedRow(row, {
+          committeeIds: committeeIdsByAccount.get(row.id) ?? [],
+          hydratedAccessProfile: accessProfilesByAccount.get(row.id) ?? null,
+          departmentDisplayName: departmentNamesById.get(departmentId) ?? '',
+        });
+        return {
           accountId: account.id,
           revision: accountRevisionToken(account),
           accessId: account.accessIdNormalized,
@@ -561,8 +649,8 @@ export function createD1AccessManagementRepository(db) {
           departmentId: account.departmentId,
           departmentDisplayName: account.departmentDisplayName,
           lendingEligible: account.lendingEligible,
-        });
-      }
+        };
+      });
       return {
         items,
         pagination: {

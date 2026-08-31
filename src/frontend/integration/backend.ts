@@ -391,6 +391,7 @@ export type FrontendLendingTicket = {
   eligibilityReviewedBy: string;
   eligibilityReviewedAt: string;
   assetOptions: FrontendLendingAssetOption[];
+  historyHasMore: boolean;
   history: FrontendLendingHistoryEntry[];
   createdAt: string;
   updatedAt: string;
@@ -1863,6 +1864,7 @@ export class FrontendBackend {
       eligibilityReviewedBy: requiredText(row.eligibilityReviewedBy, 'lendingTickets.eligibilityReviewedBy'),
       eligibilityReviewedAt: requiredText(row.eligibilityReviewedAt, 'lendingTickets.eligibilityReviewedAt'),
       assetOptions: requiredRecords(row.assetOptions, 'lendingTickets.assetOptions').map(mapAsset),
+      historyHasMore: requiredBoolean(row.historyHasMore, 'lendingTickets.historyHasMore'),
       history: requiredRecords(row.history, 'lendingTickets.history').map(mapHistory),
       createdAt: requiredString(row.createdAt, 'lendingTickets.createdAt'),
       updatedAt: requiredString(row.updatedAt, 'lendingTickets.updatedAt'),

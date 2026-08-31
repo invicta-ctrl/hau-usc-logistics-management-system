@@ -122,6 +122,60 @@ async function seedInventory(database) {
     await maintenanceStatement.bind(`MFR-MAINTENANCE-${suffix}`, assetId, timestamp, owner.id).run();
     await movementStatement.bind(`MFR-MOVEMENT-${suffix}`, assetId, timestamp, owner.id).run();
   }
+
+  await database
+    .prepare(
+      `INSERT INTO lending_tickets (
+         id, borrower_reference, borrower_name, borrower_type, department_organization,
+         contact, item_id, quantity, unit, purpose, due_at, ticket_type, status,
+         created_by, created_at, updated_at, requested_item_id, requested_quantity
+       ) VALUES (
+         'MFR-LENDING-001', 'MFR-002-BORROWER', 'Synthetic borrower', 'ANGELITE',
+         'Engineering', '09170000000', 'MFR-ITEM-060', 1, 'piece',
+         'MFR-002 bounded Lending fixture', ?1, 'LOAN', 'FOR_REVIEW', ?2, ?1, ?1,
+         'MFR-ITEM-060', 1
+       )`,
+    )
+    .bind(timestamp, owner.id)
+    .run();
+
+  const historyStatement = database.prepare(
+    `INSERT INTO status_history (
+       id, entity_type, entity_id, previous_status, new_status, changed_at,
+       changed_by, reason, idempotency_key, metadata_json
+     ) VALUES (?1, 'LENDING', 'MFR-LENDING-001', 'FOR_REVIEW', 'FOR_REVIEW', ?2,
+      ?3, ?4, ?5, '{}')`,
+  );
+  const historyStatements = [];
+  for (let index = 0; index <= 21; index += 1) {
+    const suffix = String(index).padStart(2, '0');
+    historyStatements.push(
+      historyStatement.bind(
+        `MFR-HISTORY-${suffix}`,
+        timestamp,
+        owner.id,
+        `MFR-002 bounded history ${suffix}`,
+        `MFR-HISTORY-${suffix}`,
+      ),
+    );
+  }
+  await database.batch(historyStatements);
+}
+
+function recordingDatabase(database) {
+  const statements = [];
+  return {
+    statements,
+    binding: {
+      prepare(sql) {
+        statements.push(String(sql));
+        return database.prepare(sql);
+      },
+      batch(preparedStatements) {
+        return database.batch(preparedStatements);
+      },
+    },
+  };
 }
 
 describe('MFR-002 Inventory D1 pagination', () => {
@@ -135,7 +189,7 @@ describe('MFR-002 Inventory D1 pagination', () => {
     await applyMigrations(db);
     await seedInventory(db);
     service = createD1OperationalService({ db, schemaVersion: '32' });
-  }, 30_000);
+  }, 60_000);
 
   afterAll(async () => {
     await miniflare?.dispose();
@@ -197,5 +251,58 @@ describe('MFR-002 Inventory D1 pagination', () => {
     expect(below.data.inventoryItems.every((item) => item.onHand === 0)).toBe(true);
     expect(alias.pagination).toEqual({ page: 1, pageSize: 10, total: 1, hasMore: false });
     expect(alias.data.inventoryItems.map((item) => item.id)).toEqual(['MFR-ITEM-060']);
+  });
+
+  it('omits generic reads that Restocking and Procurement do not return', async () => {
+    const restockingRecorder = recordingDatabase(db);
+    const restockingService = createD1OperationalService({
+      db: restockingRecorder.binding,
+      schemaVersion: '32',
+    });
+    await restockingService.bootstrapModule({
+      account: owner,
+      command: { module: 'restocking', page: 1, pageSize: 10 },
+      correlationId: 'MFR002-D1-RESTOCKING',
+    });
+    const restockingSql = restockingRecorder.statements.join('\n');
+    expect(restockingSql).not.toMatch(/SELECT request\.\* FROM requests request WHERE/u);
+    expect(restockingSql).not.toMatch(/SELECT line\.\* FROM request_lines line\s+JOIN requests request/u);
+
+    const procurementRecorder = recordingDatabase(db);
+    const procurementService = createD1OperationalService({
+      db: procurementRecorder.binding,
+      schemaVersion: '32',
+    });
+    await procurementService.bootstrapModule({
+      account: owner,
+      command: { module: 'procurement', page: 1, pageSize: 10 },
+      correlationId: 'MFR002-D1-PROCUREMENT',
+    });
+    const procurementSql = procurementRecorder.statements.join('\n');
+    expect(procurementSql).not.toMatch(
+      /FROM inventory_items item\s+JOIN lending_catalog_availability availability[\s\S]*LIMIT \?1 OFFSET \?2/u,
+    );
+  });
+
+  it('bounds visible Lending item, asset, and history collections and discloses truncation', async () => {
+    const result = await service.bootstrapModule({
+      account: owner,
+      command: { module: 'lending', page: 1, pageSize: 1 },
+      correlationId: 'MFR002-D1-LENDING',
+    });
+
+    expect(result.data.inventoryItems.map((item) => item.id)).toEqual(['MFR-ITEM-001', 'MFR-ITEM-060']);
+    expect(result.data.lendingTickets).toHaveLength(1);
+    expect(result.data.lendingTickets[0]).toMatchObject({
+      id: 'MFR-LENDING-001',
+      historyHasMore: true,
+    });
+    expect(result.data.lendingTickets[0].assetOptions.map((asset) => asset.itemId)).toEqual([
+      'MFR-ITEM-001',
+      'MFR-ITEM-060',
+    ]);
+    expect(result.data.lendingTickets[0].history).toHaveLength(20);
+    expect(result.data.lendingTickets[0].history[0].reason).toBe('MFR-002 bounded history 02');
+    expect(result.data.lendingTickets[0].history.at(-1).reason).toBe('MFR-002 bounded history 21');
   });
 });

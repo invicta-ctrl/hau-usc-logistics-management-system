@@ -142,6 +142,7 @@ const PREVIEW_QUEUE: FrontendLendingBootstrap = {
           status: 'AVAILABLE',
         },
       ],
+      historyHasMore: false,
       history: [
         {
           previousStatus: '',
@@ -184,6 +185,7 @@ const PREVIEW_QUEUE: FrontendLendingBootstrap = {
       eligibilityReviewedBy: 'Preview operator',
       eligibilityReviewedAt: '2026-08-24T09:30:00.000Z',
       assetOptions: [],
+      historyHasMore: false,
       history: [
         {
           previousStatus: 'FOR_REVIEW',
@@ -226,6 +228,7 @@ const PREVIEW_QUEUE: FrontendLendingBootstrap = {
       eligibilityReviewedBy: 'Preview operator',
       eligibilityReviewedAt: '2020-08-24T09:30:00.000Z',
       assetOptions: [],
+      historyHasMore: false,
       history: [
         {
           previousStatus: 'READY_TO_CLAIM',
@@ -1920,6 +1923,11 @@ export function InternalLendingHub({
               </section>
               <section className="mt-4 border-t border-[var(--border-paper)] pt-4">
                 <h3 className="text-sm font-semibold">Status history</h3>
+                {selected.historyHasMore ? (
+                  <p className="mt-2 text-xs leading-5 text-[var(--ink-mid)]">
+                    Showing the latest 20 status changes. Older history remains in the authoritative record.
+                  </p>
+                ) : null}
                 {selected.history.length ? (
                   <ol className="mt-3 grid gap-2">
                     {selected.history.map((entry, index) => (
