@@ -1,46 +1,44 @@
-# MFR-002 U08 Operations + Administration + Index Handoff
+# MFR-002 U09 Fullstack Data-Path Handoff
 
-FROM: HAU-USC-MFR-002 U07 integrated Lending + Release
-TO: HAU-USC-MFR-002 U08 Operations + Administration + Index
+FROM: HAU-USC-MFR-002 U08 integrated Operations + Administration + Index
+TO: HAU-USC-MFR-002 U09 Fullstack Data Path
 PROGRAM: HAU-USC Logistics MFR-002
-BRANCH: work/playground-mfr002-operations
+BRANCH: work/playground-mfr002-data-path
 BASE_BRANCH: Playground
-STARTING_SHA: 8f9ea464410434ea11499bef194545d6025dcb1b
-STARTING_TREE: a546b79be00f5ae5a3f2b7b62e3a9acd4c83cbe7
-LOCAL_EQUIVALENT_STARTING_SHA: 71accded7c2241b8319454b804fc829a2e416df9
+STARTING_SHA: 61e5a5372830767614dc42ccd4363e5c79b3fa56
+STARTING_TREE: cd4b369bc3077926ebfb84c1479478286d29bba7
 HEAD: GIT_HEAD
-UPSTREAM: origin/Playground
-WORKTREE: /workspace/scratch/9d88b058f45e/repo
+UPSTREAM: PENDING_PUBLICATION
+WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-master-reconciliation
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: SOL_ULTRA:/root
-WRITER_LOCK: ACTIVE_MFR002_U08
+ACTIVE_WRITER: SOL_HIGH:/root
+WRITER_LOCK: ACTIVE_MFR002_U09
 ROUTE: SOLO
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-08-31-mfr002-unified-mobile-first-fullstack-performance-transformation.md
 
-PHASE: U08_OPERATIONS_ADMIN_INDEX
-BASE_PLAYGROUND_SHA: 8f9ea464410434ea11499bef194545d6025dcb1b
+PHASE: U09_FULLSTACK_DATA_PATH
+BASE_PLAYGROUND_SHA: 61e5a5372830767614dc42ccd4363e5c79b3fa56
 ENDING_SHA: GIT_HEAD
 TREE: GIT_TREE
-OBJECTIVE: Make receiving, procurement, events, administration, and the Playground Index focused, truthful, responsive operational workspaces.
-COMPLETED: U08 is complete in four bounded source commits. Receiving and procurement lead with authoritative operational consequence; Events is an activity-first logistics-readiness report; Administration is a responsive, privacy-safe master/detail workspace with a separately governed reset boundary; and the Playground Index is a search-first launcher with compact truthful runtime health and disclosed technical detail.
-FILES_CHANGED: Focused receiving/procurement, Events, Administration, and Preview Index route components, presentation helpers, semantic responsive styles, fixture-boundary updates, and proportional unit/browser contracts, plus this canonical closeout evidence.
-FACTS_INVALIDATED: U07 is no longer pending integration. Its artifact and verification evidence remain the U08 baseline until U08 source changes invalidate them.
-VALIDATION: Full unit passes 178 files / 1,286 tests with one intentional skip; lint passes with zero errors and two preexisting warnings; build, fixture boundary, design, six-theme/twelve-appearance contracts, 66/66 contrast pairs, Apps Script, governance, handoff, canonical/staging artifacts, and 535-case frontend enumeration pass.
-BROWSER_EVIDENCE: A fresh frontend-390 Administration launch was attempted and stopped before page execution because Playwright Chromium headless shell 1228 is absent. No rendered pass is claimed; the residual is recorded in MFR002_U08_OPERATIONS_ADMIN_INDEX.json.
-PERFORMANCE_EFFECT: Canonical direct transfer changed from 375,876 to 398,055 bytes (+5.9006%) and from 94,937 to 98,167 gzip bytes (+3.4023%), below the 15% unexplained-regression alarm. The largest individual measured growth was CSS at +13.0503% raw / +10.1398% gzip.
-D1_EFFECT: Visual U08 slices must remain query- and schema-neutral. Accepted measured data-path work is reserved for U09.
-ACCESSIBILITY_EFFECT: Receiving uses mobile list/detail, desktop persistent context, exact final confirmation, inert/focus/Escape restoration, whole-number constraints, and pre-upload recheck. Procurement and Events use one responsive semantic record representation. Events places activity readiness first, uses native disclosure for secondary context, and exposes independent empty/denied/unavailable states without false actions or inferred scores.
-PLAYGROUND_DEPLOYMENT: ZERO; source integration only.
-EXTERNAL_WRITES: U07 remote temporary branch creation and non-force Playground update to 8f9ea464410434ea11499bef194545d6025dcb1b only. No provider, D1/R2/reset/data, Google, email, Figma, main, or Production write.
-EXTERNAL_ACTIONS: U07 GitHub publication described above; no other external action in U08.
-KNOWN_RESIDUALS: U08 publication/integration and rendered-browser execution remain open. Browser execution is environment-blocked and is not represented as a pass.
-NEXT_BRANCH: work/playground-mfr002-data-path
-DO_NOT_REPEAT: Do not re-publish U07, mix U09 query repair into U08 visual diffs, fabricate readiness or privileged actions, or claim rendered acceptance without a browser.
-PRESERVED: U03-U07 product behavior; public/authenticated context separation; capability and privacy boundaries; cumulative receiving, custody, ledger, audit, reset, and evidence truth; six theme families and twelve Light/Dark contracts; P23 build architecture; P34 runtime/data/reset evidence.
+OBJECTIVE: Remove proven U09 overfetch and repeated reads while preserving response/business truth, with an additive truthful Lending history bound disclosure.
+COMPLETED: U09 source is complete at commit 9a82307ed422ce02bd6e164716e8d8d7a10a826b / tree 222bbc0b7985b50daca81d583911d9979cdab32d. Administration list hydration is set-wise and purpose-limited; unused Restocking and Procurement reads are removed; Lending catalog, asset, and visible-ticket history collections are bounded; and the latest-20 history contract exposes a required truthful historyHasMore field through the backend adapter and UI.
+FILES_CHANGED: Two backend data paths, the Lending frontend contract and disclosure, five focused unit/source-contract suites, and sanitized U09 evidence plus the canonical continuity records.
+FACTS_INVALIDATED: The cloud continuation's reported dirty U09 working tree was unavailable locally and was not published to GitHub, so its implementation claims were not accepted as evidence. The independently reconstructed U09 source and deterministic tests now supersede that unverified claim. U00-U08 remote integration evidence remains valid.
+VALIDATION: Administration 15/15; operational focused 45/45; Lending plus pagination 10/10; frontend backend adapter 30/30; overview/inventory 6/6; full unit 178 files / 1,290 tests; lint 0 errors with one unrelated preexisting warning; build 1,696 modules; fixture boundary, Apps Script, dist, Cloudflare dry-run, changed-file Prettier, and diff checks pass. The repository-wide formatting baseline remains historically red outside this diff; every changed file is green.
+BROWSER_EVIDENCE: Not required for deterministic U09 query-shape acceptance. No rendered, live latency, Web Vitals, or D1 runtime performance pass is claimed.
+PERFORMANCE_EFFECT: Deterministic local evidence changes a 25-account Administration page from 52 prepared reads to 4 without departments or 5 with department expansion; removes two Restocking and one Procurement read groups; and bounds visible-ticket Lending history to 20 display rows plus one sentinel. Live rows_read, p50, and p95 remain unavailable and are not inferred.
+D1_EFFECT: Query shape only. No schema, migration, index, provider, or data mutation.
+ACCESSIBILITY_EFFECT: The additive Lending truncation disclosure is visible text, fail-closed at the adapter boundary, and preserves the established status-history semantics.
+PLAYGROUND_DEPLOYMENT: ZERO.
+EXTERNAL_WRITES: Git fetch only; no remote ref, provider, D1/R2, reset, data, Google, email, Figma, main, or Production write yet.
+EXTERNAL_ACTIONS: Read-only GitHub fetch and remote identity verification only.
+KNOWN_RESIDUALS: Temporary-branch publication and non-force Playground integration remain open. Repository-wide historical formatting remains outside U09; changed-file formatting is green.
+NEXT_BRANCH: work/playground-mfr002-worker-hardening after verified U09 integration.
+DO_NOT_REPEAT: Do not reimplement U00-U08, claim the missing dirty U09 work as verified, add migration 0033, create an unbounded history endpoint, or touch main/Production.
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Publish the exact U08 closeout commit, integrate it non-force into Playground, verify remote tree parity and unchanged main, then create work/playground-mfr002-data-path from that integrated lineage.
-RESUME_COMMANDS: Verify branch/status and the U08 closeout commit; publish only the temporary U08 branch and Playground; inspect the remote branch, Playground, and main identities; do not begin U09 until integration containment is proven.
-PROHIBITED_ACTIONS: Mutate main or Production; deploy outside isolated Playground; change D1/R2/reset/schema/migration/index/provider data in visual U08; write Figma; invent receiving/procurement/event/admin truth; weaken capability, privacy, cumulative, evidence, idempotency, ledger, audit, or U03-U07 contracts.
-HANDOFF_STATUS: ACTIVE
+NEXT_EXACT_ACTION: Publish the exact U09 source and closeout commits to the temporary branch, integrate non-force into Playground, verify remote tree parity and unchanged main, then create work/playground-mfr002-worker-hardening from that integrated lineage.
+RESUME_COMMANDS: Verify branch and status in the Windows worktree; confirm source commit 9a82307ed422ce02bd6e164716e8d8d7a10a826b and tree 222bbc0b7985b50daca81d583911d9979cdab32d; rerun governance and handoff gates after any continuity edit; fetch before publishing; require origin/Playground to remain 61e5a5372830767614dc42ccd4363e5c79b3fa56 and origin/main to remain f7e5bf83205dbe58b5fb72126a4456747d92e906 before non-force integration.
+PROHIBITED_ACTIONS: Mutate main or Production; deploy in U09; change D1/R2/schema/migration/index/provider data; weaken capability, privacy, identity, cumulative, evidence, idempotency, ledger, or audit contracts.
+HANDOFF_STATUS: READY_FOR_PLAYGROUND_INTEGRATION

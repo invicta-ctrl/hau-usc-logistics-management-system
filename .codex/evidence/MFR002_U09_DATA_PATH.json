@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "program": "HAU-USC-MFR-002",
+  "phase": "U09_FULLSTACK_DATA_PATH",
+  "base": {
+    "playgroundCommit": "61e5a5372830767614dc42ccd4363e5c79b3fa56",
+    "playgroundTree": "cd4b369bc3077926ebfb84c1479478286d29bba7",
+    "branch": "work/playground-mfr002-data-path",
+    "sourceEndingCommit": "9a82307ed422ce02bd6e164716e8d8d7a10a826b",
+    "sourceEndingTree": "222bbc0b7985b50daca81d583911d9979cdab32d",
+    "mainCommitPreserved": "f7e5bf83205dbe58b5fb72126a4456747d92e906",
+    "mainTreePreserved": "480cf65cb9ec07fbab729f0588023e120cf3f97a"
+  },
+  "change": {
+    "administration": {
+      "before": "A 25-account list page executed the count and list reads plus per-account committee and access-profile reads: 52 prepared reads without a department expansion.",
+      "after": "The same page executes one count, one purpose-limited account projection, one set-wise committee hydration, and one set-wise access-profile hydration: 4 prepared reads, or 5 when the page contains at least one department reference.",
+      "privacy": "The list projection does not use SELECT a.* and excludes credential_json and other credential material. Single-account detail hydration retains its existing complete projection path."
+    },
+    "restocking": "The Restocking bootstrap no longer reads generic requests or request lines that its response does not return.",
+    "procurement": "The Procurement bootstrap no longer reads the generic inventory catalog page that its response does not return.",
+    "lending": {
+      "catalogFixture": "The regression fixture contains 60 active catalog items and assets. A one-ticket, page-size-one Lending bootstrap returns the one visible catalog item plus the ticket-linked item, and asset candidates are restricted to those two item identities.",
+      "historyFixture": "The visible ticket has 22 status-history rows. One set-wise query ranks only visible ticket identities, retrieves the latest 21 rows per ticket as a 20-row display bound plus one sentinel, returns the latest 20 in chronological display order, and sets historyHasMore=true.",
+      "frontendTruth": "historyHasMore is a required fail-closed boolean in the frontend adapter, is preserved through preview transitions, and visibly discloses that older history remains in the authoritative record."
+    },
+    "newEndpoint": 0,
+    "schemaChange": 0,
+    "migrationChange": 0,
+    "indexChange": 0,
+    "dependencyChange": 0,
+    "lockfileChange": 0
+  },
+  "performance": {
+    "measurementClass": "DETERMINISTIC_LOCAL_QUERY_SHAPE_EVIDENCE",
+    "administrationPreparedReadsBefore": 52,
+    "administrationPreparedReadsAfterWithoutDepartment": 4,
+    "administrationPreparedReadsAfterWithDepartment": 5,
+    "restockingRedundantReadGroupsRemoved": 2,
+    "procurementRedundantReadGroupsRemoved": 1,
+    "lendingHistoryDisplayRowsPerTicket": 20,
+    "lendingHistorySentinelRowsPerTicket": 1,
+    "rowsRead": "UNAVAILABLE_NO_LIVE_D1_MEASUREMENT",
+    "p50Ms": "UNAVAILABLE_NO_LIVE_RUNTIME_MEASUREMENT",
+    "p95Ms": "UNAVAILABLE_NO_LIVE_RUNTIME_MEASUREMENT",
+    "claimBoundary": "No live D1 rows_read, SQL duration, endpoint latency, Web Vitals, p50, or p95 improvement is claimed from deterministic local tests."
+  },
+  "verification": {
+    "administrationFocused": "PASS_15_TESTS",
+    "operationalFocused": "PASS_45_TESTS",
+    "lendingAndPaginationFocused": "PASS_10_TESTS",
+    "frontendBackendAdapter": "PASS_30_TESTS",
+    "overviewInventoryContract": "PASS_6_TESTS",
+    "fullUnit": "PASS_178_FILES_1290_TESTS",
+    "lint": "PASS_0_ERRORS_1_PREEXISTING_UNRELATED_WARNING",
+    "build": "PASS_1696_MODULES",
+    "fixtureBoundary": "PASS_NORMAL_ROUTES_BACKEND_BACKED",
+    "appsScript": "PASS_34_SOURCE_FILES_57_REQUIRED_FUNCTIONS_GENERATED_PARITY",
+    "canonicalArtifact": "PASS_9_FILES_36963069_BYTES_2_DIRECT_ASSETS",
+    "cloudflareDryRun": "PASS_LOCAL_DEVELOPMENT_BINDINGS_NO_DEPLOYMENT",
+    "changedFileFormat": "PASS_13_FILES",
+    "repositoryFormatBaseline": "FAIL_PREEXISTING_OUT_OF_SCOPE_HISTORICAL_AND_GENERATED_FILES",
+    "diffCheck": "PASS",
+    "governance": "PASS_12_AGENT_FILES_14_CONTINUATION_FIELDS",
+    "handoff": "PASS_CANONICAL_RECORDS_GIT_STATE_AND_SECRET_SCAN"
+  },
+  "review": {
+    "completeLogicalDiff": "PASS_NO_ACTIONABLE_FINDING",
+    "changedFiles": 9,
+    "insertions": 437,
+    "deletions": 101,
+    "responseContract": "Equivalent business and authorization behavior is preserved except for the deliberate additive historyHasMore field and its truthful UI disclosure."
+  },
+  "result": "PASS_U09_DATA_PATH_READY_FOR_PLAYGROUND_INTEGRATION",
+  "rollback": "Revert source commit 9a82307ed422ce02bd6e164716e8d8d7a10a826b. No schema, migration, index, provider, deployment, data, main, or Production rollback is required.",
+  "deploymentMutation": "ZERO",
+  "providerMutation": "ZERO",
+  "dataMutation": "ZERO",
+  "figmaMutation": "ZERO",
+  "productionMutation": "ZERO"
+}

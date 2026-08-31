@@ -2,17 +2,17 @@
 
 ## Current resume block
 
-- **Repository/worktree:** /workspace/scratch/9d88b058f45e/repo.
-- **Branch/HEAD/upstream:** `work/playground-mfr002-operations` from local U07 commit `71accded` / exact tree `a546b79b`; remote Playground carries that tree at `8f9ea464`.
-- **Current phase/stage:** MFR-002 U08 Operations + Administration + Index is active; supply is committed, Events is locally complete, and Administration is next.
-- **Accepted scope:** HAU-USC-MFR-002 U08 only, split sequentially: receiving/procurement, events/administration, then launcher-first Playground Index. U09 query work and U10+ remain separate.
-- **Completed work:** U07 is integrated on remote Playground. U08 receiving/procurement is committed locally at `147f8b3`. Events now presents activity logistics readiness first, keeps series/day context secondary, handles partial collections independently, and preserves capability/abort/retry/sanitized/zero-traffic inspection behavior.
-- **Files changed by purpose:** Prior supply slice plus purpose-built Events route/styles, SupplyRoutes delegation and dead managed-events removal, fixture-boundary guard, FI-11/U08 tests, and Playwright registration.
-- **Tests verified at current SHA:** Supply-focused units pass (9 tests). Events/FI-11/FI-09 focused units pass (13 tests); application build, fixture boundary, foundation check, and quiet lint pass; 20 Events browser cases enumerate at all five widths. A fresh 390px browser launch remains blocked by the absent pinned Chromium headless shell, so no rendered pass is claimed.
-- **Generated artifacts:** U07 canonical manifest `a67b98c5...`, 375,876 direct bytes / 94,937 gzip bytes including HTML, remains the U08 performance baseline until source changes.
-- **External actions:** U07 remote branch and Playground were updated to `8f9ea464`; `main` remains `f7e5bf8`. No provider, D1/R2, reset, data, Google, email, Figma, main, or Production write.
-- **Rollback:** Revert each isolated U08 commit or move only the Playground ref back to the last verified integrated commit. No schema/provider/data rollback is expected from visual U08 slices.
-- **Blocker:** None. Browser availability remains an explicit evidence constraint.
-- **Next three actions:** Commit Events; build responsive Administration master/detail; verify privacy, capability, activity, and reset boundaries before Index.
-- **Resume commands:** `git status --short --branch`; verify local supply commit `147f8b3`; run focused Events/FI-11 units/build after any Events change; inspect accepted U08/FI-10/FI-11 contracts; continue Administration frontend source/tests only.
-- **Prohibited actions:** Production/main mutation; deployment outside isolated Playground; D1/R2/reset/schema/migration/index/provider changes inside visual U08; Figma write; invented operational truth; capability/privacy/cumulative/evidence/idempotency/ledger/audit regression; U09 query changes in the U08 diff.
+- **Repository/worktree:** `D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-master-reconciliation`.
+- **Branch/HEAD/upstream:** `work/playground-mfr002-data-path`; source checkpoint `9a82307ed422ce02bd6e164716e8d8d7a10a826b` / tree `222bbc0b7985b50daca81d583911d9979cdab32d`; closeout HEAD is the current Git HEAD; upstream is pending publication.
+- **Current phase/stage:** MFR-002 U09 Fullstack Data Path is complete and ready for non-force Playground integration.
+- **Accepted scope:** Administration batch hydration and purpose-limited list projection; unused Restocking/Procurement read removal; page/ticket-bound Lending item/asset scope; visible-ticket set-wise bounded history with truthful `historyHasMore`; focused evidence and non-force Playground integration.
+- **Completed work:** U09 was independently reconstructed from the accepted specification because the attachment's dirty cloud tree was unavailable. Administration hydration is set-wise and purpose-limited; unused Restocking and Procurement reads are gone; Lending item, asset, and visible-ticket history collections are bounded; and a required `historyHasMore` field truthfully discloses the latest-20 history bound.
+- **Files changed by purpose:** Backend query/projection repairs in the access and operational repositories; Lending adapter/type/UI disclosure; five focused regression/source-contract files; sanitized evidence and canonical continuity records.
+- **Tests verified at current SHA:** Focused suites pass at 15/15, 45/45, 10/10, 30/30, and 6/6; full unit passes 178 files / 1,290 tests; lint has zero errors and one unrelated preexisting warning; build transforms 1,696 modules; fixture, Apps Script, dist, Cloudflare dry-run, changed-file Prettier, and diff checks pass.
+- **Generated artifacts:** Canonical `dist` verification passes at 9 files / 36,963,069 bytes / 2 direct assets; Cloudflare staging dry-run verifies byte-identical chunked hero media. `dist` and `.wrangler` remain ignored and untracked. Evidence is `.codex/evidence/MFR002_U09_DATA_PATH.json`.
+- **External actions:** Git fetch only. No remote ref, provider, D1/R2, reset, data, Google, email, Figma, main, or Production write.
+- **Rollback:** Revert source commit `9a82307ed422ce02bd6e164716e8d8d7a10a826b` and its closeout commit, or leave remote Playground at verified U08 commit `61e5a5372830767614dc42ccd4363e5c79b3fa56`. No schema/provider/data rollback is required.
+- **Blocker:** None.
+- **Next three actions:** Publish the exact temporary branch; integrate it non-force into Playground only after a fresh fetch and ancestry proof; verify remote commit/tree parity and unchanged main, then create the U10 worker-hardening branch.
+- **Resume commands:** In the Windows worktree run `git status --short --branch`, verify source commit/tree `9a82307ed422ce02bd6e164716e8d8d7a10a826b` / `222bbc0b7985b50daca81d583911d9979cdab32d`, run `npm.cmd run check:governance` and `npm.cmd run handoff:verify` after any record change, fetch, then compare exact remote Playground/main identities before any push.
+- **Prohibited actions:** Production/main mutation; U09 deployment; schema/migration/index/provider changes; speculative history API; capability/privacy/evidence/idempotency/ledger/audit regression.
