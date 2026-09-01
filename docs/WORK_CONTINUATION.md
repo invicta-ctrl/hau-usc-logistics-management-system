@@ -13,8 +13,8 @@ Local evidence remains 445 passed, 90 expected skipped, 0 failed/interrupted in 
 - `main` and Production remain unchanged; no Google, email, or Figma mutation occurred.
 - D1 remains schema 32 at migration `0032_staff_account_activity_history.sql`; reset generation remains 9. No reset or reconciliation occurred. The pre-existing dirty active test session was preserved.
 - Historical U11 acceptance/performance evidence remains preserved and is not current acceptance proof.
-- All enumerated temporary MFR-002 branches are ancestors of the accepted rollback or are protected by the rejected archive tag; no open pull request references them. Their retirement is the final post-parity gate.
+- All enumerated temporary MFR-002 branches were proven ancestors of the accepted rollback or protected by the rejected archive tag, had no open pull-request dependency, and were retired locally/remotely. The rollback worktree was removed; generated rejected-final residue was preserved under the project archive.
 
 ## Next exact action
 
-Publish and deploy this receipt-bearing finalization commit, verify exact live parity, then retire the proven-safe temporary MFR-002 branches and worktrees. Stop after clean GitHub topology and unchanged `main`/Production are reverified.
+None. Stop at the accepted rollback state unless Earl gives new authority.
