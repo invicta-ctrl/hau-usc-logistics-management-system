@@ -1,10 +1,12 @@
-import { Menu, Search } from 'lucide-react';
-import type { Route } from '../appTypes';
+import { Menu } from 'lucide-react';
+import { AUTH_ROUTE_INTENT_LABELS } from '../appRoutes';
+import type { AuthRoute, Route } from '../appTypes';
 import { appRouteHash } from '../routeHash';
 import { ThemeToggle } from '../brand/ThemeToggle';
 import type { ShellPresentation } from './presentation';
 
 export function AuthShellTopbar({
+  route,
   navigate,
   presentation,
   dark,
@@ -13,6 +15,7 @@ export function AuthShellTopbar({
   inspection = false,
   onBackToPreview,
 }: {
+  route: AuthRoute;
   navigate: (r: Route) => void;
   presentation: ShellPresentation;
   dark: boolean;
@@ -29,6 +32,7 @@ export function AuthShellTopbar({
   const commandBorder = 'var(--theme-border)';
   const navigateBackground = 'var(--sidebar)';
   const navigateForeground = 'var(--sidebar-foreground)';
+  const routeLabel = AUTH_ROUTE_INTENT_LABELS[route];
 
   return (
     <header
@@ -105,35 +109,37 @@ export function AuthShellTopbar({
           HAU-USC Logistics
         </span>
 
-        <div className="flex-1 hidden lg:flex items-center">
+        <div
+          className="workbench-command flex-1 hidden lg:flex items-center gap-3 px-3"
+          style={{ background: commandSurface, border: `1px solid ${commandBorder}` }}
+          data-command-panel
+          aria-label={`Current workspace: ${routeLabel}`}
+        >
           <div
-            className="flex w-full max-w-[180px] xl:max-w-[240px] items-center gap-2 rounded-[8px] px-3 py-2 cursor-default select-none"
-            style={{ background: commandSurface, border: `1px solid ${commandBorder}` }}
-            aria-hidden="true"
-            data-command-search
+            className="min-w-0 flex items-center gap-2"
           >
-            <Search size={13} strokeWidth={1.5} color={commandMuted} />
             <span
-              style={{
-                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-                fontSize: 12,
-                color: commandMuted,
-                letterSpacing: -0.1,
-              }}
-            >
-              Search
-            </span>
-            <span
-              className="ml-auto rounded px-1.5 py-0.5"
               style={{
                 fontFamily: "'IBM Plex Mono', monospace",
                 fontSize: 10,
                 color: commandMuted,
-                background: commandSurface,
-                border: `1px solid ${commandBorder}`,
+                letterSpacing: '0.45px',
+                textTransform: 'uppercase',
               }}
             >
-              ⌘K
+              Workbench
+            </span>
+            <span
+              className="truncate"
+              style={{
+                fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+                fontSize: 13,
+                color: commandForeground,
+                fontWeight: 650,
+                letterSpacing: '-0.1px',
+              }}
+            >
+              {routeLabel}
             </span>
           </div>
         </div>

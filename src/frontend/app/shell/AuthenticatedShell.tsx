@@ -57,6 +57,7 @@ export function AuthenticatedShell({
 
         <div className="auth-shell__workspace">
           <AuthShellTopbar
+            route={route}
             navigate={navigate}
             presentation={presentation}
             dark={dark}

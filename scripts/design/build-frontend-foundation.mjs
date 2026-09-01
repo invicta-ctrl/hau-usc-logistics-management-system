@@ -142,6 +142,59 @@ ${typographyTokens}
     background: var(--surface-raised);
     box-shadow: var(--elevation-raised);
   }
+
+  /* FBR-001 institutional vocabulary. These are deliberately quiet semantic
+     primitives, not a competing component library or card-grid recipe. */
+  .workbench-command,
+  .workbench-box,
+  .workbench-attention,
+  .workbench-line-decision {
+    border: 1px solid var(--border-subtle-role);
+    background: var(--surface-content);
+  }
+
+  .workbench-command {
+    border-radius: var(--radius-control);
+    min-block-size: var(--control-height-standard);
+  }
+
+  .workbench-box,
+  .workbench-attention {
+    border-radius: var(--radius-surface);
+  }
+
+  .workbench-attention {
+    border-block-start: 2px solid var(--theme-accent, var(--gold-canonical));
+  }
+
+  .workbench-line-decision {
+    border-radius: 0;
+    border-inline: 0;
+    border-block-start: 0;
+  }
+
+  .workbench-tabs {
+    display: flex;
+    min-inline-size: 0;
+    gap: var(--space-xs);
+    overflow-x: auto;
+    border-block-end: 1px solid var(--border-subtle-role);
+    scrollbar-width: thin;
+  }
+
+  .workbench-tab {
+    min-block-size: var(--control-hit-area-min);
+    padding-inline: var(--space-sm);
+    border-block-end: 2px solid transparent;
+    color: var(--theme-text-muted, var(--muted-foreground));
+    font: inherit;
+    white-space: nowrap;
+  }
+
+  .workbench-tab[aria-selected='true'] {
+    border-block-end-color: var(--theme-accent, var(--gold-canonical));
+    color: var(--theme-text, var(--foreground));
+  }
 }
 
 @layer utilities {

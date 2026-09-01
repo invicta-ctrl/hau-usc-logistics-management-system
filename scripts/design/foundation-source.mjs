@@ -15,7 +15,10 @@ export const CASCADE_LAYERS = [
   'overrides',
 ];
 
-export const STRUCTURAL_WIDTHS = [320, 390, 768, 1024, 1440];
+// FBR-001 acceptance widths. A layout still has to make its own deliberate
+// table treatment; this list ensures the shared foundation and receipts name
+// every required inspection width.
+export const STRUCTURAL_WIDTHS = [320, 375, 390, 414, 768, 1024, 1440, 1920];
 
 export const TYPOGRAPHY_ROLES = {
   display: {

@@ -1,8 +1,8 @@
-# Current Environment Handoff — FBR-001 Phase A
+# Current Environment Handoff — FBR-001 Phase B–C
 
 PROGRAM: FBR-001
 FROM: TERRA_HIGH:/root/fbr_writer
-TO: Parent-run Hallmark/Impeccable pre-edit gate, then TERRA_HIGH continuation in this worktree
+TO: TERRA_HIGH Phase D route-body reconciliation in this worktree
 BRANCH: release/v0.8.3-fbr001-claude-frontend-reconciliation
 HEAD: GIT_HEAD
 UPSTREAM: origin/Playground@7f483d2d713c406a465d218055696b31cd0dc9bd; parity 0/0 at handshake
@@ -25,13 +25,14 @@ PHASE_A_RECEIPT: .codex/FBR001_PHASE_A_RECEIPT.md
 PARITY_MATRIX: docs/frontend/FBR001_FRONTEND_FUNCTIONAL_PARITY_MATRIX.md
 
 COMPLETED: exact Playground worktree/branch handshake; immutable source hash check; safe Python-stdlib TAR.GZ preflight and extraction; full extracted manifest/per-file hashes; embedded handoff hash equality; Claude source/audit inventory; current route/capability/transport inventory; accepted FBR-001 record; deterministic matrix.
-VALIDATION: archive/handoff hashes PASS; safe archive preflight PASS; embedded handoff equality PASS; route/API inventory COMPLETE; governance/continuation/handoff PASS; diff check PASS.
-NOT_COMPLETED: Hallmark/Impeccable gate; Phase B–H; runtime source changes; real-read/write proof; browser/accessibility acceptance; Playground candidate deployment.
+VALIDATION: Phase A archive/handoff hashes and safe intake PASS; foundation generation/check PASS; focused frontend tests 39/39 PASS; application build PASS; Impeccable detector PASS after replacing the rejected side-stripe attention rule with a top decision rule.
+PHASE_B_C_OUTCOME: FBR authority amendment in `DESIGN.md`; four hash-verified self-hosted Claude Latin font subsets; generated Workbench component vocabulary; exact responsive inspection widths; truthful current-workspace command panel; current route/session/capability shell preservation.
+REMAINING: Phase D–H route-body adoption; live browser/accessibility acceptance; real-read/write proof beyond existing test coverage; Playground candidate deployment.
 EXTERNAL_ACTIONS: local Git worktree/branch creation and immutable archive intake only; no provider, Playground, D1, R2, Google, Figma, or Production write.
 EXTERNAL_WRITES: NONE. PLAYGROUND_WRITES: 0. D1_WRITES: 0. R2_WRITES: 0. GOOGLE_WRITES: 0. PROVIDER_WRITES: 0. PRODUCTION_WRITES: 0.
 BLOCKER: NONE
-RESUME_COMMANDS: npm.cmd run check:governance; npm.cmd run handoff:verify; git diff --check; git status --short
-PROHIBITED_ACTIONS: RUNTIME_FRONTEND_EDIT_BEFORE_PRE_EDIT_GATE;PRODUCTION_DEPLOYMENT;PROVIDER_D1_R2_GOOGLE_FIGMA_MUTATION;MAIN_OR_HISTORICAL_WORKTREE_MUTATION;HISTORY_REWRITE
-DO_NOT_REPEAT: do not re-extract over the approved scratch intake; do not use Claude preview localStorage/role picker/seed records as authority; do not modify main, historical worktrees, .ai-bridge, .local, or providers; do not start Phase B before the pre-edit gate.
-NEXT_EXACT_ACTION: RUN_PARENT_HALLMARK_IMPECCABLE_PRE_EDIT_GATE_THEN_CONTINUE_FBR001_PHASE_B_IN_THIS_WORKTREE
-HANDOFF_STATUS: READY_FOR_PRE_EDIT_GATE
+RESUME_COMMANDS: git status --short; npm.cmd run design:foundation:check; npm.cmd exec vitest run tests/unit/fbr001-frontend-shell-contract.test.js; npm.cmd run build; npm.cmd run check:governance; npm.cmd run handoff:verify
+PROHIBITED_ACTIONS: PROVIDER_D1_R2_GOOGLE_FIGMA_MUTATION;PLAYGROUND_OR_PRODUCTION_DEPLOYMENT;MAIN_OR_HISTORICAL_WORKTREE_MUTATION;HISTORY_REWRITE;MOCK_AUTH_OR_DATA;SECOND_FRONTEND_TRANSPORT;LEGACY_FRONTEND_DELETION
+DO_NOT_REPEAT: do not rerun `npm ci`; do not re-extract the approved scratch intake; do not use Claude preview localStorage/role picker/seed records as authority; do not restore the fake Search/⌘K control; do not reintroduce side-stripe attention cards.
+NEXT_EXACT_ACTION: BEGIN_FBR001_PHASE_D_ROUTE_BODY_RECONCILIATION_IN_THIS_WORKTREE
+HANDOFF_STATUS: READY_FOR_PHASE_D

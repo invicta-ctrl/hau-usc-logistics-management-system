@@ -4,10 +4,10 @@ status: active
 scope: hau-usc-logistics-frontend
 authority: canonical
 branch: Playground
-visual_authority: live-figma-make-rP9W9MQlZkyQrUx38TVsFS
+visual_authority: fbr001-immutable-claude-handoff-2026-09-01
 design_documentation_authority: live-figma-design-hXJElH4p72KfgAaoUyfNOC-current-lane
 functional_authority: repository-server-worker-auth-contracts
-accepted_amendment: .codex/specs/accepted/2026-08-23-r3-a1-a2-owner-routing-identity-three-context.md
+accepted_amendment: .codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md
 last_reviewed: 2026-08-31
 # Machine-readable palette. Generated from scripts/design/theme-source.mjs, the
 # canonical token source, and emitted into src/frontend/styles/theme.css. This
@@ -141,6 +141,30 @@ SUPERSEDED, PROTOTYPE, CONTRACT-GATED — and those words are authoritative.
 
 Neither the design authorities nor the functional contracts may be inferred from
 one another.
+
+## FBR-001 visual-authority amendment — 2026-09-01
+
+For the bounded FBR-001 reconciliation, the immutable Claude handoff is the
+accepted visual and frontend-composition authority. Its source archive SHA-256
+is `4DDAE14C3373DA96FD40E008DC3E636E58B90D70716AED3241680A9F1779BF8A`; its
+external `HANDOFF.md` SHA-256 is
+`01FF2CFA7B0B4D112645801C7088E972BAC401EED27AC03AF50128B4490BEBF7`.
+
+This amendment supersedes the Figma Make and Design authorities above only for
+the FBR-001 visual world: editorial public and identity composition, the
+authenticated Workbench macrostructure, warm-paper/oxblood/gold token roles,
+the Bricolage Grotesque/Newsreader/IBM Plex family roles, and the command
+panel/box/table/pill/attention/timeline/tabs/line-decision/sheet vocabulary.
+The archive's preview seed data, localStorage, role picker, and preview auth
+behaviour are non-authoritative and must not enter the application.
+
+Repository Worker, API, auth, capability projection, route, privacy, D1/R2,
+audit/ledger/custody, and Playground-only contracts remain the sole functional
+authority. A current Playground contract wins any product or behaviour conflict;
+Claude wins only a visual or composition conflict. FBR-001 permits deployment
+only to the existing isolated Playground after all required gates; Production is
+forbidden. The historical Figma records remain preserved provenance and are not
+rewritten by this amendment.
 
 ## R3-A1-A2 three-context workflow architecture
 
