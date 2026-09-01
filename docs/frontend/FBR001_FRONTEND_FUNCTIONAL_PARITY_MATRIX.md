@@ -1,6 +1,6 @@
 # FBR-001 Frontend Functional Parity Matrix
 
-STATUS: Phase D real-read integration checkpoint complete; Phase E write integration pending parent direction
+STATUS: Phase E write-integration checkpoint complete; Phase F missing-parity work pending parent direction
 FUNCTIONAL AUTHORITY: `Playground@7f483d2d713c406a465d218055696b31cd0dc9bd`, current Worker/API and server capability projection.
 VISUAL AUTHORITY: immutable Claude archive and handoff named by FBR-001.
 STATUS SEMANTICS: `PRESENT` means Claude already has the comparable composition; `PARTIAL` means it lacks an accepted current contract, state, route, tab, or real-data behavior; `MISSING` means no comparable Claude surface. These are baseline gaps, not implementation acceptance.
@@ -53,6 +53,21 @@ Every row requires loading, empty, safe error, denied, and stale/conflict states
 | Events/administration/profile | `events/EventReadinessRoute.tsx`; `AdministrationRoute.tsx`; `profile/ProfileRoute.tsx` | `eventManagement`; administration reads; `profile` | PRESENT — protected reads stay capability/session-scoped. |
 
 No adapter extension was required. Phase D tests assert these bindings and fixture isolation; Phase E retains all mutation controls and is not started by this checkpoint.
+
+## Phase E real-write reconciliation evidence
+
+| Mutation family | Existing endpoint/adapter and route evidence | Phase E result |
+|---|---|---|
+| Public lending submit/receipt | `PublicFlows.tsx` → `submitPublicLending` → `POST /api/public/lending` | PRESENT — public receipt is server-returned; no authenticated cancellation contract is exposed on this route. |
+| Anonymous public request | `/api/public/request` exists in the preserved Worker, but `PublicFlows.tsx` records its owner-locked supersession by authenticated requester mode | INTENTIONALLY_DEFERRED — do not revive a superseded anonymous workflow. |
+| External requester submit/cancel | `ExternalRequestCenter.tsx` → `submitRequesterRequest` / `cancelRequesterRequest` → `POST /api/portal/request` and `/cancel` | PRESENT — cancellation is rendered only for `FOR_REVIEW`/`ACCEPTED`, carries a new client idempotency key, disables while pending, reconciles returned status, and reloads after 403/409. |
+| Internal review | `InternalRequestHub.tsx` → `reviewRequest` → `POST /api/reviewRequest` | PRESENT — existing line-route, validation, conflict/denial recovery, and authoritative queue refresh retained. |
+| Release/receiving/evidence | `ReleaseStation.tsx`; `ReceivingStation.tsx` → `uploadOperationalEvidence`, `confirmRelease`, `receiveRestock` | PRESENT — existing CSRF, receipt, cumulative/idempotent, conflict, and reload behavior retained. |
+| Lending lifecycle/evidence | `InternalLendingHub.tsx` → approve/handoff/return/evidence canonical methods | PRESENT — existing capability, custody, pending, conflict/denial, and refresh behavior retained. |
+| Profile/account/session | `ProfileRoute.tsx`, `AccountAccessPanel.tsx`, `AccountRecoveryPanel.tsx`, `useAppController.ts` → current profile/account/auth methods | PRESENT — credential/session revocation remains server returned and controlled. |
+| Playground-gated administration reset | `AdministrationRoute.tsx` → `requestPlaygroundReset` | PRESENT — existing Playground-only server gate retained; no reset was requested in this checkpoint. |
+| Direct inventory reserve/adjust and restock transition | Server has accepted domain commands, but `backend.ts` and current React routes expose no accepted adapter/route action | INTENTIONALLY_DEFERRED — Phase F visual parity is excluded; no new command or capability is invented. |
+| Procurement/events command mutations | Current React routes expose `operationalModuleBootstrap('procurement')` and `eventManagement` reads only | INTENTIONALLY_DEFERRED — no current accepted React mutation command exists. |
 
 ## Integration target and evidence
 

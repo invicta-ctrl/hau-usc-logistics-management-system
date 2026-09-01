@@ -72,6 +72,11 @@ const pretty = (value: string) => value.replaceAll('_', ' ');
 
 const newClientRequestId = () => `frontend-${crypto.randomUUID()}`;
 
+/** The Worker remains authoritative; this only avoids offering an impossible action. */
+export function canCancelRequesterRequest(status: string) {
+  return ['FOR_REVIEW', 'ACCEPTED'].includes(status);
+}
+
 const emptyLine = (category: string, unit: string): DraftLine => ({
   category,
   description: '',
@@ -123,6 +128,7 @@ export function ExternalRequestCenter({
     acceptableUseAcknowledged: false,
   });
   const [busy, setBusy] = useState(false);
+  const [cancellingRequestId, setCancellingRequestId] = useState('');
   const [receipt, setReceipt] = useState<RequesterSubmissionReceipt | null>(null);
   const [clientRequestId, setClientRequestId] = useState(newClientRequestId);
   const receiptRef = useRef<HTMLElement>(null);
@@ -260,6 +266,36 @@ export function ExternalRequestCenter({
     event.preventDefault();
     void submit();
   };
+
+  async function cancelRequest(requestId: string) {
+    if (inspection || cancellingRequestId) return;
+    setAlert('');
+    setCancellingRequestId(requestId);
+    try {
+      const result = await frontendBackend.cancelRequesterRequest({
+        requestId,
+        clientRequestId: newClientRequestId(),
+      });
+      setPortal((current) =>
+        current
+          ? {
+              ...current,
+              requests: current.requests.map((request) =>
+                request.id === result.id ? { ...request, status: result.status } : request,
+              ),
+            }
+          : current,
+      );
+      setLive(`Request ${result.id} cancelled. Server status ${pretty(result.status)}.`);
+      setReload((current) => current + 1);
+    } catch (error) {
+      const api = error instanceof FrontendApiError ? error : null;
+      setAlert(api?.message ?? 'The request service is temporarily unavailable.');
+      if ([403, 409].includes(api?.status ?? 0)) setReload((current) => current + 1);
+    } finally {
+      setCancellingRequestId('');
+    }
+  }
 
   const field = {
     background: c.m2,
@@ -570,6 +606,21 @@ export function ExternalRequestCenter({
                         {request.lines.length} line{request.lines.length === 1 ? '' : 's'} · updated{' '}
                         {request.updatedAt || 'not reported'}
                       </p>
+                      {!inspection && canCancelRequesterRequest(request.status) && (
+                        <div className="flex flex-wrap items-center gap-3">
+                          <button
+                            type="button"
+                            disabled={cancellingRequestId === request.id}
+                            onClick={() => void cancelRequest(request.id)}
+                            style={quietButton}
+                          >
+                            {cancellingRequestId === request.id ? 'Cancelling…' : 'Cancel request'}
+                          </button>
+                          <span style={{ fontSize: 11, color: c.muted }}>
+                            Available while the request has no irreversible downstream work.
+                          </span>
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
