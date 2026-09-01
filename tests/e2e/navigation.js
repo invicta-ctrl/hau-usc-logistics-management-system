@@ -37,7 +37,6 @@ export async function navigateAuthenticatedRoute(page, label) {
       .click();
     return;
   }
-
   await page.getByRole('button', { name: 'Open navigation' }).click();
   await page
     .getByRole('dialog', { name: 'Workspace navigation' })

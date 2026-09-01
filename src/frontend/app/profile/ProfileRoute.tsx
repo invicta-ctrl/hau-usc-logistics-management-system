@@ -411,7 +411,7 @@ export function ProfileRoute({
   };
 
   return (
-    <div className="profile-workspace max-w-[1080px] mx-auto px-5 md:px-8 py-8 pb-12">
+    <div className="max-w-[1080px] mx-auto px-5 md:px-8 py-8 pb-12">
       <nav
         aria-label="Breadcrumb"
         className="mb-5"
@@ -421,7 +421,7 @@ export function ProfileRoute({
       </nav>
 
       <section
-        className="profile-workspace__identity rounded-[14px] px-5 sm:px-6 py-6 mb-6"
+        className="rounded-[14px] px-5 sm:px-6 py-6 mb-6"
         style={{ background: '#40070a', border: '1px solid rgba(242,209,92,0.22)' }}
         aria-labelledby="profile-heading"
       >
@@ -509,7 +509,7 @@ export function ProfileRoute({
         </div>
       </section>
 
-      <div className="profile-workspace__grid grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="flex flex-col gap-6">
           <Section title="Identity" subtitle="Institution-controlled details are read-only.">
             <ReadOnlyGrid

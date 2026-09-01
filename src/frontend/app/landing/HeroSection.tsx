@@ -13,7 +13,9 @@ export function HeroSection({
   onRequireExternalRequest: () => void;
 }) {
   return (
-    <section id="hero" aria-labelledby="hero-heading" className="digital-atrium civic-ledger-hero">
+    <section id="hero" aria-labelledby="hero-heading" className="digital-atrium">
+      <HeroMotion videoSrc={heroVideoSrc} />
+
       <div className="atrium__stage">
         <div className="atrium__copy atrium__reveal" style={{ '--i': 0 } as CSSProperties}>
           <p className="atrium__institution">HAU-USC · Institutional Logistics Ledger</p>
@@ -59,33 +61,15 @@ export function HeroSection({
           </div>
 
           <div className="atrium__secondary-paths" aria-label="Other logistics paths">
-            <a
-              href={appRouteHash('tracking')}
-              className="atrium__text-action"
-              onClick={(event) => {
-                event.preventDefault();
-                onNavigate('tracking');
-              }}
-            >
+            <a href={appRouteHash('tracking')} className="atrium__text-action" onClick={(event) => { event.preventDefault(); onNavigate('tracking'); }}>
               Track lending
             </a>
 
-            <a
-              href={appRouteHash('staff-signin')}
-              className="atrium__text-action"
-              onClick={(event) => {
-                event.preventDefault();
-                onNavigate('staff-signin');
-              }}
-            >
+            <a href={appRouteHash('staff-signin')} className="atrium__text-action" onClick={(event) => { event.preventDefault(); onNavigate('staff-signin'); }}>
               Staff sign in
             </a>
           </div>
         </div>
-      </div>
-
-      <div className="atrium__media" data-civic-ledger-media>
-        <HeroMotion videoSrc={heroVideoSrc} />
       </div>
     </section>
   );

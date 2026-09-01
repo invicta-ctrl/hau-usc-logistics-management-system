@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "status": "LOCAL_CANDIDATE_READY_FOR_PARENT_REVIEW",
+  "ownerAuthority": "HAU-USC-MFR002-U11-FRONTEND-ROLLBACK-CLEANUP-A1",
+  "rejectedVisualAuthority": "HAU-USC-MFR002-U11-VISUAL-RECOVERY-A1",
+  "rejectedEvidenceDisposition": "HISTORICAL_REJECTED",
+  "rejectedArchiveTag": "archive/mfr002-u11-rejected-visual-recovery-2026-09-01",
+  "rejectedArchiveTarget": "670f14bf",
+  "restoredFrontendSource": "c437115e",
+  "boundedRepairs": [
+    "dialog and route focus timing",
+    "mobile drawer stacking and safe interaction",
+    "truthful denied Public Lending recovery",
+    "narrow responsive and fixture-backed browser contracts"
+  ],
+  "verification": {
+    "frontendUnits": "34 passed",
+    "mobileShellUnit": "5 passed",
+    "fixtureBoundary": "PASS",
+    "build": "PASS; 1696 modules",
+    "dist": "PASS; 9 files; 36964322 bytes",
+    "contrast": "66/66 pass",
+    "theme": "PASS",
+    "releaseCandidateLint": "0 errors; 1 pre-existing unrelated warning",
+    "browserMatrix": "445 passed; 90 expected skipped; 0 failed; 0 interrupted; exact local 4173; 19.3m"
+  },
+  "externalState": {
+    "deployment": "NOT_STARTED",
+    "dataReset": "ZERO",
+    "d1OrR2Mutation": "ZERO",
+    "branchCleanup": "NOT_STARTED",
+    "mainMutation": "ZERO",
+    "productionMutation": "ZERO"
+  },
+  "nextGate": "PARENT_REVIEW_OF_LOCAL_CANDIDATE_DIFF_BEFORE_PUSH_OR_DEPLOY"
+}

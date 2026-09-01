@@ -4,111 +4,110 @@ status: active
 scope: hau-usc-logistics-frontend
 authority: canonical
 branch: Playground
-visual_authority: owner-amendment-HAU-USC-MFR002-U11-VISUAL-RECOVERY-A1
-visual_reference_sources: figma-make-figma-design-current-playground-before-baseline
-design_documentation_authority: repository-DESIGN-md-plus-u11-visual-recovery-evidence
+visual_authority: live-figma-make-rP9W9MQlZkyQrUx38TVsFS
+design_documentation_authority: live-figma-design-hXJElH4p72KfgAaoUyfNOC-current-lane
 functional_authority: repository-server-worker-auth-contracts
 accepted_amendment: .codex/specs/accepted/2026-08-23-r3-a1-a2-owner-routing-identity-three-context.md
-last_reviewed: 2026-09-01
+last_reviewed: 2026-08-31
 # Machine-readable palette. Generated from scripts/design/theme-source.mjs, the
 # canonical token source, and emitted into src/frontend/styles/theme.css. This
 # block exists so tooling can tell a real design-system addition from drift; it
 # does not replace the variables, which remain the implementation contract.
 colors:
-  oxblood-deep: '#40070a'
-  oxblood-mid: '#78141a'
-  oxblood-light: '#8d1f28'
-  oxblood-dark-ground: '#4a1015'
-  gold-canonical: '#d4af37'
-  gold-vivid: '#e8b93c'
-  gold-mid: '#f2d15c'
-  gold-pale: '#f6e29a'
-  gold-cream: '#faeecb'
-  gold-dark-mode: '#e1c671'
-  accent-text: '#7d5518'
-  accent-text-dark: '#c9a45f'
-  paper-warm: '#fffdf8'
-  paper-mid: '#fcf2cf'
-  paper-light: '#f7f0e2'
-  paper-bg: '#f2eae5'
-  ink-deep: '#241416'
-  ink-mid: '#6f5a60'
-  border-warm: '#d1b478'
-  border-paper: '#e6dcc9'
-  on-oxblood: '#ffffff'
-  scrim: 'rgba(0,0,0,0.5)'
-  hairline-gold: 'rgba(242,209,92,0.16)'
-  hairline-gold-strong: 'rgba(242,209,92,0.28)'
+  oxblood-deep: "#40070a"
+  oxblood-mid: "#78141a"
+  oxblood-light: "#8d1f28"
+  oxblood-dark-ground: "#4a1015"
+  gold-canonical: "#d4af37"
+  gold-vivid: "#e8b93c"
+  gold-mid: "#f2d15c"
+  gold-pale: "#f6e29a"
+  gold-cream: "#faeecb"
+  gold-dark-mode: "#e1c671"
+  accent-text: "#7d5518"
+  accent-text-dark: "#c9a45f"
+  paper-warm: "#fffdf8"
+  paper-mid: "#fcf2cf"
+  paper-light: "#f7f0e2"
+  paper-bg: "#f2eae5"
+  ink-deep: "#241416"
+  ink-mid: "#6f5a60"
+  border-warm: "#d1b478"
+  border-paper: "#e6dcc9"
+  on-oxblood: "#ffffff"
+  scrim: "rgba(0,0,0,0.5)"
+  hairline-gold: "rgba(242,209,92,0.16)"
+  hairline-gold-strong: "rgba(242,209,92,0.28)"
   # Semantic status roles. These ship in theme.css and are used across the
   # frontend, but were previously undeclared here, so the detector read genuine
   # system tokens as drift (FE-R3-013). Declaring them is the fix; suppressing
   # the finding would not have been.
-  destructive: '#d4183d'
-  destructive-foreground: '#ffffff'
-  destructive-dark: '#f6acb2'
-  green-open: '#1f6b41'
-  green-open-dark: '#9ad9b2'
+  destructive: "#d4183d"
+  destructive-foreground: "#ffffff"
+  destructive-dark: "#f6acb2"
+  green-open: "#1f6b41"
+  green-open-dark: "#9ad9b2"
   # Historical fallback for the account-panel input role. Both account panels
   # now consume generated theme roles in every Light/Dark appearance.
-  panel-input: '#fff7e6'
+  panel-input: "#fff7e6"
 typography:
   display:
     fontFamily: "'Bricolage Grotesque', system-ui, sans-serif"
     fontWeight: 700
-    fontSize: 'clamp(2.5rem, 8vw, 4.75rem)'
-  civic-display:
-    fontFamily: "'Bricolage Grotesque', system-ui, sans-serif"
+    fontSize: "clamp(2.5rem, 8vw, 4.75rem)"
+  editorial:
+    fontFamily: "'Newsreader', Georgia, serif"
     fontWeight: 700
-    fontSize: 'clamp(2rem, 6vw, 4.75rem)'
+    fontSize: "clamp(2rem, 6vw, 3.75rem)"
   page-title:
     fontFamily: "'Bricolage Grotesque', system-ui, sans-serif"
     fontWeight: 700
-    fontSize: 'clamp(1.75rem, 4vw, 2.5rem)'
+    fontSize: "clamp(1.75rem, 4vw, 2.5rem)"
   section-title:
     fontFamily: "'Bricolage Grotesque', system-ui, sans-serif"
     fontWeight: 700
-    fontSize: 'clamp(1.25rem, 2.4vw, 1.625rem)'
+    fontSize: "clamp(1.25rem, 2.4vw, 1.625rem)"
   record-title:
     fontFamily: "'IBM Plex Sans', system-ui, sans-serif"
     fontWeight: 650
-    fontSize: '1rem'
+    fontSize: "1rem"
   body:
     fontFamily: "'IBM Plex Sans', system-ui, sans-serif"
     fontWeight: 400
-    fontSize: '1rem'
+    fontSize: "1rem"
   compact-body:
     fontFamily: "'IBM Plex Sans', system-ui, sans-serif"
     fontWeight: 400
-    fontSize: '0.875rem'
+    fontSize: "0.875rem"
   label:
     fontFamily: "'IBM Plex Sans', system-ui, sans-serif"
     fontWeight: 650
-    fontSize: '0.8125rem'
+    fontSize: "0.8125rem"
   caption:
     fontFamily: "'IBM Plex Sans', system-ui, sans-serif"
     fontWeight: 500
-    fontSize: '0.75rem'
+    fontSize: "0.75rem"
   numeric:
     fontFamily: "'IBM Plex Sans', system-ui, sans-serif"
     fontWeight: 600
-    fontSize: '0.875rem'
-    fontVariantNumeric: 'tabular-nums lining-nums'
+    fontSize: "0.875rem"
+    fontVariantNumeric: "tabular-nums lining-nums"
   mono-reference:
     fontFamily: "'IBM Plex Mono', ui-monospace, monospace"
     fontWeight: 500
-    fontSize: '0.75rem'
-    letterSpacing: '0.025em'
+    fontSize: "0.75rem"
+    letterSpacing: "0.025em"
 # scripts/design/foundation-source.mjs is the non-color token authority and
 # deterministically emits src/frontend/styles/foundation.css. Existing routes
 # migrate to these semantic roles only in their bounded redesign slices.
 # Radius scale is real, emitted by the shared foundation:
 #   compact 6px, control 8px, surface 10px, overlay 14px.
 rounded:
-  sm: '6px'
-  md: '8px'
-  lg: '10px'
-  xl: '14px'
-  pill: '999px'
+  sm: "6px"
+  md: "8px"
+  lg: "10px"
+  xl: "14px"
+  pill: "999px"
 ---
 
 # HAU-USC Logistics frontend design authority
@@ -118,13 +117,15 @@ rounded:
 1. Earl's current explicit instruction, then the accepted specification and its
    approved amendments. The current amendment is **R3-A1-A2**.
 2. **Repository backend, API, auth, data, security and provider contracts** are
-   the sole _functional_ authority: authorization, capabilities, request
+   the sole *functional* authority: authorization, capabilities, request
    semantics, state transitions, inventory truth, privacy, and data ownership.
-3. **U11 Visual Recovery Amendment A1** is the current visual authority. It
-   requires a material multi-route transformation and rendered browser proof.
-4. Live Figma Make, the current Figma Design lane, and the pre-recovery
-   Playground candidate are reference inputs and historical evidence. They are
-   not a pixel target, a visual ceiling, or authority to preserve weak patterns.
+3. **Live Figma Make `rP9W9MQlZkyQrUx38TVsFS`** is the *interactive frontend
+   prototype* authority — composition, route/flow, motion and responsive
+   behaviour — wherever it does not contradict a functional contract.
+4. **The current-authority lane of live Figma Design `hXJElH4p72KfgAaoUyfNOC`**
+   is the *design documentation and visual reference* authority: workflow
+   references, component and state references, responsive, accessibility and
+   motion documentation, and traceability.
 5. Repository design mirrors, registers and audits under `docs/design/` are
    derived evidence.
 6. Historical lanes are provenance only and never authority.
@@ -138,68 +139,8 @@ system. Pages 15–90 are modules. Pages 91–99 are annotation matrices. Frame 
 page names carry the binding status vocabulary — CURRENT, HISTORICAL,
 SUPERSEDED, PROTOTYPE, CONTRACT-GATED — and those words are authoritative.
 
-Neither visual references nor functional contracts may be inferred from one
-another. The visual recovery may change hierarchy, composition, density,
-responsive behavior, and motion, but it may not change business behavior,
-authorization, data ownership, workflow state, or provider boundaries.
-
-## U11 visual transformation recovery
-
-`HAU-USC-MFR002-U11-VISUAL-RECOVERY-A1` pauses the prior U11 visual freeze and
-opens the visual and interaction layer for one bounded recovery. The coherent
-system is **Civic Ledger Workbench**: a HAU-USC record room translated into a
-modern, task-first interface.
-
-### System grammar
-
-- **Public gateway — split studio.** Compact institutional masthead, an
-  asymmetric service brief, one dominant request action, and ruled task lanes.
-  Media is contextual evidence rather than a full-viewport visual dependency.
-- **Authenticated operations — workbench.** The first useful viewport answers
-  what needs attention, what the current record means, and what action is next.
-  Queue/table and inspector use a solid 12-column frame at desktop and a single
-  working column with modal/sheet detail on mobile.
-- **Playground Index — index first.** Search and grouped compact route rows are
-  primary. Runtime/technical detail stays available without becoming a repeated
-  wall of identical cards.
-- **Material.** Oxblood is the structural spine, warm paper is the working plane,
-  and canonical gold is a sparse attention/focus signal. Operational surfaces
-  are solid and ruled. Glass is restricted to genuine overlays or media context.
-- **Type.** Bricolage Grotesque carries display and civic titles, IBM Plex Sans
-  carries body/UI, and IBM Plex Mono is the single outlier for identifiers,
-  timestamps, and tabular metadata. Newsreader remains a historical reference,
-  not a fourth runtime family.
-- **Geometry.** Data is expressed as ledgers, rows, dividers, and one signature
-  frame per route. Pills are reserved for real state. Card-in-card and equal
-  feature-card walls are prohibited.
-- **Motion.** Finite 120–280 ms transform/opacity transitions clarify route,
-  drawer, selection, and inspector state. No ambient loops, bounce, parallax,
-  layout-property animation, or delayed focus indicators. Reduced motion keeps
-  state feedback and removes spatial travel.
-
-### Route recovery classification
-
-| Surface                 | Recovery class  | Required visual outcome                                           |
-| ----------------------- | --------------- | ----------------------------------------------------------------- |
-| Landing                 | REDESIGN        | Split civic front door with task lanes and contextual media       |
-| Track Record            | REDESIGN        | Privacy-first lookup station and readable result timeline         |
-| Public Lending          | REDESIGN        | Search/catalog transaction plane with progressive borrower detail |
-| Staff Sign In           | REDESIGN        | Identity rail plus focused access form                            |
-| External Request Center | REDESIGN        | Requester queue plus focused intake station                       |
-| Operations Overview     | REDESIGN        | Exceptions-first decision brief, not a KPI/card wall              |
-| Inventory               | REFINE          | Preserve stock truth; strengthen ledger density and risk lane     |
-| Internal Request Hub    | REDESIGN        | Triage queue plus decision inspector                              |
-| Internal Lending Hub    | REFINE          | Preserve custody truth; compact lifecycle and elevate queue       |
-| Release Desk            | REDESIGN        | Ready-to-handoff queue plus custody station                       |
-| Restocking              | REDESIGN        | Receiving/reconciliation queue plus evidence station              |
-| Procurement             | REDESIGN        | Approved-needs pipeline plus supplier/deliverable inspector       |
-| Events                  | REFINE          | Preserve report truth; elevate readiness and blockers             |
-| Administration          | REDESIGN        | Grouped governance master/detail with scope and health first      |
-| Account Profile         | KEEP_WITH_PROOF | Preserve identity dossier; adopt shared system and verify         |
-| Playground Index        | REDESIGN        | Dense searchable route atlas with one launch action per row       |
-
-The 16 audited primary surfaces are the 15 application routes plus the
-Playground Index. This count does not invent a sixteenth application route.
+Neither the design authorities nor the functional contracts may be inferred from
+one another.
 
 ## R3-A1-A2 three-context workflow architecture
 
@@ -237,7 +178,7 @@ second request system and no second lending system.
 > Center is for verified USC staff and officers and requires authentication.
 
 The superseded reading was not a mistake in reasoning — it was faithful to
-`D06 — Product / Route Inventory` (`/request` = _Public request intake_),
+`D06 — Product / Route Inventory` (`/request` = *Public request intake*),
 production `public-requester-portal.js` at `0.8.2 / c316e047` (no session check,
 no sign-in gate, no authorization branch), and the accepted `/api/public/request`
 Worker contract. Those artifacts still say what they say; they are now historical
@@ -247,7 +188,7 @@ it anticipated.
 
 **D24.0 is not superseded.** It is the OWNER-LOCKED no-login model for the
 **Public Lending Center** and remains current. The R3-A1 correction of record —
-that `.codex/R3_PUBLIC_STAFF_BOUNDARY_RECEIPT.md` mis-cited D24.0 as the _Request_
+that `.codex/R3_PUBLIC_STAFF_BOUNDARY_RECEIPT.md` mis-cited D24.0 as the *Request*
 authority — stands, and is now moot for Request, which is no longer public at all.
 
 ### A. Public Lending Hub
@@ -285,8 +226,8 @@ Request Hub as a submission form with the review queue appended, gated on
 `request.review`, with a per-line route decision and no pre-selected default
 (RV-01.6). `D24.1` records the internal Office Lending Hub.
 
-**Vocabulary, fixed by R3-A1-A2.** The name _Request Center_ belongs to context B.
-The internal DOL surface is the _Request Hub_.
+**Vocabulary, fixed by R3-A1-A2.** The name *Request Center* belongs to context B.
+The internal DOL surface is the *Request Hub*.
 
 ### Generic Staff Sign In
 
@@ -314,7 +255,7 @@ The public/identity surfaces and FI-04 through FI-12 operational workspaces are
 implemented in `src/frontend/`:
 
 - institutional design foundation and public landing;
-- public media, task-first gateway composition, finite motion, and reduced-motion behavior;
+- Make hero poster, scrims, entrance motion, and reduced-motion behavior;
 - public navigation, Request, Lending, receipt, and tracking presentation;
 - sign-in, session/bootstrap, logout, starter activation, email verification,
   account application, private status-token lookup, and withdrawal;
@@ -348,18 +289,19 @@ inventory, approval, or provider state.
 
 ## Visual system
 
-- Oxblood provides institutional structure; canonical gold `#D4AF37` marks
-  focus, selection, and the single primary action without carpeting a viewport.
-- Warm paper carries reading and operations. Solid planes and semantic hairlines
-  replace decorative glass, nested cards, and glow.
-- Bricolage Grotesque is the display face; IBM Plex Sans and IBM Plex Mono carry
-  operational copy, labels, identifiers, and tabular values.
-- Lines are semantic. Purposeful asymmetry and operational hierarchy distinguish
-  the product from a generic dashboard while preserving scan speed.
-- Official USC and Department of Logistics marks remain the identity anchors;
-  live Make ordering is reference, not a mandatory composition.
-- The public poster/video may enrich the gateway, but the task and access model
-  must remain complete and legible without it.
+- Oxblood provides institutional structure; warm gold marks focus and primary
+  action. Canonical primary gold is `#D4AF37`, OWNER-LOCKED.
+- Warm paper and restrained, contextual Institutional Glass carry public and
+  authentication surfaces. Glass is localised to layers that earn it, never a
+  wash over the whole application.
+- Newsreader is the editorial hero face; Bricolage Grotesque is the display
+  face; IBM Plex Sans and Mono carry operational copy and labels.
+- Lines are semantic; decorative rules are rejected. Purposeful asymmetry and
+  operational hierarchy are preserved — this is not a generic SaaS dashboard.
+- Official USC and Department of Logistics identity follows the live Make
+  ordering and compact mobile reduction.
+- The public landing preserves the exact Make hierarchy, poster crop,
+  two-gradient readability model, and staggered entrance.
 
 ## Responsive, motion and accessibility
 
@@ -371,12 +313,12 @@ inventory, approval, or provider state.
 
 ## Provider and mirror identity
 
-| Authority              | Identity                                                                                                                                           |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Figma Design reference | `hXJElH4p72KfgAaoUyfNOC` — 28 pages. Historical/current-lane input; not the U11 visual ceiling                                                     |
-| Figma Make reference   | `rP9W9MQlZkyQrUx38TVsFS` — **Version 40** (R3-A1; previous 39), preserved as reference evidence                                                    |
+| Authority | Identity |
+|---|---|
+| Figma Design | `hXJElH4p72KfgAaoUyfNOC` — 28 pages. Current-authority board: page `55:3`, board `568:2`, R3-A1 block `733:2` |
+| Figma Make | `rP9W9MQlZkyQrUx38TVsFS` — **Version 40** (R3-A1; previous 39) |
 | Repository Make mirror | `output/design/make-adoption/`, `output/design/make-preservation/`, `output/design/figma-make-source/`, `prototypes/public-portals-r3/figma-make/` |
-| Registers              | `docs/design/FIGMA_MAKE_SOURCE_REGISTER.md`, `docs/design/FIGMA_BASELINE_REGISTER.md`                                                              |
+| Registers | `docs/design/FIGMA_MAKE_SOURCE_REGISTER.md`, `docs/design/FIGMA_BASELINE_REGISTER.md` |
 
 **Figma Make is synchronized and verified.** R3-A1 applied the public request
 reconciliation to eight Make source files and saved them: **Version 39 → Version
@@ -399,8 +341,8 @@ grep-verified.
 2. Read this file, `docs/frontend/WORKFLOW_ARCHITECTURE.md`, and
    `.codex/R3_A1_FIGMA_MAKE_DESIGN_SYNC_RECEIPT.md`.
 3. Implement only inside `src/frontend/` and frontend-owned surfaces.
-4. Run the exact local 4173 inspection preview and capture every primary surface
-   at 390 and 1440; structurally review 320, 768, and 1024.
+4. Run the **local** frontend preview and compare against the Figma Design
+   current-authority references named above.
 5. Do not treat any FI-04 staff workspace as verified.
 
 ## Implementation boundaries
@@ -412,11 +354,10 @@ grep-verified.
 - Receipts and tracking views are constructed by the frontend from
   server-confirmed values; the client never invents record identifiers, tracking
   codes, status, or lifecycle history.
-- Backend, auth, schema, migration, provider-design, Main, and Production
-  mutations remain out of scope.
-- The isolated Playground branch may be committed, pushed, deployed, and reset
-  only after final source/build/security/accessibility/performance gates pass and
-  exact branch/SHA/tree/artifact identity is verified.
+- Production deployment, backend changes, provider changes other than the two
+  design files named by R3-A1, and schema or migration changes require separate
+  accepted authority.
+- Playground, Production and `main` are out of scope for this phase.
 
 ## Known residuals
 
@@ -429,9 +370,10 @@ grep-verified.
 
 ## Stale if
 
-This file is stale if U11 Visual Recovery A1 is superseded; if the 15-route plus
-Playground-Index inventory changes; if the repository workflow model changes;
-or if a later accepted visual authority replaces Civic Ledger Workbench.
+This file is stale if R3-A1 is superseded; if the live Make version is not 40 and
+that is not recorded here; if `docs/frontend/WORKFLOW_ARCHITECTURE.md` or the
+Figma Design current lane stops agreeing with the workflow model above; or if
+FI-04 workspaces become runnable and are still described here as unexposed.
 
 Recovery and source-delivery evidence lives under `docs/frontend/`. Historical
 design research under `docs/design/` is reference-only and cannot override this

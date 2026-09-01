@@ -53,7 +53,7 @@ async function installSupplyWorkspace(page, state, { shrinkOnRecheck = false } =
   );
   await page.route('**/api/bootstrap/restocking?**', (route) => {
     state.restockBootstrapCalls += 1;
-    const changed = shrinkOnRecheck && state.authoritativeChange;
+    const changed = shrinkOnRecheck && state.restockBootstrapCalls >= 3;
     const received = state.recorded ? 8 : changed ? 11 : 6;
     return fulfill(route, {
       ok: true,
@@ -324,11 +324,9 @@ test('MFR-002 U08 stops a stale receipt before evidence upload', async ({ page }
   await prepareReceipt(page, '2');
 
   const confirmation = page.getByRole('dialog', { name: 'Recheck and record receipt' });
-  await expect(confirmation).toBeVisible();
   await confirmation
     .getByRole('checkbox', { name: /I verified the record, item, quantity, prior cumulative total/u })
     .check();
-  state.authoritativeChange = true;
   await confirmation.getByRole('button', { name: 'Recheck and record receipt' }).click();
 
   await expect(page.getByText(/Authoritative recheck stopped this receipt/u)).toBeVisible();

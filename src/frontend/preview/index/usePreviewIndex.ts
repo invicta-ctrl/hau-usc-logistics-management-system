@@ -127,8 +127,7 @@ export function usePreviewIndex() {
     allowed,
     gatePendingForRequestedRoute:
       gateState === 'CHECKING' &&
-      (isPreviewIndexHash(window.location.hash) ||
-        previewInspectionRouteFromHash(window.location.hash) !== null),
+      (isPreviewIndexHash(window.location.hash) || previewInspectionRouteFromHash(window.location.hash) !== null),
     indexOpen,
     returnFocusRequestedRef,
     openIndex,

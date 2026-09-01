@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { navigateAuthenticatedRoute } from './navigation.js';
 
-function fulfill(route, body, status = 200) {
-  return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
-}
-
 function expectStrictModeBoundedRead(count) {
   expect(count).toBeGreaterThanOrEqual(1);
   expect(count).toBeLessThanOrEqual(2);
+}
+
+function fulfill(route, body, status = 200) {
+  return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 }
 
 async function installAdministrationRuntime(page, state, { directoryUnavailable = false } = {}) {

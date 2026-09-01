@@ -292,6 +292,12 @@
   box-shadow: var(--glass-shadow-soft);
 }
 
+@media (max-width: 63.999rem) {
+  .preview-index-launcher {
+    inset-block-end: calc(3.75rem + var(--safe-area-bottom) + 1rem);
+  }
+}
+
 .preview-surface {
   display: grid;
   gap: 1rem;

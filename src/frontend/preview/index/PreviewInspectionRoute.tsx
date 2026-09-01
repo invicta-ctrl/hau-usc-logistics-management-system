@@ -32,7 +32,7 @@ export function PreviewInspectionRoute({
     return (
       <div data-preview-inspection="true" data-preview-route="external-request">
         <section
-          className="preview-inspection-banner mx-4 mt-4 rounded-[8px] px-4 py-3 flex flex-wrap items-center justify-between gap-3"
+          className="mx-4 mt-4 rounded-[8px] px-4 py-3 flex flex-wrap items-center justify-between gap-3"
           style={{
             background: 'var(--gold-pale)',
             border: '1px solid var(--border-warm)',
@@ -44,14 +44,7 @@ export function PreviewInspectionRoute({
           <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '0.35px' }}>
             PLAYGROUND INSPECTION · Sample data · Actions are unavailable.
           </p>
-          <a
-            href="#/__preview/index"
-            className="preview-action"
-            onClick={(event) => {
-              event.preventDefault();
-              onBackToIndex();
-            }}
-          >
+          <a href="#/__preview/index" className="preview-action" onClick={(event) => { event.preventDefault(); onBackToIndex(); }}>
             Back to Playground Index
           </a>
         </section>

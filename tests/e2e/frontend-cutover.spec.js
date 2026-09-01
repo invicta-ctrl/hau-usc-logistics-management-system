@@ -103,6 +103,10 @@ function installPublicIntakeContracts(page) {
   );
 }
 
+function usesMobileShell(testInfo) {
+  return ['frontend-320', 'frontend-390', 'frontend-768'].includes(testInfo.project.name);
+}
+
 function installOverviewBootstrap(page) {
   return page.route('**/api/bootstrap/overview?**', (route) =>
     route.fulfill({
@@ -130,10 +134,6 @@ function installOverviewBootstrap(page) {
       }),
     }),
   );
-}
-
-function usesMobileShell(testInfo) {
-  return ['frontend-320', 'frontend-390', 'frontend-768'].includes(testInfo.project.name);
 }
 
 async function signOutFromShell(page, testInfo) {
@@ -362,7 +362,9 @@ test('FVR-001 preserves keyboard focus, theme behavior, and 200 percent reflow',
 
   if (testInfo.project.name === 'frontend-1440') {
     await page.setViewportSize({ width: 720, height: 500 });
-    await expect(page.getByRole('heading', { name: 'Logistics services and records' })).toBeVisible();
+    await expect(
+    page.getByRole('heading', { name: 'Logistics services and records' }),
+    ).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );

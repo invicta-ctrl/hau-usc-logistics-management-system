@@ -298,12 +298,12 @@ export function ExternalRequestCenter({
   } as const;
 
   return (
-    <div className="requester-gateway min-h-screen flex flex-col" style={{ background: c.bg, color: c.text }}>
+    <div className="min-h-screen flex flex-col" style={{ background: c.bg, color: c.text }}>
       <div className="sr-only" role="status" aria-live="polite">
         {live}
       </div>
       <header
-        className="requester-gateway__topbar flex items-center gap-4 px-5 md:px-8 py-[14px]"
+        className="flex items-center gap-4 px-5 md:px-8 py-[14px]"
         style={{ background: '#40070a', borderBottom: '1px solid rgba(242,209,92,0.22)' }}
       >
         <div className="flex items-center gap-3">
@@ -344,7 +344,7 @@ export function ExternalRequestCenter({
 
       <main
         id="main-content"
-        className="requester-workbench route-focus-target flex-1 w-full max-w-[1120px] mx-auto px-5 md:px-8 py-8 flex flex-col gap-6"
+        className="route-focus-target flex-1 w-full max-w-[1120px] mx-auto px-5 md:px-8 py-8 flex flex-col gap-6"
         tabIndex={-1}
       >
         {/* R3-A1-A2 §34 — DOL requester-mode context cue. Shown only when a DOL
@@ -381,7 +381,7 @@ export function ExternalRequestCenter({
           </section>
         )}
 
-        <section className="requester-workbench__intro flex flex-col gap-2">
+        <section className="flex flex-col gap-2">
           <h1
             style={{
               fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
@@ -495,7 +495,7 @@ export function ExternalRequestCenter({
 
         {state === 'ready' && portal && !composing && (
           <>
-            <section className="requester-workbench__actions flex flex-wrap items-center gap-3">
+            <section className="flex flex-wrap items-center gap-3">
               <button type="button" onClick={startCompose} style={primaryButton}>
                 <span className="inline-flex items-center gap-2">
                   <Plus size={15} strokeWidth={1.8} aria-hidden="true" />
@@ -507,7 +507,7 @@ export function ExternalRequestCenter({
               </span>
             </section>
 
-            <section className="requester-workbench__queue flex flex-col gap-3" aria-label="Your requests">
+            <section className="flex flex-col gap-3" aria-label="Your requests">
               <h2
                 style={{
                   fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
@@ -529,11 +529,11 @@ export function ExternalRequestCenter({
                   </p>
                 </div>
               ) : (
-                <ul className="requester-workbench__records flex flex-col gap-3">
+                <ul className="flex flex-col gap-3">
                   {portal.requests.map((request) => (
                     <li
                       key={request.id}
-                      className="requester-workbench__record rounded-[14px] px-5 py-4 flex flex-col gap-2"
+                      className="rounded-[14px] px-5 py-4 flex flex-col gap-2"
                       style={{ background: c.m1, border: `1px solid ${c.border}` }}
                     >
                       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -579,7 +579,7 @@ export function ExternalRequestCenter({
         )}
 
         {state === 'ready' && portal && composing && (
-          <form className="requester-workbench__compose flex flex-col gap-5" aria-labelledby="new-request-heading" onSubmit={submitForm}>
+          <form className="flex flex-col gap-5" aria-labelledby="new-request-heading" onSubmit={submitForm}>
             <h2
               id="new-request-heading"
               style={{

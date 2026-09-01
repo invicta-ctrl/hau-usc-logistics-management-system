@@ -6,7 +6,6 @@ import { loadFrontendVersion } from './integration/frontendVersion';
 import { isPreviewIndexHash, previewInspectionRouteFromHash } from './preview/index/routeHash';
 import './styles/index.css';
 import './styles/skip-link.css';
-import './styles/visual-recovery.css';
 
 installStaleChunkRecovery();
 

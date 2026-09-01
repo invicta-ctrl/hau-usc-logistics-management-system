@@ -10,10 +10,22 @@ export function PreviewIndexLauncher({
   const ref = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (returnFocusRequestedRef.current) {
-      returnFocusRequestedRef.current = false;
-      ref.current?.focus();
-    }
+    if (!returnFocusRequestedRef.current) return;
+
+    let focusFrame = 0;
+    const routeFrame = requestAnimationFrame(() => {
+      focusFrame = requestAnimationFrame(() => {
+        const launcher = ref.current;
+        if (!launcher) return;
+        launcher.focus({ preventScroll: true });
+        returnFocusRequestedRef.current = false;
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(routeFrame);
+      cancelAnimationFrame(focusFrame);
+    };
   }, [returnFocusRequestedRef]);
 
   return (

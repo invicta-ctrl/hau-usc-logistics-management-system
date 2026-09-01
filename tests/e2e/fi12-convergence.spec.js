@@ -8,20 +8,7 @@ const scopedRoutes = [
   { route: 'restocking', root: '.sup' },
 ];
 
-function computedHeaderStyle(locator) {
-  return locator.evaluate((element) => {
-    const style = getComputedStyle(element);
-    return {
-      alignItems: style.alignItems,
-      display: style.display,
-      gap: style.gap,
-      marginTop: style.marginTop,
-      maxWidth: style.maxWidth,
-    };
-  });
-}
-
-test('FI-12 keeps all scoped route header styles out of the authenticated shell', async ({ page }) => {
+test('FI-12 keeps restored route headers visible, non-overlapping, and horizontally safe', async ({ page }) => {
   test.skip(!exactInspectionPort, 'Run explicitly against the accepted 4173 supervisor.');
   test.setTimeout(120_000);
   await page.route(VERSION, (route) =>
@@ -38,24 +25,18 @@ test('FI-12 keeps all scoped route header styles out of the authenticated shell'
       await page.locator(`[data-preview-route="${target.route}"] [data-action="open-preview"]`).click();
       const routeRoot = page.locator(target.root);
       await expect(routeRoot).toBeVisible();
-      const shellTopbar = page.locator('.auth-shell__topbar');
+      const shellTopbar = page.getByRole('banner', { name: 'Workspace command bar' });
       await expect(shellTopbar).toBeVisible();
       const routeHeader = routeRoot.locator(':scope > header');
       await expect(routeHeader).toBeVisible();
 
-      const shellAfter = await computedHeaderStyle(shellTopbar);
-      const routeStyle = await computedHeaderStyle(routeHeader);
-      expect(shellAfter).toEqual({
-        alignItems: 'normal',
-        display: 'block',
-        gap: 'normal',
-        marginTop: '0px',
-        maxWidth: 'none',
-      });
-      expect(routeStyle.display).toBe('flex');
-      expect(routeStyle.marginTop).toBe('22px');
-      expect(routeStyle.maxWidth).toBe('1440px');
-      expect(routeStyle).not.toEqual(shellAfter);
+      const [topbarBox, routeHeaderBox] = await Promise.all([shellTopbar.boundingBox(), routeHeader.boundingBox()]);
+      expect(topbarBox).not.toBeNull();
+      expect(routeHeaderBox).not.toBeNull();
+      expect(routeHeaderBox.y).toBeGreaterThanOrEqual(topbarBox.y + topbarBox.height);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+      ).toBeLessThanOrEqual(1);
     });
   }
 });

@@ -357,6 +357,11 @@
     background: var(--administration-surface);
   }
 
+  .auth-shell__main:has(.administration-records-inspector--mobile) {
+    position: relative;
+    z-index: var(--z-modal);
+  }
+
   .administration-workspace .administration-records-inspector__back {
     justify-self: start;
     border-color: var(--administration-border);

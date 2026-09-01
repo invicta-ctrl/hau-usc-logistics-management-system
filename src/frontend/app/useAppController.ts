@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AUTH_ROUTES, isAuthRoute } from './appRoutes';
 import type { AuthGateState, AuthRoute, EntryIntent, Route, Session } from './appTypes';
 import { resolvePostAuthDestination, resolveStaffHome, type DenialReason } from './entryIntent';
@@ -98,7 +98,6 @@ export function useAppController() {
         setDenialReason(decision.reason);
         setRequesterMode(false);
         setAuthState('denied');
-        window.history.replaceState(null, '', appRouteHash('staff-signin'));
         moveTo('staff-signin');
         return;
       }
@@ -181,31 +180,33 @@ export function useAppController() {
         // Generic identity gateway: no pre-committed destination. Binding it to a
         // capability-gated route would deny otherwise-valid accounts that merely
         // lack that one capability.
-        // A post-auth denial also owns this route. Hash synchronization must not
-        // erase that stable, recoverable result after the session projection lands.
-        if (!denialReason) {
-          setEntryIntent('GENERIC_STAFF_SIGN_IN');
-          setIntendedRoute(null);
-          setDenialReason(null);
-          setAuthError(null);
-          setActivationExpiresAt('');
-          setAuthState(session ? 'authorized' : 'signed-out');
-        }
+        setEntryIntent('GENERIC_STAFF_SIGN_IN');
+        setIntendedRoute(null);
+        setDenialReason(null);
+        setAuthError(null);
+        setActivationExpiresAt('');
+        setAuthState(session ? 'authorized' : 'signed-out');
       }
       moveTo(next);
     },
-    [denialReason, moveTo, requireAuth, requireExternalRequest, session],
+    [moveTo, requireAuth, requireExternalRequest, session],
   );
+
+  const navigateRef = useRef(navigate);
+
+  useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate]);
 
   useEffect(() => {
     const syncRouteFromHash = () => {
       const next = appRouteFromHash(window.location.hash);
-      if (next) navigate(next, true);
+      if (next) navigateRef.current(next, true);
     };
     syncRouteFromHash();
     window.addEventListener('hashchange', syncRouteFromHash);
     return () => window.removeEventListener('hashchange', syncRouteFromHash);
-  }, [navigate]);
+  }, []);
 
   /**
    * R3-A1-A2: Home is Home, not logout.

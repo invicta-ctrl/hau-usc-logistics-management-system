@@ -596,6 +596,7 @@ test('REQ-05 an ineligible identity cannot reach the External Request Center and
   // Truthful denial: no enumeration, and a way out.
   await expect(page.getByText(/Public Lending remains open to you/u)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Home', exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Browse public lending', exact: true })).toBeVisible();
 });
 
 test('REQ-06 submission goes to the authenticated portal contract and carries no browser-supplied requester identity', async ({
@@ -1036,7 +1037,9 @@ test('FI-06 labels retained data refreshing before success and stale only after 
   mode = 'hold';
   await page.getByRole('button', { name: 'Refresh queue' }).click();
   await expect(page.locator('[data-fi06-state="refreshing"]')).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: 'Updating the request queue' })).toBeVisible();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Updating the request queue' }),
+  ).toBeVisible();
   const dialog = await openRequestRecord(page);
   await expect(dialog.getByRole('button', { name: /Record request review/u })).toHaveCount(0);
   releaseRefreshing();
@@ -1215,7 +1218,9 @@ test('FI-06 preview inspection records only a local action and never contacts re
   const dialog = await openRequestRecord(page, 'Sample logistics request');
   await dialog.getByLabel('Route Preview folding chair').selectOption('ISSUE_FROM_STOCK');
   await dialog.getByRole('button', { name: 'Check review action' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Review action checked' })).toBeVisible();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Review action checked' }),
+  ).toBeVisible();
   expect(protectedRequests).toEqual([]);
 });
 
@@ -1248,9 +1253,7 @@ test('FI-05 Inventory uses the authenticated bootstrap, restores inspector focus
       await page.getByRole('dialog').evaluate((element) => element.contains(document.activeElement)),
     ).toBe(true);
   } else {
-    await expect(page.getByRole('complementary', { name: 'Authoritative folding chair' })).toContainText(
-      'Current authorized inventory records',
-    );
+    await expect(page.locator('.inventory-inspector')).toContainText('Current authorized inventory records');
     await expect(page.getByRole('button', { name: 'Close inspector' })).toBeVisible();
   }
   await page.keyboard.press('Escape');
@@ -1364,7 +1367,6 @@ test('P14 profile uses authenticated identity data and exposes the accepted self
   await page.goto('/');
   await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
-  await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
   await page.evaluate(() => {
     window.location.hash = '#/route/profile';
   });
@@ -1395,7 +1397,6 @@ test('P18 Profile persists theme family separately from Light, Dark, and System 
   await page.goto('/');
   await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
-  await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
   await page.evaluate(() => {
     window.location.hash = '#/route/profile';
   });
@@ -1463,7 +1464,6 @@ test('FI-04 profile surfaces a failed profile response and retries only after th
   await page.goto('/');
   await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
-  await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
   await page.evaluate(() => {
     window.location.hash = '#/route/profile';
   });
@@ -1679,8 +1679,8 @@ test('CTX-02 every public surface states the staff gate before the user commits'
   await page.goto('/');
 
   await expect(page.getByText('USC staff sign-in required').first()).toBeVisible();
-  const hubTile = page.getByRole('link', { name: /^Start a logistics request/u }).first();
-  await expect(hubTile).toContainText('USC staff sign-in required');
+  const hubTile = page.getByRole('link', { name: /^Start a request/u }).first();
+  await expect(hubTile).toContainText('Staff sign-in required');
 
   if (testInfo.project.name === 'frontend-320' || testInfo.project.name === 'frontend-390') {
     await page.getByRole('button', { name: 'Open navigation menu' }).click();

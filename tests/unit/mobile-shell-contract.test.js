@@ -38,8 +38,6 @@ describe('MFR-002 U03 mobile-first shell contract', () => {
     expect(routeFocus).toContain('main.focus({ preventScroll: true })');
     expect(routeFocus.match(/requestAnimationFrame/g)?.length).toBeGreaterThanOrEqual(2);
     expect(routeFocus).toContain('document.title = `${label} · HAU-USC Logistics`');
-    expect(routeFocus).toContain('const initialRouteKey = useRef(routeKey)');
-    expect(routeFocus).toContain('routeKey === initialRouteKey.current');
     expect(focusTrap).toContain('inertSelector');
     expect(focusTrap).toContain('snapshot.element.inert = true');
     expect(focusTrap).toContain('snapshot.element.inert = snapshot.inert');
@@ -115,8 +113,8 @@ describe('MFR-002 U03 mobile-first shell contract', () => {
     expect(navbar).toContain('openLandingSection');
     expect(landingNavigation).toContain("section.scrollIntoView({ block: 'start', behavior: 'auto' })");
     expect(landingNavigation).toContain('focusTarget.focus({ preventScroll: true })');
-    expect(footer).toContain("openLandingSection('logistics', onHome)");
-    expect(footer).toContain("openLandingSection('hero', onHome)");
+    expect(footer).toContain('openLandingSection("logistics", onHome)');
+    expect(footer).toContain('openLandingSection("hero", onHome)');
     expect(drawer).toContain('onOpenSection(link.href.slice(1))');
     expect(navLink).toContain("aria-current={active ? 'page' : undefined}");
     expect(controller).toContain("window.scrollTo({ top: 0, left: 0, behavior: 'auto' })");

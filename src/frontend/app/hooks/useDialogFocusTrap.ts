@@ -60,7 +60,10 @@ export function useDialogFocusTrap({
       target.focus();
     };
 
-    const frame = requestAnimationFrame(focusInitial);
+    let focusFrame = 0;
+    const dialogFrame = requestAnimationFrame(() => {
+      focusFrame = requestAnimationFrame(focusInitial);
+    });
     const trapTab = (event: KeyboardEvent) => {
       if (event.key !== 'Tab') return;
       const items = focusableElements(dialog);
@@ -84,7 +87,8 @@ export function useDialogFocusTrap({
 
     document.addEventListener('keydown', trapTab);
     return () => {
-      cancelAnimationFrame(frame);
+      cancelAnimationFrame(dialogFrame);
+      cancelAnimationFrame(focusFrame);
       document.removeEventListener('keydown', trapTab);
       for (const snapshot of inertSnapshots) {
         snapshot.element.inert = snapshot.inert;

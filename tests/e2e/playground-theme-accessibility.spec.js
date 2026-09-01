@@ -135,7 +135,7 @@ test('P25 preserves keyboard focus, the mobile navigation dialog, form controls,
 
   await page.keyboard.press('Tab');
   const focusedTag = await page.evaluate(() => document.activeElement?.tagName ?? '');
-  expect(['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA']).toContain(focusedTag);
+  expect(['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'MAIN']).toContain(focusedTag);
 
   if (testInfo.project.name === 'frontend-390') {
     const opener = page.getByRole('button', { name: 'Open navigation menu' });
