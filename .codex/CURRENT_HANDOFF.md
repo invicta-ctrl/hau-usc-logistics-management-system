@@ -1,11 +1,37 @@
-# MFR-002 Pre-Amendment Frontend Rollback — Current Handoff
+# Current Environment Handoff — FBR-001 Phase A
 
-STATUS: COMPLETE
-REJECTED_U11: Preserved by annotated archive tag `archive/mfr002-u11-rejected-visual-recovery-2026-09-01` at `670f14bfbaccd7e1c59c749ef0a4f03d9ff204f7`; prior U11 acceptance/performance evidence is historical and rejected.
-RESTORE: Frontend visual source restored from `c437115e`, retaining only audited functional/accessibility and test-harness corrections.
-GITHUB: `Playground` and the rollback review branch reached `c9a713a69a0798a6db53a13105c2fcb9f46d19e0` / tree `255b7a21795b7da098e6ce8a265a2a51e76ef784` by non-force fast-forward; `main` remained unchanged.
-VERIFIED_LOCAL: Frontend units 34/34; mobile-shell 5/5; fixture boundary/build/dist/theme PASS; contrast 66/66; lint 0 errors with one pre-existing warning; exact-4173 browser matrix 445 passed, 90 expected skipped, 0 failed/interrupted; independent review `ship`.
-VERIFIED_LIVE: Isolated staging deployment passed exact branch/commit/tree/artifact and Production-denial guards. Fresh browsers at 390 and 1440 passed runtime identity, eleven authenticated read-only routes, supported public flows, static/API/network/console/overflow gates.
-DATA: Schema 32 and migration `0032_staff_account_activity_history.sql`; reset generation 9 unchanged; no reset/reconciliation; pre-existing dirty active session preserved; zero foreign-key violations.
-BRANCH_CLEANUP: All proven-safe local and remote MFR-002 temporary branches were retired. The rollback worktree was removed. Generated residue from the rejected-final worktree was preserved under the project archive before its Git worktree and branch were retired.
-NEXT_GATE: NONE; stop unless Earl gives new authority.
+PROGRAM: FBR-001
+FROM: TERRA_HIGH:/root/fbr_writer
+TO: Parent-run Hallmark/Impeccable pre-edit gate, then TERRA_HIGH continuation in this worktree
+BRANCH: release/v0.8.3-fbr001-claude-frontend-reconciliation
+HEAD: GIT_HEAD
+UPSTREAM: origin/Playground@7f483d2d713c406a465d218055696b31cd0dc9bd; parity 0/0 at handshake
+STARTING_BRANCH: release/v0.8.3-fbr001-claude-frontend-reconciliation
+STARTING_SHA: 7f483d2d713c406a465d218055696b31cd0dc9bd
+STARTING_TREE: 9b9e1b07a4b6e7a93f5b2033d7519bbc1d1f52c2
+UPSTREAM_BASELINE: origin/Playground@7f483d2d713c406a465d218055696b31cd0dc9bd; 0/0 at handshake
+WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation
+WORKTREE_STATE: GIT_STATUS
+ACTIVE_WRITER: TERRA_HIGH:/root/fbr_writer
+CURRENT_POINTER: .codex/CURRENT.md
+CURRENT_TASK: .codex/CURRENT_TASK.md
+ACCEPTED_SPEC: .codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md
+
+CLAUDE_BASELINE_ARCHIVE_SHA256: 4DDAE14C3373DA96FD40E008DC3E636E58B90D70716AED3241680A9F1779BF8A
+CLAUDE_HANDOFF_SHA256: 01FF2CFA7B0B4D112645801C7088E972BAC401EED27AC03AF50128B4490BEBF7
+BASELINE_INTAKE_PATH: D:/Documents/Codex/HAU-USC Logistics/intake/fbr001-claude-baseline-2026-09-01
+DESIGN_DNA_STATUS: REGISTERED; no canonical runtime adoption yet
+PHASE_A_RECEIPT: .codex/FBR001_PHASE_A_RECEIPT.md
+PARITY_MATRIX: docs/frontend/FBR001_FRONTEND_FUNCTIONAL_PARITY_MATRIX.md
+
+COMPLETED: exact Playground worktree/branch handshake; immutable source hash check; safe Python-stdlib TAR.GZ preflight and extraction; full extracted manifest/per-file hashes; embedded handoff hash equality; Claude source/audit inventory; current route/capability/transport inventory; accepted FBR-001 record; deterministic matrix.
+VALIDATION: archive/handoff hashes PASS; safe archive preflight PASS; embedded handoff equality PASS; route/API inventory COMPLETE; governance/continuation/handoff PASS; diff check PASS.
+NOT_COMPLETED: Hallmark/Impeccable gate; Phase B–H; runtime source changes; real-read/write proof; browser/accessibility acceptance; Playground candidate deployment.
+EXTERNAL_ACTIONS: local Git worktree/branch creation and immutable archive intake only; no provider, Playground, D1, R2, Google, Figma, or Production write.
+EXTERNAL_WRITES: NONE. PLAYGROUND_WRITES: 0. D1_WRITES: 0. R2_WRITES: 0. GOOGLE_WRITES: 0. PROVIDER_WRITES: 0. PRODUCTION_WRITES: 0.
+BLOCKER: NONE
+RESUME_COMMANDS: npm.cmd run check:governance; npm.cmd run handoff:verify; git diff --check; git status --short
+PROHIBITED_ACTIONS: RUNTIME_FRONTEND_EDIT_BEFORE_PRE_EDIT_GATE;PRODUCTION_DEPLOYMENT;PROVIDER_D1_R2_GOOGLE_FIGMA_MUTATION;MAIN_OR_HISTORICAL_WORKTREE_MUTATION;HISTORY_REWRITE
+DO_NOT_REPEAT: do not re-extract over the approved scratch intake; do not use Claude preview localStorage/role picker/seed records as authority; do not modify main, historical worktrees, .ai-bridge, .local, or providers; do not start Phase B before the pre-edit gate.
+NEXT_EXACT_ACTION: RUN_PARENT_HALLMARK_IMPECCABLE_PRE_EDIT_GATE_THEN_CONTINUE_FBR001_PHASE_B_IN_THIS_WORKTREE
+HANDOFF_STATUS: READY_FOR_PRE_EDIT_GATE

@@ -1,14 +1,21 @@
-# Current Bounded Task — MFR-002 Pre-Amendment Frontend Rollback
+# Current Bounded Task — FBR-001 Phase A checkpoint
 
-STATUS: COMPLETE
-INTENT: FRONTEND_ROLLBACK;BUG_FIX;TESTING;REPOSITORY_MAINTENANCE
+INTENT: FRONTEND_INTEGRATION
 MODE: EXECUTE
-AUTHORITY: HAU-USC-MFR002-U11-FRONTEND-ROLLBACK-CLEANUP-A1
-ROLLBACK_SOURCE: c437115e
-REJECTED_ARCHIVE: archive/mfr002-u11-rejected-visual-recovery-2026-09-01 -> 670f14bfbaccd7e1c59c749ef0a4f03d9ff204f7
-COMPLETED: Rejected U11 visual surface restored, bounded functional/accessibility repairs accepted, independent review returned SHIP, Playground updated non-force, exact isolated staging candidate passed live acceptance, and all proven-safe temporary MFR-002 branches/worktrees were retired.
-VERIFIED: frontend units 34/34; mobile-shell 5/5; fixture boundary/build/dist/theme PASS; contrast 66/66; lint 0 errors/1 pre-existing warning; exact-4173 matrix 445 passed/90 expected skip/0 failed; live 390/1440 acceptance PASS across eleven authenticated read-only routes and supported public flows.
-DATA: schema 32 and migration 0032 retained; reset generation 9 unchanged; no reset or reconciliation; pre-existing dirty active session preserved.
-HISTORICAL_REJECTED_EVIDENCE: MFR002_U11_FINAL_ACCEPTANCE.json and MFR002_U11_FINAL_PERFORMANCE.json are rejected historical evidence only.
-NEXT_EXACT_ACTION: NONE; stop unless Earl gives new authority.
-PROHIBITED: Visual redesign; CIVIC_LEDGER_WORKBENCH retention; main/Production mutation; schema/provider changes; reset/rebase/force-push/history rewrite; unproven branch deletion.
+OBJECTIVE: Establish FBR-001 authority, immutable Claude-source intake, and deterministic current-Playground functional parity matrix without changing runtime/frontend source.
+TARGET: release/v0.8.3-fbr001-claude-frontend-reconciliation isolated worktree and its owned FBR-001 documentation; separately owned bounded scratch intake.
+CURRENT_POINTER: .codex/CURRENT.md
+CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
+ACCEPTED_SPEC: .codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md
+AUTHORITY: Earl 2026-09-01 owner packet -> AGENTS.md -> .agents/PROJECT_POLICY.md -> FBR-001 accepted spec -> Playground@7f483d2d functional contracts -> immutable Claude visual baseline.
+REQUIRED_MODEL: GPT-5.6_TERRA_HIGH
+ACTIVE_WRITER: TERRA_HIGH:/root/fbr_writer
+RISK: HIGH; FRONTEND_BASELINE_CHANGE; PRODUCTION_FORBIDDEN
+SCOPE: PHASE_A_ONLY
+IN_SCOPE: Phase A documentation/spec/current chain; source safety/hash/manifest proof; deterministic route/capability/API inventory; parity matrix; focused validation; one Phase A checkpoint commit.
+OUT_OF_SCOPE: runtime/frontend source edits; backend/API/auth/data/schema/migration/provider changes; Figma/Google/Cloudflare/D1/R2/Playground/Production mutation or deployment; old-worktree/main mutation.
+DELIVERABLES: accepted FBR-001 spec, complete safe scratch intake, parity matrix, durable Phase A receipt, committed clean checkpoint.
+VERIFICATION: exact Playground SHA/tree and origin parity; archive and handoff SHA-256; complete preflight-before-extraction safety proof; extracted manifest/file hashes and embedded handoff comparison; focused governance/continuation checks; diff check/review.
+STOP_CONDITIONS: conflicting writer; target pre-existence; exact-ref mismatch; unsafe archive provenance; unknown work overwrite; required backend/security/migration/provider change; Production crossover; failed required check.
+STATUS: PHASE_A_COMPLETE_AWAITING_PRE_EDIT_GATE
+NEXT_EXACT_ACTION: RUN_PARENT_HALLMARK_IMPECCABLE_PRE_EDIT_GATE_THEN_CONTINUE_FBR001_PHASE_B_IN_THIS_WORKTREE
