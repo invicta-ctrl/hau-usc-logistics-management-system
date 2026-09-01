@@ -1,6 +1,6 @@
 # FBR-001 Frontend Functional Parity Matrix
 
-STATUS: Phase B–C shell/foundation checkpoint; Phase D route-body reconciliation pending
+STATUS: Phase D real-read integration checkpoint complete; Phase E write integration pending parent direction
 FUNCTIONAL AUTHORITY: `Playground@7f483d2d713c406a465d218055696b31cd0dc9bd`, current Worker/API and server capability projection.
 VISUAL AUTHORITY: immutable Claude archive and handoff named by FBR-001.
 STATUS SEMANTICS: `PRESENT` means Claude already has the comparable composition; `PARTIAL` means it lacks an accepted current contract, state, route, tab, or real-data behavior; `MISSING` means no comparable Claude surface. These are baseline gaps, not implementation acceptance.
@@ -38,6 +38,21 @@ Every row requires loading, empty, safe error, denied, and stale/conflict states
 | `administration` | `access.admin` plus granular permissions | Admin directory, staff history, reference links, brand assets, health/readiness; audited mutations | Eight-tab Administration | PARTIAL — reconcile actual tab/capability set and protected-data boundaries. |
 | `profile` | Authenticated account controls; server session revocation | `/api/me/profile`, appearance, avatar, username/password/correction endpoints | Profile and display-family swatches | PARTIAL — retain preferences only through accepted server/local contract; clear on sign-out. |
 | Playground Index, inspection and tester utilities | Playground-only authorization; no Production exposure | `/api/version`, `/api/playground/status`, authorized Playground operation | Diagnostics panel only | MISSING — preserve required tester routes/chrome; deny/omit in Production mode. |
+
+## Phase D real-read reconciliation evidence
+
+| Read family | Route implementation | Existing canonical adapter read | Phase D result |
+|---|---|---|---|
+| Public announcement/config | `landing/CurrentSection.tsx` | `publicAdvertisements` | PRESENT — loading, empty, request/media error are already real-service states. |
+| Public lending/tracking | `PublicFlows.tsx` | `publicLendingCatalog`, `trackPublicRequest`, `trackPublicLending` | PRESENT — catalogue and private tracking results remain backend-derived. |
+| External requester | `request/ExternalRequestCenter.tsx` | existing requester portal bootstrap | PRESENT — session-gated requester data remains on the canonical adapter. |
+| Overview | `overview/OverviewRoute.tsx` | `operationalModuleBootstrap('overview')` | PRESENT — authorized/stale/denied/error handling retained. |
+| Inventory | `inventory/InventoryRoute.tsx` | `inventoryBootstrap` | PRESENT — normal mode starts empty then consumes the bounded server projection; `INV_FIXTURE` is inspection-only. |
+| Internal request/lending | `request/InternalRequestHub.tsx`; `lending/InternalLendingHub.tsx` | `requestBootstrap`; `lendingBootstrap` | PRESENT — preview queues are inspection-only; normal queues use real bootstrap data. |
+| Release/restocking/procurement | `operations/OperationalModuleRoute.tsx` | `operationalModuleBootstrap(module)` | PRESENT — one canonical read projection serves the preserved routes. |
+| Events/administration/profile | `events/EventReadinessRoute.tsx`; `AdministrationRoute.tsx`; `profile/ProfileRoute.tsx` | `eventManagement`; administration reads; `profile` | PRESENT — protected reads stay capability/session-scoped. |
+
+No adapter extension was required. Phase D tests assert these bindings and fixture isolation; Phase E retains all mutation controls and is not started by this checkpoint.
 
 ## Integration target and evidence
 

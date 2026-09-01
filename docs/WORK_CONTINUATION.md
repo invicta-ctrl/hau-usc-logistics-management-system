@@ -1,20 +1,20 @@
-# Work Continuation — FBR-001 Phase B–C checkpoint
+# Work Continuation — FBR-001 Phase D checkpoint
 
 ## Current resume block
 
 - **Repository/worktree:** `invicta-ctrl/hau-usc-logistics-management-system`; `D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation`
 - **Branch/HEAD/upstream:** `release/v0.8.3-fbr001-claude-frontend-reconciliation`; `GIT_HEAD` after this checkpoint; source baseline `Playground@7f483d2d713c406a465d218055696b31cd0dc9bd`; `origin/Playground` was 0/0 at the Phase A handshake.
-- **Current phase/stage:** FBR-001 Phase B–C complete; Phase D route-body reconciliation is next.
+- **Current phase/stage:** FBR-001 Phase D real-read integration complete; parent direction is required before Phase E writes.
 - **Accepted scope:** `.codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md`; Production forbidden.
-- **Completed work:** Phase A immutable intake and parity matrix; FBR visual-authority amendment; canonical foundation width/vocabulary update; self-hosted font intake; retained public/auth shell and capability projection; truthful Workbench command panel.
-- **Files changed by purpose:** `DESIGN.md`; canonical foundation source/output; same-origin font assets/styles; authenticated shell; focused frontend contract test; parity/current/receipt documents.
-- **Tests verified at current SHA:** focused Vitest 39/39 PASS; fixture-boundary PASS; foundation check PASS; application build PASS; Impeccable detector PASS after the attention primitive correction.
+- **Completed work:** Phase A immutable intake and parity matrix; Phase B–C foundation/shell; Phase D proof that all normal backend-supported read families use the canonical adapter while fixture data remains inspection-only.
+- **Files changed by purpose:** Phase B–C foundation/shell artifacts plus `tests/unit/fbr001-read-integration.test.js`, Phase D parity/current/receipt records.
+- **Tests verified at current SHA:** focused Vitest 41/41 PASS; fixture-boundary PASS; foundation check PASS; application build PASS; Impeccable detector PASS after the attention primitive correction.
 - **Generated artifacts:** `src/frontend/styles/foundation.css`; bounded external scratch `intake/fbr001-claude-baseline-2026-09-01/EXTRACTION_MANIFEST.json` remains immutable.
 - **External actions:** local worktree-only font intake and build; no provider, Playground, D1, R2, Google, Figma, or Production write.
-- **Rollback:** revert the forthcoming Phase B–C commit on this isolated branch; source baseline and immutable archive remain untouched.
+- **Rollback:** revert the forthcoming Phase D read-boundary evidence commit on this isolated branch; source baseline and immutable archive remain untouched.
 - **Blocker:** none.
-- **Next three actions:** inspect the next route body against its parity row; adopt Claude composition over the existing backend-backed state model; run its focused test/build/Impeccable evidence and checkpoint.
-- **Resume commands:** `git status --short`; `npm.cmd run design:foundation:check`; `npm.cmd exec vitest run tests/unit/fbr001-frontend-shell-contract.test.js`; `npm.cmd run build`; `npm.cmd run check:governance`; `npm.cmd run handoff:verify`.
+- **Next three actions:** await parent direction; if authorized, identify one existing mutation family; retain canonical transport/server response handling; add focused write and stale/conflict evidence.
+- **Resume commands:** `git status --short`; `npm.cmd exec vitest run tests/unit/fbr001-read-integration.test.js`; `npm.cmd run design:foundation:check`; `npm.cmd run build`; `npm.cmd run check:governance`; `npm.cmd run handoff:verify`.
 - **Prohibited actions:** provider/data/Production mutation; main/historical worktree mutation; history rewrite; archive re-extraction; `npm ci` retry; mock auth/data or second transport; legacy frontend deletion.
 
 ## Accepted rollback
