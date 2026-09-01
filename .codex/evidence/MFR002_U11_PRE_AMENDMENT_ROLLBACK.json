@@ -1,12 +1,16 @@
 {
   "schemaVersion": 1,
-  "status": "LOCAL_CANDIDATE_READY_FOR_PARENT_REVIEW",
+  "status": "ACCEPTED_ROLLBACK_LIVE_BRANCH_RETIREMENT_GATE",
   "ownerAuthority": "HAU-USC-MFR002-U11-FRONTEND-ROLLBACK-CLEANUP-A1",
   "rejectedVisualAuthority": "HAU-USC-MFR002-U11-VISUAL-RECOVERY-A1",
   "rejectedEvidenceDisposition": "HISTORICAL_REJECTED",
   "rejectedArchiveTag": "archive/mfr002-u11-rejected-visual-recovery-2026-09-01",
-  "rejectedArchiveTarget": "670f14bf",
+  "rejectedArchiveTarget": "670f14bfbaccd7e1c59c749ef0a4f03d9ff204f7",
   "restoredFrontendSource": "c437115e",
+  "acceptedRollbackCommit": "c9a713a69a0798a6db53a13105c2fcb9f46d19e0",
+  "acceptedRollbackTree": "255b7a21795b7da098e6ce8a265a2a51e76ef784",
+  "applicationHtmlSha256": "67b9db08b0e31dd26fa2a16520050fcd7d7899fa418669e6b0ac62329b1f1b27",
+  "independentReview": "SHIP",
   "boundedRepairs": [
     "dialog and route focus timing",
     "mobile drawer stacking and safe interaction",
@@ -18,19 +22,30 @@
     "mobileShellUnit": "5 passed",
     "fixtureBoundary": "PASS",
     "build": "PASS; 1696 modules",
-    "dist": "PASS; 9 files; 36964322 bytes",
+    "dist": "PASS; 9 files; 36964376 bytes",
     "contrast": "66/66 pass",
     "theme": "PASS",
     "releaseCandidateLint": "0 errors; 1 pre-existing unrelated warning",
-    "browserMatrix": "445 passed; 90 expected skipped; 0 failed; 0 interrupted; exact local 4173; 19.3m"
+    "browserMatrix": "445 passed; 90 expected skipped; 0 failed; 0 interrupted; exact local 4173; 19.3m",
+    "liveBrowser": "PASS; widths 390 and 1440; eleven authenticated read-only routes; supported public flows; zero console, network, or overflow failure"
+  },
+  "dataState": {
+    "schemaVersion": "32",
+    "latestMigration": "0032_staff_account_activity_history.sql",
+    "baselineId": "PGBL-20260828-COVERAGE-V2",
+    "baselineVersion": 2,
+    "resetGeneration": 9,
+    "resetOccurred": false,
+    "reconciliationOccurred": false,
+    "workingState": "DIRTY_PREEXISTING_ACTIVE_TEST_SESSION_PRESERVED",
+    "foreignKeyViolations": 0
   },
   "externalState": {
-    "deployment": "NOT_STARTED",
-    "dataReset": "ZERO",
-    "d1OrR2Mutation": "ZERO",
-    "branchCleanup": "NOT_STARTED",
+    "githubPlayground": "PASS_NON_FORCE",
+    "deployment": "PASS_ISOLATED_STAGING",
+    "branchCleanup": "READY_AFTER_RECEIPT_BEARING_COMMIT_LIVE_PARITY",
     "mainMutation": "ZERO",
     "productionMutation": "ZERO"
   },
-  "nextGate": "PARENT_REVIEW_OF_LOCAL_CANDIDATE_DIFF_BEFORE_PUSH_OR_DEPLOY"
+  "nextGate": "PUBLISH_DEPLOY_RECEIPT_COMMIT_THEN_RETIRE_PROVEN_SAFE_TEMPORARY_BRANCHES"
 }
