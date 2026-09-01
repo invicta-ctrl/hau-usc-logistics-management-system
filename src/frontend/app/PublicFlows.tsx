@@ -230,7 +230,7 @@ export default function PublicFlows({
   return (
     <main
       id="main-content"
-      className={`pub route-focus-target ${dark ? "dark" : "light"}`}
+      className={`pub fbr-f1-public-flow route-focus-target ${dark ? "dark" : "light"}`}
       tabIndex={-1}
     >
       <style>{css}</style>
@@ -662,35 +662,35 @@ const css = `
 .primary{background:var(--action)!important;color:var(--onAction)!important;border-color:var(--action)!important;font-weight:700;min-height:48px}
 .pub nav,.panel{max-width:980px;margin-left:auto;margin-right:auto}
 .assure{display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:18px;padding:18px 22px;border:1px solid var(--hair);border-radius:var(--radius-overlay);background:var(--inset)}
-.assure b{font-size:18px}.assure p{margin:4px 0 0;color:var(--text);font-size:14px;max-width:64ch}
+.assure b{font-size:var(--type-body-lg-size)}.assure p{margin:4px 0 0;color:var(--text);font-size:var(--type-body-size);max-width:64ch}
 .assure .who{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
-.chip{padding:8px 14px;border-radius:var(--radius-pill);background:var(--surface);border:1px solid var(--line);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.chip{padding:8px 14px;border-radius:var(--radius-pill);background:var(--surface);border:1px solid var(--line);font-size:var(--type-label-size);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
 .pub nav{display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px;gap:6px}
 .pub nav button{font-size:12px}.pub nav .active{background:var(--ox);color:var(--onOx);border-color:var(--ox);font-weight:800}
 .panel{margin-top:20px;padding:clamp(22px,4vw,40px);border-radius:var(--radius-overlay)}
 .panel h1{font:700 clamp(32px,4.4vw,52px)/1.02 "Bricolage Grotesque",Georgia,serif;letter-spacing:-.03em;margin:0 0 12px}
-.panel h2{font:700 24px/1.2 "Bricolage Grotesque",Georgia,serif;margin:0 0 6px}
-.panel h3{font:700 17px/1.3 "Bricolage Grotesque",Georgia,serif;margin:24px 0 8px}
+.panel h2{font:700 var(--type-section-size)/1.2 var(--font-display);margin:0 0 6px}
+.panel h3{font:700 var(--type-body-lg-size)/1.3 var(--font-display);margin:24px 0 8px}
 .panel>p{color:var(--muted);max-width:70ch}
 .muted{color:var(--muted)}
 .stateSwitch{display:flex;gap:6px;margin:18px 0 6px;flex-wrap:wrap}.stateSwitch button{font-size:12px;min-height:36px;padding:6px 12px;border-radius:var(--radius-pill)}
 .stateSwitch .active{background:var(--ox);color:var(--onOx);border-color:var(--ox)}
-.stepEyebrow{margin:22px 0 0!important;color:var(--muted)!important;font:700 10px/1.4 "IBM Plex Mono",monospace!important;letter-spacing:.09em;text-transform:uppercase}
-.filters{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}.filters .field{flex:1;min-width:150px}.filters label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.stepEyebrow{margin:22px 0 0!important;color:var(--muted)!important;font:700 var(--type-record-size)/1.4 var(--font-record)!important;letter-spacing:.09em;text-transform:uppercase}
+.filters{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}.filters .field{flex:1;min-width:150px}.filters label{font-size:var(--type-label-size);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 .filters .grow{flex:2 1 260px}
 .catalog{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:12px}
 .catalog li{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:14px;align-items:start;padding:14px;border:1px solid var(--hair);border-radius:var(--radius-overlay);background:var(--surface)}
 .catalog li.sel{border-color:var(--action);border-width:2px}
 .itemThumb{width:72px;height:72px;object-fit:cover;border-radius:var(--radius-surface);border:1px solid var(--line);background:var(--inset)}
-.ident{display:grid;gap:3px}.ident b{font-size:16px}.ident small{color:var(--muted);font-size:11px}
-.tone{display:inline-block;padding:4px 9px;border-radius:var(--radius-pill);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;justify-self:start;font-style:normal}
+.ident{display:grid;gap:3px}.ident b{font-size:var(--type-body-size)}.ident small{color:var(--muted);font-size:var(--type-label-size)}
+.tone{display:inline-block;padding:4px 9px;border-radius:var(--radius-pill);font-size:var(--type-record-size);font-weight:800;letter-spacing:.06em;text-transform:uppercase;justify-self:start;font-style:normal}
 .tone--done{background:var(--doneB);color:var(--doneF);border:1px solid var(--doneL)}
 .tone--progress{background:var(--progB);color:var(--progF);border:1px solid var(--progL)}
 .tone--info{background:var(--infoB);color:var(--infoF);border:1px solid var(--infoL)}
 .tone--neutral{background:var(--neuB);color:var(--neuF);border:1px solid var(--neuL)}
 .stateBlock{margin-top:18px;padding:20px;border:1px solid var(--hair);border-radius:var(--radius-overlay);background:var(--inset);display:grid;gap:8px;justify-items:start}
 .stateBlock.err{border-color:var(--alertL)}
-.stateBlock strong{font-size:18px}.stateBlock p{margin:0;color:var(--muted)}
+.stateBlock strong{font-size:var(--type-body-lg-size)}.stateBlock p{margin:0;color:var(--muted)}
 .catChips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .catChips button{min-height:40px;padding:8px 14px;border-radius:var(--radius-pill);font-size:13px}
 .catChips .allBtn{background:var(--inset);border-color:var(--line)}
@@ -701,22 +701,22 @@ const css = `
 .selBox b{display:block}.selBox small{color:var(--muted)}
 .lines{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
 .lines li{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px 14px;background:var(--surface);border:1px solid var(--hair);border-radius:var(--radius-surface)}
-.lines li>span{flex:1;min-width:180px}.lines small{display:block;color:var(--muted);font-size:11px}
-.qty{display:grid;gap:4px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)}.qty input{width:90px}
+.lines li>span{flex:1;min-width:180px}.lines small{display:block;color:var(--muted);font-size:var(--type-label-size)}
+.qty{display:grid;gap:4px;font-size:var(--type-label-size);font-weight:700;text-transform:uppercase;color:var(--muted)}.qty input{width:90px}
 fieldset{border:0;margin:22px 0 0;padding:0}legend{font:700 17px/1.3 "Bricolage Grotesque",Georgia,serif;padding:0 0 10px}
 .choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .choice{display:flex;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:var(--radius-surface);background:var(--surface);cursor:pointer}
 .choice.on{background:var(--progB);border-color:var(--action);border-width:2px}
 .choice input{width:18px;height:18px;min-height:0;flex:none;accent-color:var(--ox)}
-.choice b{display:block;font-size:15px}.choice small{color:var(--muted);font-size:11px}
+.choice b{display:block;font-size:var(--type-body-size)}.choice small{color:var(--muted);font-size:var(--type-label-size)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
 .field{display:grid;gap:6px;font-size:12px;font-weight:700}
 .grid .span2{grid-column:1/-1}
-.badge{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:var(--radius-pill);background:var(--infoB);color:var(--infoF);border:1px solid var(--infoL);font-size:10px;font-style:normal;font-weight:700}
+.badge{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:var(--radius-pill);background:var(--infoB);color:var(--infoF);border:1px solid var(--infoL);font-size:var(--type-record-size);font-style:normal;font-weight:700}
 .ack{display:flex;gap:12px;align-items:flex-start;padding:14px;margin-top:10px;background:var(--inset);border:1px solid var(--hair);border-radius:var(--radius-surface)}
 .ack.cond{border-color:var(--infoL)}
 .ack input{width:18px;height:18px;min-height:0;flex:none;margin-top:3px;accent-color:var(--ox)}
-.ack b{display:block;font-size:15px}.ack small{color:var(--muted);font-size:13px}
+.ack b{display:block;font-size:var(--type-body-size)}.ack small{color:var(--muted);font-size:var(--type-body-sm-size)}
 /* No left accent bar. DESIGN.md D08: lines are semantic — they connect a route,
    divide data, or indicate selection. A coloured tab on a disclaimer does none
    of those, and it is the most common tell of a generated UI. The quiet inset
@@ -727,17 +727,17 @@ fieldset{border:0;margin:22px 0 0;padding:0}legend{font:700 17px/1.3 "Bricolage 
 .stepper li{display:flex;gap:8px;align-items:center;padding:12px;border-radius:var(--radius-surface);font-size:12px}
 .stepper li.cur{background:var(--progB);border:1px solid var(--action)}
 .stepper li.todo{color:var(--muted)}
-.mk{flex:none;padding:3px 8px;border-radius:var(--radius-pill);font-size:11px;font-weight:800;background:var(--inset);border:1px solid var(--line)}
+.mk{flex:none;padding:3px 8px;border-radius:var(--radius-pill);font-size:var(--type-label-size);font-weight:800;background:var(--inset);border:1px solid var(--line)}
 .stepper li.done .mk{background:var(--doneB);color:var(--doneF);border-color:var(--doneL)}
 .stepper li.cur .mk{background:var(--ox);color:var(--onOx);border-color:var(--ox)}
 .summary{display:flex;gap:16px;align-items:center;padding:14px 16px;margin-top:12px;background:var(--inset);border:1px solid var(--hair);border-radius:var(--radius-surface)}
-.summary>span{flex:1}.summary small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.summary>span{flex:1}.summary small{display:block;color:var(--muted);font-size:var(--type-label-size);text-transform:uppercase;letter-spacing:.06em}
 .stepNav{display:flex;justify-content:space-between;gap:12px;margin-top:22px}
 .receipt{border:2px solid var(--doneL)}
 .codes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
 .codes div{padding:16px;background:var(--inset);border:1px solid var(--line);border-radius:var(--radius-surface)}
-.codes small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
-.codes code{display:block;margin-top:8px;font-family:"IBM Plex Mono",monospace;font-size:19px}
+.codes small{color:var(--muted);font-size:var(--type-label-size);text-transform:uppercase;letter-spacing:.06em}
+.codes code{display:block;margin-top:8px;font-family:var(--font-record);font-size:var(--type-record-value-size)}
 .warn{padding:14px;background:var(--progB);color:var(--progF);border:1px solid var(--progL);border-radius:var(--radius-surface);font-size:14px}
 .inlineAlert{margin:14px 0;padding:12px 14px;border:1px solid var(--alertL);border-radius:var(--radius-surface);background:var(--alertB);color:var(--alertF)!important;font-size:13px}
 .copyStatus{min-height:20px;margin:8px 0;color:var(--muted);font-size:12px}

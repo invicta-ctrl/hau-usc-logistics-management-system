@@ -334,7 +334,7 @@ export function ExternalRequestCenter({
   } as const;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: c.bg, color: c.text }}>
+    <div className="fbr-f1-requester min-h-screen flex flex-col" style={{ background: c.bg, color: c.text }}>
       <div className="sr-only" role="status" aria-live="polite">
         {live}
       </div>

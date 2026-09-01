@@ -4,7 +4,7 @@
 
 - **Repository/worktree:** `invicta-ctrl/hau-usc-logistics-management-system`; `D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation`
 - **Branch/HEAD/upstream:** `release/v0.8.3-fbr001-claude-frontend-reconciliation`; `GIT_HEAD` after this checkpoint; source baseline `Playground@7f483d2d713c406a465d218055696b31cd0dc9bd`; `origin/Playground` was 0/0 at the Phase A handshake.
-- **Current phase/stage:** FBR-001 Phase E write integration complete; parent direction is required before Phase F missing-parity work.
+- **Current phase/stage:** FBR-001 Phase F1 public/request/overview visual parity complete; parent direction is required before Phase F2 internal-operations parity work.
 - **Accepted scope:** `.codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md`; Production forbidden.
 - **Completed work:** Phase A immutable intake and parity matrix; Phase B–C foundation/shell; Phase D read-boundary proof; Phase E canonical mutation audit and requester cancellation connection.
 - **Files changed by purpose:** Phase E changes only `ExternalRequestCenter.tsx`, `tests/unit/fbr001-requester-cancellation.test.js`, and Phase E parity/current/receipt records.

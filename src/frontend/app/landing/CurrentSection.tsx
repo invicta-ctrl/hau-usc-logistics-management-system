@@ -42,11 +42,11 @@ export function CurrentSection() {
 
   return (
     <section id="current" aria-labelledby="current-heading" className="landing-current w-full">
-      <div className="max-w-[1520px] mx-auto px-5 md:px-8 py-14">
+      <div className="landing-current__frame max-w-[1520px] mx-auto px-5 md:px-8 py-14">
         <div className="landing-section-heading pb-5 mb-8">
           <h2 id="current-heading">What the council is doing now</h2>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-[1.25fr_.9fr] gap-5 items-stretch" aria-busy={state === "loading"}>
+        <div className="landing-current__grid grid grid-cols-1 lg:grid-cols-[1.25fr_.9fr] gap-5 items-stretch" aria-busy={state === "loading"}>
           {active ? <>
             <figure className="landing-current__media rounded-[14px] overflow-hidden flex items-center justify-center">
               {state !== "media-error" ? <img src={active.imageUrl ?? ""} alt={active.altText?.trim() || active.title} className="w-full h-auto max-h-[360px] object-contain" onError={() => setState("media-error")} /> : <div className="landing-current__media-state p-8 text-center">{statusCopy["media-error"]}</div>}

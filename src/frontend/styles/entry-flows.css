@@ -44,3 +44,95 @@
     }
   }
 }
+
+/* FBR-001 Phase F1 — route-local state remains in the canonical adapter;
+   these classes only give public, auth, and requester states one restrained
+   Claude editorial/Workbench presentation. */
+@layer components {
+  .fbr-f1-auth,
+  .fbr-f1-public-flow,
+  .fbr-f1-requester {
+    min-inline-size: 0;
+    background: var(--theme-page) !important;
+    color: var(--theme-text);
+  }
+
+  .fbr-f1-auth__masthead {
+    background: var(--theme-primary) !important;
+    border-block-end: 1px solid var(--theme-border) !important;
+  }
+
+  .fbr-f1-auth__sheet {
+    border-radius: var(--radius-overlay) !important;
+    border-color: var(--theme-border) !important;
+    background: var(--theme-surface-raised) !important;
+    box-shadow: var(--shadow-overlay) !important;
+  }
+
+  .fbr-f1-auth__stage {
+    background-color: var(--theme-primary);
+    background-image: var(--fbr-auth-background);
+    background-blend-mode: multiply;
+    background-position: center;
+    background-size: cover;
+  }
+
+  .fbr-f1-auth .auth-gate-status,
+  .fbr-f1-requester .entry-flow__notice,
+  .fbr-f1-requester [role='alert'] {
+    border-inline-start: 0;
+    border-block-start: 2px solid var(--theme-accent);
+  }
+
+  .fbr-f1-public-flow > nav {
+    display: flex;
+    gap: var(--space-2xs);
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    border-block-end: 1px solid var(--theme-border);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--theme-surface);
+  }
+
+  .fbr-f1-public-flow > nav > button {
+    min-block-size: var(--control-hit-area-min);
+    flex: 0 0 auto;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-body);
+    white-space: nowrap;
+  }
+
+  .fbr-f1-public-flow .panel,
+  .fbr-f1-public-flow .assure,
+  .fbr-f1-requester .entry-flow__sheet {
+    border-color: var(--theme-border) !important;
+    border-radius: var(--radius-overlay) !important;
+    box-shadow: none !important;
+  }
+
+  .fbr-f1-public-flow .stepEyebrow,
+  .fbr-f1-requester .entry-flow__step-label {
+    color: var(--theme-text-muted);
+    font-family: var(--font-record);
+  }
+
+  .fbr-f1-public-flow button:focus-visible,
+  .fbr-f1-auth button:focus-visible,
+  .fbr-f1-requester button:focus-visible,
+  .fbr-f1-auth input:focus-visible,
+  .fbr-f1-public-flow input:focus-visible,
+  .fbr-f1-requester input:focus-visible {
+    outline: 2px solid var(--theme-focus) !important;
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 39.999rem) {
+    .fbr-f1-public-flow > nav {
+      padding-inline: var(--space-sm);
+    }
+
+    .fbr-f1-auth__sheet {
+      border-radius: var(--radius-surface) !important;
+    }
+  }
+}

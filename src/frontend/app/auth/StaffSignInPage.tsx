@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import type { AuthGateState, AuthRoute, EntryIntent, Session } from "../appTypes";
 import { AUTH_ROUTE_INTENT_LABELS } from "../appRoutes";
@@ -130,10 +130,10 @@ export function StaffSignInPage({
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: c.bg }}>
+    <div className="fbr-f1-auth min-h-screen flex flex-col" style={{ background: c.bg }}>
       {/* Minimal topbar */}
       <div
-        className="flex items-center justify-between px-5 md:px-8 py-[14px]"
+        className="fbr-f1-auth__masthead flex items-center justify-between px-5 md:px-8 py-[14px]"
         style={{ background: "#40070a", borderBottom: "1px solid rgba(242,209,92,0.22)" }}
       >
         <div className="flex items-center gap-3">
@@ -148,17 +148,13 @@ export function StaffSignInPage({
       {/* Form */}
       <main
         id="main-content"
-        className="route-focus-target flex flex-1 items-center justify-center px-5 py-14"
         tabIndex={-1}
-        style={{
-          backgroundImage: `linear-gradient(${dark ? "rgba(18,11,11,.58)" : "rgba(64,7,10,.48)"}, ${dark ? "rgba(18,11,11,.68)" : "rgba(64,7,10,.58)"}), url(${loginBackground})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+        style={{ '--fbr-auth-background': `url(${loginBackground})` } as CSSProperties}
+        className="fbr-f1-auth__stage route-focus-target flex flex-1 items-center justify-center px-5 py-14"
       >
         <div
           aria-busy={busy}
-          className={`content-surface w-full ${accessMode || recoveryMode ? "max-w-[760px]" : "max-w-[420px]"} flex flex-col gap-8 rounded-[18px] p-6 md:p-8`}
+          className={`content-surface fbr-f1-auth__sheet w-full ${accessMode || recoveryMode ? "max-w-[760px]" : "max-w-[420px]"} flex flex-col gap-8 rounded-[18px] p-6 md:p-8`}
           style={{
             color: c.text,
           }}

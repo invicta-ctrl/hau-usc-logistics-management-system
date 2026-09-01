@@ -116,7 +116,7 @@ export function OverviewRoute({ session, navigate }: { session: Session; navigat
 
   if (loadState === 'denied') {
     return (
-      <main className="operations-overview layout-container" aria-labelledby="overview-title">
+      <main className="operations-overview fbr-f1-overview layout-container" aria-labelledby="overview-title">
         <section className="operations-overview__state surface-content">
           <ShieldAlert aria-hidden="true" size={24} />
           <h1 id="overview-title">Overview access is limited</h1>
@@ -128,7 +128,7 @@ export function OverviewRoute({ session, navigate }: { session: Session; navigat
 
   if (loadState === 'error' && !bootstrap) {
     return (
-      <main className="operations-overview layout-container" aria-labelledby="overview-title">
+      <main className="operations-overview fbr-f1-overview layout-container" aria-labelledby="overview-title">
         <section className="operations-overview__state surface-content">
           <AlertTriangle aria-hidden="true" size={24} />
           <h1 id="overview-title">Overview unavailable</h1>
@@ -148,7 +148,7 @@ export function OverviewRoute({ session, navigate }: { session: Session; navigat
 
   return (
     <main
-      className="operations-overview layout-container"
+      className="operations-overview fbr-f1-overview layout-container"
       aria-labelledby="overview-title"
       aria-busy={loadState === 'loading' || loadState === 'refreshing'}
     >

@@ -13,7 +13,7 @@ export function LandingPage({
   onRequireExternalRequest: () => void;
 }) {
   return (
-    <main id="main-content" className="route-focus-target flex flex-col flex-1" tabIndex={-1}>
+    <main id="main-content" className="route-focus-target fbr-f1-landing flex flex-col flex-1" tabIndex={-1}>
       <HeroSection onNavigate={onNavigate} onRequireExternalRequest={onRequireExternalRequest} />
 
       <CurrentSection />

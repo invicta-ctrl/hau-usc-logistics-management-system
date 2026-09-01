@@ -17,6 +17,20 @@
     max-inline-size: 52rem;
   }
 
+  /* FBR-001 Phase F1: server-derived signals retain the Workbench reading
+     order—brief, attention, resolution, record timeline—without decorative
+     side stripes or synthetic aggregate metrics. */
+  .fbr-f1-overview .operations-overview__brief,
+  .fbr-f1-overview .operations-overview__panel {
+    border-radius: var(--radius-overlay);
+    box-shadow: none;
+  }
+
+  .fbr-f1-overview .operations-overview__panel--attention {
+    border-inline-start: 1px solid var(--border-subtle-role);
+    border-block-start: 2px solid var(--theme-accent);
+  }
+
   .operations-overview__header h1 {
     max-inline-size: 18ch;
     margin: 0;

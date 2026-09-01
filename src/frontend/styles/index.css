@@ -34,6 +34,28 @@ textarea {
   min-width: 0;
 }
 
+/* FBR-001 Phase F1 keeps the public gateway editorial: real service state is
+   presented as a ruled sheet, never as a synthetic metric card. */
+.fbr-f1-landing .landing-current__frame {
+  padding-block: clamp(3rem, 7vw, 6rem);
+}
+
+.fbr-f1-landing .landing-current__grid {
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.fbr-f1-landing .landing-current__detail,
+.fbr-f1-landing .landing-current__state {
+  border-radius: var(--radius-surface);
+  box-shadow: none;
+}
+
+.fbr-f1-landing .landing-current__action {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, currentColor 42%, transparent);
+  text-underline-offset: 0.25rem;
+}
+
 .brand-mark__fallback {
   width: 100%;
   height: 100%;

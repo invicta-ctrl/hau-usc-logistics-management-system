@@ -2,7 +2,7 @@
 
 PROGRAM: FBR-001
 FROM: TERRA_HIGH:/root/fbr_writer
-TO: Parent direction before any FBR-001 Phase F missing-parity work
+TO: Parent direction before FBR-001 Phase F2 internal-operations parity work
 BRANCH: release/v0.8.3-fbr001-claude-frontend-reconciliation
 HEAD: GIT_HEAD
 UPSTREAM: origin/Playground@7f483d2d713c406a465d218055696b31cd0dc9bd; parity 0/0 at handshake
@@ -23,6 +23,7 @@ BASELINE_INTAKE_PATH: D:/Documents/Codex/HAU-USC Logistics/intake/fbr001-claude-
 DESIGN_DNA_STATUS: PHASE_B_C_CANONICAL_RUNTIME_ADOPTED; fonts, foundation, and Workbench shell adopted; route-body adoption remains pending
 PHASE_A_RECEIPT: .codex/FBR001_PHASE_A_RECEIPT.md
 PHASE_E_RECEIPT: .codex/FBR001_PHASE_E_RECEIPT.md
+PHASE_F1_RECEIPT: .codex/FBR001_PHASE_F1_RECEIPT.md
 PARITY_MATRIX: docs/frontend/FBR001_FRONTEND_FUNCTIONAL_PARITY_MATRIX.md
 
 COMPLETED: exact Playground worktree/branch handshake; immutable source hash check; safe Python-stdlib TAR.GZ preflight and extraction; full extracted manifest/per-file hashes; embedded handoff hash equality; Claude source/audit inventory; current route/capability/transport inventory; accepted FBR-001 record; deterministic matrix.
@@ -30,12 +31,13 @@ VALIDATION: Phase A archive/handoff hashes and safe intake PASS; foundation gene
 PHASE_B_C_OUTCOME: FBR authority amendment in `DESIGN.md`; four hash-verified self-hosted Claude Latin font subsets; generated Workbench component vocabulary; exact responsive inspection widths; truthful current-workspace command panel; current route/session/capability shell preservation.
 PHASE_D_OUTCOME: All eleven backend-supported public/authenticated read families are proven to use `frontendBackend`; normal routes do not consume fixture data, which remains explicit inspection-only. No adapter extension or backend contract change was necessary.
 PHASE_E_OUTCOME: Existing accepted mutation flows were audited on the canonical adapter. `ExternalRequestCenter` now exposes requester cancellation only for server-cancellable states, posts its caller-supplied idempotency key with in-memory CSRF, disables while pending, reconciles the returned status, and reloads after conflict or denial. No adapter or backend extension was required.
-REMAINING: Phase F–H missing-parity completion, seed retirement after equivalent real behavior, live browser/accessibility acceptance, and Playground candidate deployment.
+PHASE_F1_OUTCOME: Public/current announcement, staff access, requester, public lending/tracking, and overview presentation now declare the tokenized Claude editorial/Workbench boundary while retaining existing canonical backend/session state branches. No foundation extension, adapter change, or mock path was added.
+REMAINING: Phase F2 internal operations parity; Phase F3 administration/profile/Playground utility parity; Phase G seed retirement after equivalent real behavior; Phase H live browser/accessibility acceptance and only then any authorized Playground candidate deployment.
 EXTERNAL_ACTIONS: local Git worktree/branch creation and immutable archive intake only; no provider, Playground, D1, R2, Google, Figma, or Production write.
 EXTERNAL_WRITES: NONE. PLAYGROUND_WRITES: 0. D1_WRITES: 0. R2_WRITES: 0. GOOGLE_WRITES: 0. PROVIDER_WRITES: 0. PRODUCTION_WRITES: 0.
 BLOCKER: NONE
 RESUME_COMMANDS: git status --short; npm.cmd exec vitest run tests/unit/fbr001-requester-cancellation.test.js tests/unit/frontend-backend-adapter.test.js tests/unit/inventory-slice2-d1.test.js tests/unit/inventory-command-cancellation-races.test.js; npm.cmd run design:foundation:check; npm.cmd run build; npm.cmd run check:governance; npm.cmd run handoff:verify
 PROHIBITED_ACTIONS: PROVIDER_D1_R2_GOOGLE_FIGMA_MUTATION;PLAYGROUND_OR_PRODUCTION_DEPLOYMENT;MAIN_OR_HISTORICAL_WORKTREE_MUTATION;HISTORY_REWRITE;MOCK_AUTH_OR_DATA;SECOND_FRONTEND_TRANSPORT;LEGACY_FRONTEND_DELETION
 DO_NOT_REPEAT: do not rerun `npm ci`; do not re-extract the approved scratch intake; do not use Claude preview localStorage/role picker/seed records as authority; do not restore the fake Search/⌘K control; do not reintroduce side-stripe attention cards; do not revive the owner-superseded anonymous public request flow; do not replace server cancellation with local status mutation.
-NEXT_EXACT_ACTION: AWAIT_PARENT_DIRECTION_FOR_FBR001_PHASE_F_MISSING_PARITY
-HANDOFF_STATUS: READY_FOR_PARENT_PHASE_F_DIRECTION
+NEXT_EXACT_ACTION: AWAIT_PARENT_DIRECTION_FOR_FBR001_PHASE_F2_INTERNAL_OPERATIONS_PARITY
+HANDOFF_STATUS: READY_FOR_PARENT_PHASE_F2_DIRECTION
