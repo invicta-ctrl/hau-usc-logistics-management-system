@@ -1,6 +1,6 @@
 # FBR-001 Frontend Functional Parity Matrix
 
-STATUS: Phase F complete through the bounded F3 administration/profile/Playground utility checkpoint; Phase G and Phase H remain pending parent direction
+STATUS: Phase G canonical-runtime seed/mock retirement complete after Phase F; Phase H remains pending parent direction
 FUNCTIONAL AUTHORITY: `Playground@7f483d2d713c406a465d218055696b31cd0dc9bd`, current Worker/API and server capability projection.
 VISUAL AUTHORITY: immutable Claude archive and handoff named by FBR-001.
 STATUS SEMANTICS: `PRESENT` means Claude already has the comparable composition; `PARTIAL` means it lacks an accepted current contract, state, route, tab, or real-data behavior; `MISSING` means no comparable Claude surface. These are baseline gaps, not implementation acceptance.
@@ -68,6 +68,16 @@ No adapter extension was required. Phase D tests assert these bindings and fixtu
 | Playground-gated administration reset | `AdministrationRoute.tsx` → `requestPlaygroundReset` | PRESENT — existing Playground-only server gate retained; no reset was requested in this checkpoint. |
 | Direct inventory reserve/adjust and restock transition | Server has accepted domain commands, but `backend.ts` and current React routes expose no accepted adapter/route action | INTENTIONALLY_DEFERRED — Phase F visual parity is excluded; no new command or capability is invented. |
 | Procurement/events command mutations | Current React routes expose `operationalModuleBootstrap('procurement')` and `eventManagement` reads only | INTENTIONALLY_DEFERRED — no current accepted React mutation command exists. |
+
+## Phase G canonical-runtime retirement evidence
+
+| Candidate | Deterministic classification | Phase G decision |
+|---|---|---|
+| `LendingHubRoute.tsx` | Zero executable consumers; local seed queue/actions; replaced by canonical `InternalLendingHub` in normal and inspection composition. | DELETED — recovery is the F3 parent and recorded Git blob. |
+| `RequestCenterRouteWithStates.tsx` and `RequestCenterRoute.tsx` | Wrapper had zero executable consumers; its child had only the wrapper; both carried old local preview state rather than canonical `InternalRequestHub`. | DELETED — recovery is the F3 parent and recorded Git blobs. |
+| Inventory/overview/profile/Playground inspection fixtures | Explicit inspection-only reachability or unique content; retained by preview route, current inspection branch, or preservation rule. | KEPT — not runtime seed state in a backend-supported normal route. |
+
+The fixture-boundary verifier now fails closed if any executable frontend source references a retired path; source comments and preserved historical records are not runtime consumers.
 
 ## Integration target and evidence
 

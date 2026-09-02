@@ -115,8 +115,9 @@ requireExactReferences('ReleaseDeskRoute', [
   'src/frontend/preview/index/PreviewInspectionRoute.tsx',
 ]);
 requireExactReferences('LegacyAdministrationFixture', ['src/frontend/app/AdministrationRoute.tsx']);
-requireExactReferences('LendingHubRoute', ['src/frontend/app/LendingHubRoute.tsx']);
-requireExactReferences('RequestCenterRouteWithStates', ['src/frontend/app/RequestCenterRouteWithStates.tsx']);
+requireExactReferences('LendingHubRoute', []);
+requireExactReferences('RequestCenterRouteWithStates', []);
+requireExactReferences('RequestCenterRoute', []);
 
 const sharedFixtureContracts = [
   ['src/frontend/app/inventory/InventoryRoute.tsx', 'inspection ? INV_FIXTURE : []'],

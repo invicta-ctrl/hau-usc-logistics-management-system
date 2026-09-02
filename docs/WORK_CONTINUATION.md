@@ -1,20 +1,20 @@
-# Work Continuation — FBR-001 Phase F3 checkpoint
+# Work Continuation — FBR-001 Phase G checkpoint
 
 ## Current resume block
 
 - **Repository/worktree:** `invicta-ctrl/hau-usc-logistics-management-system`; `D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation`
 - **Branch/HEAD/upstream:** `release/v0.8.3-fbr001-claude-frontend-reconciliation`; `GIT_HEAD` after this checkpoint; source baseline `Playground@7f483d2d713c406a465d218055696b31cd0dc9bd`; `origin/Playground` was 0/0 at the Phase A handshake.
-- **Current phase/stage:** FBR-001 Phase F is complete through F3 administration/profile/Playground utility parity; parent direction is required before Phase G or Phase H.
+- **Current phase/stage:** FBR-001 Phase G canonical-runtime cleanup is complete; parent direction is required before Phase H browser/accessibility acceptance.
 - **Accepted scope:** `.codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md`; Production forbidden.
-- **Completed work:** Phase A immutable intake and parity matrix; Phase B–C foundation/shell; Phase D read-boundary proof; Phase E canonical mutation audit; Phase F1 public/request/overview parity; Phase F2 internal-operations parity; Phase F3 administration/profile/Playground utility parity.
-- **Files changed by purpose:** F3 changes only four route/utility presentation markers, administration top-rule attention styling, one scoped F3 stylesheet/import, one focused F3 test, and F3 parity/current/receipt records.
-- **Tests verified at current SHA:** F3 focused visual/state/security-boundary Vitest 4/4 PASS; deterministic trusted-gate coverage denies the preview index outside `playground:true`; remaining required deterministic checks are recorded in the Phase F3 receipt.
+- **Completed work:** Phase A immutable intake and parity matrix; Phase B–C foundation/shell; Phase D read-boundary proof; Phase E canonical mutation audit; Phase F1 public/request/overview parity; Phase F2 internal-operations parity; Phase F3 administration/profile/Playground utility parity; Phase G exact legacy seed/mock retirement.
+- **Files changed by purpose:** G removes only three exact unreachable legacy presentation paths; tightens the fixture-boundary verifier to require zero executable consumers; adds one focused G test; and records the inventory/recovery decisions.
+- **Tests verified at current SHA:** G focused canonical-runtime boundary Vitest 3/3 PASS; fixture-boundary and application build PASS. Remaining required deterministic checks are recorded in the Phase G receipt.
 - **Generated artifacts:** `src/frontend/styles/foundation.css`; bounded external scratch `intake/fbr001-claude-baseline-2026-09-01/EXTRACTION_MANIFEST.json` remains immutable.
 - **External actions:** local worktree-only font intake and build; no provider, Playground, D1, R2, Google, Figma, or Production write.
-- **Rollback:** revert the Phase F3 scoped checkpoint commit on this isolated branch; source baseline and immutable archive remain untouched.
+- **Rollback:** revert the Phase G scoped checkpoint commit on this isolated branch; recovery also remains in the recorded F3 parent and deleted Git blobs.
 - **Blocker:** none.
-- **Next three actions:** await parent direction; if authorized, evaluate Phase G seed retirement only after an equivalent real behavior proof; keep canonical transport/server response handling; run Phase H browser/accessibility acceptance only under its separate authority.
-- **Resume commands:** `git status --short`; `npm.cmd exec vitest run tests/unit/fbr001-phase-f3-visual-parity.test.js tests/unit/playground-profile-route.test.js tests/unit/mfr002-preview-index.test.js tests/unit/frontend-playground-guard.test.js`; `npm.cmd run design:foundation:check`; `npm.cmd run build`; `npm.cmd run check:governance`; `npm.cmd run handoff:verify`.
+- **Next three actions:** await parent direction; if authorized, run only Phase H browser/accessibility acceptance; retain canonical transport/server response handling; consider any Playground candidate only after H passes and explicit authorization.
+- **Resume commands:** `git status --short`; `npm.cmd exec vitest run tests/unit/fbr001-phase-g-runtime-boundary.test.js tests/unit/frontend-playground-guard.test.js tests/unit/mfr002-preview-index.test.js`; `npm.cmd run verify:frontend:fixture-boundary`; `npm.cmd run build`; `npm.cmd run check:governance`; `npm.cmd run handoff:verify`.
 - **Prohibited actions:** provider/data/Production mutation; main/historical worktree mutation; history rewrite; archive re-extraction; `npm ci` retry; mock auth/data or second transport; legacy frontend deletion.
 
 ## Accepted rollback
@@ -34,4 +34,4 @@ Local evidence remains 445 passed, 90 expected skipped, 0 failed/interrupted in 
 
 ## Next exact action
 
-Await parent direction for FBR-001 Phase G or Phase H only. Do not begin seed retirement, browser acceptance, deployment, or provider work without the separately bounded authority.
+Await parent direction for FBR-001 Phase H only. Do not begin browser acceptance, deployment, or provider work without the separately bounded authority.

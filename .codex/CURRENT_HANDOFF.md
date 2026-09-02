@@ -1,8 +1,8 @@
-# Current Environment Handoff — FBR-001 Phase F3
+# Current Environment Handoff — FBR-001 Phase G
 
 PROGRAM: FBR-001
 FROM: TERRA_HIGH:/root/fbr_writer
-TO: Parent direction before FBR-001 Phase G seed-retirement evaluation or Phase H browser acceptance
+TO: Parent direction before FBR-001 Phase H browser/accessibility acceptance
 BRANCH: release/v0.8.3-fbr001-claude-frontend-reconciliation
 HEAD: GIT_HEAD
 UPSTREAM: origin/Playground@7f483d2d713c406a465d218055696b31cd0dc9bd; parity 0/0 at handshake
@@ -26,6 +26,7 @@ PHASE_E_RECEIPT: .codex/FBR001_PHASE_E_RECEIPT.md
 PHASE_F1_RECEIPT: .codex/FBR001_PHASE_F1_RECEIPT.md
 PHASE_F2_RECEIPT: .codex/FBR001_PHASE_F2_RECEIPT.md
 PHASE_F3_RECEIPT: .codex/FBR001_PHASE_F3_RECEIPT.md
+PHASE_G_RECEIPT: .codex/FBR001_PHASE_G_RECEIPT.md
 PARITY_MATRIX: docs/frontend/FBR001_FRONTEND_FUNCTIONAL_PARITY_MATRIX.md
 
 COMPLETED: exact Playground worktree/branch handshake; immutable source hash check; safe Python-stdlib TAR.GZ preflight and extraction; full extracted manifest/per-file hashes; embedded handoff hash equality; Claude source/audit inventory; current route/capability/transport inventory; accepted FBR-001 record; deterministic matrix.
@@ -38,12 +39,14 @@ PHASE_F2_OUTCOME: Inventory, Internal Request Hub, Internal Lending Hub, Release
 PHASE_F2_VALIDATION: lint 0 errors (one pre-existing warning); focused F2/read/inventory/release/lending/supply/mobile Vitest 7 files/32 tests PASS; fixture boundary, foundation, Impeccable detector, build, governance, handoff, and diff-check PASS. Browser matrix remains Phase H.
 PHASE_F3_OUTCOME: Administration retains visible capability-filtered tabs and canonical protected reads; profile retains server-backed mutations and its preview early return; Playground index/inspection remains explicitly marked sample-data-only. F3 adds only scoped Workbench hierarchy, top decision rules, narrow-width scroll/focus/reduced-motion treatment, and deterministic denial proof for non-Playground version state.
 PHASE_F3_VALIDATION: focused F3 Vitest 4/4 PASS before final required checks; deterministic `projectPreviewIndexGate({ playground: false })` proves `validatedPlayground:false` and `indexAllowed:false`. Final lint/fixture/foundation/build/Impeccable/governance/handoff verification is recorded in the Phase F3 receipt.
-REMAINING: Phase G seed retirement only after equivalent real behavior evaluation; Phase H live browser/accessibility acceptance and only then any authorized Playground candidate deployment.
+PHASE_G_OUTCOME: Exact runtime/import/reachability and hash inventory proved only `LendingHubRoute.tsx`, `RequestCenterRouteWithStates.tsx`, and its only child `RequestCenterRoute.tsx` were unreachable legacy seed/mock presentation duplicates. They were deleted with recovery preserved in parent `2587217802ae2334183189d949ef4a72b879a054` and recorded Git blobs. All explicit Playground inspection fixtures, preview presenters, current Events `SupplyRoutes`, and unique orphan `profileFixtures.ts` remain unchanged.
+PHASE_G_VALIDATION: focused canonical-runtime boundary PASS 3/3; fixture-boundary verifier now requires zero executable references to all three retired paths and PASS; application build PASS with fixture/foundation prerequisites. Final lint/relevant tests/governance/handoff/diff evidence is recorded in the Phase G receipt.
+REMAINING: Phase H live browser/accessibility acceptance and only then any authorized Playground candidate deployment.
 EXTERNAL_ACTIONS: local Git worktree/branch creation and immutable archive intake only; no provider, Playground, D1, R2, Google, Figma, or Production write.
 EXTERNAL_WRITES: NONE. PLAYGROUND_WRITES: 0. D1_WRITES: 0. R2_WRITES: 0. GOOGLE_WRITES: 0. PROVIDER_WRITES: 0. PRODUCTION_WRITES: 0.
 BLOCKER: NONE
 RESUME_COMMANDS: git status --short; npm.cmd exec vitest run tests/unit/fbr001-phase-f2-visual-parity.test.js tests/unit/fbr001-read-integration.test.js tests/unit/fi07-lending-hub.test.js tests/unit/fi08-release-desk.test.js tests/unit/fi09-supply-operations.test.js tests/unit/mfr002-overview-inventory.test.js tests/unit/mobile-shell-contract.test.js; npm.cmd run design:foundation:check; npm.cmd run build; npm.cmd run check:governance; npm.cmd run handoff:verify
 PROHIBITED_ACTIONS: PROVIDER_D1_R2_GOOGLE_FIGMA_MUTATION;PLAYGROUND_OR_PRODUCTION_DEPLOYMENT;MAIN_OR_HISTORICAL_WORKTREE_MUTATION;HISTORY_REWRITE;MOCK_AUTH_OR_DATA;SECOND_FRONTEND_TRANSPORT;LEGACY_FRONTEND_DELETION
 DO_NOT_REPEAT: do not rerun `npm ci`; do not re-extract the approved scratch intake; do not use Claude preview localStorage/role picker/seed records as authority; do not restore the fake Search/⌘K control; do not reintroduce side-stripe attention cards; do not revive the owner-superseded anonymous public request flow; do not replace server cancellation with local status mutation.
-NEXT_EXACT_ACTION: AWAIT_PARENT_DIRECTION_FOR_FBR001_PHASE_G_SEED_RETIREMENT_OR_PHASE_H_BROWSER_ACCEPTANCE
-HANDOFF_STATUS: READY_FOR_PARENT_PHASE_G_DIRECTION
+NEXT_EXACT_ACTION: AWAIT_PARENT_DIRECTION_FOR_FBR001_PHASE_H_BROWSER_ACCESSIBILITY_ACCEPTANCE
+HANDOFF_STATUS: READY_FOR_PARENT_PHASE_H_DIRECTION
