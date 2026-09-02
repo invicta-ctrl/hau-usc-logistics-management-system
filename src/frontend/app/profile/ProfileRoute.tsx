@@ -411,7 +411,7 @@ export function ProfileRoute({
   };
 
   return (
-    <div className="max-w-[1080px] mx-auto px-5 md:px-8 py-8 pb-12">
+    <div className="fbr-f3-profile max-w-[1080px] mx-auto px-5 md:px-8 py-8 pb-12" data-fbr-f3-profile="true">
       <nav
         aria-label="Breadcrumb"
         className="mb-5"

@@ -30,7 +30,7 @@ export function PreviewInspectionRoute({
 }) {
   if (route === 'external-request') {
     return (
-      <div data-preview-inspection="true" data-preview-route="external-request">
+      <div className="fbr-f3-inspection" data-preview-inspection="true" data-preview-route="external-request" data-fbr-f3-inspection="true">
         <section
           className="mx-4 mt-4 rounded-[8px] px-4 py-3 flex flex-wrap items-center justify-between gap-3"
           style={{
@@ -65,6 +65,7 @@ export function PreviewInspectionRoute({
 
   const authRoute = route as AuthRoute;
   return (
+    <div className="fbr-f3-inspection" data-preview-inspection="true" data-fbr-f3-inspection="true">
     <AuthenticatedShell
       presentation={LOCAL_PREVIEW_OPERATOR}
       route={authRoute}
@@ -110,5 +111,6 @@ export function PreviewInspectionRoute({
         <AuthPlaceholderRoute route={authRoute} />
       )}
     </AuthenticatedShell>
+    </div>
   );
 }

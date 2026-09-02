@@ -357,7 +357,7 @@ export function PreviewIndexPage({
   };
 
   return (
-    <main ref={mainRef} id="main-content" className="preview-index" data-preview-index>
+    <main ref={mainRef} id="main-content" className="preview-index fbr-f3-preview-index" data-preview-index data-fbr-f3-preview-index>
       <div className="preview-index-inner">
         <header className="preview-index-header">
           <div>

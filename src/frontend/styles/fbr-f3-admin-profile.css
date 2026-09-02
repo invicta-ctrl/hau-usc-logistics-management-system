@@ -1,0 +1,87 @@
+/* FBR-001 F3: presentation-only hierarchy for existing administration, profile,
+   and explicitly gated Playground inspection surfaces. */
+.fbr-f3-administration > header,
+.fbr-f3-profile > section[aria-labelledby='profile-heading'],
+.fbr-f3-preview-index .preview-index-header {
+  position: relative;
+}
+
+.fbr-f3-administration > header::before,
+.fbr-f3-profile > section[aria-labelledby='profile-heading']::before,
+.fbr-f3-preview-index .preview-index-header::before {
+  content: '';
+  display: block;
+  inline-size: 3.25rem;
+  block-size: 0.2rem;
+  margin-block-end: 1rem;
+  background: var(--theme-accent, var(--gold-canonical));
+}
+
+.fbr-f3-administration .tabs,
+.fbr-f3-preview-index .preview-filters {
+  scrollbar-width: thin;
+}
+
+.fbr-f3-administration .tabs button,
+.fbr-f3-preview-index .preview-filter,
+.fbr-f3-preview-index .preview-action,
+.fbr-f3-profile button,
+.fbr-f3-profile label[class*='min-h-11'] {
+  min-block-size: 2.75rem;
+}
+
+.fbr-f3-administration .tabs button[aria-current='page'],
+.fbr-f3-preview-index .preview-filter[aria-pressed='true'] {
+  border-block-end: 0.2rem solid var(--theme-accent, var(--gold-canonical));
+}
+
+.fbr-f3-administration .gate {
+  border-inline-start: 1px solid var(--line, var(--theme-border));
+  border-block-start: 0.25rem solid var(--theme-accent, var(--gold-canonical));
+}
+
+.fbr-f3-profile > .grid > div > section,
+.fbr-f3-preview-index .preview-entry,
+.fbr-f3-preview-index .preview-qa-status {
+  box-shadow: none;
+}
+
+.fbr-f3-inspection [data-preview-inspection],
+.fbr-f3-inspection [data-fi10-inspection] {
+  border-block: 1px solid var(--border-warm, var(--theme-border));
+}
+
+.fbr-f3-administration :is(button, select, a):focus-visible,
+.fbr-f3-profile :is(button, input, select, a):focus-visible,
+.fbr-f3-preview-index :is(button, input, summary, a):focus-visible {
+  outline: 0.18rem solid var(--ring, var(--theme-accent));
+  outline-offset: 0.18rem;
+}
+
+@media (max-width: 47.99rem) {
+  .fbr-f3-administration .tabs,
+  .fbr-f3-preview-index .preview-filters {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  .fbr-f3-administration .tabs button,
+  .fbr-f3-preview-index .preview-filter {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .fbr-f3-profile > .grid {
+    gap: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fbr-f3-administration *,
+  .fbr-f3-profile *,
+  .fbr-f3-preview-index * {
+    scroll-behavior: auto;
+  }
+}

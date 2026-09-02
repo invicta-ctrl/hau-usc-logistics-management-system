@@ -493,7 +493,12 @@ export default function AdministrationRoute({
   }
 
   return (
-    <div className={"adm administration-workspace " + (dark ? "dark" : "light")} data-fi10-administration="true" data-fi11-administration="true">
+    <div
+      className={"adm administration-workspace fbr-f3-administration " + (dark ? "dark" : "light")}
+      data-fi10-administration="true"
+      data-fi11-administration="true"
+      data-fbr-f3-administration="true"
+    >
       <style>{scopeRouteCss(".adm", css)}</style>
       {inspection ? (
         <section className="sandbox" data-fi10-inspection="true" data-administration-modal-background>

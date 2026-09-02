@@ -1,6 +1,6 @@
 # FBR-001 Frontend Functional Parity Matrix
 
-STATUS: Phase F2 internal-operations visual-parity checkpoint complete; Phase F3 administration/profile/Playground utility remains pending parent direction
+STATUS: Phase F complete through the bounded F3 administration/profile/Playground utility checkpoint; Phase G and Phase H remain pending parent direction
 FUNCTIONAL AUTHORITY: `Playground@7f483d2d713c406a465d218055696b31cd0dc9bd`, current Worker/API and server capability projection.
 VISUAL AUTHORITY: immutable Claude archive and handoff named by FBR-001.
 STATUS SEMANTICS: `PRESENT` means Claude already has the comparable composition; `PARTIAL` means it lacks an accepted current contract, state, route, tab, or real-data behavior; `MISSING` means no comparable Claude surface. These are baseline gaps, not implementation acceptance.
@@ -35,9 +35,9 @@ Every row requires loading, empty, safe error, denied, and stale/conflict states
 | Staff sign-in/recovery | PRESENT | Existing same-origin session, CSRF, activation, recovery, and denial contracts | Retained canonical staff gateway and state handling; no preview auth substituted. | Phase D visual/body reconciliation only; keep all recovery/server errors truthful. |
 | Authenticated Workbench | PRESENT | `projectSession`, capability projection, `AuthenticatedShell`, and current route registry | Replaced nonfunctional Search/⌘K placeholder with a truthful current-workspace command panel; navigation remains capability-filtered. | Apply the vocabulary to each module body without changing authorization. |
 | Every existing route | PRESENT (shell) / PARTIAL (body) | `APP_ROUTES`, `AUTH_ROUTES`, controller and existing backend adapter | All 15 routes retained; external request and internal modules remain session/capability-gated. | Phase D must reconcile each route body against the original table without mock data or a second transport. |
-| `administration` | `access.admin` plus granular permissions | Admin directory, staff history, reference links, brand assets, health/readiness; audited mutations | Eight-tab Administration | PARTIAL — reconcile actual tab/capability set and protected-data boundaries. |
-| `profile` | Authenticated account controls; server session revocation | `/api/me/profile`, appearance, avatar, username/password/correction endpoints | Profile and display-family swatches | PARTIAL — retain preferences only through accepted server/local contract; clear on sign-out. |
-| Playground Index, inspection and tester utilities | Playground-only authorization; no Production exposure | `/api/version`, `/api/playground/status`, authorized Playground operation | Diagnostics panel only | MISSING — preserve required tester routes/chrome; deny/omit in Production mode. |
+| `administration` | `access.admin` plus granular permissions | Admin directory, staff history, reference links, brand assets, health/readiness; audited mutations | Eight-tab Administration | PRESENT — F3 keeps the actual visible capability-filtered tab set, protected reads, denial/error states, and accepted audited controls while adding a restrained Workbench records boundary. |
+| `profile` | Authenticated account controls; server session revocation | `/api/me/profile`, appearance, avatar, username/password/correction endpoints | Profile and display-family swatches | PRESENT — F3 preserves all server-returned profile/session outcomes and preview mutation guard; local appearance remains only through the current accepted contract and is cleared by existing sign-out handling. |
+| Playground Index, inspection and tester utilities | Playground-only authorization; no Production exposure | `/api/version`, `/api/playground/status`, authorized Playground operation | Diagnostics panel only | PRESENT — F3 preserves inspection sample labels and route/tester utilities behind the existing trusted Playground gate; deterministic version-state coverage proves the index is denied outside Playground mode. |
 
 ## Phase D real-read reconciliation evidence
 

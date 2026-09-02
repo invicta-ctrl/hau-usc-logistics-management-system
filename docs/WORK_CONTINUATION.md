@@ -1,20 +1,20 @@
-# Work Continuation — FBR-001 Phase F2 checkpoint
+# Work Continuation — FBR-001 Phase F3 checkpoint
 
 ## Current resume block
 
 - **Repository/worktree:** `invicta-ctrl/hau-usc-logistics-management-system`; `D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation`
 - **Branch/HEAD/upstream:** `release/v0.8.3-fbr001-claude-frontend-reconciliation`; `GIT_HEAD` after this checkpoint; source baseline `Playground@7f483d2d713c406a465d218055696b31cd0dc9bd`; `origin/Playground` was 0/0 at the Phase A handshake.
-- **Current phase/stage:** FBR-001 Phase F2 internal-operations visual parity complete; parent direction is required before Phase F3 administration/profile/Playground utility parity work.
+- **Current phase/stage:** FBR-001 Phase F is complete through F3 administration/profile/Playground utility parity; parent direction is required before Phase G or Phase H.
 - **Accepted scope:** `.codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md`; Production forbidden.
-- **Completed work:** Phase A immutable intake and parity matrix; Phase B–C foundation/shell; Phase D read-boundary proof; Phase E canonical mutation audit; Phase F1 public/request/overview parity; Phase F2 internal-operations parity.
-- **Files changed by purpose:** F2 changes only five route-body presentation boundaries, one shared F2 stylesheet/import, one focused F2 test, and F2 parity/current/receipt records.
-- **Tests verified at current SHA:** F2 focused visual/state/functional-preservation Vitest 32/32 PASS; remaining required deterministic checks are recorded in the Phase F2 receipt.
+- **Completed work:** Phase A immutable intake and parity matrix; Phase B–C foundation/shell; Phase D read-boundary proof; Phase E canonical mutation audit; Phase F1 public/request/overview parity; Phase F2 internal-operations parity; Phase F3 administration/profile/Playground utility parity.
+- **Files changed by purpose:** F3 changes only four route/utility presentation markers, administration top-rule attention styling, one scoped F3 stylesheet/import, one focused F3 test, and F3 parity/current/receipt records.
+- **Tests verified at current SHA:** F3 focused visual/state/security-boundary Vitest 4/4 PASS; deterministic trusted-gate coverage denies the preview index outside `playground:true`; remaining required deterministic checks are recorded in the Phase F3 receipt.
 - **Generated artifacts:** `src/frontend/styles/foundation.css`; bounded external scratch `intake/fbr001-claude-baseline-2026-09-01/EXTRACTION_MANIFEST.json` remains immutable.
 - **External actions:** local worktree-only font intake and build; no provider, Playground, D1, R2, Google, Figma, or Production write.
-- **Rollback:** revert the Phase F2 scoped checkpoint commit on this isolated branch; source baseline and immutable archive remain untouched.
+- **Rollback:** revert the Phase F3 scoped checkpoint commit on this isolated branch; source baseline and immutable archive remain untouched.
 - **Blocker:** none.
-- **Next three actions:** await parent direction; if authorized, map only F3 administration/profile/Playground utility route bodies; retain canonical transport/server response handling; prove equivalent behavior before any seed retirement.
-- **Resume commands:** `git status --short`; `npm.cmd exec vitest run tests/unit/fbr001-phase-f2-visual-parity.test.js tests/unit/fbr001-read-integration.test.js tests/unit/fi07-lending-hub.test.js tests/unit/fi08-release-desk.test.js tests/unit/fi09-supply-operations.test.js tests/unit/mfr002-overview-inventory.test.js tests/unit/mobile-shell-contract.test.js`; `npm.cmd run design:foundation:check`; `npm.cmd run build`; `npm.cmd run check:governance`; `npm.cmd run handoff:verify`.
+- **Next three actions:** await parent direction; if authorized, evaluate Phase G seed retirement only after an equivalent real behavior proof; keep canonical transport/server response handling; run Phase H browser/accessibility acceptance only under its separate authority.
+- **Resume commands:** `git status --short`; `npm.cmd exec vitest run tests/unit/fbr001-phase-f3-visual-parity.test.js tests/unit/playground-profile-route.test.js tests/unit/mfr002-preview-index.test.js tests/unit/frontend-playground-guard.test.js`; `npm.cmd run design:foundation:check`; `npm.cmd run build`; `npm.cmd run check:governance`; `npm.cmd run handoff:verify`.
 - **Prohibited actions:** provider/data/Production mutation; main/historical worktree mutation; history rewrite; archive re-extraction; `npm ci` retry; mock auth/data or second transport; legacy frontend deletion.
 
 ## Accepted rollback
@@ -34,4 +34,4 @@ Local evidence remains 445 passed, 90 expected skipped, 0 failed/interrupted in 
 
 ## Next exact action
 
-Await parent direction for FBR-001 Phase F3 only. Do not begin Phase G seed retirement or Phase H browser/deployment work.
+Await parent direction for FBR-001 Phase G or Phase H only. Do not begin seed retirement, browser acceptance, deployment, or provider work without the separately bounded authority.
