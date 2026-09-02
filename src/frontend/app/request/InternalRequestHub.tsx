@@ -1169,7 +1169,7 @@ export function InternalRequestHub({
     );
 
   return (
-    <main className="request-hub layout-container" style={{ color: colors.text }} data-fi06-state={loadState}>
+    <main className="request-hub fbr-f2-request-hub layout-container" style={{ color: colors.text }} data-fi06-state={loadState}>
       <header
         className="request-hub__header mb-6 flex flex-wrap items-start justify-between gap-4"
         data-request-modal-background
@@ -1422,8 +1422,11 @@ export function InternalRequestHub({
                         className="request-hub__card flex w-full flex-col gap-2 px-4 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[var(--gold-vivid)]"
                         style={{
                           background: selectedRow ? colors.selected : colors.surface,
-                          borderTop: index ? `1px solid ${colors.border}` : 'none',
-                          borderLeft: selectedRow ? '3px solid #c8992f' : '3px solid transparent',
+                          borderTop: selectedRow
+                            ? '2px solid var(--theme-accent, var(--gold-canonical))'
+                            : index
+                              ? `1px solid ${colors.border}`
+                              : 'none',
                         }}
                       >
                         <div className="flex items-start justify-between gap-3">
@@ -1480,8 +1483,11 @@ export function InternalRequestHub({
                                 : index % 2
                                   ? colors.zebra
                                   : colors.surface,
-                              borderTop: index ? `1px solid ${colors.border}` : 'none',
-                              borderLeft: selectedRow ? '3px solid #c8992f' : '3px solid transparent',
+                              borderTop: selectedRow
+                                ? '2px solid var(--theme-accent, var(--gold-canonical))'
+                                : index
+                                  ? `1px solid ${colors.border}`
+                                  : 'none',
                             }}
                           >
                             <td className="px-4 py-3" style={{ maxWidth: 330 }}>

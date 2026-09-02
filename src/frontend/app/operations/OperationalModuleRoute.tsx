@@ -234,7 +234,7 @@ export function OperationalModuleRoute({
 
   return (
     <div
-      className="custody-workspace mx-auto w-full max-w-[1440px] px-4 py-7 md:px-8 md:py-9"
+      className="custody-workspace fbr-f2-operations mx-auto w-full max-w-[1440px] px-4 py-7 md:px-8 md:py-9"
       data-operational-module={module}
     >
       <header

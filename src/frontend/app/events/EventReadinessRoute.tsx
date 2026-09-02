@@ -296,7 +296,7 @@ export function EventReadinessRoute({
   }
 
   return (
-    <div className={`events-workspace${dark ? ' events-workspace--dark' : ''}`} data-fi11-events="true">
+    <div className={`events-workspace fbr-f2-events${dark ? ' events-workspace--dark' : ''}`} data-fi11-events="true">
       {inspection ? (
         <section className="events-inspection" data-fi11-events-inspection="true">
           <strong>Inspection mode</strong>

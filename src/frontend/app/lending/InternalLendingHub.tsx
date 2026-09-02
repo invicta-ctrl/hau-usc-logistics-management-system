@@ -1425,7 +1425,7 @@ export function InternalLendingHub({
 
   return (
     <main
-      className="custody-workspace max-w-full space-y-4 overflow-x-hidden text-[var(--ink-deep)]"
+      className="custody-workspace fbr-f2-lending max-w-full space-y-4 overflow-x-hidden text-[var(--ink-deep)]"
       data-fi07-lending-hub
       data-fi07-mode={inspection ? 'preview' : 'authenticated'}
       data-theme={dark ? 'dark' : 'light'}

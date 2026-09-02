@@ -1,0 +1,94 @@
+/* FBR-001 Phase F2: operational route bodies use the shared Claude Workbench
+   vocabulary. These selectors only compose existing server-backed content. */
+.fbr-f2-inventory,
+.fbr-f2-request-hub,
+.fbr-f2-lending,
+.fbr-f2-operations,
+.fbr-f2-events {
+  min-inline-size: 0;
+}
+
+.fbr-f2-inventory .inventory-workspace__header,
+.fbr-f2-request-hub .request-hub__header,
+.fbr-f2-lending > header,
+.fbr-f2-operations > header,
+.fbr-f2-events .events-header {
+  border-block-end: 1px solid var(--theme-border, var(--border-paper));
+}
+
+.fbr-f2-inventory .inventory-workspace__controls,
+.fbr-f2-inventory .inventory-workspace__records,
+.fbr-f2-request-hub .request-hub__queue,
+.fbr-f2-lending > header > aside,
+.fbr-f2-events .events-readonly-note {
+  border-radius: var(--radius-surface);
+  box-shadow: none;
+}
+
+.fbr-f2-inventory .inventory-workspace__notice,
+.fbr-f2-request-hub .request-hub__notice,
+.fbr-f2-request-hub .request-hub__mode,
+.fbr-f2-lending [role='alert'],
+.fbr-f2-operations [role='alert'],
+.fbr-f2-events [role='alert'] {
+  border-inline: 1px solid var(--theme-border, var(--border-paper));
+  border-block-start: 2px solid var(--theme-accent, var(--gold-canonical));
+  border-block-end: 1px solid var(--theme-border, var(--border-paper));
+}
+
+.fbr-f2-request-hub .request-hub__filter-row,
+.fbr-f2-lending .custody-lifecycle {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.fbr-f2-request-hub .request-hub__filter,
+.fbr-f2-lending .custody-lifecycle button {
+  flex: 0 0 auto;
+  min-block-size: var(--control-hit-area-min);
+  white-space: nowrap;
+}
+
+.fbr-f2-inventory .inventory-workspace__table-scroll,
+.fbr-f2-request-hub .request-hub__table,
+.fbr-f2-lending .overflow-x-auto {
+  overscroll-behavior-inline: contain;
+}
+
+.fbr-f2-lending .custody-summary,
+.fbr-f2-lending .custody-lifecycle,
+.fbr-f2-operations .custody-notice,
+.fbr-f2-events .events-activity-list,
+.fbr-f2-events .events-schedule-context {
+  border-color: var(--theme-border, var(--border-paper));
+}
+
+.fbr-f2-inventory button:focus-visible,
+.fbr-f2-request-hub button:focus-visible,
+.fbr-f2-lending button:focus-visible,
+.fbr-f2-operations button:focus-visible,
+.fbr-f2-events button:focus-visible {
+  outline: 2px solid var(--theme-focus, var(--gold-vivid));
+  outline-offset: 3px;
+}
+
+@media (max-width: 47.99rem) {
+  .fbr-f2-inventory .inventory-workspace__header,
+  .fbr-f2-request-hub .request-hub__header,
+  .fbr-f2-lending > header,
+  .fbr-f2-operations > header,
+  .fbr-f2-events .events-header {
+    padding-block-end: var(--space-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fbr-f2-inventory *,
+  .fbr-f2-request-hub *,
+  .fbr-f2-lending *,
+  .fbr-f2-operations *,
+  .fbr-f2-events * {
+    scroll-behavior: auto;
+  }
+}

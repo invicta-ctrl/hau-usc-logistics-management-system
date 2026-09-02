@@ -218,7 +218,7 @@ export function InventoryRoute({
   }
 
   return (
-    <main className="inventory-workspace layout-container" aria-labelledby="inventory-title">
+    <main className="inventory-workspace fbr-f2-inventory layout-container" aria-labelledby="inventory-title">
       <header className="inventory-workspace__header" data-inventory-modal-background>
         <div>
           <p className="inventory-workspace__kicker">Inventory records</p>
