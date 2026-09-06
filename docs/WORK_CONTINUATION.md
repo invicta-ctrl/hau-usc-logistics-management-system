@@ -3,7 +3,7 @@
 ## Resume block
 
 - **Repository/worktree:** `invicta-ctrl/hau-usc-logistics-management-system`; `D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation`
-- **Branch/identity:** `release/v0.8.3-fbr001-claude-frontend-reconciliation`; `GIT_HEAD` / `GIT_TREE` mean resolve the final checkpoint after commit. Parent base: `47e55d71eadcdbab2d5eced8c16baf95e3ae781d`. No upstream is configured and no remote action is authorized.
+- **Branch/identity:** `reconcile/playground-fbr001-claude-frontend`; upstream `origin/reconcile/playground-fbr001-claude-frontend`. Earl authorized Git publication for ChatGPT Work. Verify remote parity before resuming. Implementation checkpoint: `d565485e193febb7ab2b10bbaa0983ce036fe239`; tree `1e862c86ec6a806ce9db1ec3cb76fbe23c9d7e18`. The original local release branch preserves that checkpoint. Use the cloud checkout root in place of the originating Windows path.
 - **Authority:** `.codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md`; Phase G receipt `.codex/FBR001_PHASE_G_RECEIPT.md`; durable H1 detail `.codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md`.
 - **Current phase:** H1 local browser/accessibility and fresh local-Worker acceptance is in progress, interrupted due to repeated child usage exhaustion during full verification. This is not a code blocker and is not an acceptance result.
 - **Writer/transfer:** `ACTIVE_WRITER: NONE`; `HANDOFF_STATUS: READY_FOR_HANDOFF` after this checkpoint commit.

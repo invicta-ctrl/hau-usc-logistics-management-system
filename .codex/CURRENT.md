@@ -3,11 +3,11 @@
 PROGRAM: FBR-001 Claude Frontend Baseline Adoption + Backend Reconciliation + Playground Functional Parity
 MILESTONE: PHASE_H1_LOCAL_BROWSER_ACCESSIBILITY_AND_WORKER_ACCEPTANCE
 STATUS: H1_IN_PROGRESS_INTERRUPTED_CHECKPOINT_NOT_ACCEPTED
-BRANCH: release/v0.8.3-fbr001-claude-frontend-reconciliation
+BRANCH: reconcile/playground-fbr001-claude-frontend
 HEAD: GIT_HEAD
 PARENT_BASE_SHA: 47e55d71eadcdbab2d5eced8c16baf95e3ae781d
 TREE: GIT_TREE (resolve after this single checkpoint commit)
-UPSTREAM: none configured for this temporary release branch; no remote action authorized
+UPSTREAM: origin/reconcile/playground-fbr001-claude-frontend (owner-authorized publication; verify remote HEAD before resuming)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation
 WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: NONE

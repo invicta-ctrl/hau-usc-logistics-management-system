@@ -3,7 +3,7 @@
 INTENT: FRONTEND_INTEGRATION_AND_ACCEPTANCE
 MODE: EXECUTE
 OBJECTIVE: Resume and complete only FBR-001 Phase H1 local browser, accessibility, and local-Worker acceptance from the preserved checkpoint; H2, Playground preflight, deployment, and Production remain gated.
-TARGET: release/v0.8.3-fbr001-claude-frontend-reconciliation isolated worktree and the H1 acceptance evidence.
+TARGET: reconcile/playground-fbr001-claude-frontend repository checkout and the H1 acceptance evidence.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 INTERRUPTED_CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md

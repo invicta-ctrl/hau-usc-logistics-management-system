@@ -5,7 +5,16 @@ PROGRAM: FBR-001 Claude Frontend Baseline Adoption + Backend Reconciliation + Pl
 ACCEPTED_SPEC: `.codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md`
 PHASE_G_RECEIPT: `.codex/FBR001_PHASE_G_RECEIPT.md`
 WORKTREE: `D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation`
-BRANCH: `release/v0.8.3-fbr001-claude-frontend-reconciliation`
+BRANCH: `reconcile/playground-fbr001-claude-frontend`
+LOCAL_CHECKPOINT_BRANCH: `release/v0.8.3-fbr001-claude-frontend-reconciliation` at `d565485e193febb7ab2b10bbaa0983ce036fe239`
+REMOTE_CONTINUATION_BRANCH: `reconcile/playground-fbr001-claude-frontend`
+IMPLEMENTATION_CHECKPOINT_TREE: `1e862c86ec6a806ce9db1ec3cb76fbe23c9d7e18`
+
+## Repository-based cloud handoff
+
+Earl explicitly requested publication to GitHub so ChatGPT Work can continue from the repository. Use `invicta-ctrl/hau-usc-logistics-management-system`, branch `reconcile/playground-fbr001-claude-frontend`. Verify the checked-out HEAD equals the remote branch before work. The Windows WORKTREE paths describe the originating machine; use the cloud checkout root instead. All required continuation instructions and accepted specifications are tracked in this repository. Local browser sessions, running services, ignored dependencies, and private provider state are not transferred by Git.
+
+This publication is a checkpoint, not H1 acceptance. Permanent `Playground` remains at `7f483d2d713c406a465d218055696b31cd0dc9bd`. Continue H1 in the temporary branch and commit/push completed evidence there; follow the accepted gates before any subsequent phase. If the cloud checkout lacks dependencies, report the setup constraint before proceeding: the existing `npm ci` prohibition remains in force. Do not rely on access to local Windows documents or services.
 PARENT_BASE_HEAD: `47e55d71eadcdbab2d5eced8c16baf95e3ae781d`
 CHECKPOINT_HEAD: `GIT_HEAD` — resolve after this one checkpoint commit; deliberately not self-embedded so the commit is not amended.
 CHECKPOINT_TREE: `GIT_TREE` — resolve after this one checkpoint commit with `git rev-parse HEAD^{tree}`.
