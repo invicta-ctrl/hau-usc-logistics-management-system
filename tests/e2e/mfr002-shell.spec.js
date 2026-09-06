@@ -1,7 +1,18 @@
 import { expect, test } from '@playwright/test';
 
 const inspectionRoute = (route) => `/#/__preview/inspect/${route}`;
+const exactInspectionPort = process.env.HAU_FRONTEND_E2E_PORT === '4173';
 const isDesktop = (testInfo) => testInfo.project.use.viewport.width >= 1024;
+
+async function installPlaygroundCapability(page) {
+  await page.route('**/api/version', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, playground: true, correlationId: 'mfr002-shell-inspection' }),
+    }),
+  );
+}
 
 async function pageOverflow(page) {
   return page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -10,6 +21,8 @@ async function pageOverflow(page) {
 test('MFR-002 U03 composes the authenticated shell intentionally at every accepted width', async ({
   page,
 }, testInfo) => {
+  test.skip(!exactInspectionPort, 'The exact-4173 invocation exercises inspection-only routes.');
+  await installPlaygroundCapability(page);
   await page.goto(inspectionRoute('overview'));
   const shell = page.locator('.auth-shell');
   const main = page.locator('#main-content');
@@ -44,6 +57,8 @@ test('MFR-002 U03 composes the authenticated shell intentionally at every accept
 });
 
 test('MFR-002 U03 moves route focus to the new main context', async ({ page }, testInfo) => {
+  test.skip(!exactInspectionPort, 'The exact-4173 invocation exercises inspection-only routes.');
+  await installPlaygroundCapability(page);
   await page.goto(inspectionRoute('overview'));
 
   if (isDesktop(testInfo)) {
@@ -69,6 +84,8 @@ test('MFR-002 U03 moves route focus to the new main context', async ({ page }, t
 test('MFR-002 U03 mobile drawer traps focus, isolates background and restores the opener', async ({
   page,
 }, testInfo) => {
+  test.skip(!exactInspectionPort, 'The exact-4173 invocation exercises inspection-only routes.');
+  await installPlaygroundCapability(page);
   test.skip(isDesktop(testInfo), 'Mobile and tablet drawer contract.');
   await page.goto(inspectionRoute('overview'));
   const opener = page.getByRole('button', { name: 'Open navigation' });
@@ -92,6 +109,8 @@ test('MFR-002 U03 mobile drawer traps focus, isolates background and restores th
 test('MFR-002 U03 treats 200 percent zoom as a mobile reflow, not a compressed desktop', async ({
   page,
 }, testInfo) => {
+  test.skip(!exactInspectionPort, 'The exact-4173 invocation exercises inspection-only routes.');
+  await installPlaygroundCapability(page);
   test.skip(testInfo.project.name !== 'frontend-1440', 'One exact 1440 to 720 CSS-pixel zoom simulation.');
   await page.setViewportSize({ width: 720, height: 500 });
   await page.goto(inspectionRoute('overview'));

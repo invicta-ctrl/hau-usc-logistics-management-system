@@ -785,12 +785,17 @@ export function InternalLendingHub({
 
   const restoreQueueFocus = useCallback((ticketId?: string) => {
     requestAnimationFrame(() => {
-      const matches = ticketId
-        ? Array.from(document.querySelectorAll<HTMLButtonElement>('[data-ticket-trigger="' + ticketId + '"]'))
-        : [];
-      const visible = matches.find((button) => button.offsetParent !== null);
-      (visible ?? (ticketId ? triggerRefs.current[ticketId] : null) ?? queueFallbackRef.current)?.focus({
-        preventScroll: true,
+      requestAnimationFrame(() => {
+        const matches = ticketId
+          ? Array.from(document.querySelectorAll<HTMLButtonElement>('[data-ticket-trigger="' + ticketId + '"]'))
+          : [];
+        const visible = matches.find((button) => button.offsetParent !== null);
+        const cachedTrigger = ticketId ? triggerRefs.current[ticketId] : null;
+        const connectedCachedTrigger =
+          cachedTrigger?.isConnected && cachedTrigger.offsetParent !== null ? cachedTrigger : null;
+        (visible ?? connectedCachedTrigger ?? queueFallbackRef.current)?.focus({
+          preventScroll: true,
+        });
       });
     });
   }, []);

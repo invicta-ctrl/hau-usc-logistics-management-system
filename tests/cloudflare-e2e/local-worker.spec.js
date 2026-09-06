@@ -1,4 +1,8 @@
 import { expect, request as apiRequest, test } from '@playwright/test';
+import { localWorkerBaseUrl, resolveLocalWorkerPort } from '../../scripts/local-worker-port.mjs';
+
+const localWorkerBaseURL = () =>
+  process.env.HAU_CLOUDFLARE_BASE_URL || localWorkerBaseUrl(resolveLocalWorkerPort());
 
 // Lending pickup/due dates are validated against the current date, so they must
 // be derived at run time. Hardcoded calendar dates made this suite pass only
@@ -16,58 +20,58 @@ const roles = [
   [
     'LOCAL.OWNER',
     'administrator',
-    'admin.overview',
+    'overview',
     'Administrator',
-    'admin.access',
-    '[data-v5-admin-parity="access"]',
+    'administration',
+    'Authorized records and system boundaries',
   ],
   [
     'LOCAL.ADMIN',
     'administrator',
-    'admin.overview',
+    'overview',
     'Administrator',
-    'admin.access',
-    '[data-v5-admin-parity="access"]',
+    'administration',
+    'Authorized records and system boundaries',
   ],
   [
     'LOCAL.DIRECTOR',
     'director',
-    'director.overview',
+    'overview',
     'Director',
-    'events.series',
-    '[data-v5-operations-parity="events.series"]',
+    'events',
+    'Event logistics readiness',
   ],
-  ['LOCAL.FOOD', 'food', 'food.overview', 'Food Committee', 'request.queue', '.state'],
+  ['LOCAL.FOOD', 'food', 'overview', 'Food Committee', 'request-center', 'Request review queue'],
   [
     'LOCAL.INVENTORY',
     'inventory-pantry',
-    'inventory.overview',
+    'overview',
     'Inventory Committee',
-    'inventory.catalog',
-    'form[data-v5-command="inventory-bulk-classify"]',
+    'inventory',
+    'Inventory',
   ],
   [
     'LOCAL.MATERIALS',
     'materials',
-    'materials.overview',
+    'overview',
     'Materials Committee',
-    'procurement.board',
-    'form[data-v5-command="canvass-create"]',
+    'procurement',
+    'Procurement Workspace',
   ],
 ];
 
 async function signInV5(page, accessId, password = PASSWORD) {
-  await page.goto('/#/public.signin');
-  await page.getByLabel('Username').fill(accessId);
-  await page.getByLabel('Password (required)', { exact: true }).fill(password);
+  await page.goto('/#/route/staff-signin');
+  await page.getByLabel('Identifier').fill(accessId);
+  await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.locator('.shell')).toBeVisible();
-  await expect(page.locator('#surface-main')).toBeVisible();
+  await expect(page.locator('.auth-shell')).toBeVisible();
+  await expect(page.locator('#main-content')).toBeVisible();
 }
 
 async function openV5Route(page, route) {
-  await page.goto(`/#/${route}`);
-  await expect(page.locator('#surface-main')).toBeVisible();
+  await page.goto(`/#/route/${route}`);
+  await expect(page.locator('#main-content')).toBeVisible();
 }
 
 async function login(request, accessId, password = PASSWORD) {
@@ -96,9 +100,9 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
     database: { connected: true, schemaVersion: '32' },
   });
 
-  await page.goto('/#/public.signin');
+  await page.goto('/#/route/staff-signin');
   await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
-  await expect(page.locator('#surface-main')).toBeVisible();
+  await expect(page.locator('#main-content')).toBeVisible();
 });
 
 test('request-only mode bypasses auth and exposes only sanitized reference data', async ({
@@ -127,11 +131,10 @@ test('request-only mode bypasses auth and exposes only sanitized reference data'
 
   const protectedRoute = await request.get('/api/procurement');
   expect(protectedRoute.status()).toBe(401);
-  await page.goto('/#/public.request-intake');
-  await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
-  await expect(page.locator('#request-center-form')).toBeVisible();
-  await expect(page.getByLabel('Username')).toHaveCount(0);
-  await expect(page.getByText('Public request portal', { exact: true })).toBeVisible();
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Logistics services and records' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Staff sign in' }).first()).toBeVisible();
+  await expect(page.getByLabel('Identifier')).toHaveCount(0);
 });
 
 test('an authorized administrator reads only the bounded retained staff account activity DTO', async ({
@@ -670,10 +673,10 @@ test('inventory bulk classification is atomic and bootstrap projects a searched 
     expect(afterStale.items.every((item) => item.classificationHistory.length === 0)).toBe(true);
 
     await signInV5(page, 'LOCAL.INVENTORY');
-    await openV5Route(page, 'inventory.catalog');
+    await openV5Route(page, 'inventory');
     await expect(page.getByRole('heading', { name: 'Inventory', exact: true })).toBeVisible();
-    await expect(page.locator('#surface-main')).toContainText(createdItems[0].itemId);
-    await expect(page.locator('#surface-main')).toContainText(createdItems[1].itemId);
+    await expect(page.locator('#main-content')).toContainText(createdItems[0].itemId);
+    await expect(page.locator('#main-content')).toContainText(createdItems[1].itemId);
     const inventoryOperations = page.locator('[data-v5-operations-parity="inventory.catalog"]');
     const bulkForm = page.locator('form[data-v5-command="inventory-bulk-classify"]');
     await expect(inventoryOperations).toBeVisible();
@@ -1077,7 +1080,7 @@ test('shared shell exposes the owner roster and authorized Administrator health 
 
 test('Request Center public APIs enforce the two-purpose private-tracking contract', async ({ request }) => {
   const submissionHeaders = {
-    origin: 'http://127.0.0.1:8787',
+    origin: localWorkerBaseURL(),
     'cf-connecting-ip': '192.0.2.30',
   };
   const optionsResponse = await request.get('/api/public/request/options');
@@ -1143,7 +1146,7 @@ test('Request Center public APIs enforce the two-purpose private-tracking contra
   expect(JSON.stringify(changedReplay)).not.toContain(submitted.trackingCode);
 
   const trackedResponse = await request.post('/api/public/request/track', {
-    headers: { origin: 'http://127.0.0.1:8787' },
+    headers: { origin: localWorkerBaseURL() },
     data: { requestId: submitted.requestId, trackingCode: submitted.trackingCode },
   });
   expect(trackedResponse.status()).toBe(200);
@@ -1157,7 +1160,7 @@ test('Request Center public APIs enforce the two-purpose private-tracking contra
   expect(JSON.stringify(tracked)).not.toContain(command.email);
 
   const relatedResponse = await request.post('/api/public/request/related', {
-    headers: { origin: 'http://127.0.0.1:8787' },
+    headers: { origin: localWorkerBaseURL() },
     data: { requestId: submitted.requestId, trackingCode: submitted.trackingCode },
   });
   expect(relatedResponse.status()).toBe(200);
@@ -1343,7 +1346,7 @@ test('public Lending Center submits both borrower types with private tracking', 
     clientRequestId,
   };
   const fractionalCountable = await request.post('/api/public/lending', {
-    headers: { origin: 'http://127.0.0.1:8787' },
+    headers: { origin: localWorkerBaseURL() },
     data: {
       ...command,
       lines: [{ itemId: item.id, quantity: 1.5 }],
@@ -1357,7 +1360,7 @@ test('public Lending Center submits both borrower types with private tracking', 
   });
 
   const submitted = await request.post('/api/public/lending', {
-    headers: { origin: 'http://127.0.0.1:8787' },
+    headers: { origin: localWorkerBaseURL() },
     data: command,
   });
   expect(submitted.status()).toBe(200);
@@ -1369,7 +1372,7 @@ test('public Lending Center submits both borrower types with private tracking', 
   expect(receipt).not.toHaveProperty('ticketId');
 
   const replay = await request.post('/api/public/lending', {
-    headers: { origin: 'http://127.0.0.1:8787' },
+    headers: { origin: localWorkerBaseURL() },
     data: command,
   });
   await expect(replay.json()).resolves.toMatchObject({
@@ -1379,7 +1382,7 @@ test('public Lending Center submits both borrower types with private tracking', 
   });
 
   const trackingRoute = await request.post('/api/public/lending/track', {
-    headers: { origin: 'http://127.0.0.1:8787' },
+    headers: { origin: localWorkerBaseURL() },
     data: { submissionId: receipt.submissionId, trackingCode: receipt.trackingCode },
   });
   expect(trackingRoute.status()).toBe(200);
@@ -1395,13 +1398,13 @@ test('public Lending Center submits both borrower types with private tracking', 
   expect(tracked).not.toHaveProperty('contactNumber');
 
   const invalidTracking = await request.post('/api/public/lending/track', {
-    headers: { origin: 'http://127.0.0.1:8787' },
+    headers: { origin: localWorkerBaseURL() },
     data: { submissionId: receipt.submissionId, trackingCode: 'invalid-private-code' },
   });
   expect(invalidTracking.status()).toBe(404);
 
   const staffSubmitted = await request.post('/api/public/lending', {
-    headers: { origin: 'http://127.0.0.1:8787' },
+    headers: { origin: localWorkerBaseURL() },
     data: {
       ...command,
       borrowerType: 'USC_STAFF',
@@ -1617,10 +1620,10 @@ test('Admin and Director govern event hierarchy while unauthorized roles remain 
   );
 
   await signInV5(page, 'LOCAL.DIRECTOR');
-  await openV5Route(page, 'events.series');
+  await openV5Route(page, 'events');
   await expect(page.getByRole('heading', { name: 'Event series', exact: true })).toBeVisible();
   await expect(page.locator('[aria-label="Current route"]')).toContainText('Event series');
-  await expect(page.locator('#surface-main')).toContainText('Local Event Management Acceptance 2099');
+  await expect(page.locator('#main-content')).toContainText('Local Event Management Acceptance 2099');
   await expect(page.locator('[data-v5-contextual-mount="events.series"]')).toBeVisible();
   await expect(page.locator('form[data-v5-command="event-series-save"]')).toBeVisible();
 
@@ -1679,7 +1682,7 @@ test('Admin and Director govern event hierarchy while unauthorized roles remain 
 
 test('event management renders truthful unknown fields on the protected mobile path', async ({ page }) => {
   await signInV5(page, 'LOCAL.DIRECTOR');
-  await openV5Route(page, 'events.series');
+  await openV5Route(page, 'events');
   await expect(page.locator('[data-v5-operations-parity="events.series"]')).toBeVisible();
   await expect(page.locator('[data-v5-contextual-mount="events.series"]')).toBeVisible();
   await expect(page.locator('form[data-v5-command="event-activity-save"]')).toBeVisible();
@@ -1687,38 +1690,22 @@ test('event management renders truthful unknown fields on the protected mobile p
   await page.reload();
   await expect(page.locator('[data-v5-operations-parity="events.series"]')).toBeVisible();
   await expect(page.locator('[data-v5-contextual-mount="events.series"]')).toBeVisible();
-  await expect(page.locator('#surface-main')).toBeVisible();
+  await expect(page.locator('#main-content')).toBeVisible();
 });
 
-for (const [accessId, experience, route, workspace, deepRoute, capabilityMarker] of roles) {
+for (const [accessId, experience, route, _workspace, deepRoute, deepRouteHeading] of roles) {
   test(`${accessId} receives only the server-routed ${experience} experience`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await signInV5(page, accessId);
-    const expectedRoute = new RegExp(`#/${route.replaceAll('.', '\\.')}$`, 'u');
+    const expectedRoute = new RegExp(`#/route/${route}$`, 'u');
     await expect(page).toHaveURL(expectedRoute);
-    await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText(workspace);
-
-    const accountMenuButton = page.locator('[data-act="open-menu"]');
-    await expect(accountMenuButton).toBeVisible();
-    await expect(accountMenuButton).toHaveAccessibleName(/\S/u);
-    await expect(accountMenuButton).toHaveAttribute('aria-haspopup', 'true');
-    await accountMenuButton.focus();
-    await expect(accountMenuButton).toBeFocused();
-    await accountMenuButton.click();
-    await expect(page.getByRole('menuitem', { name: 'Sign out' })).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('menuitem', { name: 'Sign out' })).toHaveCount(0);
+    await expect(page.locator('#main-content')).toHaveAccessibleName('Operations overview');
 
     await page.setViewportSize({ width: 1280, height: 900 });
     await openV5Route(page, deepRoute);
-    await expect(page).toHaveURL(new RegExp(`#/${deepRoute.replaceAll('.', '\\.')}$`, 'u'));
-    await expect(page.locator('[aria-label="Current route"]')).toBeVisible();
-    await expect(page.locator(capabilityMarker)).toBeVisible();
-    if (accessId === 'LOCAL.FOOD') {
-      await expect(
-        page.getByRole('heading', { name: 'No requests in this scope', exact: true }),
-      ).toBeVisible();
-    }
+    await expect(page).toHaveURL(new RegExp(`#/route/${deepRoute}$`, 'u'));
+    await expect(page.locator('#main-content')).toBeVisible();
+    await expect(page.getByRole('heading', { name: deepRouteHeading, exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'You do not have access to this area' })).toHaveCount(0);
   });
 }
@@ -1729,7 +1716,7 @@ test('System Owner changes governed operational scope without losing identity or
   await signInV5(page, 'LOCAL.OWNER');
 
   await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Administrator');
-  await openV5Route(page, 'food.overview');
+  await openV5Route(page, 'request-center');
   await expect(page.locator('[aria-label="Current route"]')).toContainText('Food committee');
   await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Administrator');
 });
@@ -1738,18 +1725,18 @@ test('System Owner opens and refreshes every real workspace without impersonatio
   await signInV5(page, 'LOCAL.OWNER');
 
   for (const [route, label] of [
-    ['admin.overview', 'Administrator overview'],
-    ['director.overview', 'Director overview'],
-    ['food.overview', 'Food committee'],
-    ['inventory.overview', 'Inventory committee'],
-    ['materials.overview', 'Materials committee'],
+    ['overview', 'Good work starts with the next clear action.'],
+    ['events', 'Events'],
+    ['request-center', 'Request Center'],
+    ['inventory', 'Inventory'],
+    ['procurement', 'Procurement'],
   ]) {
     await openV5Route(page, route);
     await expect(page.locator('[aria-label="Current route"]')).toContainText(label);
     await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Administrator');
     await page.reload();
-    await expect(page.locator('.shell')).toBeVisible();
-    await expect(page.locator('#surface-main')).toBeVisible();
+  await expect(page.locator('.auth-shell')).toBeVisible();
+    await expect(page.locator('#main-content')).toBeVisible();
   }
 });
 
@@ -1788,10 +1775,10 @@ test('Inventory operator receives authoritative D1 balances and bounded movement
   );
 
   await signInV5(page, 'LOCAL.INVENTORY');
-  await openV5Route(page, 'inventory.catalog');
+  await openV5Route(page, 'inventory');
   await expect(page.getByRole('heading', { name: 'Inventory', exact: true })).toBeVisible();
-  await expect(page.locator('#surface-main table')).toContainText('ITM-LOCAL-001');
-  await expect(page.locator('#surface-main table')).toContainText(String(authoritative.onHand));
+  await expect(page.locator('#main-content table')).toContainText('ITM-LOCAL-001');
+  await expect(page.locator('#main-content table')).toContainText(String(authoritative.onHand));
   await expect(page.locator('[data-v5-operations-parity="inventory.catalog"]')).toBeVisible();
   await expect(page.locator('form[data-v5-command="inventory-bulk-classify"]')).toBeVisible();
 });
@@ -1844,7 +1831,7 @@ test('Administrator reaches Access Management when the legacy reference endpoint
   page,
 }) => {
   await signInV5(page, 'LOCAL.ADMIN');
-  await openV5Route(page, 'admin.access');
+  await openV5Route(page, 'administration');
   await expect(page.getByRole('heading', { name: 'Accounts and Access', exact: true })).toBeVisible();
   const accessOperations = page.locator('[data-v5-admin-parity="access"]');
   await expect(accessOperations).toBeVisible();
@@ -1854,32 +1841,30 @@ test('Administrator reaches Access Management when the legacy reference endpoint
 
 test('starter activation rotates into a normal session and logout revokes it', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/#/public.signin');
-  await page.getByLabel('Username').fill('LOCAL.STARTER');
-  await page.getByLabel('Password (required)', { exact: true }).fill(TEMPORARY_PASSWORD);
+  await page.goto('/#/route/staff-signin');
+  await page.getByLabel('Identifier').fill('LOCAL.STARTER');
+  await page.getByLabel('Password', { exact: true }).fill(TEMPORARY_PASSWORD);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.locator('[data-v5-admin-parity="auth-activate"]')).toBeVisible();
+  await expect(page.locator('form').filter({ has: page.getByRole('button', { name: 'Activate account' }) })).toBeVisible();
 
-  const activation = page.locator('[data-v5-admin-parity="auth-activate"]');
+  const activation = page.locator('form').filter({ has: page.getByRole('button', { name: 'Activate account' }) });
   await activation.getByLabel('Full name').fill('Local Starter Operator');
   await activation.getByLabel('Mobile number').fill('+63 917 000 0000');
-  await activation.getByLabel('USC work email').fill('local-starter@example.invalid');
+  await activation.getByLabel('Email address').fill('local-starter@example.invalid');
   await activation.getByLabel('New password', { exact: true }).fill(ACTIVATED_PASSWORD);
-  await activation.getByLabel('Confirm new password', { exact: true }).fill(ACTIVATED_PASSWORD);
+  await activation.getByLabel('Confirm password', { exact: true }).fill(ACTIVATED_PASSWORD);
   await activation.getByRole('button', { name: 'Activate account' }).click();
 
-  await expect(page.locator('[data-v5-admin-parity="auth-activate"]')).toHaveCount(0);
-  await openV5Route(page, 'food.overview');
-  const accountMenuButton = page.locator('[data-act="open-menu"]');
-  await expect(accountMenuButton).toBeVisible();
-  await accountMenuButton.focus();
-  await expect(accountMenuButton).toBeFocused();
-  await accountMenuButton.click();
-  const signOut = page.getByRole('menuitem', { name: 'Sign out' });
+  await expect(page.locator('form').filter({ has: page.getByRole('button', { name: 'Activate account' }) })).toHaveCount(0);
+  await openV5Route(page, 'request-center');
+  await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
+  const signOut = page.getByRole('dialog', { name: 'Workspace navigation' }).getByRole('button', { name: 'Sign out' });
   await expect(signOut).toBeVisible();
+  const logout = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/auth/logout');
   await signOut.click();
-  await expect(page).toHaveURL(/#\/public\.signin$/u);
-  await expect(page.getByLabel('Username')).toBeVisible();
+  expect((await logout).status()).toBe(200);
+  await expect(page).toHaveURL(/\/#$/u);
+  await expect(page.getByRole('heading', { name: 'Logistics services and records' })).toBeVisible();
   const sessionAfterLogout = await page.evaluate(async () => {
     const response = await fetch('/api/session', { credentials: 'include' });
     return { status: response.status, body: await response.json() };
@@ -1888,11 +1873,11 @@ test('starter activation rotates into a normal session and logout revokes it', a
     status: 401,
     body: { code: 'SESSION_REQUIRED' },
   });
-  await expect(page.locator('.shell')).toHaveCount(0);
+  await expect(page.locator('.auth-shell')).toHaveCount(0);
 });
 
 test('Administrator Access Management renames an Access ID once and revokes prior sessions', async () => {
-  const baseURL = process.env.HAU_CLOUDFLARE_BASE_URL || 'http://127.0.0.1:8787';
+  const baseURL = localWorkerBaseURL();
   const admin = await apiRequest.newContext({ baseURL });
   const target = await apiRequest.newContext({ baseURL });
   const fresh = await apiRequest.newContext({ baseURL });
@@ -2203,7 +2188,7 @@ test('System Owner assigns effective workspace policy and direct routes fail clo
       },
     });
 
-    await openV5Route(page, 'materials.overview');
+    await openV5Route(page, 'procurement');
     await expect(page).toHaveURL(/#\/materials\.overview$/u);
     await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Food Committee');
     await expect(page.getByRole('heading', { name: 'You do not have access to this area' })).toBeVisible();
@@ -2213,7 +2198,7 @@ test('System Owner assigns effective workspace policy and direct routes fail clo
 });
 
 test('Administrator Access Management governs the staging account lifecycle and safe audit history', async () => {
-  const baseURL = process.env.HAU_CLOUDFLARE_BASE_URL || 'http://127.0.0.1:8787';
+  const baseURL = localWorkerBaseURL();
   const admin = await apiRequest.newContext({ baseURL });
   const managed = await apiRequest.newContext({ baseURL });
   const anonymous = await apiRequest.newContext({ baseURL });
@@ -2474,7 +2459,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
 });
 
 test('Administrator atomically initializes, revokes, restores, and resets department requester accounts', async () => {
-  const baseURL = process.env.HAU_CLOUDFLARE_BASE_URL || 'http://127.0.0.1:8787';
+  const baseURL = localWorkerBaseURL();
   const admin = await apiRequest.newContext({ baseURL });
   const requester = await apiRequest.newContext({ baseURL });
   const anonymous = await apiRequest.newContext({ baseURL });
@@ -2676,7 +2661,7 @@ test('Administrator UI routes a one-time department reset through the current V5
       response.request().postDataJSON()?.limit === 100 &&
       response.request().postDataJSON()?.offset === 0,
   );
-  await openV5Route(page, 'admin.access');
+  await openV5Route(page, 'administration');
   const initialDirectoryResponse = await initialDirectoryResponsePromise;
   expect(initialDirectoryResponse.status()).toBe(200);
   await expect(page.getByRole('heading', { name: 'Accounts and Access', exact: true })).toBeVisible();
@@ -2755,7 +2740,7 @@ test('Administrator UI routes a one-time department reset through the current V5
 });
 
 test('requester portals keep request and lending records self-scoped', async () => {
-  const baseURL = process.env.HAU_CLOUDFLARE_BASE_URL || 'http://127.0.0.1:8787';
+  const baseURL = localWorkerBaseURL();
   const admin = await apiRequest.newContext({ baseURL });
   const departmentRequester = await apiRequest.newContext({ baseURL });
   const lendingRequester = await apiRequest.newContext({ baseURL });
@@ -3676,7 +3661,7 @@ test('committee-scoped canvass, procurement, and cumulative receiving execute in
   const uiQuoteResult = await uiQuote.json();
 
   await signInV5(page, 'LOCAL.MATERIALS');
-  await openV5Route(page, 'procurement.board');
+  await openV5Route(page, 'procurement');
   const canvassSurface = page.locator('[data-v5-operations-parity="procurement.board"]');
   const createForm = page.locator('form[data-v5-command="canvass-create"]');
   const preferredForm = page.locator('form[data-v5-command="canvass-preferred"]');

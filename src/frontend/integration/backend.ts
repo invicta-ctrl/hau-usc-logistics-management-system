@@ -2057,6 +2057,10 @@ export class FrontendBackend {
 
   async logout(): Promise<void> {
     try {
+      // A hard refresh or recreated adapter can lose only the in-memory token while the
+      // cookie-backed session remains authenticated. Rehydrate that server-issued token
+      // before logout rather than treating local navigation as successful revocation.
+      if (!this.csrfToken) await this.session();
       if (this.csrfToken) await this.request('/api/auth/logout', { body: {}, csrf: true });
     } finally {
       this.csrfToken = '';

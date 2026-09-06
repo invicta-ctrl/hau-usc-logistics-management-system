@@ -56,6 +56,7 @@ function ticket(overrides) {
     eligibilityReviewedBy: '',
     eligibilityReviewedAt: '',
     assetOptions: [],
+    historyHasMore: false,
     history: [
       {
         previousStatus: '',
@@ -251,7 +252,7 @@ async function openLendingHub(page, testInfo) {
     ? (await page.getByRole('button', { name: 'Open navigation' }).click(),
       page.getByRole('dialog', { name: 'Workspace navigation' }))
     : page;
-  await navigation.getByRole('button', { name: 'Internal Lending Hub', exact: true }).click();
+  await navigation.getByRole('link', { name: 'Internal Lending Hub', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Loans and custody' })).toBeVisible();
 }
 
@@ -305,9 +306,9 @@ test('FI-07 projects the strict lending page, responsive queue, custody actions,
   await openLendingHub(page, testInfo);
   expect(bootstrapRequests[0]).toBe('/api/bootstrap/lending?page=1&pageSize=25');
   await expect(
-    page.getByText(/Search and status filters apply only to this loaded authoritative page/u),
+    page.getByText(/Search and status filters apply only to this loaded page/u),
   ).toBeVisible();
-  await expect(page.getByText(/No global lending-ticket total is shown/u)).toBeVisible();
+  await expect(page.getByText(/A total is not shown because it cannot be confirmed/u)).toBeVisible();
   await expect(page.getByRole('button', { name: 'For review 1' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Ready to claim 1' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Overdue 1' })).toBeVisible();
@@ -355,8 +356,8 @@ test('FI-07 projects the strict lending page, responsive queue, custody actions,
   await expect(reviewSummary).toContainText('4 pack');
   await expect(reviewSummary).toContainText('does not yet transfer custody');
   await review.getByRole('checkbox', { name: /Identity verified through/u }).check();
-  await review.getByRole('button', { name: 'Record server review', exact: true }).click();
-  await expect(page.getByText('Server lending review recorded', { exact: true })).toBeVisible();
+  await review.getByRole('button', { name: 'Record lending review', exact: true }).click();
+  await expect(page.getByText('Lending review recorded', { exact: true })).toBeVisible();
   expect(commands.review).toMatchObject({
     ticketId: 'LEND-REVIEW',
     decision: 'APPROVE',
@@ -380,7 +381,7 @@ test('FI-07 projects the strict lending page, responsive queue, custody actions,
     .getByRole('checkbox', { name: /I understand this records the physical custody consequence/u })
     .check();
   await handoff.getByRole('button', { name: 'Confirm issue', exact: true }).click();
-  await expect(page.getByText('Server issue recorded', { exact: true })).toBeVisible();
+  await expect(page.getByText('Item issue recorded', { exact: true })).toBeVisible();
   expect(commands.handoff).toMatchObject({
     ticketId: 'LEND-CLAIM',
     conditionLabel: 'GOOD',
@@ -406,7 +407,7 @@ test('FI-07 projects the strict lending page, responsive queue, custody actions,
     .getByRole('checkbox', { name: /I confirm the inspected quantities and condition/u })
     .check();
   await returnDialog.getByRole('button', { name: 'Upload evidence and confirm return', exact: true }).click();
-  await expect(page.getByText('Server return recorded', { exact: true })).toBeVisible();
+  await expect(page.getByText('Item return recorded', { exact: true })).toBeVisible();
   expect(commands.evidence).toMatchObject({
     evidenceType: 'LENDING_RETURN_PHOTO',
     relatedEntityType: 'LENDING',
@@ -491,7 +492,7 @@ test('FI-07 clears a disappeared selected record and restores stable queue focus
   await page.getByRole('button', { name: 'Review ticket', exact: true }).click();
   const review = page.getByRole('dialog', { name: 'Review LEND-REVIEW' });
   await review.getByRole('checkbox', { name: /Identity verified through/u }).check();
-  await review.getByRole('button', { name: 'Record server review', exact: true }).click();
+  await review.getByRole('button', { name: 'Record lending review', exact: true }).click();
   await expect(
     page.getByText('Selected ticket is no longer on this loaded page', { exact: true }),
   ).toBeVisible();
@@ -527,9 +528,9 @@ test('FI-07 pauses an open confirmation dialog when its authoritative reload bec
   await expect(inspector).toHaveAttribute('aria-hidden', 'true');
   await expect(inspector).not.toHaveAttribute('aria-modal', 'true');
   await review.getByRole('checkbox', { name: /Identity verified through/u }).check();
-  await review.getByRole('button', { name: 'Record server review', exact: true }).click();
+  await review.getByRole('button', { name: 'Record lending review', exact: true }).click();
   await expect(page.getByText('Last-known lending data', { exact: true })).toBeVisible();
-  await expect(review.getByRole('button', { name: 'Record server review', exact: true })).toBeDisabled();
+  await expect(review.getByRole('button', { name: 'Record lending review', exact: true })).toBeDisabled();
 });
 
 test('FI-07 requires exact matching available candidates for traceable reusable review and blocks zero availability', async ({
@@ -621,8 +622,8 @@ test('FI-07 requires exact matching available candidates for traceable reusable 
   ).toBeVisible();
   await exactReview.getByRole('checkbox', { name: /TRACE-1/u }).check();
   await exactReview.getByRole('checkbox', { name: /TRACE-2/u }).check();
-  await exactReview.getByRole('button', { name: 'Record server review', exact: true }).click();
-  await expect(page.getByText('Server lending review recorded', { exact: true })).toBeVisible();
+  await exactReview.getByRole('button', { name: 'Record lending review', exact: true }).click();
+  await expect(page.getByText('Lending review recorded', { exact: true })).toBeVisible();
   expect(commands).toHaveLength(1);
   expect(commands[0].assetIds).toEqual(['AST-TRACE-1', 'AST-TRACE-2']);
 
@@ -631,9 +632,15 @@ test('FI-07 requires exact matching available candidates for traceable reusable 
   await page.getByRole('button', { name: 'Review ticket', exact: true }).click();
   const zeroReview = page.getByRole('dialog', { name: 'Review LEND-TRACE-ZERO' });
   await zeroReview.getByRole('checkbox', { name: /Identity verified through/u }).check();
-  await expect(zeroReview.getByText(/No matching available review candidates are projected/u)).toBeVisible();
-  await zeroReview.getByRole('button', { name: 'Record server review', exact: true }).click();
-  await expect(zeroReview.getByText(/not enough matching available review candidates/u)).toBeVisible();
+  await expect(
+    zeroReview
+      .getByLabel('Custody consequence summary')
+      .filter({ hasText: /not enough matching available review candidates/u }),
+  ).toBeVisible();
+  await zeroReview.getByRole('button', { name: 'Record lending review', exact: true }).click();
+  await expect(
+    zeroReview.getByRole('alert').filter({ hasText: /not enough matching available review candidates/u }),
+  ).toBeVisible();
   expect(commands).toHaveLength(1);
 });
 
@@ -698,7 +705,7 @@ test('FI-07 blocks mixed traceable reusable return outcomes before any protected
     .getByRole('checkbox', { name: /I confirm the inspected quantities and condition/u })
     .check();
   await returnDialog.getByRole('button', { name: 'Upload evidence and confirm return', exact: true }).click();
-  await expect(returnDialog.getByText(/exactly one nonzero outcome/u)).toBeVisible();
+  await expect(returnDialog.getByRole('alert').filter({ hasText: /exactly one nonzero outcome/u })).toBeVisible();
   expect(returnRequests).toBe(0);
   expect(evidenceRequests).toBe(0);
 });

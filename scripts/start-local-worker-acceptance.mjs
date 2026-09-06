@@ -3,10 +3,12 @@ import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveLocalWorkerPort } from './local-worker-port.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const wrangler = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
 const vite = path.join(repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
+const localWorkerPort = resolveLocalWorkerPort();
 const privateRoot = await mkdtemp(path.join(tmpdir(), 'hau-usc-local-worker-'));
 const state = path.join(privateRoot, 'state');
 const seed = path.join(privateRoot, 'seed.sql');
@@ -32,7 +34,7 @@ execFileSync(
 
 const worker = spawn(
   process.execPath,
-  [wrangler, 'dev', '--local', '--assets', assets, '--persist-to', state, '--port', '8787'],
+  [wrangler, 'dev', '--local', '--assets', assets, '--persist-to', state, '--port', String(localWorkerPort)],
   shared,
 );
 for (const signal of ['SIGINT', 'SIGTERM']) {

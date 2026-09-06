@@ -1,6 +1,17 @@
 import { expect, test } from '@playwright/test';
 
 const inspectionRoute = (route) => `/#/__preview/inspect/${route}`;
+const exactInspectionPort = process.env.HAU_FRONTEND_E2E_PORT === '4173';
+
+async function installPlaygroundCapability(page) {
+  await page.route('**/api/version', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, playground: true, correlationId: 'mfr002-entry-inspection' }),
+    }),
+  );
+}
 const isNarrow = (testInfo) => testInfo.project.use.viewport.width <= 640;
 
 async function pageOverflow(page) {
@@ -122,6 +133,8 @@ test('MFR-002 U04 generic staff gateway preserves account and password-manager s
 test('MFR-002 U04 requester and Profile previews keep form and card hierarchy at every width', async ({
   page,
 }, testInfo) => {
+  test.skip(!exactInspectionPort, 'The exact-4173 invocation exercises inspection-only routes.');
+  await installPlaygroundCapability(page);
   await page.goto(inspectionRoute('external-request'));
   await page.getByRole('button', { name: 'New request' }).click();
   const requestForm = page.getByRole('form', { name: 'New request' });

@@ -1,21 +1,23 @@
-# Current Bounded Task — FBR-001 Phase G checkpoint
+# Current Bounded Task — FBR-001 Phase H1 interrupted checkpoint
 
-INTENT: FRONTEND_INTEGRATION
+INTENT: FRONTEND_INTEGRATION_AND_ACCEPTANCE
 MODE: EXECUTE
-OBJECTIVE: Prove one canonical frontend runtime by retiring only the exactly proven unreachable legacy seed/mock presentation paths while preserving all inspection fixtures, history, and functional boundaries.
-TARGET: release/v0.8.3-fbr001-claude-frontend-reconciliation isolated worktree and its owned FBR-001 documentation; separately owned bounded scratch intake.
+OBJECTIVE: Resume and complete only FBR-001 Phase H1 local browser, accessibility, and local-Worker acceptance from the preserved checkpoint; H2, Playground preflight, deployment, and Production remain gated.
+TARGET: release/v0.8.3-fbr001-claude-frontend-reconciliation isolated worktree and the H1 acceptance evidence.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
+INTERRUPTED_CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md
-AUTHORITY: Earl 2026-09-01 owner packet -> AGENTS.md -> .agents/PROJECT_POLICY.md -> FBR-001 accepted spec -> Playground@7f483d2d functional contracts -> immutable Claude visual baseline.
+AUTHORITY: Earl H1 checkpoint instruction -> AGENTS.md -> .agents/PROJECT_POLICY.md -> accepted FBR-001 spec -> current Worker/API/auth/domain/privacy contracts.
 REQUIRED_MODEL: GPT-5.6_TERRA_HIGH
-ACTIVE_WRITER: TERRA_HIGH:/root/fbr_writer
-RISK: HIGH; FRONTEND_BASELINE_CHANGE; PRODUCTION_FORBIDDEN
-SCOPE: PHASE_G_ONLY
-IN_SCOPE: deterministic candidate classification; removal of exactly `LendingHubRoute.tsx`, `RequestCenterRouteWithStates.tsx`, and `RequestCenterRoute.tsx`; no-reference verifier correction; focused canonical-runtime boundary proof; durable G inventory/recovery evidence.
-OUT_OF_SCOPE: any other deletion or normalization; preview/test fixture removal; backend/API/auth/data/schema/migration/provider/capability/security/privacy behavior; Figma/Google/Cloudflare/D1/R2/Playground/Production mutation or deployment; Phase H browser/deployment acceptance; old-worktree/main mutation.
-DELIVERABLES: one canonical executable frontend path, zero executable consumers of the three retired paths, retained inspection fixture boundary, updated parity/current chain, and durable Phase G receipt.
-VERIFICATION: focused G boundary and relevant preview/fixture guard tests; lint; fixture/foundation/build checks; deploy-artifact static verification; governance/handoff; complete diff/diff-check review.
-STOP_CONDITIONS: conflicting writer; target pre-existence; exact-ref mismatch; unsafe archive provenance; unknown work overwrite; required backend/security/migration/provider change; Production crossover; failed required check.
-STATUS: PHASE_G_COMPLETE_AWAITING_PARENT_DIRECTION_FOR_PHASE_H
-NEXT_EXACT_ACTION: AWAIT_PARENT_DIRECTION_FOR_FBR001_PHASE_H_BROWSER_ACCESSIBILITY_ACCEPTANCE
+ACTIVE_WRITER: NONE
+RISK: HIGH; FRONTEND_ACCEPTANCE; LOCAL_WORKER; PRODUCTION_FORBIDDEN
+SCOPE: PHASE_H1_ONLY
+IN_SCOPE: reproduce/classify the one fresh local-Worker residual, evidence-only repair if required and authorized by the accepted spec, final local Worker/frontend/browser/accessibility matrix, exact H1 receipt only when all required local evidence is green.
+OUT_OF_SCOPE: H2; deployment; Playground/provider/D1/R2/Google/Figma/Production writes; schema/migration; capability widening; backend/auth/security/privacy semantic expansion; main or historical-worktree mutation; `npm ci`; archive extraction; 8787 reuse or termination.
+DELIVERABLES: final H1 local acceptance evidence and `.codex/FBR001_PHASE_H1_LOCAL_ACCEPTANCE_RECEIPT.md` only when all gates pass; otherwise a truthful updated interrupted handoff.
+VERIFICATION: exact sequence in the interrupted checkpoint, including fresh 8788 local Worker, final frontend/browser matrix, deterministic checks, handoff verifier, and diff check.
+STOP_CONDITIONS: conflicting writer; unknown dirty residue; required product/backend/schema/auth semantic expansion; provider action; Production crossover; secret/private data; failed verification that cannot form safe evidence.
+STATUS: H1_IN_PROGRESS_NOT_ACCEPTED
+HANDOFF_STATUS: READY_FOR_HANDOFF
+NEXT_EXACT_ACTION: CHATGPT_WORK_HANDSHAKE_THEN_REPRODUCE_ONLY_INVENTORY_BULK_FAILURE_ON_FRESH_LOCAL_WORKER_8788

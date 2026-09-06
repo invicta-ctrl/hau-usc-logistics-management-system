@@ -703,7 +703,7 @@ test('AUTH-01 generic staff sign-in sends a DOL account to its capability-approp
     const rail = page.getByRole('complementary', { name: 'Workspace navigation' });
     await expect(rail).toBeVisible();
     expect(await rail.evaluate((element) => Math.round(element.getBoundingClientRect().width))).toBe(76);
-    await expect(page.locator('[data-command-search]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Open navigation', exact: true })).toBeVisible();
     await expect(page.locator('[data-theme-control]')).toBeVisible();
     await expect(page.locator('[data-navigate-surface="light-oxblood"]')).toBeVisible();
   }

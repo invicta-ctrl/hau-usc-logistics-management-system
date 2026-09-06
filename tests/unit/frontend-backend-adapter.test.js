@@ -212,6 +212,70 @@ describe('Figma frontend backend adapter', () => {
     ]);
   });
 
+  it('rehydrates a missing in-memory CSRF token before revoking an authenticated session', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        response({
+          state: 'AUTHENTICATED',
+          csrfToken: 'csrf-rehydrated-token',
+          user: {
+            accountId: 'ACC-REHYDRATE',
+            displayName: 'Authorized Staff',
+            authorization: {
+              active: true,
+              mappingStatus: 'MAPPED',
+              roleId: 'DOL_STAFF',
+              capabilities: ['view.internal'],
+            },
+          },
+        }),
+      )
+      .mockResolvedValueOnce(response({ ok: true }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await new FrontendBackend().logout();
+
+    expect(fetchMock.mock.calls.map(([path]) => path)).toEqual(['/api/auth/session', '/api/auth/logout']);
+    expect(fetchMock.mock.calls[1][1].headers['x-csrf-token']).toBe('csrf-rehydrated-token');
+  });
+
+  it('clears a failed logout token so a later logout must rehydrate rather than reuse it', async () => {
+    const authenticated = {
+      state: 'AUTHENTICATED',
+      user: {
+        accountId: 'ACC-RETRY',
+        displayName: 'Authorized Staff',
+        authorization: {
+          active: true,
+          mappingStatus: 'MAPPED',
+          roleId: 'DOL_STAFF',
+          capabilities: ['view.internal'],
+        },
+      },
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(response({ ...authenticated, csrfToken: 'csrf-stale-token' }))
+      .mockResolvedValueOnce(response({ code: 'SERVICE_UNAVAILABLE', message: 'Try again.' }, 503))
+      .mockResolvedValueOnce(response({ ...authenticated, csrfToken: 'csrf-fresh-token' }))
+      .mockResolvedValueOnce(response({ ok: true }));
+    vi.stubGlobal('fetch', fetchMock);
+    const backend = new FrontendBackend();
+
+    await backend.session();
+    await expect(backend.logout()).rejects.toMatchObject({ code: 'SERVICE_UNAVAILABLE', status: 503 });
+    await backend.logout();
+
+    expect(fetchMock.mock.calls.map(([path]) => path)).toEqual([
+      '/api/auth/session',
+      '/api/auth/logout',
+      '/api/auth/session',
+      '/api/auth/logout',
+    ]);
+    expect(fetchMock.mock.calls[3][1].headers['x-csrf-token']).toBe('csrf-fresh-token');
+  });
+
   it('opens a credential-free Playground session through the staging-only endpoint', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       response({

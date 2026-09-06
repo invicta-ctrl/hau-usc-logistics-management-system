@@ -18,6 +18,7 @@ const ROUTES = [
   ['#/__preview/inspect/administration', 'administration'],
   ['#/__preview/inspect/profile', 'profile'],
 ];
+const exactInspectionPort = process.env.HAU_FRONTEND_E2E_PORT === '4173';
 
 function installPlaygroundCapability(page) {
   return page.route('**/api/version', (route) =>
@@ -104,6 +105,7 @@ async function visibleSemanticAudit(page) {
 }
 
 test('P20 keeps every Playground workspace natively named and structurally coherent', async ({ page }, testInfo) => {
+  test.skip(!exactInspectionPort, 'The exact-4173 invocation exercises inspection-only routes.');
   test.skip(!['frontend-390', 'frontend-1440'].includes(testInfo.project.name), 'P20 samples mobile and desktop.');
   test.setTimeout(120_000);
   await installPlaygroundCapability(page);

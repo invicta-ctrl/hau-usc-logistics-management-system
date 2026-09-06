@@ -1,52 +1,36 @@
-# Current Environment Handoff — FBR-001 Phase G
+# Current Environment Handoff — FBR-001 Phase H1 interrupted checkpoint
 
 PROGRAM: FBR-001
-FROM: TERRA_HIGH:/root/fbr_writer
-TO: Parent direction before FBR-001 Phase H browser/accessibility acceptance
+FROM: TERRA_HIGH:/root/fbr_h1_checkpoint
+TO: ChatGPT Work continuation in this repository
 BRANCH: release/v0.8.3-fbr001-claude-frontend-reconciliation
 HEAD: GIT_HEAD
-UPSTREAM: origin/Playground@7f483d2d713c406a465d218055696b31cd0dc9bd; parity 0/0 at handshake
-STARTING_BRANCH: release/v0.8.3-fbr001-claude-frontend-reconciliation
-STARTING_SHA: 7f483d2d713c406a465d218055696b31cd0dc9bd
-STARTING_TREE: 9b9e1b07a4b6e7a93f5b2033d7519bbc1d1f52c2
-UPSTREAM_BASELINE: origin/Playground@7f483d2d713c406a465d218055696b31cd0dc9bd; 0/0 at handshake
+TREE: GIT_TREE (resolve with `git rev-parse HEAD^{tree}` after handoff)
+PARENT_BASE_SHA: 47e55d71eadcdbab2d5eced8c16baf95e3ae781d
+UPSTREAM: none configured; no push, provider, remote, or deployment action occurred
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: TERRA_HIGH:/root/fbr_writer
+ACTIVE_WRITER: NONE
+HANDOFF_STATUS: READY_FOR_HANDOFF
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md
+CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
 
-CLAUDE_BASELINE_ARCHIVE_SHA256: 4DDAE14C3373DA96FD40E008DC3E636E58B90D70716AED3241680A9F1779BF8A
-CLAUDE_HANDOFF_SHA256: 01FF2CFA7B0B4D112645801C7088E972BAC401EED27AC03AF50128B4490BEBF7
-BASELINE_INTAKE_PATH: D:/Documents/Codex/HAU-USC Logistics/intake/fbr001-claude-baseline-2026-09-01
-DESIGN_DNA_STATUS: PHASE_F2_INTERNAL_OPERATIONS_ROUTE_BODIES_ADOPTED; fonts, foundation, Workbench shell, and bounded internal route bodies use canonical vocabulary
-PHASE_A_RECEIPT: .codex/FBR001_PHASE_A_RECEIPT.md
-PHASE_E_RECEIPT: .codex/FBR001_PHASE_E_RECEIPT.md
-PHASE_F1_RECEIPT: .codex/FBR001_PHASE_F1_RECEIPT.md
-PHASE_F2_RECEIPT: .codex/FBR001_PHASE_F2_RECEIPT.md
-PHASE_F3_RECEIPT: .codex/FBR001_PHASE_F3_RECEIPT.md
-PHASE_G_RECEIPT: .codex/FBR001_PHASE_G_RECEIPT.md
-PARITY_MATRIX: docs/frontend/FBR001_FRONTEND_FUNCTIONAL_PARITY_MATRIX.md
+STATUS: H1_IN_PROGRESS_NOT_ACCEPTED. This is an interruption checkpoint caused by repeated child usage exhaustion during full H1 verification, not a code blocker. No H1 acceptance receipt exists. H2, Playground preflight, deployment, and Production are forbidden until H1 has final green evidence.
 
-COMPLETED: exact Playground worktree/branch handshake; immutable source hash check; safe Python-stdlib TAR.GZ preflight and extraction; full extracted manifest/per-file hashes; embedded handoff hash equality; Claude source/audit inventory; current route/capability/transport inventory; accepted FBR-001 record; deterministic matrix.
-VALIDATION: Phase A archive/handoff hashes and safe intake PASS; foundation generation/check PASS; focused frontend tests 39/39 PASS; application build PASS; Impeccable detector PASS after replacing the rejected side-stripe attention rule with a top decision rule.
-PHASE_B_C_OUTCOME: FBR authority amendment in `DESIGN.md`; four hash-verified self-hosted Claude Latin font subsets; generated Workbench component vocabulary; exact responsive inspection widths; truthful current-workspace command panel; current route/session/capability shell preservation.
-PHASE_D_OUTCOME: All eleven backend-supported public/authenticated read families are proven to use `frontendBackend`; normal routes do not consume fixture data, which remains explicit inspection-only. No adapter extension or backend contract change was necessary.
-PHASE_E_OUTCOME: Existing accepted mutation flows were audited on the canonical adapter. `ExternalRequestCenter` now exposes requester cancellation only for server-cancellable states, posts its caller-supplied idempotency key with in-memory CSRF, disables while pending, reconciles the returned status, and reloads after conflict or denial. No adapter or backend extension was required.
-PHASE_F1_OUTCOME: Public/current announcement, staff access, requester, public lending/tracking, and overview presentation declare the tokenized Claude editorial/Workbench boundary while retaining existing canonical backend/session state branches. No foundation extension, adapter change, or mock path was added.
-PHASE_F2_OUTCOME: Inventory, Internal Request Hub, Internal Lending Hub, Release/Receiving/Procurement, and Events retain canonical reads and accepted mutations while applying a shared Workbench route-body boundary, semantic top decision rules, mobile-scrollable filter/lifecycle tabs, visible focus, and reduced-motion-safe behavior. Direct inventory commands and procurement/events mutations remain intentionally deferred because no accepted React route command exists.
-PHASE_F2_VALIDATION: lint 0 errors (one pre-existing warning); focused F2/read/inventory/release/lending/supply/mobile Vitest 7 files/32 tests PASS; fixture boundary, foundation, Impeccable detector, build, governance, handoff, and diff-check PASS. Browser matrix remains Phase H.
-PHASE_F3_OUTCOME: Administration retains visible capability-filtered tabs and canonical protected reads; profile retains server-backed mutations and its preview early return; Playground index/inspection remains explicitly marked sample-data-only. F3 adds only scoped Workbench hierarchy, top decision rules, narrow-width scroll/focus/reduced-motion treatment, and deterministic denial proof for non-Playground version state.
-PHASE_F3_VALIDATION: focused F3 Vitest 4/4 PASS before final required checks; deterministic `projectPreviewIndexGate({ playground: false })` proves `validatedPlayground:false` and `indexAllowed:false`. Final lint/fixture/foundation/build/Impeccable/governance/handoff verification is recorded in the Phase F3 receipt.
-PHASE_G_OUTCOME: Exact runtime/import/reachability and hash inventory proved only `LendingHubRoute.tsx`, `RequestCenterRouteWithStates.tsx`, and its only child `RequestCenterRoute.tsx` were unreachable legacy seed/mock presentation duplicates. They were deleted with recovery preserved in parent `2587217802ae2334183189d949ef4a72b879a054` and recorded Git blobs. All explicit Playground inspection fixtures, preview presenters, current Events `SupplyRoutes`, and unique orphan `profileFixtures.ts` remain unchanged.
-PHASE_G_VALIDATION: focused canonical-runtime boundary PASS 3/3; fixture-boundary verifier now requires zero executable references to all three retired paths and PASS; application build PASS with fixture/foundation prerequisites. Final lint/relevant tests/governance/handoff/diff evidence is recorded in the Phase G receipt.
-REMAINING: Phase H live browser/accessibility acceptance and only then any authorized Playground candidate deployment.
-EXTERNAL_ACTIONS: local Git worktree/branch creation and immutable archive intake only; no provider, Playground, D1, R2, Google, Figma, or Production write.
+COMPLETED: H1 code/test harness edits and durable interrupted checkpoint records are preserved. H1 acceptance is not complete.
+VALIDATION: focused Vitest 41/41 PASS; application build PASS; final handoff verifier and diff check required before the checkpoint commit.
+- `npm.cmd exec vitest run tests/unit/frontend-backend-adapter.test.js tests/unit/local-worker-port.test.js` — PASS, 2 files / 41 tests (32 adapter; 9 port resolver).
+- `npm.cmd run build` — PASS, including fixture-boundary and foundation checks.
+- `git diff --check` — PASS before checkpoint documentation edit; rerun after final staging.
+
+KNOWN_RESIDUAL: the latest fresh full 59-case local Worker run was interrupted after 10 passes and 1 failure at test 9: `inventory bulk classification is atomic and bootstrap projects a searched governed page`. Reproduce and classify this exact failure first on a fresh 8788 worker. Do not call the partial run acceptance; final tally is unknown.
+
+EXTERNAL_ACTIONS: local Git worktree only; no provider, remote, deployment, or Production action.
+BLOCKER: latest partial local Worker run inventory-bulk failure requires fresh 8788 reproduction/classification; child usage exhaustion interrupted verification.
+RESUME_COMMANDS: git status --short; verify 8788 free; set HAU_CLOUDFLARE_LOCAL_PORT=8788; reproduce only the inventory-bulk local Worker test; then follow .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md.
+PROHIBITED_ACTIONS: npm_ci;archive_extraction;8787_reuse_or_termination;provider_or_Playground_or_D1_or_R2_or_Production_action;fake_success_or_wildcard_mocks;legacy_route_aliases;exact_4173_gate_weakening.
+NEXT_EXACT_ACTION: CHATGPT_WORK_HANDSHAKE_THEN_REPRODUCE_ONLY_INVENTORY_BULK_FAILURE_ON_FRESH_LOCAL_WORKER_8788
+
 EXTERNAL_WRITES: NONE. PLAYGROUND_WRITES: 0. D1_WRITES: 0. R2_WRITES: 0. GOOGLE_WRITES: 0. PROVIDER_WRITES: 0. PRODUCTION_WRITES: 0.
-BLOCKER: NONE
-RESUME_COMMANDS: git status --short; npm.cmd exec vitest run tests/unit/fbr001-phase-f2-visual-parity.test.js tests/unit/fbr001-read-integration.test.js tests/unit/fi07-lending-hub.test.js tests/unit/fi08-release-desk.test.js tests/unit/fi09-supply-operations.test.js tests/unit/mfr002-overview-inventory.test.js tests/unit/mobile-shell-contract.test.js; npm.cmd run design:foundation:check; npm.cmd run build; npm.cmd run check:governance; npm.cmd run handoff:verify
-PROHIBITED_ACTIONS: PROVIDER_D1_R2_GOOGLE_FIGMA_MUTATION;PLAYGROUND_OR_PRODUCTION_DEPLOYMENT;MAIN_OR_HISTORICAL_WORKTREE_MUTATION;HISTORY_REWRITE;MOCK_AUTH_OR_DATA;SECOND_FRONTEND_TRANSPORT;LEGACY_FRONTEND_DELETION
-DO_NOT_REPEAT: do not rerun `npm ci`; do not re-extract the approved scratch intake; do not use Claude preview localStorage/role picker/seed records as authority; do not restore the fake Search/⌘K control; do not reintroduce side-stripe attention cards; do not revive the owner-superseded anonymous public request flow; do not replace server cancellation with local status mutation.
-NEXT_EXACT_ACTION: AWAIT_PARENT_DIRECTION_FOR_FBR001_PHASE_H_BROWSER_ACCESSIBILITY_ACCEPTANCE
-HANDOFF_STATUS: READY_FOR_PARENT_PHASE_H_DIRECTION
