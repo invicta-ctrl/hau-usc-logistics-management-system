@@ -2,7 +2,7 @@
 
 ## FBR-001 current cloud continuation — 2026-09-06
 
-H1 remains in progress and unaccepted on `reconcile/playground-fbr001-claude-frontend`. The cloud checkout matched remote checkpoint `924756b38c9116bc1f7cfde0580946e483852e5f`, but required test/build dependencies are missing and `npm ci` remains prohibited. Inventory-bulk reproduction and runtime gates are unrun in this continuation. See `.codex/CURRENT.md` and the H1 interrupted checkpoint. No runtime code, provider resource, or Production state changed.
+H1 remains unaccepted on `reconcile/playground-fbr001-claude-frontend`. Owner-authorized dependencies are installed. Fixed local Worker startup on restricted runners and the inherited port-test lint error. Focused units 44/44, lint, application/staging builds, artifacts, Cloudflare dry-run, and governance pass. Browser acceptance is blocked by local browser access/runner failure; the inventory-bulk UI residual remains unclassified. See `.codex/CURRENT.md` and the H1 interrupted checkpoint. No application behavior, provider resource, or Production state changed.
 
 ## Historical MFR-002 state
 

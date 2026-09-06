@@ -34,7 +34,23 @@ execFileSync(
 
 const worker = spawn(
   process.execPath,
-  [wrangler, 'dev', '--local', '--assets', assets, '--persist-to', state, '--port', String(localWorkerPort)],
+  // Bind only loopback. Let the OS assign the unused inspector port instead of
+  // Wrangler enumerating host interfaces, which restricted runners may deny.
+  [
+    wrangler,
+    'dev',
+    '--local',
+    '--assets',
+    assets,
+    '--persist-to',
+    state,
+    '--ip',
+    '127.0.0.1',
+    '--port',
+    String(localWorkerPort),
+    '--inspector-port',
+    '0',
+  ],
   shared,
 );
 for (const signal of ['SIGINT', 'SIGTERM']) {

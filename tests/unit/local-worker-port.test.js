@@ -16,8 +16,10 @@ describe('local Worker port resolver', () => {
     expect(localWorkerBaseUrl(8788)).toBe('http://127.0.0.1:8788');
   });
 
-  it.each(['', '0', '1023', '65536', '8788.5', 'localhost', '127.0.0.1:8788'])
-    ('rejects invalid local Worker port %j', (value) => {
+  it.each(['', '0', '1023', '65536', '8788.5', 'localhost', '127.0.0.1:8788'])(
+    'rejects invalid local Worker port %j',
+    (value) => {
       expect(() => resolveLocalWorkerPort(value)).toThrow(/integer loopback port/u);
-    });
+    },
+  );
 });

@@ -10,6 +10,12 @@
 
 ## Unreleased
 
+### FBR-001 H1 local harness verification — 2026-09-06
+
+- Bind local Worker acceptance to loopback and an OS-assigned inspector port so restricted runners need no network-interface enumeration.
+- Correct the inherited port-resolver unit test multiline-call lint error; keep assertions unchanged.
+- Verify 44 focused units, lint, application/staging artifacts, Cloudflare dry-run, and governance. Record blocked browser evidence without claiming H1 acceptance; no application or Production mutation.
+
 ### FBR-001 H1 cloud setup checkpoint — 2026-09-06
 
 - Verified the clean continuation branch against remote checkpoint `924756b`; recorded missing Playwright/Vite/Wrangler/Vitest and free local port 8788.

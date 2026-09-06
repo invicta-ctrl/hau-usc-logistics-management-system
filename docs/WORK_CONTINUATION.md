@@ -4,18 +4,18 @@
 
 - **Repository/worktree:** `invicta-ctrl/hau-usc-logistics-management-system`; `/workspace/scratch/b56b3f18bfa9/repo`.
 - **Branch/HEAD/upstream:** `reconcile/playground-fbr001-claude-frontend`; resolve current HEAD with Git; fetched starting HEAD and upstream both `924756b38c9116bc1f7cfde0580946e483852e5f`. Verify remote again before resuming.
-- **Current phase/stage:** FBR-001 H1 in progress, setup blocked, not accepted.
+- **Current phase/stage:** FBR-001 H1 in progress, local-browser acceptance blocked, not accepted.
 - **Accepted scope:** H1 only under `.codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md` and current task/checkpoint.
-- **Completed work:** Cloud handshake and dependency/port availability checks; inventory-bulk failure remains unclassified.
-- **Files changed by purpose:** Current pointer/task/handoff, interrupted checkpoint, status, changelog, and this continuation record document cloud setup evidence only.
-- **Tests verified at current SHA:** Runtime tests UNRUN in cloud continuation; inherited 41-unit/build results are historical. Handoff verifier, continuation check (14 fields), agent-instruction check (12 files), and diff whitespace check PASS for this documentation update.
-- **Generated artifacts:** None.
+- **Completed work:** Dependency installation, local Worker startup repair, port-test lint repair, and deterministic gates complete; inventory-bulk UI residual remains unclassified.
+- **Files changed by purpose:** Local Worker launch arguments and port-test formatting repairs; continuity records capture evidence and the browser blocker.
+- **Tests verified at current SHA:** Focused units 44/44 PASS; lint, application/staging builds, artifact checks, Cloudflare dry-run PASS; browser acceptance not established. Handoff verifier, continuation check (14 fields), agent-instruction check (12 files), and diff whitespace check PASS for this documentation update.
+- **Generated artifacts:** Local application/staging artifacts, verified; no upload.
 - **External actions:** Git continuation-branch publication authorized; verify resulting remote SHA. No provider, Playground runtime, remote D1/R2, or Production writes.
-- **Rollback:** Documentation-only changes; no runtime state to restore. Original checkpoint preserved in Git ancestry.
-- **Blocker:** Playwright, Vite, Wrangler, and Vitest missing from checkout/shared runtime; npm ci remains prohibited by the interrupted checkpoint.
-- **Next three actions:** Obtain owner-authorized dependency setup; verify clean remote parity and free 8788; reproduce only inventory-bulk on a fresh Worker before the remaining ordered H1 gates.
+- **Rollback:** Harness/test changes only; original checkpoint preserved in Git ancestry. No remote runtime state to restore.
+- **Blocker:** Dependencies installed under explicit owner authorization. Managed local browser ERR_BLOCKED_BY_CLIENT; attempted test lacks browser snapshots and runner reported cancelled network approval.
+- **Next three actions:** Restore supported local-browser access; verify clean remote parity and free 8788; reproduce inventory-bulk before remaining ordered H1 gates.
 - **Resume commands:** `git status --short`; `git rev-parse HEAD`; check dependency setup and 8788; then `HAU_CLOUDFLARE_LOCAL_PORT=8788 HAU_CLOUDFLARE_REUSE_SERVER=0 npm run test:e2e:cloudflare:local -- --grep 'inventory bulk classification is atomic and bootstrap projects a searched governed page'`.
-- **Prohibited actions:** npm ci without owner amendment; archive extraction; 8787 reuse/termination; assertion weakening without evidence; H2/preflight/deployment before H1 acceptance; provider/remote D1/R2/Production writes.
+- **Prohibited actions:** archive extraction; 8787 reuse/termination; assertion weakening without evidence; H2/preflight/deployment before H1 acceptance; provider/remote D1/R2/Production writes.
 
 ## Historical interrupted resume block
 

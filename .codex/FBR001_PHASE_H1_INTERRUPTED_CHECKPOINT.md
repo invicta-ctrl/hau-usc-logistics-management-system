@@ -98,3 +98,30 @@ EXTERNAL_WRITES: PROVIDER 0; PLAYGROUND 0; D1_REMOTE 0; R2_REMOTE 0; PRODUCTION 
 - Focused inventory-bulk reproduction and every subsequent runtime gate remain UNRUN in this cloud continuation. The inherited failure is still unclassified; no assertion or runtime code was changed.
 - No npm ci, alternate installation, archive extraction, or provider/runtime write was attempted. The no-install setup constraint is reported for owner resolution before reproduction.
 - Next: obtain owner-authorized dependency setup, then resume the original ordered H1 sequence beginning with only the inventory-bulk test on fresh 8788, reuse=false. No H1 acceptance receipt exists; H2 and deployment remain gated; Production remains forbidden.
+
+## Owner-authorized cloud execution evidence — 2026-09-06
+
+Starting Git HEAD and upstream: `eb0174b8b1fa3c85d206990976c365746889b938`. Earl authorized dependency setup and direct ChatGPT Work execution to finish accepted frontend adoption without expanding scope. This supersedes the earlier npm ci prohibition for the isolated cloud checkout; all substantive phase gates and Production prohibition remain.
+
+### Repairs and verified results
+
+- `npm ci --no-audit --no-fund`: PASS, 235 packages; package.json/package-lock.json unchanged.
+- `scripts/start-local-worker-acceptance.mjs`: explicit `--ip 127.0.0.1 --inspector-port 0`. Original startup failed at Wrangler get-port interface enumeration (`uv_interface_addresses`); after the repair the fresh Worker reached the focused test. No application/Worker business behavior changes.
+- `tests/unit/local-worker-port.test.js`: corrected inherited multiline-call syntax rejected by ESLint; assertions unchanged.
+- `npm exec vitest run tests/unit/frontend-backend-adapter.test.js tests/unit/local-worker-port.test.js tests/unit/fbr001-phase-g-runtime-boundary.test.js`: PASS, 3 files / 44 tests after final code edits.
+- `npm run lint`: PASS, zero errors; existing unused-variable warnings in public-request-service and local-worker.spec remain.
+- `npm run build`: PASS, including fixture boundary and foundation checks.
+- `npm run cloudflare:dry-run`: PASS, including staging build and hero verification; local default bindings, no deployment.
+- `npm run verify:deploy:artifact -- staging .wrangler/build/staging`: PASS, 13 files / 37,317,967 bytes; manifest prefix `0aa7f668acdde867`, HTML prefix `a1591470ba88fd4f`.
+- `npm run verify:dist`: PASS, 13 files / 37,317,913 bytes; manifest prefix `84285bec0d0d1811`.
+- `npm run check:governance`, `node scripts/handoff-verify.mjs`, `git diff --check`: PASS for this bounded change.
+
+### Focused reproduction and remaining block
+
+Fresh Worker on 8788, reuse=false, 300-second startup allowance: the exact inventory-bulk case reached its API assertions. Incomplete reusable physical review and stale revisions were rejected, with both items still revision 1 and empty classification history. The attempted run then reported a heading visibility failure at local-worker.spec.js:677 (`Received: undefined`). The trace contains API request contexts but no browser snapshots; runner collection returned `network approval was cancelled before a decision was returned`. This does not establish the original UI defect's cause or a valid acceptance result.
+
+The official Chromium and headless-shell downloads timed out. A temporary, out-of-repository `@sparticuz/chromium@149.0.0` package supplied Chromium 149.0.7827.0 for the attempt, using an ignored config with only executablePath, absolute harness cwd, test/output paths adjusted; no disabled-web-security flags or response mocks were added. Managed-browser access to the local frontend separately failed with `ERR_BLOCKED_BY_CLIENT`. Do not repeat downloads or substitute these incomplete traces for browser evidence.
+
+The inherited test also references the absent legacy `data-v5-operations-parity`/`inventory-bulk-classify` form. This is a source finding, not a reproduced classification of the original residual; no assertions were deleted, weakened, or changed to hide it. Restore supported local-browser access and reproduce before repairing within the accepted spec.
+
+Full fresh 59-case Worker suite, final frontend suite, exact-4173 inspection, and manual eight-width/browser/accessibility matrix remain pending. No H1 local acceptance receipt exists. H2/preflight/deployment remain gated; Production forbidden. Port 8788 was free after teardown; 8787 was not reused or terminated. Temporary local D1 seeds only; remote D1/R2, Playground runtime, and Production writes remain zero.
