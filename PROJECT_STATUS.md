@@ -1,6 +1,10 @@
 # Project Status
 
-## Current state
+## FBR-001 current cloud continuation — 2026-09-06
+
+H1 remains in progress and unaccepted on `reconcile/playground-fbr001-claude-frontend`. The cloud checkout matched remote checkpoint `924756b38c9116bc1f7cfde0580946e483852e5f`, but required test/build dependencies are missing and `npm ci` remains prohibited. Inventory-bulk reproduction and runtime gates are unrun in this continuation. See `.codex/CURRENT.md` and the H1 interrupted checkpoint. No runtime code, provider resource, or Production state changed.
+
+## Historical MFR-002 state
 
 `HAU-USC-MFR-002` is the accepted next Playground-only transformation program. U00 starts from the clean permanent `Playground` head `6186f90` and preserves the completed P34 candidate as the verified runtime, data, reset, and performance baseline; `main` remains unchanged.
 

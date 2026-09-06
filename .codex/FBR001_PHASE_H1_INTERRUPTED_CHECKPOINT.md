@@ -88,3 +88,13 @@ On the latest partial fresh full Worker run, `inventory bulk classification is a
 - Do not treat prior partial/broad results as final acceptance after changed code.
 
 EXTERNAL_WRITES: PROVIDER 0; PLAYGROUND 0; D1_REMOTE 0; R2_REMOTE 0; PRODUCTION 0.
+
+## Cloud continuation setup blocker — 2026-09-06
+
+- Verified clean isolated branch and fetched remote at `924756b38c9116bc1f7cfde0580946e483852e5f`, tree `8eb4d2b340b470c52ec1b4d0f944a8e9f196798a`.
+- Local checkout: `/workspace/scratch/b56b3f18bfa9/repo`. Originating Windows paths above are historical.
+- Node v24.19.0 and npm 11.9.0 are present. Module resolution confirms `@playwright/test`, `vite`, `wrangler`, and `vitest` are missing in both checkout and shared runtime; no existing dependency tree was found in the available repository checkout.
+- Loopback bind check: 8788 free. No Worker started; 8787 was untouched.
+- Focused inventory-bulk reproduction and every subsequent runtime gate remain UNRUN in this cloud continuation. The inherited failure is still unclassified; no assertion or runtime code was changed.
+- No npm ci, alternate installation, archive extraction, or provider/runtime write was attempted. The no-install setup constraint is reported for owner resolution before reproduction.
+- Next: obtain owner-authorized dependency setup, then resume the original ordered H1 sequence beginning with only the inventory-bulk test on fresh 8788, reuse=false. No H1 acceptance receipt exists; H2 and deployment remain gated; Production remains forbidden.

@@ -1,6 +1,23 @@
 # Work Continuation — FBR-001 Phase H1 interrupted checkpoint
 
-## Resume block
+## Current resume block
+
+- **Repository/worktree:** `invicta-ctrl/hau-usc-logistics-management-system`; `/workspace/scratch/b56b3f18bfa9/repo`.
+- **Branch/HEAD/upstream:** `reconcile/playground-fbr001-claude-frontend`; resolve current HEAD with Git; fetched starting HEAD and upstream both `924756b38c9116bc1f7cfde0580946e483852e5f`. Verify remote again before resuming.
+- **Current phase/stage:** FBR-001 H1 in progress, setup blocked, not accepted.
+- **Accepted scope:** H1 only under `.codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md` and current task/checkpoint.
+- **Completed work:** Cloud handshake and dependency/port availability checks; inventory-bulk failure remains unclassified.
+- **Files changed by purpose:** Current pointer/task/handoff, interrupted checkpoint, status, changelog, and this continuation record document cloud setup evidence only.
+- **Tests verified at current SHA:** Runtime tests UNRUN in cloud continuation; inherited 41-unit/build results are historical. Handoff verifier, continuation check (14 fields), agent-instruction check (12 files), and diff whitespace check PASS for this documentation update.
+- **Generated artifacts:** None.
+- **External actions:** Git continuation-branch publication authorized; verify resulting remote SHA. No provider, Playground runtime, remote D1/R2, or Production writes.
+- **Rollback:** Documentation-only changes; no runtime state to restore. Original checkpoint preserved in Git ancestry.
+- **Blocker:** Playwright, Vite, Wrangler, and Vitest missing from checkout/shared runtime; npm ci remains prohibited by the interrupted checkpoint.
+- **Next three actions:** Obtain owner-authorized dependency setup; verify clean remote parity and free 8788; reproduce only inventory-bulk on a fresh Worker before the remaining ordered H1 gates.
+- **Resume commands:** `git status --short`; `git rev-parse HEAD`; check dependency setup and 8788; then `HAU_CLOUDFLARE_LOCAL_PORT=8788 HAU_CLOUDFLARE_REUSE_SERVER=0 npm run test:e2e:cloudflare:local -- --grep 'inventory bulk classification is atomic and bootstrap projects a searched governed page'`.
+- **Prohibited actions:** npm ci without owner amendment; archive extraction; 8787 reuse/termination; assertion weakening without evidence; H2/preflight/deployment before H1 acceptance; provider/remote D1/R2/Production writes.
+
+## Historical interrupted resume block
 
 - **Repository/worktree:** `invicta-ctrl/hau-usc-logistics-management-system`; `D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation`
 - **Branch/identity:** `reconcile/playground-fbr001-claude-frontend`; upstream `origin/reconcile/playground-fbr001-claude-frontend`. Earl authorized Git publication for ChatGPT Work. Verify remote parity before resuming. Implementation checkpoint: `d565485e193febb7ab2b10bbaa0983ce036fe239`; tree `1e862c86ec6a806ce9db1ec3cb76fbe23c9d7e18`. The original local release branch preserves that checkpoint. Use the cloud checkout root in place of the originating Windows path.

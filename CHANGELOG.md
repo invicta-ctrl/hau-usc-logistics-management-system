@@ -10,6 +10,12 @@
 
 ## Unreleased
 
+### FBR-001 H1 cloud setup checkpoint — 2026-09-06
+
+- Verified the clean continuation branch against remote checkpoint `924756b`; recorded missing Playwright/Vite/Wrangler/Vitest and free local port 8788.
+- Updated cloud worktree and resume records; preserved the inventory-bulk residual as unclassified and all runtime acceptance checks as unrun in this continuation.
+- No runtime fix, dependency installation, H1 acceptance, subsequent phase, or deployment is claimed. Production remains forbidden.
+
 ### MFR-002 U03 app shell and responsive navigation
 
 - Added one mobile-first shell contract for authenticated and shared public chrome: capability-filtered bottom navigation below 1024 CSS pixels, a 76px compact rail at 1024, and the intentional 272px rail from 1280 upward.

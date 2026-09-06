@@ -20,4 +20,8 @@ VERIFICATION: exact sequence in the interrupted checkpoint, including fresh 8788
 STOP_CONDITIONS: conflicting writer; unknown dirty residue; required product/backend/schema/auth semantic expansion; provider action; Production crossover; secret/private data; failed verification that cannot form safe evidence.
 STATUS: H1_IN_PROGRESS_NOT_ACCEPTED
 HANDOFF_STATUS: READY_FOR_HANDOFF
-NEXT_EXACT_ACTION: CHATGPT_WORK_HANDSHAKE_THEN_REPRODUCE_ONLY_INVENTORY_BULK_FAILURE_ON_FRESH_LOCAL_WORKER_8788
+NEXT_EXACT_ACTION: OWNER_AUTHORIZE_DEPENDENCY_SETUP_THEN_REPRODUCE_ONLY_INVENTORY_BULK_ON_FRESH_8788
+
+## Cloud setup check — 2026-09-06
+
+Clean isolated checkout and fetched upstream both matched `924756b38c9116bc1f7cfde0580946e483852e5f` (tree `8eb4d2b340b470c52ec1b4d0f944a8e9f196798a`). Node v24.19.0 / npm 11.9.0 are available, but Playwright, Vite, Wrangler, and Vitest are absent from the checkout and shared runtime. Port 8788 was free; no Worker was started and 8787 was untouched. No dependency installation, runtime edit, or acceptance run occurred. The checkpoint requires reporting this setup constraint; owner-authorized dependency setup is needed before the original first-test action. H1 remains unaccepted; no subsequent phase or deployment is authorized by this check. This update records setup evidence only.
