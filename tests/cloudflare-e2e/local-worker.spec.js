@@ -677,8 +677,8 @@ test('inventory bulk classification is atomic and bootstrap projects a searched 
     await expect(page.getByRole('heading', { name: 'Inventory', exact: true })).toBeVisible();
     await expect(page.locator('#main-content')).toContainText(createdItems[0].itemId);
     await expect(page.locator('#main-content')).toContainText(createdItems[1].itemId);
-    const inventoryOperations = page.locator('[data-v5-operations-parity="inventory.catalog"]');
-    const bulkForm = page.locator('form[data-v5-command="inventory-bulk-classify"]');
+    const inventoryOperations = page.getByRole('region', { name: 'Inventory classification' });
+    const bulkForm = page.getByRole('form', { name: 'Inventory classification' });
     await expect(inventoryOperations).toBeVisible();
     await expect(inventoryOperations).toContainText('Classify a verified similar group');
     await expect(bulkForm).toBeVisible();
@@ -714,7 +714,7 @@ test('inventory bulk classification is atomic and bootstrap projects a searched 
       classificationRevisions: Object.fromEntries(createdItems.map((item) => [item.itemId, 2])),
     });
     await inventoryRefreshPromise;
-    await expect(page.locator('form[data-v5-command="inventory-bulk-classify"]')).toBeVisible();
+    await expect(page.getByRole('form', { name: 'Inventory classification' })).toBeVisible();
     const replay = await mutate(inventory, inventoryCsrf, 'bulkClassifyInventoryItems', bulkCommand);
     expect(replay.status()).toBe(200);
     await expect(replay.json()).resolves.toMatchObject(bulkResult);
@@ -1779,8 +1779,8 @@ test('Inventory operator receives authoritative D1 balances and bounded movement
   await expect(page.getByRole('heading', { name: 'Inventory', exact: true })).toBeVisible();
   await expect(page.locator('#main-content table')).toContainText('ITM-LOCAL-001');
   await expect(page.locator('#main-content table')).toContainText(String(authoritative.onHand));
-  await expect(page.locator('[data-v5-operations-parity="inventory.catalog"]')).toBeVisible();
-  await expect(page.locator('form[data-v5-command="inventory-bulk-classify"]')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Inventory classification' })).toBeVisible();
+  await expect(page.getByRole('form', { name: 'Inventory classification' })).toBeVisible();
 });
 
 test('Materials queue projects canonical deliverables and fails closed across committee scope', async ({

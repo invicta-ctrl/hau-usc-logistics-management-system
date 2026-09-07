@@ -1,5 +1,9 @@
 # Project Status
 
+## FBR-001 H1 inventory-bulk repair — 2026-09-07
+
+H1 remains unaccepted on `reconcile/playground-fbr001-claude-frontend`. The canonical frontend now has a capability-gated, consumable-only inventory bulk-classification command using existing CSRF-protected backend endpoints and authoritative refresh data. The exact fresh 8788 Worker bulk case passes, as do two `frontend-390` browser regressions for persisted-refresh failure/reload gating and delayed-refresh/new-search protection. Final local Worker is 50 passed / 9 failed; final frontend is 416 passed / 121 skipped / 3 failed. Event and procurement mutation expectations conflict with explicitly deferred accepted scope and require parent reconciliation; exact-4173 inspection and the manual eight-width/accessibility matrix are unrun. No backend, schema, auth, provider, Playground, or Production change occurred.
+
 ## FBR-001 current cloud continuation — 2026-09-06
 
 H1 remains unaccepted on `reconcile/playground-fbr001-claude-frontend`. Owner-authorized dependencies are installed. Fixed local Worker startup on restricted runners and the inherited port-test lint error. Focused units 44/44, lint, application/staging builds, artifacts, Cloudflare dry-run, and governance pass. Browser acceptance is blocked by local browser access/runner failure; the inventory-bulk UI residual remains unclassified. See `.codex/CURRENT.md` and the H1 interrupted checkpoint. No application behavior, provider resource, or Production state changed.

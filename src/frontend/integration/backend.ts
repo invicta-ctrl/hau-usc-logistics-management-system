@@ -231,6 +231,7 @@ export type InventoryBootstrapOptions = {
   query?: string;
   filter?: InventoryBootstrapFilter;
   signal?: AbortSignal;
+  afterMutation?: boolean;
 };
 
 export type FrontendInventoryBootstrap = {
@@ -242,6 +243,59 @@ export type FrontendInventoryBootstrap = {
   assetMovementHistory: FrontendInventoryAssetHistory[];
   pagination: { page: number; pageSize: number; total: number; hasMore: boolean };
   scopeRevision: { token: string; updatedAt: string };
+};
+
+/** A classification queue record is fetched only for an authorized classification command. */
+export type FrontendInventoryClassificationItem = {
+  id: string;
+  stockArea: string;
+  storageLocation: string;
+  unit: string;
+  reorderThreshold: number;
+  classificationRevision: number;
+  assetInstanceCount: number;
+};
+
+export type InventoryClassificationOptions = {
+  status?: 'NEEDS_CLASSIFICATION' | 'CLASSIFIED' | 'ALL';
+  page?: number;
+  pageSize?: number;
+  search?: string;
+};
+
+export type FrontendBulkInventoryClassificationCommand = {
+  clientRequestId: string;
+  reason: string;
+  similarityConfirmed: boolean;
+  items: Array<{
+    itemId: string;
+    expectedRevision: number;
+    classificationStatus: 'CLASSIFIED';
+    inventoryKind: 'CONSUMABLE';
+    stockArea: string;
+    storageLocation: string;
+    unit: string;
+    reorderThreshold: number;
+    conditionReviewState: 'NOT_APPLICABLE';
+    maintenanceReviewState: 'NOT_APPLICABLE';
+    classificationNotes: string;
+    reason: string;
+    similarityConfirmed: true;
+    isLendable: false;
+    lendingAudience: 'NOT_AVAILABLE_FOR_LENDING';
+    enableLendingConfirmed: false;
+    assetInstanceCountIfReusable: 0;
+    assetTrackingConfirmed: false;
+    assetTags: [];
+  }>;
+};
+
+export type FrontendBulkInventoryClassificationResult = {
+  itemIds: string[];
+  count: number;
+  bulkGroupId: string;
+  correlationId: string;
+  classificationRevisions: Record<string, number>;
 };
 
 export type FrontendOperationalModuleName = 'overview' | 'release' | 'restocking' | 'procurement';
@@ -1450,10 +1504,22 @@ export class FrontendBackend {
    * quantities; this adapter supplies no identity, capability, or stock values.
    */
   async inventoryBootstrap(options: InventoryBootstrapOptions = {}): Promise<FrontendInventoryBootstrap> {
-    const payload = await this.request(buildInventoryBootstrapPath(options), {
-      method: 'GET',
-      signal: options.signal,
-    });
+    const payload = options.afterMutation
+      ? await this.request('/api/getBootstrapModule', {
+          body: {
+            module: 'inventory',
+            page: options.page ?? 1,
+            pageSize: options.pageSize ?? 25,
+            query: options.query ?? '',
+            filter: options.filter ?? 'ALL',
+          },
+          csrf: true,
+          signal: options.signal,
+        })
+      : await this.request(buildInventoryBootstrapPath(options), {
+          method: 'GET',
+          signal: options.signal,
+        });
     if (
       payload.ok !== true ||
       asString(payload.contract) !== 'bootstrap-module' ||
@@ -1572,6 +1638,66 @@ export class FrontendBackend {
       },
       scopeRevision,
     };
+  }
+
+  /**
+   * The classified-item command deliberately reads its own authorized queue so
+   * commands retain server-issued revisions and storage context rather than
+   * deriving mutation values from the display projection.
+   */
+  async inventoryClassifications(
+    options: InventoryClassificationOptions = {},
+  ): Promise<FrontendInventoryClassificationItem[]> {
+    const payload = await this.request('/api/listInventoryClassifications', {
+      body: {
+        status: options.status ?? 'NEEDS_CLASSIFICATION',
+        page: options.page ?? 1,
+        pageSize: options.pageSize ?? 100,
+        search: options.search ?? '',
+      },
+      csrf: true,
+    });
+    if (payload.ok !== true) incomplete('The inventory classification queue response was incomplete.');
+    return requiredRecords(payload.items, 'inventory classification items').map((item) => ({
+      id: requiredString(item.id, 'inventory classification item id'),
+      stockArea: requiredString(item.stockArea, 'inventory classification stockArea'),
+      storageLocation: requiredString(item.storageLocation, 'inventory classification storageLocation'),
+      unit: requiredString(item.unit, 'inventory classification unit'),
+      reorderThreshold: requiredNumber(item.reorderThreshold, 'inventory classification reorderThreshold'),
+      classificationRevision: requiredPositiveInteger(
+        item.classificationRevision,
+        'inventory classification revision',
+      ),
+      assetInstanceCount: requiredNonNegativeInteger(
+        item.assetInstanceCount,
+        'inventory classification assetInstanceCount',
+      ),
+    }));
+  }
+
+  async bulkClassifyInventoryItems(
+    command: FrontendBulkInventoryClassificationCommand,
+  ): Promise<FrontendBulkInventoryClassificationResult> {
+    const payload = await this.request('/api/bulkClassifyInventoryItems', { body: command, csrf: true });
+    if (payload.ok !== true) incomplete('The inventory classification command response was incomplete.');
+    const revisions = requiredRecord(payload.classificationRevisions, 'classification revisions');
+    return {
+      itemIds: requiredStrings(payload.itemIds, 'classified item IDs'),
+      count: requiredPositiveInteger(payload.count, 'classified item count'),
+      bulkGroupId: requiredString(payload.bulkGroupId, 'classification bulk group ID'),
+      correlationId: requiredString(payload.correlationId, 'classification correlation ID'),
+      classificationRevisions: Object.fromEntries(
+        Object.entries(revisions).map(([itemId, revision]) => [
+          itemId,
+          requiredPositiveInteger(revision, `classification revision for ${itemId}`),
+        ]),
+      ),
+    };
+  }
+
+  /** A mutation refreshes through the canonical command endpoint before restoring the bounded display projection. */
+  async refreshInventoryBootstrap(options: InventoryBootstrapOptions = {}): Promise<FrontendInventoryBootstrap> {
+    return this.inventoryBootstrap({ ...options, afterMutation: true });
   }
 
   /**

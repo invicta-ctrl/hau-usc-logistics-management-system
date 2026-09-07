@@ -10,6 +10,12 @@
 
 ## Unreleased
 
+### FBR-001 H1 inventory bulk repair — 2026-09-07
+
+- Add a capability-gated consumable-only bulk-classification panel, typed same-origin CSRF adapter calls, authoritative queue lookup, canonical mutation refresh, and stale-projection/reload handling without changing server contracts.
+- Preserve all Worker business assertions; the exact fresh 8788 bulk case and two focused frontend-390 browser regressions pass.
+- Record the full Worker 50-pass/9-fail H1 result for accepted-scope reconciliation. No H1 receipt, H2 work, provider action, Playground write, or Production mutation is claimed.
+
 ### FBR-001 H1 local harness verification — 2026-09-06
 
 - Bind local Worker acceptance to loopback and an OS-assigned inspector port so restricted runners need no network-interface enumeration.

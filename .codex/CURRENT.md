@@ -8,11 +8,11 @@ HEAD: GIT_HEAD
 PARENT_BASE_SHA: 47e55d71eadcdbab2d5eced8c16baf95e3ae781d
 TREE: GIT_TREE (resolve after this single checkpoint commit)
 UPSTREAM: origin/reconcile/playground-fbr001-claude-frontend (owner-authorized publication; verify remote HEAD before resuming)
-WORKTREE: /workspace/scratch/b56b3f18bfa9/repo
+WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation
 WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: NONE
 REQUIRED_MODEL: CHATGPT_WORK_OWNER_AUTHORIZED
-WRITER_LOCK: FBR001_ISOLATED_CLOUD_WORKTREE_RELEASED_FOR_HANDOFF
+WRITER_LOCK: FBR001_READY_FOR_HANDOFF_AND_SINGLE_CHECKPOINT_COMMIT
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 INTERRUPTED_CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
@@ -21,9 +21,16 @@ PHASE_G_RECEIPT: .codex/FBR001_PHASE_G_RECEIPT.md
 PARITY_MATRIX: docs/frontend/FBR001_FRONTEND_FUNCTIONAL_PARITY_MATRIX.md
 FUNCTIONAL_AUTHORITY: Playground@7f483d2d + Worker/API/auth/domain/privacy/capability/D1/R2/audit/ledger/custody contracts; schema 32; migration 0032
 PRODUCTION_DEPLOYMENT: FORBIDDEN
-BLOCKER: Local browser acceptance unavailable: managed browser ERR_BLOCKED_BY_CLIENT; focused Playwright run returned cancelled network approval and no browser trace snapshots. Inventory-bulk UI residual remains unclassified.
+STARTING_HEAD_AND_UPSTREAM: 89d8627b899df7bb586c5542f4ee2a6c9131ffb2
+BLOCKER: H1 final local Worker is 50 passed / 9 failed and final frontend is 416 passed / 121 skipped / 3 failed; parent must reconcile failures against the accepted matrix before H1 acceptance. Inventory bulk is classified and focused evidence is green.
 HANDOFF_STATUS: READY_FOR_HANDOFF
-NEXT_EXACT_ACTION: RESTORE_SUPPORTED_LOCAL_BROWSER_ACCESS_THEN_REPRODUCE_INVENTORY_BULK_ON_FRESH_8788
+NEXT_EXACT_ACTION: PARENT_RECONCILES_12_FINAL_SUITE_FAILURES_AGAINST_ACCEPTED_SCOPE; DO_NOT_CREATE_H1_RECEIPT
+
+## Inventory bulk repair in progress - 2026-09-07
+
+The parent-supported original reproduction failed before any new panel existed because the legacy inventory catalog wrapper was absent. The first edited run separately proved the canonical panel rendered and stopped at a semantic region-name mismatch before a mutation. The original failure trace and screenshot remain preserved by the parent evidence record. The bounded frontend-only repair adds a capability-gated consumable classification command, typed existing-endpoint adapter calls, server-issued queue revisions/storage context, and a canonical POST bootstrap refresh. Reusable physical assessment, asset tracking, backend/schema/auth/capability expansion, provider actions, Playground, and Production remain out of scope. H1 remains unaccepted.
+
+The corrected exact fresh 8788 Worker test passed on 2026-09-07. It exercised the complete existing server contract: negative physical-review and stale-revision atomicity checks, authenticated browser submission, bulk result, POST bootstrap refresh, idempotent replay, and classification history. Focused frontend-390 browser regressions passed 2/2: a persisted receipt blocks resubmission until Reload, and a delayed mutation refresh cannot overwrite a newer search. The final H1 Worker result is 50 passed / 9 failed; final frontend is 416 passed / 121 skipped / 3 failed. Exact-4173 inspection and the manual eight-width/accessibility matrix remain unrun. H1 remains unaccepted.
 
 ## Cloud setup check — 2026-09-06
 

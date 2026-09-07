@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, Search } from 'lucide-react';
-import type { InventoryBootstrapFilter } from '../../integration/backend';
+import type {
+  FrontendInventoryBootstrap,
+  FrontendInventoryClassificationItem,
+  InventoryBootstrapFilter,
+} from '../../integration/backend';
 import { FrontendApiError, frontendBackend } from '../../integration/backend';
 import type { Route } from '../appTypes';
 import { ap } from '../theme/palette';
@@ -21,6 +25,24 @@ const FILTERS: Array<{ value: InventoryBootstrapFilter; label: string }> = [
   { value: 'OUT', label: 'Out of stock' },
   { value: 'UNCONFIRMED', label: 'Unconfirmed' },
 ];
+
+/** A late response must never replace a newer search, filter, or page intent. */
+function isCurrentInventoryProjection(capturedIntent: number, currentIntent: number) {
+  return capturedIntent === currentIntent;
+}
+
+/** Only a load started after a failed command refresh can re-enable bulk submission. */
+function canResolveBulkReloadGate(capturedGeneration: number, currentGeneration: number) {
+  return capturedGeneration === currentGeneration;
+}
+
+function persistedBulkRefreshFailure(bulkGroupId: string) {
+  return {
+    loadState: 'stale' as const,
+    reloadRequired: true,
+    notice: `Classification group ${bulkGroupId} was recorded, but the inventory projection could not refresh. Reload this workspace before another classification.`,
+  };
+}
 
 function formatRevisionTime(value: string) {
   if (!value) return 'Time not reported';
@@ -57,11 +79,13 @@ export function InventoryRoute({
   dark,
   navigate,
   availableRoutes = [],
+  canClassify = false,
   inspection = false,
 }: {
   dark: boolean;
   navigate: (route: Route) => void;
   availableRoutes?: Route[];
+  canClassify?: boolean;
   /** A4-only fixture mode. It never asks the protected bootstrap endpoint for data. */
   inspection?: boolean;
 }) {
@@ -79,14 +103,53 @@ export function InventoryRoute({
   const [isMobile, setIsMobile] = useState(false);
   const [previewState, setPreviewState] = useState<PreviewState>('default');
   const [errorMessage, setErrorMessage] = useState('');
+  const [bulkItemIds, setBulkItemIds] = useState('');
+  const [bulkKind, setBulkKind] = useState<'CONSUMABLE'>('CONSUMABLE');
+  const [bulkStatus, setBulkStatus] = useState<'CLASSIFIED'>('CLASSIFIED');
+  const [bulkCondition, setBulkCondition] = useState<'NOT_APPLICABLE'>('NOT_APPLICABLE');
+  const [bulkMaintenance, setBulkMaintenance] = useState<'NOT_APPLICABLE'>('NOT_APPLICABLE');
+  const [bulkLendingAudience, setBulkLendingAudience] = useState<'NOT_AVAILABLE_FOR_LENDING'>(
+    'NOT_AVAILABLE_FOR_LENDING',
+  );
+  const [bulkNotes, setBulkNotes] = useState('');
+  const [bulkReason, setBulkReason] = useState('');
+  const [bulkSimilarityConfirmed, setBulkSimilarityConfirmed] = useState(false);
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+  const [bulkNotice, setBulkNotice] = useState('');
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const searchRef = useRef<HTMLInputElement>(null);
   const itemsRef = useRef(items);
   const requestKeyRef = useRef('');
+  const projectionIntentRef = useRef(0);
+  const bulkReloadRequiredRef = useRef(false);
+  const bulkReloadGenerationRef = useRef(0);
+  const [bulkReloadRequired, setBulkReloadRequired] = useState(false);
+
+  const invalidateProjection = useCallback(() => {
+    projectionIntentRef.current += 1;
+  }, []);
+
+  const requireBulkReload = useCallback(() => {
+    bulkReloadRequiredRef.current = true;
+    bulkReloadGenerationRef.current += 1;
+    setBulkReloadRequired(true);
+  }, []);
 
   useEffect(() => {
     itemsRef.current = items;
   }, [items]);
+
+  const applyInventoryProjection = useCallback(
+    (result: FrontendInventoryBootstrap, requestKey: string) => {
+      const nextItems = inventoryItemsFromBootstrap(result);
+      requestKeyRef.current = requestKey;
+      setItems(nextItems);
+      setPagination(result.pagination);
+      setRevision(result.scopeRevision);
+      setSelected((current) => nextItems.find((item) => item.id === current?.id) ?? null);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (inspection) {
@@ -108,6 +171,8 @@ export function InventoryRoute({
     }
     const abort = new AbortController();
     const requestKey = `${page}|${filter}|${query}`;
+    const capturedIntent = projectionIntentRef.current;
+    const capturedReloadGeneration = bulkReloadGenerationRef.current;
     const sameProjection = requestKeyRef.current === requestKey;
     if (!sameProjection) {
       setItems([]);
@@ -118,13 +183,15 @@ export function InventoryRoute({
     void frontendBackend
       .inventoryBootstrap({ page, pageSize: PAGE_SIZE, query, filter, signal: abort.signal })
       .then((result) => {
-        if (abort.signal.aborted) return;
-        const nextItems = inventoryItemsFromBootstrap(result);
-        requestKeyRef.current = requestKey;
-        setItems(nextItems);
-        setPagination(result.pagination);
-        setRevision(result.scopeRevision);
-        setSelected((current) => nextItems.find((item) => item.id === current?.id) ?? null);
+        if (abort.signal.aborted || !isCurrentInventoryProjection(capturedIntent, projectionIntentRef.current)) return;
+        applyInventoryProjection(result, requestKey);
+        if (
+          bulkReloadRequiredRef.current &&
+          canResolveBulkReloadGate(capturedReloadGeneration, bulkReloadGenerationRef.current)
+        ) {
+          bulkReloadRequiredRef.current = false;
+          setBulkReloadRequired(false);
+        }
         setLoadState('ready');
       })
       .catch((error: unknown) => {
@@ -137,7 +204,7 @@ export function InventoryRoute({
         setLoadState(sameProjection && itemsRef.current.length > 0 ? 'stale' : 'error');
       });
     return () => abort.abort();
-  }, [filter, inspection, page, query, reloadKey]);
+  }, [applyInventoryProjection, filter, inspection, page, query, reloadKey]);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 59.99rem)');
@@ -197,11 +264,13 @@ export function InventoryRoute({
   }, []);
 
   function updateFilter(next: InventoryBootstrapFilter) {
+    invalidateProjection();
     setFilter(next);
     setPage(1);
   }
 
   function clearFilters() {
+    invalidateProjection();
     setSearchInput('');
     setQuery('');
     setFilter('ALL');
@@ -215,6 +284,124 @@ export function InventoryRoute({
       return;
     }
     setReloadKey((value) => value + 1);
+  }
+
+  async function submitBulkClassification(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (bulkSubmitting || bulkReloadRequired) return;
+    const itemIds = [...new Set(bulkItemIds.split(/[\n,]+/u).map((item) => item.trim()).filter(Boolean))];
+    if (itemIds.length < 2) {
+      setBulkNotice('Enter at least two unique inventory item IDs from one physically reviewed similar group.');
+      return;
+    }
+    if (!bulkSimilarityConfirmed) {
+      setBulkNotice('Confirm that the selected records share the same verified classification before saving.');
+      return;
+    }
+    if (!bulkNotes.trim() || !bulkReason.trim()) {
+      setBulkNotice('Record both the physical review notes and the bulk classification reason before saving.');
+      return;
+    }
+
+    setBulkSubmitting(true);
+    setBulkNotice('');
+    const requestKey = `${page}|${filter}|${query}`;
+    const capturedIntent = projectionIntentRef.current;
+    try {
+      const selectedItems = await Promise.all(
+        itemIds.map(async (itemId) => {
+          const queue = await frontendBackend.inventoryClassifications({
+            status: 'NEEDS_CLASSIFICATION',
+            page: 1,
+            pageSize: 10,
+            search: itemId,
+          });
+          return queue.find((item) => item.id === itemId) ?? null;
+        }),
+      );
+      if (selectedItems.some((item) => !item)) {
+        setBulkNotice('One or more requested records are no longer in your current classification queue. Refresh and review them before retrying.');
+        return;
+      }
+      const candidates = selectedItems.filter(
+        (item): item is FrontendInventoryClassificationItem => item !== null,
+      );
+      const receipt = await frontendBackend.bulkClassifyInventoryItems({
+        clientRequestId: `inventory-bulk-classify-${crypto.randomUUID()}`,
+        reason: bulkReason.trim(),
+        similarityConfirmed: true,
+        items: candidates.map((item) => ({
+          itemId: item.id,
+          expectedRevision: item.classificationRevision,
+          classificationStatus: bulkStatus,
+          inventoryKind: bulkKind,
+          stockArea: item.stockArea,
+          storageLocation: item.storageLocation,
+          unit: item.unit,
+          reorderThreshold: item.reorderThreshold,
+          conditionReviewState: bulkCondition,
+          maintenanceReviewState: bulkMaintenance,
+          classificationNotes: bulkNotes.trim(),
+          reason: bulkReason.trim(),
+          similarityConfirmed: true,
+          isLendable: false,
+          lendingAudience: bulkLendingAudience,
+          enableLendingConfirmed: false,
+          assetInstanceCountIfReusable: 0,
+          assetTrackingConfirmed: false,
+          assetTags: [],
+        })),
+      });
+      setBulkItemIds('');
+      setBulkNotes('');
+      setBulkReason('');
+      setBulkSimilarityConfirmed(false);
+      try {
+        const refreshed = await frontendBackend.refreshInventoryBootstrap({ page, pageSize: PAGE_SIZE, query, filter });
+        if (isCurrentInventoryProjection(capturedIntent, projectionIntentRef.current)) {
+          applyInventoryProjection(refreshed, requestKey);
+          setLoadState('ready');
+          setBulkNotice(`Classification group ${receipt.bulkGroupId} was recorded and the authorized inventory projection was refreshed.`);
+        } else {
+          requireBulkReload();
+          setBulkNotice(`Classification group ${receipt.bulkGroupId} was recorded, but this workspace changed while it was saving. Reload inventory before another classification.`);
+        }
+      } catch {
+        const failure = persistedBulkRefreshFailure(receipt.bulkGroupId);
+        requireBulkReload();
+        setLoadState(failure.loadState);
+        setBulkNotice(failure.notice);
+      }
+    } catch (error) {
+      const safeRefresh = error instanceof FrontendApiError && [403, 409].includes(error.status);
+      let refreshedAfterFailure = false;
+      if (safeRefresh) {
+        try {
+          const refreshed = await frontendBackend.refreshInventoryBootstrap({ page, pageSize: PAGE_SIZE, query, filter });
+          if (isCurrentInventoryProjection(capturedIntent, projectionIntentRef.current)) {
+            applyInventoryProjection(refreshed, requestKey);
+            setLoadState('ready');
+            refreshedAfterFailure = true;
+          } else {
+            requireBulkReload();
+          }
+        } catch {
+          requireBulkReload();
+          setLoadState('stale');
+        }
+      }
+      setBulkNotice(
+        safeRefresh
+          ? error.status === 403
+            ? `Your classification permission changed. No classification was assumed; ${refreshedAfterFailure ? 'review the refreshed inventory state before retrying.' : 'reload this workspace before retrying.'}`
+            : `The classification queue changed during review. No classification was assumed; ${refreshedAfterFailure ? 'review the refreshed inventory state before retrying.' : 'reload this workspace before retrying.'}`
+          : error instanceof FrontendApiError
+            ? `${error.message} No classification was assumed.`
+            : 'The classification could not be recorded. No classification was assumed.',
+      );
+    } finally {
+      setBulkSubmitting(false);
+    }
   }
 
   return (
@@ -312,7 +499,10 @@ export function InventoryRoute({
                   id="inventory-search"
                   type="search"
                   value={searchInput}
-                  onChange={(event) => setSearchInput(event.target.value)}
+                  onChange={(event) => {
+                    invalidateProjection();
+                    setSearchInput(event.target.value);
+                  }}
                   placeholder="Item name, ID, category, or alias"
                   autoComplete="off"
                 />
@@ -335,6 +525,82 @@ export function InventoryRoute({
               </div>
             </fieldset>
           </section>
+
+          {canClassify && !inspection ? (
+            <section
+              className="inventory-classification surface-content"
+              aria-labelledby="inventory-classification-title"
+              data-inventory-modal-background
+            >
+              <div className="inventory-classification__head">
+                <div>
+                  <p>Classification queue</p>
+                  <h2 id="inventory-classification-title">Inventory classification</h2>
+                </div>
+                <p>Classify a verified similar group of consumable records. Reusable physical assessment and asset tracking are unavailable in this command.</p>
+              </div>
+              <form aria-label="Inventory classification" onSubmit={submitBulkClassification}>
+                <label className="inventory-classification__wide">
+                  <span>Inventory item IDs</span>
+                  <textarea
+                    value={bulkItemIds}
+                    onChange={(event) => setBulkItemIds(event.target.value)}
+                    placeholder="One authoritative inventory ID per line"
+                    disabled={bulkSubmitting || bulkReloadRequired}
+                  />
+                </label>
+                <label>
+                  <span>Inventory kind</span>
+                  <select value={bulkKind} onChange={(event) => setBulkKind(event.target.value as 'CONSUMABLE')} disabled={bulkSubmitting || bulkReloadRequired}>
+                    <option value="CONSUMABLE">Consumable</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Classification status</span>
+                  <select value={bulkStatus} onChange={(event) => setBulkStatus(event.target.value as 'CLASSIFIED')} disabled={bulkSubmitting || bulkReloadRequired}>
+                    <option value="CLASSIFIED">Classified</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Condition review state</span>
+                  <select value={bulkCondition} onChange={(event) => setBulkCondition(event.target.value as 'NOT_APPLICABLE')} disabled={bulkSubmitting || bulkReloadRequired}>
+                    <option value="NOT_APPLICABLE">Not applicable</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Maintenance review state</span>
+                  <select value={bulkMaintenance} onChange={(event) => setBulkMaintenance(event.target.value as 'NOT_APPLICABLE')} disabled={bulkSubmitting || bulkReloadRequired}>
+                    <option value="NOT_APPLICABLE">Not applicable</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Lending audience</span>
+                  <select value={bulkLendingAudience} onChange={(event) => setBulkLendingAudience(event.target.value as 'NOT_AVAILABLE_FOR_LENDING')} disabled={bulkSubmitting || bulkReloadRequired}>
+                    <option value="NOT_AVAILABLE_FOR_LENDING">Not available for lending</option>
+                  </select>
+                </label>
+                <label className="inventory-classification__wide">
+                  <span>Classification notes</span>
+                  <textarea value={bulkNotes} onChange={(event) => setBulkNotes(event.target.value)} disabled={bulkSubmitting || bulkReloadRequired} />
+                </label>
+                <label className="inventory-classification__wide">
+                  <span>Bulk classification reason</span>
+                  <textarea value={bulkReason} onChange={(event) => setBulkReason(event.target.value)} disabled={bulkSubmitting || bulkReloadRequired} />
+                </label>
+                <label className="inventory-classification__confirm inventory-classification__wide">
+                  <input type="checkbox" checked={bulkSimilarityConfirmed} onChange={(event) => setBulkSimilarityConfirmed(event.target.checked)} disabled={bulkSubmitting || bulkReloadRequired} />
+                  <span>Confirm these items share the same classification</span>
+                </label>
+                <div className="inventory-classification__submit inventory-classification__wide">
+                  <button type="submit" disabled={bulkSubmitting || bulkReloadRequired}>
+                    {bulkSubmitting ? 'Recording classification…' : 'Classify a verified similar group'}
+                  </button>
+                  {bulkNotice ? <p role="status">{bulkNotice}</p> : null}
+                  {bulkReloadRequired ? <button type="button" onClick={retry}>Reload inventory</button> : null}
+                </div>
+              </form>
+            </section>
+          ) : null}
 
           <div
             className="inventory-workspace__result-meta"
@@ -484,7 +750,10 @@ export function InventoryRoute({
                   <button
                     type="button"
                     disabled={pagination.page <= 1 || visibleState === 'refreshing'}
-                    onClick={() => setPage((value) => Math.max(1, value - 1))}
+                    onClick={() => {
+                      invalidateProjection();
+                      setPage((value) => Math.max(1, value - 1));
+                    }}
                   >
                     <ChevronLeft aria-hidden="true" size={16} />
                     Previous
@@ -495,7 +764,10 @@ export function InventoryRoute({
                   <button
                     type="button"
                     disabled={!pagination.hasMore || visibleState === 'refreshing'}
-                    onClick={() => setPage((value) => value + 1)}
+                    onClick={() => {
+                      invalidateProjection();
+                      setPage((value) => value + 1);
+                    }}
                   >
                     Next
                     <ChevronRight aria-hidden="true" size={16} />

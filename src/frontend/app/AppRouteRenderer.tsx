@@ -95,7 +95,12 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
         ) : route === 'overview' ? (
           <OverviewRoute session={session} navigate={navigate} />
         ) : route === 'inventory' ? (
-          <InventoryRoute dark={dark} navigate={navigate} availableRoutes={session.capabilities} />
+          <InventoryRoute
+            dark={dark}
+            navigate={navigate}
+            availableRoutes={session.capabilities}
+            canClassify={session.serverCapabilities.includes('inventory.classify')}
+          />
         ) : route === 'request-center' ? (
           <InternalRequestHub dark={dark} navigate={navigate} canReviewRequests={session.canReviewRequests} />
         ) : route === 'lending' ? (

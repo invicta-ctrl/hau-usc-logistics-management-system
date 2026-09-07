@@ -20,7 +20,13 @@ VERIFICATION: exact sequence in the interrupted checkpoint, including fresh 8788
 STOP_CONDITIONS: conflicting writer; unknown dirty residue; required product/backend/schema/auth semantic expansion; provider action; Production crossover; secret/private data; failed verification that cannot form safe evidence.
 STATUS: H1_IN_PROGRESS_NOT_ACCEPTED
 HANDOFF_STATUS: READY_FOR_HANDOFF
-NEXT_EXACT_ACTION: RESTORE_SUPPORTED_LOCAL_BROWSER_ACCESS_THEN_REPRODUCE_INVENTORY_BULK_ON_FRESH_8788
+NEXT_EXACT_ACTION: PARENT_RECONCILES_12_FINAL_SUITE_FAILURES_AGAINST_ACCEPTED_SCOPE; DO_NOT_CREATE_H1_RECEIPT
+
+## Inventory bulk repair in progress - 2026-09-07
+
+The parent-supported original reproduction failed at the absent legacy wrapper before any panel existed. Fresh 8788 reproduction after the repair rendered the supported canonical panel and did not submit a mutation; its only failure was the separate first semantic region-name mismatch. The bounded repair remains frontend adoption only. H1 receipt, H2, Playground, deployment, and Production remain forbidden.
+
+The corrected exact fresh 8788 Worker test is PASS. It preserved and passed every atomicity, revision, replay, history, and bootstrap-refresh assertion. Focused frontend-390 persisted-receipt and delayed-refresh browser regressions are 2/2 PASS. Final Worker is 50 passed / 9 failed and final frontend is 416 passed / 121 skipped / 3 failed; exact-4173 inspection and the manual eight-width/accessibility matrix remain unrun. Do not create an H1 receipt or start H2.
 
 ## Cloud setup check — 2026-09-06
 

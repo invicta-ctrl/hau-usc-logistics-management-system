@@ -194,6 +194,111 @@
     color: var(--foreground);
   }
 
+  .inventory-classification {
+    display: grid;
+    gap: var(--space-md);
+    padding: var(--space-md);
+  }
+
+  .inventory-classification__head {
+    display: grid;
+    gap: var(--space-xs);
+  }
+
+  .inventory-classification__head p {
+    max-inline-size: 68ch;
+    margin: 0;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .inventory-classification__head p:first-child {
+    font-family: var(--font-record);
+    font-size: 0.6875rem;
+    font-weight: 650;
+    letter-spacing: 0.075em;
+    text-transform: uppercase;
+  }
+
+  .inventory-classification__head h2 {
+    margin: 0;
+    font-family: var(--type-section-title-family);
+    font-size: var(--type-section-title-size);
+    font-weight: var(--type-section-title-weight);
+    line-height: var(--type-section-title-line);
+  }
+
+  .inventory-classification form {
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .inventory-classification label {
+    display: grid;
+    gap: var(--space-2xs);
+    color: var(--foreground);
+    font-size: 0.75rem;
+    font-weight: 650;
+  }
+
+  .inventory-classification input:not([type='checkbox']),
+  .inventory-classification select,
+  .inventory-classification textarea {
+    min-block-size: var(--control-hit-area-min);
+    inline-size: 100%;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--border-control-role);
+    border-radius: var(--radius-control);
+    background: var(--surface-inset);
+    color: var(--foreground);
+    font: inherit;
+  }
+
+  .inventory-classification textarea {
+    min-block-size: 5.5rem;
+    resize: vertical;
+  }
+
+  .inventory-classification__confirm {
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    gap: var(--space-sm) !important;
+    padding-block: var(--space-xs);
+  }
+
+  .inventory-classification__confirm input {
+    margin-block: 0.15rem 0;
+  }
+
+  .inventory-classification__submit {
+    display: grid;
+    gap: var(--space-xs);
+  }
+
+  .inventory-classification__submit button {
+    min-block-size: var(--control-hit-area-min);
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-control);
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+
+  .inventory-classification__submit button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .inventory-classification__submit p {
+    margin: 0;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
   .inventory-workspace__notice {
     min-block-size: var(--control-hit-area-min);
     display: flex;
@@ -697,6 +802,12 @@
     }
     .inventory-workspace__search kbd {
       display: inline-block;
+    }
+    .inventory-classification form {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .inventory-classification__wide {
+      grid-column: 1 / -1;
     }
   }
 

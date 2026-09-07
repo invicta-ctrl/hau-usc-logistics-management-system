@@ -555,6 +555,77 @@ describe('Figma frontend backend adapter', () => {
     ]);
   });
 
+  it('uses the in-memory CSRF token and strictly projects the authorized bulk classification queue and receipt', async () => {
+    const authenticated = {
+      state: 'AUTHENTICATED',
+      csrfToken: 'csrf-inventory-classify',
+      user: {
+        accountId: 'ACC-INVENTORY',
+        displayName: 'Inventory operator',
+        authorization: {
+          active: true,
+          mappingStatus: 'MAPPED',
+          roleId: 'INVENTORY',
+          capabilities: ['view.inventory', 'inventory.classify'],
+        },
+      },
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(response(authenticated))
+      .mockResolvedValueOnce(
+        response({
+          ok: true,
+          items: [
+            {
+              id: 'ITM-CLASSIFY-1',
+              stockArea: 'OFFICE',
+              storageLocation: 'Shelf A',
+              unit: 'piece',
+              reorderThreshold: 0,
+              classificationRevision: 1,
+              assetInstanceCount: 0,
+            },
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          ok: true,
+          itemIds: ['ITM-CLASSIFY-1', 'ITM-CLASSIFY-2'],
+          count: 2,
+          bulkGroupId: 'BCL-test',
+          correlationId: 'corr-test',
+          classificationRevisions: { 'ITM-CLASSIFY-1': 2, 'ITM-CLASSIFY-2': 2 },
+        }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    const backend = new FrontendBackend();
+
+    await backend.session();
+    await expect(backend.inventoryClassifications({ search: 'ITM-CLASSIFY-1' })).resolves.toEqual([
+      expect.objectContaining({ id: 'ITM-CLASSIFY-1', classificationRevision: 1 }),
+    ]);
+    await expect(
+      backend.bulkClassifyInventoryItems({
+        clientRequestId: 'classify-test',
+        reason: 'Physical review',
+        similarityConfirmed: true,
+        items: [],
+      }),
+    ).resolves.toMatchObject({ count: 2, bulkGroupId: 'BCL-test' });
+
+    for (const [, init] of fetchMock.mock.calls.slice(1)) {
+      expect(init.headers['x-csrf-token']).toBe('csrf-inventory-classify');
+      expect(init.credentials).toBe('include');
+    }
+    expect(fetchMock.mock.calls.slice(1).map(([path]) => path)).toEqual([
+      '/api/listInventoryClassifications',
+      '/api/bulkClassifyInventoryItems',
+    ]);
+  });
+
+
   it('strictly projects the full authenticated Request bootstrap v2 and rejects a malformed bounded projection', async () => {
     const valid = internalRequestBootstrapPayload();
     const malformed = structuredClone(valid);

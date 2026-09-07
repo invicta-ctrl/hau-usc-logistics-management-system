@@ -29,6 +29,7 @@ async function installAuthenticatedOperations(page, requestedInventoryUrls) {
               'view.request',
               'view.internal',
               'view.inventory',
+              'inventory.classify',
               'request.create',
               'request.review',
               'lending.create',
@@ -282,4 +283,167 @@ test('MFR-002 U05 preserves 200 percent reflow for Overview and Inventory', asyn
   await page.getByRole('button', { name: /Open item record Wireless microphone/u }).click();
   await expect(page.getByRole('dialog', { name: 'Wireless microphone' })).toBeVisible();
   expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
+});
+
+test('MFR-002 blocks another inventory classification when a persisted receipt cannot refresh', async ({ page }, testInfo) => {
+  const inventoryRequests = [];
+  await installAuthenticatedOperations(page, inventoryRequests);
+  await page.route('**/api/listInventoryClassifications', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        items: ['A', 'B'].map((suffix) => ({
+          id: `ITM-CLASSIFY-${suffix}`,
+          stockArea: 'OFFICE',
+          storageLocation: `Shelf ${suffix}`,
+          unit: 'piece',
+          reorderThreshold: 0,
+          classificationRevision: 1,
+          assetInstanceCount: 0,
+        })),
+      }),
+    }),
+  );
+  let bulkRequests = 0;
+  await page.route('**/api/bulkClassifyInventoryItems', (route) => {
+    bulkRequests += 1;
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        itemIds: ['ITM-CLASSIFY-A', 'ITM-CLASSIFY-B'],
+        count: 2,
+        bulkGroupId: 'BCL-U05',
+        correlationId: 'CORR-U05',
+        classificationRevisions: { 'ITM-CLASSIFY-A': 2, 'ITM-CLASSIFY-B': 2 },
+      }),
+    });
+  });
+  await page.route('**/api/getBootstrapModule', (route) =>
+    route.fulfill({ status: 503, contentType: 'application/json', body: '{"code":"SERVICE_UNAVAILABLE"}' }),
+  );
+  await signIn(page);
+  await openInventory(page, testInfo);
+  const form = page.getByRole('form', { name: 'Inventory classification' });
+  await form.getByLabel('Inventory item IDs').fill('ITM-CLASSIFY-A\nITM-CLASSIFY-B');
+  await form.getByLabel('Classification notes').fill('Physically reviewed together');
+  await form.getByLabel('Bulk classification reason').fill('Physically reviewed together');
+  await form.getByLabel('Confirm these items share the same classification').check();
+  await form.getByRole('button', { name: 'Classify a verified similar group' }).click();
+  await expect(form).toContainText('Classification group BCL-U05 was recorded');
+  await expect(form.getByRole('button', { name: 'Classify a verified similar group' })).toBeDisabled();
+  await expect(form.getByRole('button', { name: 'Reload inventory' })).toBeVisible();
+  await form.getByRole('button', { name: 'Reload inventory' }).click();
+  await expect(form.getByRole('button', { name: 'Classify a verified similar group' })).toBeEnabled();
+  expect(bulkRequests).toBe(1);
+});
+
+test('MFR-002 keeps a newer inventory search when a delayed classification refresh resolves', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'frontend-390', 'One focused mobile browser race regression.');
+  const inventoryRequests = [];
+  await installAuthenticatedOperations(page, inventoryRequests);
+  await page.route('**/api/listInventoryClassifications', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        items: ['A', 'B'].map((suffix) => ({
+          id: `ITM-RACE-${suffix}`,
+          stockArea: 'OFFICE',
+          storageLocation: `Shelf ${suffix}`,
+          unit: 'piece',
+          reorderThreshold: 0,
+          classificationRevision: 1,
+          assetInstanceCount: 0,
+        })),
+      }),
+    }),
+  );
+  await page.route('**/api/bulkClassifyInventoryItems', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        itemIds: ['ITM-RACE-A', 'ITM-RACE-B'],
+        count: 2,
+        bulkGroupId: 'BCL-RACE-U05',
+        correlationId: 'CORR-RACE-U05',
+        classificationRevisions: { 'ITM-RACE-A': 2, 'ITM-RACE-B': 2 },
+      }),
+    }),
+  );
+  let refreshStarted;
+  const refreshStartedPromise = new Promise((resolve) => {
+    refreshStarted = resolve;
+  });
+  let releaseRefresh;
+  const delayedRefresh = new Promise((resolve) => {
+    releaseRefresh = resolve;
+  });
+  await page.route('**/api/getBootstrapModule', async (route) => {
+    refreshStarted();
+    await delayedRefresh;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        contract: 'bootstrap-module',
+        contractVersion: 2,
+        requestOnly: false,
+        module: 'inventory',
+        scopeRevision: { token: 'inventory-race-u05', updatedAt: '2026-09-07T00:00:00.000Z' },
+        pagination: { page: 1, pageSize: 25, total: 1, hasMore: false },
+        data: {
+          inventoryItems: [
+            {
+              id: 'ITM-LATE-PROJECTION',
+              name: 'Late old projection',
+              category: 'Equipment',
+              unit: 'piece',
+              onHand: 1,
+              reserved: 0,
+              availableToPromise: 1,
+              reorderThreshold: 0,
+              lowStockState: 'HEALTHY',
+              isLendable: false,
+              lendingStatus: 'NOT_AVAILABLE_FOR_LENDING',
+              inventoryKind: 'CONSUMABLE',
+              classificationStatus: 'CLASSIFIED',
+              conditionReviewState: 'NOT_APPLICABLE',
+              maintenanceReviewState: 'NOT_APPLICABLE',
+              updatedAt: '2026-09-07T00:00:00.000Z',
+              classificationHistory: [],
+            },
+          ],
+          ledgerTransactions: [],
+          reservations: [],
+          inventoryAssets: [],
+          assetMaintenanceHistory: [],
+          assetMovementHistory: [],
+        },
+      }),
+    });
+  });
+  await signIn(page);
+  await openInventory(page, testInfo);
+  const form = page.getByRole('form', { name: 'Inventory classification' });
+  await form.getByLabel('Inventory item IDs').fill('ITM-RACE-A\nITM-RACE-B');
+  await form.getByLabel('Classification notes').fill('Physically reviewed together');
+  await form.getByLabel('Bulk classification reason').fill('Physically reviewed together');
+  await form.getByLabel('Confirm these items share the same classification').check();
+  await form.getByRole('button', { name: 'Classify a verified similar group' }).click();
+  await refreshStartedPromise;
+  await page.getByRole('searchbox', { name: 'Search inventory' }).fill('no-current-match');
+  releaseRefresh();
+  await expect
+    .poll(() => inventoryRequests.some((url) => url.searchParams.get('query') === 'no-current-match'))
+    .toBe(true);
+  await expect(page.getByText('Late old projection')).toHaveCount(0);
+  await expect(form).toContainText('Classification group BCL-RACE-U05 was recorded, but this workspace changed while it was saving.');
 });

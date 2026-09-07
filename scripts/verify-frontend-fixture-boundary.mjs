@@ -71,7 +71,12 @@ for (const forbidden of [
 
 for (const expected of [
   '<OverviewRoute session={session} navigate={navigate} />',
-  '<InventoryRoute dark={dark} navigate={navigate} availableRoutes={session.capabilities} />',
+  `<InventoryRoute
+            dark={dark}
+            navigate={navigate}
+            availableRoutes={session.capabilities}
+            canClassify={session.serverCapabilities.includes('inventory.classify')}
+          />`,
   '<InternalRequestHub dark={dark} navigate={navigate} canReviewRequests={session.canReviewRequests} />',
   'module="release"',
   "session.serverCapabilities.includes('fulfillment.release')",

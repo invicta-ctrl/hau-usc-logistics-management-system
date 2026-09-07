@@ -1,20 +1,20 @@
-# Work Continuation — FBR-001 Phase H1 interrupted checkpoint
+# Work Continuation - FBR-001 Phase H1 interrupted checkpoint
 
 ## Current resume block
 
-- **Repository/worktree:** `invicta-ctrl/hau-usc-logistics-management-system`; `/workspace/scratch/b56b3f18bfa9/repo`.
-- **Branch/HEAD/upstream:** `reconcile/playground-fbr001-claude-frontend`; resolve current HEAD with Git; fetched starting HEAD and upstream both `924756b38c9116bc1f7cfde0580946e483852e5f`. Verify remote again before resuming.
-- **Current phase/stage:** FBR-001 H1 in progress, local-browser acceptance blocked, not accepted.
+- **Repository/worktree:** `invicta-ctrl/hau-usc-logistics-management-system`; `D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation`.
+- **Branch/HEAD/upstream:** `reconcile/playground-fbr001-claude-frontend`; base and upstream both `89d8627b899df7bb586c5542f4ee2a6c9131ffb2` before the owned uncommitted repair.
+- **Current phase/stage:** FBR-001 H1 in progress, not accepted; the final Worker suite requires scope reconciliation.
 - **Accepted scope:** H1 only under `.codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md` and current task/checkpoint.
-- **Completed work:** Dependency installation, local Worker startup repair, port-test lint repair, and deterministic gates complete; inventory-bulk UI residual remains unclassified.
-- **Files changed by purpose:** Local Worker launch arguments and port-test formatting repairs; continuity records capture evidence and the browser blocker.
-- **Tests verified at current SHA:** Focused units 44/44 PASS; lint, application/staging builds, artifact checks, Cloudflare dry-run PASS; browser acceptance not established. Handoff verifier, continuation check (14 fields), agent-instruction check (12 files), and diff whitespace check PASS for this documentation update.
+- **Completed work:** Inventory-bulk classification is repaired within the frontend adapter/UI scope; exact fresh Worker and two focused frontend-390 browser regressions pass.
+- **Files changed by purpose:** Capability-gated consumable classifier UI, typed existing-endpoint adapter, authoritative refresh/race handling, semantic tests, and continuity evidence.
+- **Tests verified at current SHA:** Working-tree candidate based on `89d8627`; exact 8788 inventory Worker PASS; frontend-390 classification regressions 2/2 PASS. Final local Worker is 50 pass / 9 fail and final frontend is 416 pass / 121 skipped / 3 fail; no H1 acceptance.
 - **Generated artifacts:** Local application/staging artifacts, verified; no upload.
 - **External actions:** Git continuation-branch publication authorized; verify resulting remote SHA. No provider, Playground runtime, remote D1/R2, or Production writes.
-- **Rollback:** Harness/test changes only; original checkpoint preserved in Git ancestry. No remote runtime state to restore.
-- **Blocker:** Dependencies installed under explicit owner authorization. Managed local browser ERR_BLOCKED_BY_CLIENT; attempted test lacks browser snapshots and runner reported cancelled network approval.
-- **Next three actions:** Restore supported local-browser access; verify clean remote parity and free 8788; reproduce inventory-bulk before remaining ordered H1 gates.
-- **Resume commands:** `git status --short`; `git rev-parse HEAD`; check dependency setup and 8788; then `HAU_CLOUDFLARE_LOCAL_PORT=8788 HAU_CLOUDFLARE_REUSE_SERVER=0 npm run test:e2e:cloudflare:local -- --grep 'inventory bulk classification is atomic and bootstrap projects a searched governed page'`.
+- **Rollback:** Revert the single frontend/checkpoint commit from this branch; no remote runtime state exists to restore.
+- **Blocker:** Full Worker failures include expectations for explicitly deferred event/procurement writes; frontend also has three unresolved responsive/focus checks. Preserve assertions and reconcile accepted scope before H1 closure.
+- **Next three actions:** Parent classifies the twelve final-suite failures; complete only authorized H1 gates; create no receipt until every required result is reconciled.
+- **Resume commands:** `git status --short`; verify remote parity before publication; use the current pointer and checkpoint for the parent-approved next H1 gate.
 - **Prohibited actions:** archive extraction; 8787 reuse/termination; assertion weakening without evidence; H2/preflight/deployment before H1 acceptance; provider/remote D1/R2/Production writes.
 
 ## Historical interrupted resume block
