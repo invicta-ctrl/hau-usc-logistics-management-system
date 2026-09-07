@@ -7,6 +7,52 @@
     color: var(--theme-text);
   }
 
+  .events-command-panel {
+    margin-block-start: var(--space-lg);
+    padding: var(--space-md);
+    border: 1px solid var(--theme-border);
+    border-radius: var(--radius-lg);
+    background: var(--theme-surface);
+  }
+
+  .events-command-unavailable {
+    margin-block-start: var(--space-lg);
+    padding: var(--space-sm);
+    border-inline-start: 0.25rem solid var(--theme-accent);
+    background: var(--theme-surface-muted);
+    color: var(--theme-text-muted);
+    line-height: 1.5;
+  }
+
+  .events-command-recovery {
+    margin-block-start: var(--space-lg);
+    padding: var(--space-md);
+    border: 1px solid var(--theme-border);
+    border-radius: var(--radius-lg);
+    background: var(--theme-surface);
+  }
+
+  .events-command-recovery p {
+    margin: 0 0 var(--space-sm);
+  }
+
+  .events-command-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: var(--space-md);
+  }
+
+  .events-command-grid form {
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .events-command-grid label {
+    display: grid;
+    gap: var(--space-2xs);
+    font-weight: 600;
+  }
+
   .events-workspace--dark {
     color-scheme: dark;
   }

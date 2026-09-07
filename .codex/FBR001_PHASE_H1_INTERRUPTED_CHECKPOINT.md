@@ -54,6 +54,13 @@ This checkpoint also updates continuity records. `GIT_HEAD`/`GIT_TREE` are inten
 - `npm.cmd run build` — PASS, including fixture-boundary and foundation checks.
 - `git diff --check` — PASS before continuity editing; rerun after all final records and staging.
 
+### Active event command repair evidence — 2026-09-08
+
+- `npm.cmd exec vitest run tests/unit/frontend-backend-adapter.test.js` — PASS: 1 file, 34 tests. The added source-backed case keeps a legacy activity with null `eventDayId` and empty `activityType` reportable while requiring its emitted revision.
+- Fresh isolated Worker: `HAU_CLOUDFLARE_LOCAL_PORT=8788`, `HAU_CLOUDFLARE_REUSE_SERVER=0`, `npm.cmd run test:e2e:cloudflare:local -- --grep "Admin and Director govern event hierarchy|event command"` — PASS: 4 tests in 1.5 minutes. This includes one updated existing hierarchy assertion and three new browser journeys: create series/day/activity, safe replay of one immutable request after an unknown response with other commands locked, and a persisted receipt whose report refresh fails and blocks repeat mutation until reload.
+- `npm.cmd run test:e2e:frontend -- --project=frontend-390 --grep "keeps a saved event actionable"` — PASS: 1 test in 43.4 seconds. It proves both initial optional command-context unavailability and a post-save null-command-context refresh leave the report visible with an accessible reload action and no duplicate save.
+- Parent exact-4173 partial inspection evidence, preserved as partial only: `mfr002-shell`, `mfr002-entry-flows`, and `playground-accessibility-semantics` passed 8/3 skipped at 390 (17.6 seconds), 6/5 skipped at 1024 (12.7 seconds), and 10/1 skipped at 1440 (19 seconds). Outputs are `.codex/runtime/fbr001-inspection-review`, `.codex/runtime/fbr001-inspection-desktop`, and `.codex/runtime/fbr001-inspection-reflow`. Public landing overflow was false at 320/375/390/414/768/1024/1440/1920; screenshots are `fbr001-public-320.png` and `fbr001-public-1920.png`. Known `/api/version` and advertisements 404s came from the unproxied local inspection server and do not establish functional or clean-console acceptance. The browser was closed and 4173 stopped. Event source edits may require related inspection evidence to be rerun.
+
 ### Pre-checkpoint/inherited evidence — not all rerun after final edits
 
 - FI-07 `frontend-390`: 6 pass / 1 intended exact-4173 skip.

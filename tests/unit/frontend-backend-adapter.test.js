@@ -1171,4 +1171,59 @@ describe('Figma frontend backend adapter', () => {
     const backend = new FrontendBackend();
     await expect(backend.version()).resolves.toEqual({ playground: false });
   });
+
+  it('keeps legacy unlinked event activities reportable while preserving valid command revisions', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      response({
+        ok: true,
+        eventSeries: [
+          { id: 'SER-LEGACY', name: 'Legacy series', code: 'LEGACY-2026', status: 'ACTIVE', revision: 3 },
+        ],
+        eventDays: [
+          {
+            id: 'DAY-LEGACY',
+            seriesId: 'SER-LEGACY',
+            name: 'Legacy day',
+            date: '2026-09-01',
+            status: 'UPCOMING',
+            revision: 4,
+          },
+        ],
+        activities: [
+          {
+            id: 'ACT-UNLINKED',
+            eventDayId: null,
+            name: 'Historical unlinked activity',
+            activityType: '',
+            venue: '',
+            timeStatus: 'TBA',
+            status: 'ACTIVE',
+            revision: 7,
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const backend = new FrontendBackend();
+
+    await expect(backend.eventManagementWithCommandProjection()).resolves.toMatchObject({
+      report: {
+        activities: [
+          {
+            name: 'Historical unlinked activity',
+            seriesName: 'Series not reported',
+            date: '',
+            activityType: '',
+          },
+        ],
+      },
+      commandProjection: {
+        activities: [
+          { id: 'ACT-UNLINKED', eventDayId: '', activityType: '', revision: 7 },
+        ],
+      },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/getEventManagement');
+  });
 });

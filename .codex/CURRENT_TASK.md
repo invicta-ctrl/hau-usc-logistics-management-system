@@ -9,8 +9,8 @@ CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 INTERRUPTED_CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md
 AUTHORITY: Earl H1 checkpoint instruction -> AGENTS.md -> .agents/PROJECT_POLICY.md -> accepted FBR-001 spec -> current Worker/API/auth/domain/privacy contracts.
-REQUIRED_MODEL: CHATGPT_WORK_OWNER_AUTHORIZED
-ACTIVE_WRITER: NONE
+REQUIRED_MODEL: MAEOS_V1_A1_TERRA_HIGH_WRITER (owner-started local Astra A1 task)
+ACTIVE_WRITER: TERRA_HIGH_FBR001_EVENT_REPAIR_A1
 RISK: HIGH; FRONTEND_ACCEPTANCE; LOCAL_WORKER; PRODUCTION_FORBIDDEN
 SCOPE: PHASE_H1_ONLY
 IN_SCOPE: reproduce/classify the one fresh local-Worker residual, evidence-only repair if required and authorized by the accepted spec, final local Worker/frontend/browser/accessibility matrix, exact H1 receipt only when all required local evidence is green.
@@ -19,8 +19,20 @@ DELIVERABLES: final H1 local acceptance evidence and `.codex/FBR001_PHASE_H1_LOC
 VERIFICATION: exact sequence in the interrupted checkpoint, including fresh 8788 local Worker, final frontend/browser matrix, deterministic checks, handoff verifier, and diff check.
 STOP_CONDITIONS: conflicting writer; unknown dirty residue; required product/backend/schema/auth semantic expansion; provider action; Production crossover; secret/private data; failed verification that cannot form safe evidence.
 STATUS: H1_IN_PROGRESS_NOT_ACCEPTED
-HANDOFF_STATUS: READY_FOR_HANDOFF
-NEXT_EXACT_ACTION: PARENT_RECONCILES_12_FINAL_SUITE_FAILURES_AGAINST_ACCEPTED_SCOPE; DO_NOT_CREATE_H1_RECEIPT
+HANDOFF_STATUS: IN_PROGRESS
+NEXT_EXACT_ACTION: COMMIT_AND_PUSH_EVENT_COMMAND_FOCUSED_EVIDENCE, THEN PROCEED WITH AUTHORIZED PROCUREMENT COMMAND ADOPTION; DO_NOT_CREATE_H1_RECEIPT
+
+## Owner-authorized frontend blocker repair - 2026-09-07
+
+SCOPE AMENDMENT: Repair only the 320 landing overflow, 320 lending conflict-reload focus, and 1024 skip-link/theme/reflow failures. The owner confirms accepted-spec Scope 4 real writes and five missing-parity rows permit existing backend command adoption; deferred matrix labels are status, not an exclusion. Keep all browser behavioral assertions. Do not edit Worker source, backend/auth/capabilities, provider resources, deployment, Production, or port 8787. Stop for a true backend/authority issue or after two failed targeted repair rounds. H1 is not accepted.
+
+RESULT: Focused frontend-320 reproduction passed landing overflow and lending conflict-reload focus 2/2 in 40.1 seconds; focused frontend-1024 skip-link/theme/reflow passed 1/1 in 15.0 seconds. No runtime or test repair was warranted. The F2 visual-boundary deferrals are historical and do not override the current accepted-spec/owner authority. Broader H1 frontend acceptance remains pending.
+
+WORKER9 PREPARATION: Existing event/procurement/admin components are intentional read-only projections and omit the immutable IDs/revisions command forms require. Implement separate privileged runtime projections and modular panels, preserving inspection/read-only behavior. Existing server contracts are confirmed; canvass evidence is optional, but supplied evidence must be stored and valid; reset credentials are one-time private display only; and all mutation results require authoritative refresh. No backend change is authorized or needed.
+
+HISTORICAL STOP CHECKPOINT: Partial event code stopped after two focused fresh-8788 failures. Correct source evidence is `operational-service.js:1293-1328`: activity revision is emitted at line 1324; historical/unlinked activity `eventDayId` can be null and `activityType` can be empty. The owner subsequently authorized the bounded response-contract repair. A fresh A1 Terra writer now owns the active event repair. H1 remains not accepted.
+
+ACTIVE EVENT EVIDENCE: adapter 34/34, fresh 8788/reuse=false Worker event grep 4/4, and frontend-390 null-command-context recovery 1/1 PASS. These focused checks do not replace the remaining H1 Worker, frontend, or manual accessibility gates.
 
 ## Inventory bulk repair in progress - 2026-09-07
 

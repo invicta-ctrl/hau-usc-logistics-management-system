@@ -1,8 +1,8 @@
 # Current Environment Handoff — FBR-001 Phase H1 interrupted checkpoint
 
 PROGRAM: FBR-001
-FROM: ChatGPT Work owner-requested cloud continuation
-TO: ChatGPT Work continuation in this repository
+FROM: owner-started local Astra A1 orchestration
+TO: local Terra High implementation continuation in this repository
 BRANCH: reconcile/playground-fbr001-claude-frontend
 HEAD: GIT_HEAD
 TREE: GIT_TREE (resolve after this single checkpoint commit)
@@ -10,8 +10,8 @@ PARENT_BASE_SHA: 47e55d71eadcdbab2d5eced8c16baf95e3ae781d
 UPSTREAM: origin/reconcile/playground-fbr001-claude-frontend (owner-authorized publication; verify remote HEAD before resuming)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: NONE
-HANDOFF_STATUS: READY_FOR_HANDOFF
+ACTIVE_WRITER: TERRA_HIGH_FBR001_EVENT_REPAIR_A1
+HANDOFF_STATUS: IN_PROGRESS
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md
@@ -20,19 +20,37 @@ CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
 STATUS: H1_IN_PROGRESS_NOT_ACCEPTED. This checkpoint preserves a verification and accepted-scope reconciliation blocker. No H1 acceptance receipt exists. H2, Playground preflight, deployment, and Production are forbidden until H1 has final green evidence.
 
 COMPLETED: H1 code/test harness edits and durable interrupted checkpoint records are preserved. H1 acceptance is not complete.
-VALIDATION: working-tree candidate focused units 45/45 PASS; lint PASS with 2 inherited warnings; fixture/foundation/application/staging build, artifact verification, Cloudflare dry-run, governance, handoff verifier, and diff check PASS. Exact fresh 8788 inventory Worker PASS; focused frontend-390 classification regressions 2/2 PASS. Final Worker is 50 passed / 9 failed; final frontend is 416 passed / 121 skipped / 3 failed. H1 remains not accepted.
+VALIDATION: Event focused evidence is PASS: adapter 34/34; fresh 8788/reuse=false Worker event grep 4/4; frontend-390 command-context recovery 1/1; lint, build, governance, handoff verifier, and diff check PASS. The last full Worker/frontend suites (50 passed / 9 failed; 416 passed / 121 skipped / 3 failed) ran at fc5c8dc before the event repair and are not current final H1 evidence. Partial exact-4173 inspection exists; the eight-width matrix remains incomplete. H1 remains not accepted.
 - Historical intermediate: `npm.cmd exec vitest run tests/unit/frontend-backend-adapter.test.js tests/unit/local-worker-port.test.js` — PASS, 2 files / 41 tests (32 adapter; 9 port resolver).
 - `npm.cmd run build` — PASS, including fixture-boundary and foundation checks.
 - `git diff --check` — PASS before checkpoint documentation edit; rerun after final staging.
 
-KNOWN_RESIDUAL: final fresh local Worker is 50 passed / 9 failed at `local-worker.spec.js:1057,1541,1683,1713,1724,1830,2043,2653,3486`; final frontend is 416 passed / 121 skipped / 3 failed. Event and procurement mutation expectations require accepted-scope reconciliation because those writes are deferred. Exact-4173 inspection and the manual eight-width/browser/accessibility matrix are unrun. Do not call H1 accepted.
+KNOWN_RESIDUAL: The full Worker/frontend suite results at fc5c8dc (50 passed / 9 failed and 416 passed / 121 skipped / 3 failed) predate the event repair and cannot serve as final H1 evidence. Partial exact-4173 inspection is recorded in the checkpoint; the manual eight-width/browser/accessibility matrix remains incomplete. The owner authorized accepted Scope 4 event/procurement command adoption. Do not call H1 accepted.
 
 EXTERNAL_ACTIONS: owner authorized Git publication of this checkpoint and handoff to the named continuation branch. Verify remote parity; no provider, deployment, or Production action.
 STARTING_HEAD_AND_UPSTREAM: 89d8627b899df7bb586c5542f4ee2a6c9131ffb2
-BLOCKER: H1 final local Worker is 50 passed / 9 failed and final frontend is 416 passed / 121 skipped / 3 failed; parent must reconcile failures against the accepted matrix before H1 acceptance. Inventory bulk is classified and focused evidence is green.
+BLOCKER: Final H1 Worker/frontend reruns are pending after authorized event/procurement adoption; partial exact-4173 inspection is not the complete eight-width matrix. Inventory bulk and event focused evidence are green.
 RESUME_COMMANDS: git status --short; verify remote parity; read the current pointer and accepted matrix; reconcile the recorded Worker/frontend failures against accepted scope before authorizing any further H1 gate. Do not rerun the already-green focused inventory-bulk case without a new evidence need.
 PROHIBITED_ACTIONS: archive_extraction;8787_reuse_or_termination;provider_or_Playground_or_D1_or_R2_or_Production_action;fake_success_or_wildcard_mocks;legacy_route_aliases;exact_4173_gate_weakening.
-NEXT_EXACT_ACTION: PARENT_RECONCILES_12_FINAL_SUITE_FAILURES_AGAINST_ACCEPTED_SCOPE; DO_NOT_CREATE_H1_RECEIPT
+NEXT_EXACT_ACTION: COMMIT_AND_PUSH_EVENT_COMMAND_FOCUSED_EVIDENCE, THEN PROCEED WITH AUTHORIZED PROCUREMENT COMMAND ADOPTION; DO_NOT_CREATE_H1_RECEIPT
+
+## Owner-authorized frontend blocker repair - 2026-09-07
+
+The owner authorizes only three current frontend failures: 320 landing overflow, 320 lending conflict-reload focus, and 1024 skip-link/theme/reflow. Scope 4 real writes and the five missing-parity rows in the accepted specification authorize canonical frontend adoption of existing backend commands; matrix deferred labels are status only. Preserve assertions and backend contracts. Worker source, backend/auth/capabilities, provider state, deployment, Production, and port 8787 remain forbidden. H1 remains unaccepted.
+
+Focused reproduction passed all three without a code change: frontend-320 landing overflow plus lending conflict-reload focus 2/2 in 40.1 seconds, and frontend-1024 skip-link/theme/reflow 1/1 in 15.0 seconds. F2 visual-boundary deferrals are historical, not a present exclusion under accepted-spec Scope 4/five missing-parity authority and owner direction. The broader H1 gate remains pending.
+
+## Historical event repair stop checkpoint - 2026-09-07
+
+Partial event code is unaccepted and stopped after two fresh-8788 attempts failed before the command panel mounted. Correct server evidence: `src/server/d1/operational-service.js:1293-1328` emits activity revision at line 1324, permits null `eventDayId`, and permits empty `activityType`. The previous revision-omission/undocumented-field diagnosis is withdrawn. The privileged projection incorrectly required the nullable/empty historical fields. Parent review also requires eliminating duplicate reads, adding a real create journey, freezing retry payload/key, and distinguishing a persisted command from refresh failure. Preserve partial files; no third run, runtime repair, commit, or push without owner-authorized contract reconciliation. H1 remains not accepted.
+
+## Active event command repair - 2026-09-07
+
+Fresh MAEOS-v1-A1 Terra writer owns `FBR001_EVENT_REPAIR_A1_ACTIVE`. The owner authorized the bounded response-contract repair. Work in progress: one event-management response derives both report and optional command context; legacy unlinked activity rows remain reportable; commands use a stable captured retry; and a known saved receipt blocks further mutation until the server report refreshes. Focused adapter and fresh-8788 browser evidence is being completed. H1 remains not accepted.
+
+## Active event command evidence - 2026-09-08
+
+PASS: `npm.cmd exec vitest run tests/unit/frontend-backend-adapter.test.js` 34/34; fresh 8788/reuse=false Worker event grep 4/4 in 1.5 minutes; frontend-390 null-command-context recovery 1/1 in 43.4 seconds. The Worker set is one existing hierarchy assertion refreshed for the canonical React surface plus three new real browser journeys: create series/day/activity, immutable replay after unknown response with a cross-command lock, and saved receipt/failed report refresh. Parent exact-4173 partial inspection evidence is appended in the interrupted checkpoint. It is not H1 acceptance and may need rerun after event source changes.
 
 ## Inventory bulk repair in progress - 2026-09-07
 

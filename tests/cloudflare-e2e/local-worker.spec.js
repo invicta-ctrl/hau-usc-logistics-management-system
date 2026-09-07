@@ -1621,11 +1621,11 @@ test('Admin and Director govern event hierarchy while unauthorized roles remain 
 
   await signInV5(page, 'LOCAL.DIRECTOR');
   await openV5Route(page, 'events');
-  await expect(page.getByRole('heading', { name: 'Event series', exact: true })).toBeVisible();
-  await expect(page.locator('[aria-label="Current route"]')).toContainText('Event series');
+  await expect(page.getByRole('heading', { name: 'Event logistics readiness', exact: true })).toBeVisible();
+  await expect(page.locator('main[aria-label="Events"]')).toBeVisible();
   await expect(page.locator('#main-content')).toContainText('Local Event Management Acceptance 2099');
-  await expect(page.locator('[data-v5-contextual-mount="events.series"]')).toBeVisible();
-  await expect(page.locator('form[data-v5-command="event-series-save"]')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Manage events', exact: true })).toBeVisible();
+  await expect(page.getByRole('form', { name: 'Create event series' })).toBeVisible();
 
   const submittedRequest = await mutate(admin, adminCsrf, 'submitRequest', {
     clientRequestId: `event-linked-request-${suffix}`,
@@ -1683,14 +1683,140 @@ test('Admin and Director govern event hierarchy while unauthorized roles remain 
 test('event management renders truthful unknown fields on the protected mobile path', async ({ page }) => {
   await signInV5(page, 'LOCAL.DIRECTOR');
   await openV5Route(page, 'events');
-  await expect(page.locator('[data-v5-operations-parity="events.series"]')).toBeVisible();
-  await expect(page.locator('[data-v5-contextual-mount="events.series"]')).toBeVisible();
-  await expect(page.locator('form[data-v5-command="event-activity-save"]')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Manage events', exact: true })).toBeVisible();
+  await expect(page.getByRole('form', { name: 'Create event activity' })).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.reload();
-  await expect(page.locator('[data-v5-operations-parity="events.series"]')).toBeVisible();
-  await expect(page.locator('[data-v5-contextual-mount="events.series"]')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Manage events', exact: true })).toBeVisible();
+  await expect(page.getByRole('form', { name: 'Create event activity' })).toBeVisible();
   await expect(page.locator('#main-content')).toBeVisible();
+});
+
+test('event command panel creates a series, day, and activity through the governed Worker contract', async ({ page }) => {
+  const suffix = crypto.randomUUID();
+  const seriesName = `Browser event command ${suffix.slice(0, 8)} 2099`;
+  await signInV5(page, 'LOCAL.DIRECTOR');
+  await openV5Route(page, 'events');
+
+  const seriesForm = page.getByRole('form', { name: 'Create event series' });
+  await seriesForm.getByLabel('Main event name').fill(seriesName);
+  await seriesForm.getByLabel('Event year').fill('2099');
+  await seriesForm.getByLabel('Reason').fill('Browser event-series command acceptance.');
+  const [seriesResponse] = await Promise.all([
+    page.waitForResponse((response) => response.url().includes('/api/saveEventSeries')),
+    seriesForm.getByRole('button', { name: 'Create main event' }).click(),
+  ]);
+  expect(seriesResponse.status()).toBe(200);
+  const series = await seriesResponse.json();
+  expect(series.eventSeriesId).toEqual(expect.any(String));
+  expect(series.revision).toEqual(expect.any(Number));
+  await expect(page.getByRole('status')).toContainText('server report was refreshed');
+
+  const dayForm = page.getByRole('form', { name: 'Create event day' });
+  await dayForm.getByLabel('Parent main event').selectOption(series.eventSeriesId);
+  await dayForm.getByLabel('Date').fill('2099-09-01');
+  await dayForm.getByLabel('Reason').fill('Browser event-day command acceptance.');
+  const [dayResponse] = await Promise.all([
+    page.waitForResponse((response) => response.url().includes('/api/saveEventDay')),
+    dayForm.getByRole('button', { name: 'Add event day' }).click(),
+  ]);
+  expect(dayResponse.status()).toBe(200);
+  const day = await dayResponse.json();
+  expect(day.eventDayId).toEqual(expect.any(String));
+  expect(day.revision).toEqual(expect.any(Number));
+  await expect(page.getByRole('status')).toContainText('server report was refreshed');
+
+  const activityForm = page.getByRole('form', { name: 'Create event activity' });
+  await activityForm.getByLabel('Event day').selectOption(day.eventDayId);
+  await activityForm.getByLabel('Activity name').fill(`Browser activity ${suffix.slice(0, 8)}`);
+  await activityForm.getByLabel('Activity type').fill('Workshop');
+  await activityForm.getByLabel('Venue').fill('Browser acceptance venue');
+  await activityForm.getByLabel('Reason').fill('Browser event-activity command acceptance.');
+  const [activityResponse] = await Promise.all([
+    page.waitForResponse((response) => response.url().includes('/api/saveEventActivity')),
+    activityForm.getByRole('button', { name: 'Add activity' }).click(),
+  ]);
+  expect(activityResponse.status()).toBe(200);
+  const activity = await activityResponse.json();
+  expect(activity.activityId).toEqual(expect.any(String));
+  expect(activity.revision).toEqual(expect.any(Number));
+  await expect(page.getByRole('status')).toContainText('server report was refreshed');
+  await expect(page.locator('#main-content')).toContainText(`Browser activity ${suffix.slice(0, 8)}`);
+});
+
+test('event command retry replays one immutable captured request after an unknown response', async ({ page }) => {
+  const suffix = crypto.randomUUID();
+  const seriesName = `Browser replay ${suffix.slice(0, 8)} 2098`;
+  const requests = [];
+  let concealResponse = true;
+  page.on('request', (request) => {
+    if (request.url().includes('/api/saveEventSeries')) requests.push(request.postDataJSON());
+  });
+  await signInV5(page, 'LOCAL.DIRECTOR');
+  await openV5Route(page, 'events');
+  await page.route('**/api/saveEventSeries', async (route) => {
+    if (!concealResponse) return route.continue();
+    concealResponse = false;
+    const upstream = await route.fetch();
+    expect(upstream.status()).toBe(200);
+    return route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 'SERVICE_UNAVAILABLE', message: 'Synthetic unavailable response.' }),
+    });
+  });
+
+  const seriesForm = page.getByRole('form', { name: 'Create event series' });
+  await seriesForm.getByLabel('Main event name').fill(seriesName);
+  await seriesForm.getByLabel('Event year').fill('2098');
+  await seriesForm.getByLabel('Reason').fill('Browser replay-safe event command acceptance.');
+  await seriesForm.getByRole('button', { name: 'Create main event' }).click();
+  await expect(page.getByRole('status')).toContainText('could not confirm whether the event was saved');
+  await expect(seriesForm.getByLabel('Main event name')).toHaveValue(seriesName);
+  await expect(seriesForm.getByLabel('Main event name')).toBeDisabled();
+  await expect(page.getByRole('form', { name: 'Create event day' }).getByRole('button')).toBeDisabled();
+  await expect(seriesForm.getByRole('button', { name: 'Retry captured main event' })).toBeEnabled();
+
+  await seriesForm.getByRole('button', { name: 'Retry captured main event' }).click();
+  await expect(page.getByRole('status')).toContainText('server report was refreshed');
+  expect(requests).toHaveLength(2);
+  expect(requests[1]).toEqual(requests[0]);
+  await expect(page.locator('#main-content')).toContainText(seriesName);
+});
+
+test('event command blocks a second mutation after a persisted receipt cannot refresh', async ({ page }) => {
+  const suffix = crypto.randomUUID();
+  const seriesName = `Browser refresh receipt ${suffix.slice(0, 8)} 2097`;
+  let failRefresh = true;
+  let saveCalls = 0;
+  page.on('request', (request) => {
+    if (request.url().includes('/api/saveEventSeries')) saveCalls += 1;
+  });
+  await signInV5(page, 'LOCAL.DIRECTOR');
+  await openV5Route(page, 'events');
+  await page.route('**/api/getEventManagement', (route) => {
+    if (!failRefresh) return route.continue();
+    failRefresh = false;
+    return route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 'EVENTS_UNAVAILABLE', message: 'Synthetic refresh failure.' }),
+    });
+  });
+
+  const seriesForm = page.getByRole('form', { name: 'Create event series' });
+  await seriesForm.getByLabel('Main event name').fill(seriesName);
+  await seriesForm.getByLabel('Event year').fill('2097');
+  await seriesForm.getByLabel('Reason').fill('Browser persisted-receipt refresh acceptance.');
+  await seriesForm.getByRole('button', { name: 'Create main event' }).click();
+  await expect(page.getByRole('status')).toContainText('current server report could not be refreshed');
+  await expect(seriesForm.getByRole('button', { name: 'Create main event' })).toBeDisabled();
+  expect(saveCalls).toBe(1);
+
+  await page.unroute('**/api/getEventManagement');
+  await page.getByRole('button', { name: 'Reload event workspace' }).click();
+  await expect(page.getByRole('form', { name: 'Create event series' }).getByRole('button', { name: 'Create main event' })).toBeEnabled();
+  expect(saveCalls).toBe(1);
 });
 
 for (const [accessId, experience, route, _workspace, deepRoute, deepRouteHeading] of roles) {

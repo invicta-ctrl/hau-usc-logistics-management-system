@@ -116,6 +116,34 @@ export type FrontendEventManagement = {
   activities: FrontendManagedEvent[];
 };
 
+/** Command projection is capability-gated and keeps opaque server keys out of the read-only report. */
+export type FrontendEventManagementCommandProjection = {
+  series: Array<{ id: string; name: string; code: string; status: string; revision: number }>;
+  days: Array<{ id: string; eventSeriesId: string; name: string; date: string; status: string; revision: number }>;
+  activities: Array<{
+    id: string;
+    eventDayId: string;
+    name: string;
+    activityType: string;
+    venue: string;
+    timeStatus: string;
+    status: string;
+    revision: number;
+  }>;
+};
+
+export type FrontendEventCommandReceipt = {
+  id: string;
+  revision: number;
+  correlationId: string;
+};
+
+/** A single event-management response feeds the public report and optional command context. */
+export type FrontendEventManagementLoad = {
+  report: FrontendEventManagement;
+  commandProjection: FrontendEventManagementCommandProjection | null;
+};
+
 /** A successful technical response is not itself a user-facing health assertion. */
 export type FrontendSystemStatus = {
   technicalResponse: 'RESPONSE_RECEIVED';
@@ -789,6 +817,90 @@ function requiredString(value: unknown, field: string): string {
   return result;
 }
 
+function eventManagementCollections(payload: Json) {
+  if (
+    payload.ok !== true ||
+    !Array.isArray(payload.eventSeries) ||
+    !Array.isArray(payload.eventDays) ||
+    !Array.isArray(payload.activities)
+  ) {
+    incomplete('The Event Management response did not match the supported read-only contract.');
+  }
+  return {
+    series: records(payload.eventSeries),
+    days: records(payload.eventDays),
+    activities: records(payload.activities),
+  };
+}
+
+function projectEventManagementReport(payload: Json): FrontendEventManagement {
+  const collections = eventManagementCollections(payload);
+  const series = collections.series.map((row) => ({
+    opaqueId: requiredString(row.id, 'event series id'),
+    name: requiredString(row.name, 'event series name'),
+    code: asString(row.code),
+    status: requiredString(row.status, 'event series status'),
+  }));
+  const seriesById = new Map(series.map((entry) => [entry.opaqueId, entry]));
+  const days = collections.days.map((row) => ({
+    opaqueId: requiredString(row.id, 'event day id'),
+    seriesId: requiredString(row.seriesId, 'event day seriesId'),
+    name: requiredString(row.name, 'event day name'),
+    date: asString(row.date),
+    status: requiredString(row.status, 'event day status'),
+  }));
+  const dayById = new Map(days.map((entry) => [entry.opaqueId, entry]));
+  return {
+    series: series.map(({ opaqueId: _opaqueId, ...entry }) => entry),
+    days: days.map(({ opaqueId: _opaqueId, seriesId, ...entry }) => ({
+      ...entry,
+      seriesName: seriesById.get(seriesId)?.name || 'Series not reported',
+    })),
+    activities: collections.activities.map((row) => {
+      const day = dayById.get(asString(row.eventDayId));
+      return {
+        name: requiredString(row.name, 'event activity name'),
+        seriesName: day ? seriesById.get(day.seriesId)?.name || 'Series not reported' : 'Series not reported',
+        date: day?.date || '',
+        activityType: asString(row.activityType),
+        status: requiredString(row.status, 'event activity status'),
+        timeStatus: asString(row.timeStatus),
+      };
+    }),
+  };
+}
+
+function projectEventManagementCommands(payload: Json): FrontendEventManagementCommandProjection {
+  const collections = eventManagementCollections(payload);
+  return {
+    series: collections.series.map((row) => ({
+      id: requiredString(row.id, 'event command series.id'),
+      name: requiredString(row.name, 'event command series.name'),
+      code: asString(row.code),
+      status: requiredString(row.status, 'event command series.status'),
+      revision: requiredNumber(row.revision, 'event command series.revision'),
+    })),
+    days: collections.days.map((row) => ({
+      id: requiredString(row.id, 'event command day.id'),
+      eventSeriesId: requiredString(row.seriesId, 'event command day.seriesId'),
+      name: requiredString(row.name, 'event command day.name'),
+      date: requiredString(row.date, 'event command day.date'),
+      status: requiredString(row.status, 'event command day.status'),
+      revision: requiredNumber(row.revision, 'event command day.revision'),
+    })),
+    activities: collections.activities.map((row) => ({
+      id: requiredString(row.id, 'event command activity.id'),
+      eventDayId: asString(row.eventDayId),
+      name: requiredString(row.name, 'event command activity.name'),
+      activityType: asString(row.activityType),
+      venue: asString(row.venue),
+      timeStatus: requiredString(row.timeStatus, 'event command activity.timeStatus'),
+      status: requiredString(row.status, 'event command activity.status'),
+      revision: requiredNumber(row.revision, 'event command activity.revision'),
+    })),
+  };
+}
+
 /** Strip query/hash data from a governed destination before it reaches visible UI. */
 function governedDestination(value: string): string {
   try {
@@ -1371,48 +1483,53 @@ export class FrontendBackend {
       csrf: true,
       signal,
     });
-    if (
-      payload.ok !== true ||
-      !Array.isArray(payload.eventSeries) ||
-      !Array.isArray(payload.eventDays) ||
-      !Array.isArray(payload.activities)
-    ) {
-      incomplete('The Event Management response did not match the supported read-only contract.');
+    return projectEventManagementReport(payload);
+  }
+
+  async eventManagementCommandProjection(
+    signal?: AbortSignal,
+  ): Promise<FrontendEventManagementCommandProjection> {
+    const payload = await this.request('/api/getEventManagement', { body: {}, csrf: true, signal });
+    return projectEventManagementCommands(payload);
+  }
+
+  async eventManagementWithCommandProjection(signal?: AbortSignal): Promise<FrontendEventManagementLoad> {
+    const payload = await this.request('/api/getEventManagement', { body: {}, csrf: true, signal });
+    const report = projectEventManagementReport(payload);
+    try {
+      return { report, commandProjection: projectEventManagementCommands(payload) };
+    } catch (error) {
+      if (error instanceof FrontendApiError && error.code === 'INCOMPLETE_RESPONSE') {
+        return { report, commandProjection: null };
+      }
+      throw error;
     }
-    const series = records(payload.eventSeries).map((row) => ({
-      opaqueId: requiredString(row.id, 'event series id'),
-      name: requiredString(row.name, 'event series name'),
-      code: asString(row.code),
-      status: requiredString(row.status, 'event series status'),
-    }));
-    const seriesById = new Map(series.map((entry) => [entry.opaqueId, entry]));
-    const days = records(payload.eventDays).map((row) => ({
-      opaqueId: requiredString(row.id, 'event day id'),
-      seriesId: requiredString(row.seriesId, 'event day seriesId'),
-      name: requiredString(row.name, 'event day name'),
-      date: asString(row.date),
-      status: requiredString(row.status, 'event day status'),
-    }));
-    const dayById = new Map(days.map((entry) => [entry.opaqueId, entry]));
+  }
+
+  async saveEventSeries(command: Record<string, unknown>): Promise<FrontendEventCommandReceipt> {
+    const payload = await this.request('/api/saveEventSeries', { body: command, csrf: true });
     return {
-      series: series.map(({ opaqueId: _opaqueId, ...entry }) => entry),
-      days: days.map(({ opaqueId: _opaqueId, seriesId, ...entry }) => ({
-        ...entry,
-        seriesName: seriesById.get(seriesId)?.name || 'Series not reported',
-      })),
-      activities: records(payload.activities).map((row) => {
-        const day = dayById.get(asString(row.eventDayId));
-        return {
-          name: requiredString(row.name, 'event activity name'),
-          seriesName: day
-            ? seriesById.get(day.seriesId)?.name || 'Series not reported'
-            : 'Series not reported',
-          date: day?.date || '',
-          activityType: asString(row.activityType),
-          status: requiredString(row.status, 'event activity status'),
-          timeStatus: asString(row.timeStatus),
-        };
-      }),
+      id: requiredString(payload.eventSeriesId, 'event series receipt.id'),
+      revision: requiredNumber(payload.revision, 'event series receipt.revision'),
+      correlationId: asString(payload.correlationId),
+    };
+  }
+
+  async saveEventDay(command: Record<string, unknown>): Promise<FrontendEventCommandReceipt> {
+    const payload = await this.request('/api/saveEventDay', { body: command, csrf: true });
+    return {
+      id: requiredString(payload.eventDayId, 'event day receipt.id'),
+      revision: requiredNumber(payload.revision, 'event day receipt.revision'),
+      correlationId: asString(payload.correlationId),
+    };
+  }
+
+  async saveEventActivity(command: Record<string, unknown>): Promise<FrontendEventCommandReceipt> {
+    const payload = await this.request('/api/saveEventActivity', { body: command, csrf: true });
+    return {
+      id: requiredString(payload.eventId ?? payload.activityId, 'event activity receipt.id'),
+      revision: requiredNumber(payload.revision, 'event activity receipt.revision'),
+      correlationId: asString(payload.correlationId),
     };
   }
 

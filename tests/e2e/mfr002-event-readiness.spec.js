@@ -8,7 +8,9 @@ function fulfill(route, body, status = 200) {
 function rawEvents({ partial = false } = {}) {
   return {
     ok: true,
-    eventSeries: [{ id: 'SER-U08', name: 'Council assembly', code: 'ASSEMBLY-2026', status: 'ACTIVE' }],
+    eventSeries: [
+      { id: 'SER-U08', name: 'Council assembly', code: 'ASSEMBLY-2026', status: 'ACTIVE', revision: 1 },
+    ],
     eventDays: partial
       ? []
       : [
@@ -18,6 +20,7 @@ function rawEvents({ partial = false } = {}) {
             name: 'Opening day',
             date: '2026-09-01',
             status: 'SCHEDULED',
+            revision: 1,
           },
         ],
     activities: partial
@@ -30,6 +33,7 @@ function rawEvents({ partial = false } = {}) {
             activityType: 'PLENARY',
             timeStatus: 'ON_TIME',
             status: 'SCHEDULED',
+            revision: 1,
           },
         ],
   };
@@ -185,4 +189,48 @@ test('MFR-002 U08 exposes bounded retry when the event service is unavailable', 
   const callsBeforeRetry = state.eventCalls;
   await page.getByRole('button', { name: 'Retry read-only load' }).click();
   await expect.poll(() => state.eventCalls).toBe(callsBeforeRetry + 1);
+});
+
+test('MFR-002 U08 keeps a saved event actionable when only command context cannot refresh', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'frontend-390', 'One focused command-recovery proof is sufficient.');
+  const state = { eventCalls: 0 };
+  let commandCalls = 0;
+  let malformedCommandContext = true;
+  await installEventRuntime(page, state);
+  await page.route('**/api/getEventManagement', (route) => {
+    state.eventCalls += 1;
+    const body = rawEvents();
+    if (malformedCommandContext) delete body.activities[0].revision;
+    return fulfill(route, body);
+  });
+  await page.route('**/api/saveEventSeries', (route) => {
+    commandCalls += 1;
+    return fulfill(route, { eventSeriesId: 'SER-U08-SAVED', revision: 1, correlationId: 'u08-save' });
+  });
+  await signInAndOpenEvents(page);
+
+  const unavailable = page.locator('.events-command-unavailable');
+  await expect(unavailable).toContainText('Event reports are available');
+  malformedCommandContext = false;
+  await unavailable.getByRole('button', { name: 'Reload event workspace' }).click();
+  await expect(page.getByRole('form', { name: 'Create event series' })).toBeVisible();
+
+  const seriesForm = page.getByRole('form', { name: 'Create event series' });
+  await seriesForm.getByLabel('Main event name').fill('Command refresh recovery 2099');
+  await seriesForm.getByLabel('Event year').fill('2099');
+  await seriesForm.getByLabel('Reason').fill('Focused command-context refresh recovery.');
+  malformedCommandContext = true;
+  await seriesForm.getByRole('button', { name: 'Create main event' }).click();
+
+  const recovery = page.getByLabel('Event command refresh required');
+  await expect(recovery.getByRole('status')).toContainText('Event saved, but event management could not refresh');
+  await expect(recovery.getByRole('button', { name: 'Reload event workspace' })).toBeVisible();
+  expect(commandCalls).toBe(1);
+
+  malformedCommandContext = false;
+  await recovery.getByRole('button', { name: 'Reload event workspace' }).click();
+  await expect(page.getByRole('form', { name: 'Create event series' })).toBeVisible();
+  expect(commandCalls).toBe(1);
 });

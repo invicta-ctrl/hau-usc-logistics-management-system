@@ -1,9 +1,16 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { FrontendApiError, frontendBackend, type FrontendEventManagement } from '../../integration/backend';
+import {
+  FrontendApiError,
+  frontendBackend,
+  type FrontendEventManagement,
+  type FrontendEventManagementCommandProjection,
+} from '../../integration/backend';
+import { EventManagementPanel } from './EventManagementPanel';
 
 /* Hallmark · design-system: DESIGN.md · macrostructure: Activity readiness report · mode: inspect */
 
 type EventLoadState = 'loading' | 'ready' | 'denied' | 'unavailable';
+type EventCommandSaveState = 'refreshed' | 'recorded' | 'retry' | 'rejected';
 
 const previewEventManagement: FrontendEventManagement = {
   series: [{ name: 'Sanitized event series', code: 'PREVIEW-SERIES', status: 'PREVIEW_ONLY' }],
@@ -199,6 +206,11 @@ export function EventReadinessRoute({
   );
   const [loadState, setLoadState] = useState<EventLoadState>(inspection ? 'ready' : 'loading');
   const [reloadKey, setReloadKey] = useState(0);
+  const [commandProjection, setCommandProjection] = useState<FrontendEventManagementCommandProjection | null>(null);
+  const [commandPending, setCommandPending] = useState<'series' | 'day' | 'activity' | null>(null);
+  const [commandNotice, setCommandNotice] = useState('');
+  const [commandReloadRequired, setCommandReloadRequired] = useState(false);
+  const [commandUnavailable, setCommandUnavailable] = useState(false);
 
   useEffect(() => {
     if (inspection) {
@@ -212,22 +224,78 @@ export function EventReadinessRoute({
       return;
     }
     const abort = new AbortController();
+    setCommandProjection(null);
+    setCommandUnavailable(false);
     setLoadState('loading');
     void frontendBackend
-      .eventManagement(abort.signal)
-      .then((result) => {
+      .eventManagementWithCommandProjection(abort.signal)
+      .then(({ report, commandProjection: commands }) => {
         if (abort.signal.aborted) return;
-        setEventManagement(result);
+        setEventManagement(report);
+        setCommandProjection(commands);
+        setCommandUnavailable(commands === null);
+        setCommandReloadRequired(false);
         setLoadState('ready');
       })
       .catch((error: unknown) => {
         if (abort.signal.aborted) return;
+        setCommandProjection(null);
         setLoadState(
           error instanceof FrontendApiError && [401, 403].includes(error.status) ? 'denied' : 'unavailable',
         );
       });
     return () => abort.abort();
   }, [eventAllowed, inspection, reloadKey]);
+
+  async function saveCommand(
+    kind: 'series' | 'day' | 'activity',
+    command: Record<string, unknown>,
+  ): Promise<EventCommandSaveState> {
+    if (commandPending || commandReloadRequired) return 'rejected';
+    setCommandPending(kind);
+    setCommandNotice('');
+    try {
+      const receipt =
+        kind === 'series'
+          ? await frontendBackend.saveEventSeries(command)
+          : kind === 'day'
+            ? await frontendBackend.saveEventDay(command)
+            : await frontendBackend.saveEventActivity(command);
+      try {
+        const { report, commandProjection: commands } = await frontendBackend.eventManagementWithCommandProjection();
+        setEventManagement(report);
+        setCommandProjection(commands);
+        setCommandUnavailable(commands === null);
+        if (commands === null) {
+          setCommandReloadRequired(true);
+          setCommandNotice(
+            'Event saved, but event management could not refresh. Reload before another event change.',
+          );
+          return 'recorded';
+        }
+        setCommandReloadRequired(false);
+        setCommandNotice('Event saved. The current server report was refreshed.');
+        return 'refreshed';
+      } catch {
+        setCommandReloadRequired(true);
+        setCommandNotice(
+          'Event saved, but the current server report could not be refreshed. Reload before another event change.',
+        );
+        return 'recorded';
+      }
+    } catch (error) {
+      if (error instanceof FrontendApiError && error.status >= 400 && error.status < 500) {
+        setCommandNotice(error.message);
+        return 'rejected';
+      }
+      setCommandNotice(
+        'We could not confirm whether the event was saved. Retrying uses the same captured event details.',
+      );
+      return 'retry';
+    } finally {
+      setCommandPending(null);
+    }
+  }
 
   const isEmpty =
     eventManagement !== null &&
@@ -315,9 +383,38 @@ export function EventReadinessRoute({
         <small>{inspection ? 'Sample data' : 'Current authorized reports'}</small>
       </header>
       <aside className="events-readonly-note">
-        Read-only projection · no event, request, inventory, supplier, or readiness score is created here.
+        {inspection || !eventAllowed
+          ? 'Read-only projection · no event, request, inventory, supplier, or readiness score is created here.'
+          : 'Readiness reports remain read-only. Authorized event commands are recorded only through the governed management surface below.'}
       </aside>
       {content}
+      {eventAllowed && !inspection && loadState === 'ready' && commandProjection ? (
+        <EventManagementPanel
+          key={reloadKey}
+          projection={commandProjection}
+          pending={commandPending}
+          reloadRequired={commandReloadRequired}
+          notice={commandNotice}
+          onSave={saveCommand}
+          onReload={() => setReloadKey((value) => value + 1)}
+        />
+      ) : null}
+      {eventAllowed && !inspection && loadState === 'ready' && commandUnavailable ? (
+        <aside className="events-command-unavailable" role="status">
+          <p>Event reports are available, but event management cannot load right now.</p>
+          <button type="button" onClick={() => setReloadKey((value) => value + 1)}>
+            Reload event workspace
+          </button>
+        </aside>
+      ) : null}
+      {eventAllowed && !inspection && loadState === 'ready' && commandReloadRequired && !commandProjection ? (
+        <section className="events-command-recovery" aria-label="Event command refresh required">
+          <p role="status">{commandNotice}</p>
+          <button type="button" onClick={() => setReloadKey((value) => value + 1)}>
+            Reload event workspace
+          </button>
+        </section>
+      ) : null}
     </div>
   );
 }
