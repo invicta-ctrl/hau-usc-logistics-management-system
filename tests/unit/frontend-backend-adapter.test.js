@@ -702,6 +702,126 @@ describe('Figma frontend backend adapter', () => {
     ]);
   });
 
+  it('binds canvass commands and the authoritative procurement refresh to their existing CSRF contracts', async () => {
+    const procurementBootstrap = {
+      ok: true,
+      contract: 'bootstrap-module',
+      contractVersion: 2,
+      module: 'procurement',
+      requestOnly: false,
+      scopeRevision: { scope: 'procurement', token: 13, updatedAt: '2026-09-08T00:00:00.000Z' },
+      pagination: { page: 1, pageSize: 25, total: 1, hasMore: false },
+      data: {
+        eventSeries: [],
+        events: [],
+        requests: [],
+        requestLines: [],
+        deliverables: [{ id: 'DEL-1', status: 'COMPLETED' }],
+        canvassReferences: [{ id: 'CAN-1', status: 'ACTIVE', linkedDeliverableId: 'DEL-1' }],
+      },
+    };
+    const saveCommand = {
+      linkedDeliverableId: 'DEL-1',
+      supplierName: 'Synthetic Supplier',
+      itemSpec: 'Synthetic item',
+      price: 125,
+      unit: 'set',
+      receiptStatus: 'VERIFIED',
+      reliability: 'SYNTHETIC',
+      checkedAt: '2026-09-08',
+      clientRequestId: 'adapter-canvass-save-0001',
+    };
+    const preferredCommand = {
+      canvassId: 'CAN-1',
+      rationale: 'Synthetic source-backed selection',
+      clientRequestId: 'adapter-canvass-preferred-0001',
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        response({
+          state: 'AUTHENTICATED',
+          csrfToken: 'csrf-procurement',
+          user: {
+            accountId: 'ACC-PROCUREMENT',
+            displayName: 'Procurement Staff',
+            authorization: {
+              active: true,
+              mappingStatus: 'MAPPED',
+              roleId: 'DOL_STAFF',
+              capabilities: ['fulfillment.canvass', 'fulfillment.procure'],
+            },
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          ok: true,
+          status: 'ACTIVE',
+          canvassId: 'CAN-1',
+          updatedAt: '2026-09-08T00:00:00.000Z',
+          correlationId: 'COR-CAN-1',
+        }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          ok: true,
+          preferred: true,
+          canvassId: 'CAN-1',
+          rationale: preferredCommand.rationale,
+          deliverableId: 'DEL-1',
+          updatedAt: '2026-09-08T00:00:01.000Z',
+          correlationId: 'COR-PREFERRED-1',
+        }),
+      )
+      .mockResolvedValueOnce(response(procurementBootstrap));
+    vi.stubGlobal('fetch', fetchMock);
+    const backend = new FrontendBackend();
+
+    await backend.session();
+    await expect(backend.saveCanvassReference(saveCommand)).resolves.toMatchObject({
+      canvassId: 'CAN-1',
+      status: 'ACTIVE',
+    });
+    await expect(backend.selectPreferredCanvass(preferredCommand)).resolves.toMatchObject({
+      canvassId: 'CAN-1',
+      preferred: true,
+      deliverableId: 'DEL-1',
+    });
+    await expect(backend.refreshOperationalModuleBootstrap('procurement')).resolves.toMatchObject({
+      module: 'procurement',
+      data: { deliverables: [{ id: 'DEL-1', status: 'COMPLETED' }] },
+      scopeRevision: { token: '13', updatedAt: '2026-09-08T00:00:00.000Z' },
+    });
+
+    expect(fetchMock.mock.calls.slice(1)).toEqual([
+      [
+        '/api/saveCanvassReference',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ 'x-csrf-token': 'csrf-procurement' }),
+          body: JSON.stringify(saveCommand),
+        }),
+      ],
+      [
+        '/api/selectPreferredCanvass',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ 'x-csrf-token': 'csrf-procurement' }),
+          body: JSON.stringify(preferredCommand),
+        }),
+      ],
+      [
+        '/api/getBootstrapModule',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ 'x-csrf-token': 'csrf-procurement' }),
+          body: JSON.stringify({ module: 'procurement', page: 1, pageSize: 25 }),
+        }),
+      ],
+    ]);
+  });
+
   it('binds release and restock operations to the existing CSRF-protected Worker commands', async () => {
     const fetchMock = vi
       .fn()

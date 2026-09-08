@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   FrontendApiError,
   frontendBackend,
@@ -189,19 +189,25 @@ export function OperationalModuleRoute({
   sessionName = '',
   canMutate = false,
   canUploadEvidence = false,
+  canCanvass = false,
+  canSelectPreferred = false,
 }: {
   module: FrontendOperationalModuleName;
   sessionName?: string;
   canMutate?: boolean;
   canUploadEvidence?: boolean;
+  canCanvass?: boolean;
+  canSelectPreferred?: boolean;
 }) {
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [bootstrap, setBootstrap] = useState<FrontendOperationalModuleBootstrap | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [commitNotice, setCommitNotice] = useState<CommitNotice | null>(null);
+  const commandRefreshVersion = useRef(0);
   const copy = ROUTE_COPY[module];
 
   useEffect(() => {
+    commandRefreshVersion.current += 1;
     const abort = new AbortController();
     setLoadState('loading');
     setBootstrap(null);
@@ -227,6 +233,14 @@ export function OperationalModuleRoute({
   );
   const totalRows = collections.reduce((sum, collection) => sum + collection.rows.length, 0);
   const mutationEnabled = canMutate && canUploadEvidence;
+  const procurementCommandEnabled = canCanvass || canSelectPreferred;
+  const refreshProcurement = async () => {
+    const refreshVersion = ++commandRefreshVersion.current;
+    const result = await frontendBackend.refreshOperationalModuleBootstrap('procurement');
+    if (commandRefreshVersion.current !== refreshVersion) return;
+    setBootstrap(result);
+    setLoadState('ready');
+  };
   const commit = (message: string) => {
     setCommitNotice({ tone: 'success', message });
     setReloadKey((value) => value + 1);
@@ -257,9 +271,13 @@ export function OperationalModuleRoute({
                     ? 'Consequence review'
                     : 'Current records'}{' '}
               ·{' '}
-              {mutationEnabled && ['release', 'restocking'].includes(module)
-                ? 'operational writes enabled'
-                : 'read-only'}
+              {module === 'procurement'
+                ? procurementCommandEnabled
+                  ? 'procurement commands enabled'
+                  : 'read-only'
+                : mutationEnabled && ['release', 'restocking'].includes(module)
+                  ? 'operational writes enabled'
+                  : 'read-only'}
             </p>
             {sessionName ? <p className="mt-1">Authorized for {sessionName}</p> : null}
             {bootstrap ? <p className="mt-1">Record version {bootstrap.scopeRevision.token}</p> : null}
@@ -319,7 +337,15 @@ export function OperationalModuleRoute({
           ) : module === 'restocking' && bootstrap ? (
             <ReceivingStation bootstrap={bootstrap} enabled={mutationEnabled} onCommitted={commit} />
           ) : module === 'procurement' && bootstrap ? (
-            <ProcurementWorkspace bootstrap={bootstrap} />
+            <ProcurementWorkspace
+              bootstrap={bootstrap}
+              canCanvass={canCanvass}
+              canSelectPreferred={canSelectPreferred}
+              onSaveCanvass={(command) => frontendBackend.saveCanvassReference(command)}
+              onSelectPreferred={(command) => frontendBackend.selectPreferredCanvass(command)}
+              onRefresh={refreshProcurement}
+              onReceipt={(message) => setCommitNotice({ tone: 'success', message })}
+            />
           ) : null}
           {module === 'release' && bootstrap ? (
             <ReleaseHistory bootstrap={bootstrap} />
@@ -332,7 +358,11 @@ export function OperationalModuleRoute({
               ))}
             </div>
           )}
-          {module !== 'overview' && module !== 'release' && module !== 'restocking' ? (
+          {module === 'procurement' && !procurementCommandEnabled ? (
+            <aside className="mt-5 border-t border-dashed border-border px-1 pt-4 text-sm opacity-75">
+              Procurement commands are unavailable for this account. The server report remains available for inspection.
+            </aside>
+          ) : module !== 'overview' && module !== 'release' && module !== 'restocking' && module !== 'procurement' ? (
             <aside className="mt-5 border-t border-dashed border-border px-1 pt-4 text-sm opacity-75">
               This page is read-only because no approved update action is available for this record.
             </aside>

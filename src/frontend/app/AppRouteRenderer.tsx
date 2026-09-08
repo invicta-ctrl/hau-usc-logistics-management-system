@@ -125,7 +125,11 @@ export function AppRouteRenderer({ controller }: { controller: AppController }) 
             canUploadEvidence={session.serverCapabilities.includes('evidence.upload')}
           />
         ) : route === 'procurement' ? (
-          <OperationalModuleRoute module="procurement" />
+          <OperationalModuleRoute
+            module="procurement"
+            canCanvass={session.serverCapabilities.includes('fulfillment.canvass')}
+            canSelectPreferred={session.serverCapabilities.includes('fulfillment.procure')}
+          />
         ) : route === 'events' ? (
           <SupplyRoutes
             dark={dark}

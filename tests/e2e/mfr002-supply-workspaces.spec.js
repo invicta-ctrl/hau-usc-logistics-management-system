@@ -5,7 +5,7 @@ function fulfill(route, body, status = 200) {
   return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 }
 
-async function installSupplyWorkspace(page, state, { shrinkOnRecheck = false } = {}) {
+async function installSupplyWorkspace(page, state, { shrinkOnRecheck = false, procurementCapabilities = [] } = {}) {
   await page.route('**/api/auth/session', (route) =>
     fulfill(route, { code: 'SESSION_REQUIRED', message: 'Sign in to continue.' }, 401),
   );
@@ -21,7 +21,13 @@ async function installSupplyWorkspace(page, state, { shrinkOnRecheck = false } =
           active: true,
           mappingStatus: 'MAPPED',
           roleId: 'DOL_STAFF',
-          capabilities: ['view.internal', 'view.inventory', 'fulfillment.receive', 'evidence.upload'],
+          capabilities: [
+            'view.internal',
+            'view.inventory',
+            'fulfillment.receive',
+            'evidence.upload',
+            ...procurementCapabilities,
+          ],
         },
       },
     }),
@@ -125,8 +131,7 @@ async function installSupplyWorkspace(page, state, { shrinkOnRecheck = false } =
       },
     });
   });
-  await page.route('**/api/bootstrap/procurement?**', (route) =>
-    fulfill(route, {
+  const procurementBootstrap = () => ({
       ok: true,
       contract: 'bootstrap-module',
       contractVersion: 2,
@@ -188,10 +193,71 @@ async function installSupplyWorkspace(page, state, { shrinkOnRecheck = false } =
             checkedAt: '2026-08-29T10:00:00.000Z',
             status: 'ACTIVE',
           },
+          ...(state.procurementSaved
+            ? [
+                {
+                  id: 'CAN-U08-SAVED',
+                  linkedDeliverableId: 'DEL-U08',
+                  supplierName: state.procurementSaved.supplierName,
+                  location: state.procurementSaved.location,
+                  price: state.procurementSaved.price,
+                  unit: state.procurementSaved.unit,
+                  receiptStatus: state.procurementSaved.receiptStatus,
+                  reliability: state.procurementSaved.reliability,
+                  checkedAt: state.procurementSaved.checkedAt,
+                  status: 'ACTIVE',
+                },
+              ]
+            : []),
         ],
       },
-    }),
-  );
+    });
+  await page.route('**/api/bootstrap/procurement?**', (route) => fulfill(route, procurementBootstrap()));
+  await page.route('**/api/saveCanvassReference', (route) => {
+    const command = JSON.parse(route.request().postData() || '{}');
+    state.procurementSaves ??= [];
+    state.procurementSaves.push(command);
+    if (state.rejectNextProcurementSave) {
+      state.rejectNextProcurementSave = false;
+      return fulfill(route, { code: 'VALIDATION_FAILED', message: 'Synthetic validation rejection.' }, 422);
+    }
+    if (state.unknownFirstProcurementSave) {
+      state.unknownFirstProcurementSave = false;
+      return fulfill(route, { code: 'SERVICE_UNAVAILABLE', message: 'Synthetic unavailable response.' }, 503);
+    }
+    state.procurementSaved = command;
+    return fulfill(route, {
+      ok: true,
+      status: 'ACTIVE',
+      canvassId: 'CAN-U08-SAVED',
+      updatedAt: '2026-09-08T00:00:00.000Z',
+      correlationId: 'COR-U08-CANVASS',
+    });
+  });
+  await page.route('**/api/selectPreferredCanvass', (route) => {
+    const command = JSON.parse(route.request().postData() || '{}');
+    state.preferredCommands ??= [];
+    state.preferredCommands.push(command);
+    return fulfill(route, {
+      ok: true,
+      preferred: true,
+      canvassId: command.canvassId,
+      rationale: command.rationale,
+      deliverableId: 'DEL-U08',
+      updatedAt: '2026-09-08T00:00:01.000Z',
+      correlationId: 'COR-U08-PREFERRED',
+    });
+  });
+  await page.route('**/api/getBootstrapModule', (route) => {
+    const body = JSON.parse(route.request().postData() || '{}');
+    if (body.module !== 'procurement') return fulfill(route, { code: 'UNSUPPORTED_MODULE' }, 422);
+    state.procurementRefreshes = (state.procurementRefreshes ?? 0) + 1;
+    if (state.failFirstProcurementRefresh) {
+      state.failFirstProcurementRefresh = false;
+      return fulfill(route, { code: 'PROCUREMENT_UNAVAILABLE', message: 'Synthetic refresh failure.' }, 503);
+    }
+    return fulfill(route, procurementBootstrap());
+  });
   await page.route('**/api/uploadEvidence', (route) => {
     state.uploads.push(JSON.parse(route.request().postData() || '{}'));
     return fulfill(route, {
@@ -235,6 +301,14 @@ async function openProcurement(page) {
   await signIn(page);
   await navigateAuthenticatedRoute(page, 'Procurement');
   await expect(page.getByRole('heading', { name: 'Procurement Workspace', exact: true })).toBeVisible();
+}
+
+async function captureProcurementReview(page, width) {
+  if (process.env.HAU_CAPTURE_FBR001_PROCUREMENT !== '1') return;
+  await page.screenshot({
+    path: `.codex/runtime/fbr001-procurement-${width}.png`,
+    fullPage: true,
+  });
 }
 
 async function prepareReceipt(page, quantity = '2') {
@@ -350,10 +424,109 @@ test('MFR-002 U08 keeps procurement read-only and leads with supplier and delive
   await expect(page.getByText('Preferred', { exact: true })).toHaveCount(1);
   await expect(page.getByText(/6 piece remain for governed receiving/u)).toBeVisible();
   await expect(page.locator('[data-operational-module="procurement"] form')).toHaveCount(0);
+  await expect(page.getByText('Procurement commands are unavailable for this account. The server report remains available for inspection.')).toBeVisible();
+  await expect(page.getByText('This page is read-only because no approved update action is available for this record.')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Canvass references', exact: true })).toHaveCount(0);
   expect(state.uploads).toHaveLength(0);
   expect(state.receipts).toHaveLength(0);
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
   ).toBeLessThanOrEqual(1);
+});
+
+test('MFR-002 U08 keeps procurement command retries immutable and waits for a current report', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'frontend-390', 'The focused command-state proof runs once at the mobile target.');
+  const state = {
+    restockBootstrapCalls: 0,
+    uploads: [],
+    receipts: [],
+    recorded: false,
+    unknownFirstProcurementSave: true,
+    failFirstProcurementRefresh: true,
+    rejectNextProcurementSave: false,
+  };
+  await installSupplyWorkspace(page, state, {
+    procurementCapabilities: ['fulfillment.canvass', 'fulfillment.procure'],
+  });
+  const consoleErrors = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      consoleErrors.push({ text: message.text(), url: message.location().url });
+    }
+  });
+  await openProcurement(page);
+
+  const quoteForm = page.getByRole('form', { name: 'Record supplier quote' });
+  const preferredForm = page.getByRole('form', { name: 'Choose preferred quote' });
+  await expect(page.getByText('Procurement commands are unavailable for this account. The server report remains available for inspection.')).toHaveCount(0);
+  await expect(page.getByText('This page is read-only because no approved update action is available for this record.')).toHaveCount(0);
+  await captureProcurementReview(page, 390);
+  await quoteForm.getByLabel('Supplier name').fill('Retry-safe Supply');
+  await quoteForm.getByLabel('Supplier location').fill('Angeles City');
+  await quoteForm.getByLabel('Item specification').fill('Stacking chair · black');
+  await quoteForm.getByLabel('Unit').fill('piece');
+  await quoteForm.getByLabel('Price').fill('475');
+  await quoteForm.getByLabel('Checked on').fill('2026-09-08');
+  await quoteForm.getByLabel('Receipt status').fill('AVAILABLE');
+  await quoteForm.getByLabel('Reliability').fill('VERIFIED');
+  await quoteForm.getByRole('button', { name: 'Save supplier quote' }).click();
+
+  await expect(page.getByRole('status')).toContainText('did not confirm this command');
+  await expect(quoteForm.getByLabel('Supplier name')).toHaveValue('Retry-safe Supply');
+  await expect(quoteForm.getByLabel('Supplier name')).toBeDisabled();
+  await expect(preferredForm.getByRole('button', { name: 'Save preferred quote' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Retry captured quote' }).click();
+
+  await expect(page.getByText(/current server report could not be refreshed/u)).toBeVisible();
+  expect(state.procurementSaves).toHaveLength(2);
+  expect(state.procurementSaves[1]).toEqual(state.procurementSaves[0]);
+  await expect(quoteForm.getByRole('button', { name: 'Save supplier quote' })).toBeDisabled();
+  await expect(preferredForm.getByRole('button', { name: 'Save preferred quote' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Reload server report' }).click();
+  await expect(page.getByText('The current server report was refreshed.')).toBeVisible();
+  await expect(quoteForm.getByRole('button', { name: 'Save supplier quote' })).toBeEnabled();
+  await expect(page.locator('[data-operational-module="procurement"]')).toContainText('Retry-safe Supply');
+
+  state.rejectNextProcurementSave = true;
+  await quoteForm.getByLabel('Supplier name').fill('Correctable Supply');
+  await quoteForm.getByLabel('Item specification').fill('Stacking chair · black');
+  await quoteForm.getByLabel('Unit').fill('piece');
+  await quoteForm.getByLabel('Price').fill('490');
+  await quoteForm.getByRole('button', { name: 'Save supplier quote' }).click();
+  await expect(page.getByRole('alert')).toContainText('Synthetic validation rejection');
+  expect(state.procurementSaves).toHaveLength(3);
+  expect(state.procurementSaves[2]).toMatchObject({ supplierName: 'Correctable Supply' });
+  await expect(quoteForm.getByLabel('Supplier name')).toHaveValue('Correctable Supply');
+  await expect(quoteForm.getByLabel('Supplier name')).toBeEnabled();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  const expectedHandledConsoleErrors = [
+    {
+      text: 'Failed to load resource: the server responded with a status of 404 (Not Found)',
+      path: '/api/version',
+    },
+    {
+      text: 'Failed to load resource: the server responded with a status of 503 (Service Unavailable)',
+      path: '/api/saveCanvassReference',
+    },
+    {
+      text: 'Failed to load resource: the server responded with a status of 503 (Service Unavailable)',
+      path: '/api/getBootstrapModule',
+    },
+    {
+      text: 'Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)',
+      path: '/api/saveCanvassReference',
+    },
+  ];
+  const unexpectedConsoleErrors = consoleErrors.filter(
+    (entry) =>
+      !expectedHandledConsoleErrors.some(
+        (expected) => entry.text === expected.text && entry.url.includes(expected.path),
+      ),
+  );
+  expect(unexpectedConsoleErrors).toEqual([]);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  await captureProcurementReview(page, 1440);
 });

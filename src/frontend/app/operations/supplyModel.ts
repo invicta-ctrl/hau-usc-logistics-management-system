@@ -44,6 +44,8 @@ export type ProcurementQuote = {
   preferred: boolean;
   preferredRationale: string;
   evidenceAttached: boolean;
+  status: string;
+  linkedDeliverableId: string;
 };
 
 export type ProcurementRecord = {
@@ -256,6 +258,8 @@ function quotesForDeliverable(deliverable: OperationalRecord, canvassRows: Opera
         : Boolean(quote.preferred),
       preferredRationale: textValue(quote, ['preferredRationale', 'preferred_rationale']),
       evidenceAttached: Boolean(textValue(quote, ['evidenceId', 'evidence_id'])),
+      status: textValue(quote, ['status']),
+      linkedDeliverableId: textValue(quote, ['linkedDeliverableId', 'linked_deliverable_id']),
     }))
     .sort((left, right) => Number(right.preferred) - Number(left.preferred) || left.price - right.price);
 }

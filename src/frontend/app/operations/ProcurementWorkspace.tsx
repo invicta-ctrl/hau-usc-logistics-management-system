@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { FrontendOperationalModuleBootstrap } from '../../integration/backend';
+import type {
+  FrontendOperationalModuleBootstrap,
+  FrontendSaveCanvassCommand,
+  FrontendSelectPreferredCanvassCommand,
+} from '../../integration/backend';
+import { CanvassCommandPanel } from './CanvassCommandPanel';
 import { readable } from './operationUtils';
 import { procurementConsequence, procurementRecordsFromBootstrap } from './supplyModel';
 
@@ -10,9 +15,26 @@ function statusTone(status: string) {
   return 'review';
 }
 
-export function ProcurementWorkspace({ bootstrap }: { bootstrap: FrontendOperationalModuleBootstrap }) {
+export function ProcurementWorkspace({
+  bootstrap,
+  canCanvass = false,
+  canSelectPreferred = false,
+  onSaveCanvass,
+  onSelectPreferred,
+  onRefresh,
+  onReceipt,
+}: {
+  bootstrap: FrontendOperationalModuleBootstrap;
+  canCanvass?: boolean;
+  canSelectPreferred?: boolean;
+  onSaveCanvass: (command: FrontendSaveCanvassCommand) => Promise<{ canvassId: string }>;
+  onSelectPreferred: (command: FrontendSelectPreferredCanvassCommand) => Promise<{ canvassId: string }>;
+  onRefresh: () => Promise<void>;
+  onReceipt: (message: string) => void;
+}) {
   const records = useMemo(() => procurementRecordsFromBootstrap(bootstrap), [bootstrap]);
   const [selectedId, setSelectedId] = useState('');
+  const [selectionLocked, setSelectionLocked] = useState(false);
   const selected = records.find((row) => row.id === selectedId) ?? records[0] ?? null;
 
   useEffect(() => {
@@ -39,8 +61,8 @@ export function ProcurementWorkspace({ bootstrap }: { bootstrap: FrontendOperati
         </h2>
         <p className="mt-2 max-w-3xl text-sm leading-6 opacity-75">
           Select one deliverable to inspect its requested and received quantity, linked supplier references,
-          and the exact next consequence already supported by the operational record. This workspace does not
-          simulate procurement writes.
+          and the exact next consequence already supported by the operational record. Authorized command controls
+          appear only when this account has the required server capability.
         </p>
       </div>
 
@@ -64,6 +86,7 @@ export function ProcurementWorkspace({ bootstrap }: { bootstrap: FrontendOperati
                 type="button"
                 key={record.id}
                 aria-current={selected?.id === record.id ? 'true' : undefined}
+                disabled={selectionLocked}
                 onClick={() => setSelectedId(record.id)}
               >
                 <span className="flex items-start justify-between gap-3">
@@ -232,6 +255,18 @@ export function ProcurementWorkspace({ bootstrap }: { bootstrap: FrontendOperati
               <p className="custody-summary__heading">Next governed consequence</p>
               <p className="custody-summary__copy text-sm leading-6">{procurementConsequence(selected)}</p>
             </section>
+            {(canCanvass || canSelectPreferred) ? (
+              <CanvassCommandPanel
+                selected={selected}
+                canCanvass={canCanvass}
+                canSelectPreferred={canSelectPreferred}
+                onSaveCanvass={onSaveCanvass}
+                onSelectPreferred={onSelectPreferred}
+                onRefresh={onRefresh}
+                onLockChange={setSelectionLocked}
+                onReceipt={onReceipt}
+              />
+            ) : null}
           </section>
         ) : null}
       </div>

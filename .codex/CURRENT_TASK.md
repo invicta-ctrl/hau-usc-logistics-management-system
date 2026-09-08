@@ -10,7 +10,8 @@ INTERRUPTED_CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md
 AUTHORITY: Earl H1 checkpoint instruction -> AGENTS.md -> .agents/PROJECT_POLICY.md -> accepted FBR-001 spec -> current Worker/API/auth/domain/privacy contracts.
 REQUIRED_MODEL: MAEOS_V1_A1_TERRA_HIGH_WRITER (owner-started local Astra A1 task)
-ACTIVE_WRITER: TERRA_HIGH_FBR001_EVENT_REPAIR_A1
+ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1c
+WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1b (interrupted before commit; no lock retained) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1c; same branch/worktree, verified HEAD/origin 21be94558e19cfc1b04b7f3a38c022c46d903827, expected dirty procurement work preserved. Owner explicitly continued the same MAEOS-v1-A1 Terra lane; this is a lock transfer, not model fallback.
 RISK: HIGH; FRONTEND_ACCEPTANCE; LOCAL_WORKER; PRODUCTION_FORBIDDEN
 SCOPE: PHASE_H1_ONLY
 IN_SCOPE: reproduce/classify the one fresh local-Worker residual, evidence-only repair if required and authorized by the accepted spec, final local Worker/frontend/browser/accessibility matrix, exact H1 receipt only when all required local evidence is green.
@@ -20,7 +21,7 @@ VERIFICATION: exact sequence in the interrupted checkpoint, including fresh 8788
 STOP_CONDITIONS: conflicting writer; unknown dirty residue; required product/backend/schema/auth semantic expansion; provider action; Production crossover; secret/private data; failed verification that cannot form safe evidence.
 STATUS: H1_IN_PROGRESS_NOT_ACCEPTED
 HANDOFF_STATUS: IN_PROGRESS
-NEXT_EXACT_ACTION: COMMIT_AND_PUSH_EVENT_COMMAND_FOCUSED_EVIDENCE, THEN PROCEED WITH AUTHORIZED PROCUREMENT COMMAND ADOPTION; DO_NOT_CREATE_H1_RECEIPT
+NEXT_EXACT_ACTION: COMMIT_AND_PUSH_VERIFIED_PROCUREMENT_COMMAND_ADOPTION, THEN PROCEED WITH BOUNDED ADMINISTRATION ONE-TIME RESET-PASSWORD FRONTEND ADOPTION; DO_NOT_CREATE_H1_RECEIPT
 
 ## Owner-authorized frontend blocker repair - 2026-09-07
 

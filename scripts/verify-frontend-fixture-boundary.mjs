@@ -82,7 +82,9 @@ for (const expected of [
   "session.serverCapabilities.includes('fulfillment.release')",
   'module="restocking"',
   "session.serverCapabilities.includes('fulfillment.receive')",
-  '<OperationalModuleRoute module="procurement" />',
+  'module="procurement"',
+  "session.serverCapabilities.includes('fulfillment.canvass')",
+  "session.serverCapabilities.includes('fulfillment.procure')",
   'mode="events"',
 ]) {
   requireText(normalRenderer, expected, 'normal AppRouteRenderer');

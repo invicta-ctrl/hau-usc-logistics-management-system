@@ -335,6 +335,43 @@ export type FrontendOperationalModuleBootstrap = {
   scopeRevision: { token: string; updatedAt: string };
 };
 
+export type FrontendSaveCanvassCommand = {
+  linkedDeliverableId: string;
+  supplierName: string;
+  location: string;
+  itemSpec: string;
+  price: number;
+  unit: string;
+  receiptStatus: string;
+  reliability: string;
+  checkedAt: string;
+  sourceUrl: string;
+  notes: string;
+  clientRequestId: string;
+};
+
+export type FrontendSaveCanvassReceipt = {
+  canvassId: string;
+  status: 'ACTIVE';
+  updatedAt: string;
+  correlationId: string;
+};
+
+export type FrontendSelectPreferredCanvassCommand = {
+  canvassId: string;
+  rationale: string;
+  clientRequestId: string;
+};
+
+export type FrontendSelectPreferredCanvassReceipt = {
+  canvassId: string;
+  preferred: true;
+  rationale: string;
+  deliverableId: string | null;
+  updatedAt: string;
+  correlationId: string;
+};
+
 export type FrontendRequestLine = {
   id: string;
   requestId: string;
@@ -1817,19 +1854,10 @@ export class FrontendBackend {
     return this.inventoryBootstrap({ ...options, afterMutation: true });
   }
 
-  /**
-   * Project the existing authenticated operational module contract without
-   * inventing rows or mutation support. Each route receives only the bounded
-   * collections emitted for its canonical module.
-   */
-  async operationalModuleBootstrap(
+  private projectOperationalModuleBootstrap(
     module: FrontendOperationalModuleName,
-    signal?: AbortSignal,
-  ): Promise<FrontendOperationalModuleBootstrap> {
-    const payload = await this.request(`/api/bootstrap/${module}?page=1&pageSize=25`, {
-      method: 'GET',
-      signal,
-    });
+    payload: JsonRecord,
+  ): FrontendOperationalModuleBootstrap {
     if (
       payload.ok !== true ||
       asString(payload.contract) !== 'bootstrap-module' ||
@@ -1859,6 +1887,66 @@ export class FrontendBackend {
         hasMore: requiredBoolean(pagination.hasMore, `${module} pagination.hasMore`),
       },
       scopeRevision,
+    };
+  }
+
+  /**
+   * Project the existing authenticated operational module contract without
+   * inventing rows or mutation support. Each route receives only the bounded
+   * collections emitted for its canonical module.
+   */
+  async operationalModuleBootstrap(
+    module: FrontendOperationalModuleName,
+    signal?: AbortSignal,
+  ): Promise<FrontendOperationalModuleBootstrap> {
+    const payload = await this.request(`/api/bootstrap/${module}?page=1&pageSize=25`, {
+      method: 'GET',
+      signal,
+    });
+    return this.projectOperationalModuleBootstrap(module, payload);
+  }
+
+  async refreshOperationalModuleBootstrap(
+    module: FrontendOperationalModuleName,
+  ): Promise<FrontendOperationalModuleBootstrap> {
+    const payload = await this.request('/api/getBootstrapModule', {
+      body: { module, page: 1, pageSize: 25 },
+      csrf: true,
+    });
+    return this.projectOperationalModuleBootstrap(module, payload);
+  }
+
+  async saveCanvassReference(command: FrontendSaveCanvassCommand): Promise<FrontendSaveCanvassReceipt> {
+    const payload = await this.request('/api/saveCanvassReference', { body: command, csrf: true });
+    if (payload.ok !== true || asString(payload.status) !== 'ACTIVE') {
+      incomplete('The canvass save response was incomplete.');
+    }
+    return {
+      canvassId: requiredString(payload.canvassId, 'canvass receipt ID'),
+      status: 'ACTIVE',
+      updatedAt: requiredString(payload.updatedAt, 'canvass receipt updatedAt'),
+      correlationId: requiredString(payload.correlationId, 'canvass receipt correlationId'),
+    };
+  }
+
+  async selectPreferredCanvass(
+    command: FrontendSelectPreferredCanvassCommand,
+  ): Promise<FrontendSelectPreferredCanvassReceipt> {
+    const payload = await this.request('/api/selectPreferredCanvass', { body: command, csrf: true });
+    if (payload.ok !== true || payload.preferred !== true) {
+      incomplete('The preferred canvass response was incomplete.');
+    }
+    const deliverableId = payload.deliverableId;
+    if (deliverableId !== null && typeof deliverableId !== 'string') {
+      incomplete('The preferred canvass response had an invalid deliverable ID.');
+    }
+    return {
+      canvassId: requiredString(payload.canvassId, 'preferred canvass receipt ID'),
+      preferred: true,
+      rationale: requiredString(payload.rationale, 'preferred canvass rationale'),
+      deliverableId,
+      updatedAt: requiredString(payload.updatedAt, 'preferred canvass updatedAt'),
+      correlationId: requiredString(payload.correlationId, 'preferred canvass correlationId'),
     };
   }
 

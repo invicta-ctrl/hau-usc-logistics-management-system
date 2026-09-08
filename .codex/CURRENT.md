@@ -10,9 +10,10 @@ TREE: GIT_TREE (resolve after this single checkpoint commit)
 UPSTREAM: origin/reconcile/playground-fbr001-claude-frontend (owner-authorized publication; verify remote HEAD before resuming)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: TERRA_HIGH_FBR001_EVENT_REPAIR_A1
+ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1c
 REQUIRED_MODEL: MAEOS_V1_A1_TERRA_HIGH_WRITER (owner-started local Astra A1 task)
-WRITER_LOCK: FBR001_EVENT_REPAIR_A1_ACTIVE
+WRITER_LOCK: FBR001_FRONTEND_ADOPTION_A1_ACTIVE
+WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1b (interrupted before commit; no lock retained) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1c; same branch/worktree, HEAD and origin both 21be94558e19cfc1b04b7f3a38c022c46d903827; expected procurement/current-record dirty state preserved. Owner explicitly continued the same MAEOS-v1-A1 Terra lane; this is a lock transfer, not model fallback.
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 INTERRUPTED_CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
@@ -24,7 +25,7 @@ PRODUCTION_DEPLOYMENT: FORBIDDEN
 STARTING_HEAD_AND_UPSTREAM: 89d8627b899df7bb586c5542f4ee2a6c9131ffb2
 BLOCKER: Final H1 Worker/frontend suites at fc5c8dc predate the event repair and remain unaccepted; rerun final H1 gates after all authorized frontend adoption is settled. Partial exact-4173 inspection exists, but the eight-width matrix is incomplete.
 HANDOFF_STATUS: IN_PROGRESS
-NEXT_EXACT_ACTION: COMMIT_AND_PUSH_EVENT_COMMAND_FOCUSED_EVIDENCE, THEN PROCEED WITH AUTHORIZED PROCUREMENT COMMAND ADOPTION; DO_NOT_CREATE_H1_RECEIPT
+NEXT_EXACT_ACTION: COMMIT_AND_PUSH_VERIFIED_PROCUREMENT_COMMAND_ADOPTION, THEN PROCEED WITH BOUNDED ADMINISTRATION ONE-TIME RESET-PASSWORD FRONTEND ADOPTION; DO_NOT_CREATE_H1_RECEIPT
 
 ## Owner-authorized frontend blocker repair - 2026-09-07
 

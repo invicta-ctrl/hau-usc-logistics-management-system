@@ -3775,27 +3775,44 @@ test('committee-scoped canvass, procurement, and cumulative receiving execute in
     preferredRationale: 'Alternate quote chosen after comparison',
   });
 
-  const uiQuote = await mutate(request, materialsCsrf, 'saveCanvassReference', {
-    ...saveCommand,
-    supplierName: 'Synthetic UI Supplier',
-    location: 'Angeles City',
-    price: 150,
-    checkedAt: '2026-08-03',
-    clientRequestId: 'local-e2e-canvass-save-ui',
-  });
-  expect(uiQuote.status()).toBe(200);
-  const uiQuoteResult = await uiQuote.json();
-
   await signInV5(page, 'LOCAL.MATERIALS');
   await openV5Route(page, 'procurement');
-  const canvassSurface = page.locator('[data-v5-operations-parity="procurement.board"]');
-  const createForm = page.locator('form[data-v5-command="canvass-create"]');
-  const preferredForm = page.locator('form[data-v5-command="canvass-preferred"]');
+  const canvassSurface = page.locator('[data-operational-module="procurement"]');
   await expect(canvassSurface).toBeVisible();
+  await page.getByRole('button', { name: /DEL-LOCAL-CANVASS/ }).click();
+  const createForm = page.getByRole('form', { name: 'Record supplier quote' });
   await expect(createForm).toBeVisible();
+  await createForm.getByLabel('Supplier name').fill('Synthetic UI Supplier');
+  await createForm.getByLabel('Supplier location').fill('Angeles City');
+  await createForm.getByLabel('Item specification').fill('Synthetic Procurement Item');
+  await createForm.getByLabel('Unit').fill('set');
+  await createForm.getByLabel('Price').fill('150');
+  await createForm.getByLabel('Checked on').fill('2026-08-03');
+  await createForm.getByLabel('Receipt status').fill('VERIFIED');
+  await createForm.getByLabel('Reliability').fill('SYNTHETIC');
+  const canvassResponsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/api/saveCanvassReference' &&
+      response.request().postDataJSON()?.supplierName === 'Synthetic UI Supplier',
+  );
+  const canvassRefreshPromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/api/getBootstrapModule' &&
+      response.request().postDataJSON()?.module === 'procurement',
+  );
+  await createForm.getByRole('button', { name: 'Save supplier quote' }).click();
+  const canvassResponse = await canvassResponsePromise;
+  expect(canvassResponse.status()).toBe(200);
+  const uiQuoteResult = await canvassResponse.json();
+  expect(uiQuoteResult).toMatchObject({ canvassId: expect.any(String), status: 'ACTIVE' });
+  await canvassRefreshPromise;
+  await expect(canvassSurface).toContainText('Synthetic UI Supplier');
+  const preferredForm = page.getByRole('form', { name: 'Choose preferred quote' });
   await expect(preferredForm).toBeVisible();
-  await preferredForm.getByLabel('Canvass record').selectOption(uiQuoteResult.canvassId);
-  await preferredForm.getByLabel('Selection rationale').fill('Selected in the governed V5 canvass surface.');
+  await preferredForm.getByLabel('Active quote').selectOption(uiQuoteResult.canvassId);
+  await preferredForm.getByLabel('Rationale').fill('Selected in the canonical procurement workspace.');
   const preferredResponsePromise = page.waitForResponse(
     (response) =>
       response.request().method() === 'POST' &&
@@ -3808,24 +3825,24 @@ test('committee-scoped canvass, procurement, and cumulative receiving execute in
       new URL(response.url()).pathname === '/api/getBootstrapModule' &&
       response.request().postDataJSON()?.module === 'procurement',
   );
-  await preferredForm.getByRole('button', { name: 'Select preferred canvass' }).click();
+  await preferredForm.getByRole('button', { name: 'Save preferred quote' }).click();
   const preferredResponse = await preferredResponsePromise;
   expect(preferredResponse.status()).toBe(200);
   const uiPreferredResult = await preferredResponse.json();
   expect(uiPreferredResult).toMatchObject({
     canvassId: uiQuoteResult.canvassId,
     preferred: true,
-    rationale: 'Selected in the governed V5 canvass surface.',
+    rationale: 'Selected in the canonical procurement workspace.',
   });
   await procurementRefreshPromise;
-  await expect(page.locator('form[data-v5-command="canvass-preferred"]')).toBeVisible();
+  await expect(page.getByRole('form', { name: 'Choose preferred quote' })).toBeVisible();
 
   const uiUpdate = await mutate(request, materialsCsrf, 'updateCanvassReference', {
     canvassId: uiQuoteResult.canvassId,
     expectedUpdatedAt: uiPreferredResult.updatedAt,
     price: 155,
     checkedAt: '2026-08-03',
-    reason: 'Updated after the governed V5 preferred-canvass proof.',
+    reason: 'Updated after the canonical preferred-canvass proof.',
     clientRequestId: 'local-e2e-canvass-update-ui',
   });
   expect(uiUpdate.status()).toBe(200);
