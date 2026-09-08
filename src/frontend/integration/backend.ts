@@ -7,6 +7,8 @@ export type FrontendUser = {
   displayName: string;
   roleId: string;
   capabilities: string[];
+  /** Existing server-issued workspace projection. It narrows route presentation; the Worker remains authoritative. */
+  workspaceIds?: string[];
 };
 
 export type FrontendSession = {
@@ -1207,6 +1209,7 @@ function projectUser(value: unknown): FrontendUser | null {
     displayName: asString(user.displayName) || accountId,
     roleId: asString(authorization.roleId) || 'REQUESTER',
     capabilities,
+    workspaceIds: asStrings(authorization.workspaceIds),
   };
 }
 

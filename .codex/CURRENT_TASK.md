@@ -21,7 +21,9 @@ VERIFICATION: exact sequence in the interrupted checkpoint, including fresh 8788
 STOP_CONDITIONS: conflicting writer; unknown dirty residue; required product/backend/schema/auth semantic expansion; provider action; Production crossover; secret/private data; failed verification that cannot form safe evidence.
 STATUS: H1_IN_PROGRESS_NOT_ACCEPTED
 HANDOFF_STATUS: IN_PROGRESS
-NEXT_EXACT_ACTION: COMMIT_AND_PUSH_THIS_VERIFIED_ADMINISTRATION_RESET_PACKET, THEN RUN_THE_FRESH_FULL_LOCAL_WORKER_H1_SUITE_ON_8788_REUSE_FALSE_TO_CLASSIFY_REMAINING_SEMANTIC_SELECTOR_FAILURES; DO_NOT_CREATE_H1_RECEIPT
+NEXT_EXACT_ACTION: RUN_THE_REMAINING_H1_FULL_FRONTEND_BROWSER_AND_ACCESSIBILITY_GATES, INCLUDING_THE_REQUIRED_RESPONSIVE_MATRIX; DO_NOT_CREATE_H1_RECEIPT
+
+WORKER_REPAIR_EVIDENCE: published administration packet `6c703f8fb3b12dcf307549ec6ad6932461ad9e4d` (tree `c50c58b820cff071fefc972e1368f64ea69b6d85) has verified origin parity. Fresh 8788/reuse=false Worker acceptance passes 62/62. The frontend now retains the existing server-issued workspace projection and fail-closes a capability-eligible route outside a populated authorized workspace list; no backend/auth contract changed. Frontend units 42/42 and application build pass; lint has 0 errors and 2 inherited warnings; `git diff --check` passes. Port 8787 PID 29528 remains untouched. H1 remains unaccepted.
 
 ADMINISTRATION_PACKET_EVIDENCE: one-time reset adopts the existing access.admin command only. A search 503 preserves loaded account records with inline retry; 401/403 clear account/staff/reset/activity projections and deny both sections. Credential display is transient and local Worker Playwright traces/screenshots are disabled. Adapter 37/37 PASS; frontend-390 administration 6/6 PASS; build PASS; lint 0 errors/2 inherited warnings; fresh 8788/reuse=false Worker reset journey 1/1 PASS; `git diff --check` PASS. Port 8788 is free and 8787 PID 29528 remains untouched. H1 is not accepted.
 

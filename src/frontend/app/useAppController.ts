@@ -30,6 +30,7 @@ export function projectSession(user: FrontendUser): Session {
     role: user.roleId,
     initials: initials(user.displayName),
     capabilities: AUTH_ROUTES.filter((route) => isRouteAuthorized(user, route)),
+    workspaceIds: [...(user.workspaceIds ?? [])],
     serverCapabilities: [...user.capabilities],
     requesterEligible: isEligibleRequester(user),
     internalOperator: isInternalOperator(user),

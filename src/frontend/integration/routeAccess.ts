@@ -13,6 +13,17 @@ const ROUTE_CAPABILITY: Partial<Record<AuthRoute, string>> = {
   administration: 'access.admin',
 };
 
+const ROUTE_WORKSPACE: Partial<Record<AuthRoute, string>> = {
+  inventory: 'inventory-pantry',
+  'request-center': 'food',
+  lending: 'inventory-pantry',
+  release: 'inventory-pantry',
+  restocking: 'inventory-pantry',
+  procurement: 'materials',
+  events: 'director',
+  administration: 'administrator',
+};
+
 /* R3-A1-A2. Both predicates read the same server-derived capability array the
  * Worker authorizes against — they do not re-derive policy in the browser.
  *
@@ -33,6 +44,10 @@ const LENDING_RETURN_CAPABILITY = 'lending.return';
 const EVIDENCE_UPLOAD_CAPABILITY = 'evidence.upload';
 
 export function isRouteAuthorized(user: FrontendUser, route: AuthRoute): boolean {
+  const workspace = ROUTE_WORKSPACE[route];
+  if (workspace && (user.workspaceIds?.length ?? 0) > 0 && !user.workspaceIds?.includes(workspace)) {
+    return false;
+  }
   if (route === 'request-center') {
     return user.capabilities.includes('view.internal') && user.capabilities.includes('view.request');
   }

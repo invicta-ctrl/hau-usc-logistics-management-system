@@ -64,7 +64,7 @@ describe('Figma frontend isolated-playground proxy guard', () => {
     expect(renderer).toContain("session.serverCapabilities.includes('fulfillment.release')");
     expect(renderer).toContain('module="restocking"');
     expect(renderer).toContain("session.serverCapabilities.includes('fulfillment.receive')");
-    expect(renderer).toContain('<OperationalModuleRoute module="procurement" />');
+    expect(renderer).toMatch(/<OperationalModuleRoute\s+module="procurement"/u);
     expect(renderer).toContain('mode="events"');
     expect(renderer).not.toContain('mode="restocking"');
     expect(renderer).not.toContain('mode="procurement"');

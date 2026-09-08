@@ -54,6 +54,8 @@ export type Session = {
   initials: string;
   /** Internal (context C) routes this account may open, derived from server capabilities. */
   capabilities: AuthRoute[];
+  /** Existing server-issued workspace projection; narrows a capability-eligible route when populated. */
+  workspaceIds: string[];
   /** Exact server-projected permission capabilities used for route presentation gates. */
   serverCapabilities: string[];
   /** Server-derived `request.create`. Gate for the External Request Center. */

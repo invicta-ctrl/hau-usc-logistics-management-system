@@ -25,7 +25,13 @@ PRODUCTION_DEPLOYMENT: FORBIDDEN
 STARTING_HEAD_AND_UPSTREAM: 89d8627b899df7bb586c5542f4ee2a6c9131ffb2
 BLOCKER: Final H1 Worker/frontend suites at fc5c8dc predate the event repair and remain unaccepted; rerun final H1 gates after all authorized frontend adoption is settled. Partial exact-4173 inspection exists, but the eight-width matrix is incomplete.
 HANDOFF_STATUS: IN_PROGRESS
-NEXT_EXACT_ACTION: COMMIT_AND_PUSH_THIS_VERIFIED_ADMINISTRATION_RESET_PACKET, THEN RUN_THE_FRESH_FULL_LOCAL_WORKER_H1_SUITE_ON_8788_REUSE_FALSE_TO_CLASSIFY_REMAINING_SEMANTIC_SELECTOR_FAILURES; DO_NOT_CREATE_H1_RECEIPT
+NEXT_EXACT_ACTION: RUN_THE_REMAINING_H1_FULL_FRONTEND_BROWSER_AND_ACCESSIBILITY_GATES, INCLUDING_THE_REQUIRED_RESPONSIVE_MATRIX; DO_NOT_CREATE_H1_RECEIPT
+## Published administration and Worker repair evidence — 2026-09-08
+
+Published `6c703f8fb3b12dcf307549ec6ad6932461ad9e4d` (`fix(frontend): add governed account credential reset`) at tree `c50c58b820cff071fefc972e1368f64ea69b6d85`; origin parity was verified. The subsequent fresh local Worker acceptance on port 8788 with reuse disabled passed 62/62. The repair keeps the existing server-issued `authorization.workspaceIds` in the frontend session projection and uses it to narrow a capability-eligible route whenever that projection is populated. A food-only account therefore reaches the signed-in denial state instead of rendering Procurement; Worker authorization remains authoritative.
+
+VALIDATION: frontend units 42/42 PASS; application build PASS; lint 0 errors with 2 inherited warnings; `git diff --check` PASS. Port 8787 PID 29528 remains untouched. H1 remains not accepted; the full frontend/browser/accessibility matrix remains required.
+
 ## Verified administration reset packet — 2026-09-08
 The bounded frontend/harness adoption adds the existing governed one-time account temporary-password reset command while preserving backend contracts and read-only projections. Search 503 keeps the loaded account page visible with an inline retry; a search 401/403 fails closed by clearing account and staff directory projections, selections, reset projection, and activity before both views become denied. The one-time credential remains transient in the open panel and is cleared on dismissal or navigation. Playwright traces and screenshots are disabled for the local Worker credential suite.
 

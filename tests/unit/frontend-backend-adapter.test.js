@@ -1270,6 +1270,19 @@ describe('Figma frontend backend adapter', () => {
     }
   });
 
+  it('narrows capability-eligible workspace routes from the existing server authorization projection', () => {
+    const foodOperator = {
+      accountId: 'ACC-FOOD',
+      displayName: 'Food Operator',
+      roleId: 'DOL_STAFF',
+      capabilities: ['view.internal', 'view.request'],
+      workspaceIds: ['food'],
+    };
+    expect(isRouteAuthorized(foodOperator, 'request-center')).toBe(true);
+    expect(isRouteAuthorized(foodOperator, 'procurement')).toBe(false);
+    expect(isRouteAuthorized(foodOperator, 'overview')).toBe(true);
+  });
+
   it('projects public catalog, submission, and tracking responses without inventing receipt state', async () => {
     const fetchMock = vi
       .fn()

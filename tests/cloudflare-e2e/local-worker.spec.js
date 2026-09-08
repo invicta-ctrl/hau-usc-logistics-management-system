@@ -1054,26 +1054,20 @@ test('identity roster is owner-only, metadata-safe, explicit-preview-only, and a
   }
 });
 
-test('shared shell exposes the owner roster and authorized Administrator health surface', async ({
+test('shared shell exposes the owner and authorized Administrator system-status surface', async ({
   browser,
 }) => {
   const ownerPage = await browser.newPage();
   await signInV5(ownerPage, 'LOCAL.OWNER');
-  await openV5Route(ownerPage, 'admin.directory');
-  await expect(ownerPage.locator('[data-v5-admin-parity="roster"]')).toBeVisible();
-  await expect(ownerPage.locator('[data-v5-admin-parity="roster"]')).toContainText(
-    'Protected identity roster',
-  );
-  await openV5Route(ownerPage, 'owner.health');
-  await expect(ownerPage.locator('[data-v5-admin-parity="health"]')).toBeVisible();
-  await expect(ownerPage.getByRole('heading', { name: 'System status', exact: true })).toBeVisible();
+  await openV5Route(ownerPage, 'administration');
+  await ownerPage.getByRole('button', { name: 'System status', exact: true }).click();
+  await expect(ownerPage.getByRole('heading', { name: 'Redacted technical response', exact: true })).toBeVisible();
 
   const adminPage = await browser.newPage();
   await signInV5(adminPage, 'LOCAL.ADMIN');
-  await openV5Route(adminPage, 'owner.health');
-  await expect(adminPage.locator('[data-v5-admin-parity="health"]')).toBeVisible();
-  await expect(adminPage.locator('[data-v5-admin-parity="denied"]')).toHaveCount(0);
-  await expect(adminPage.getByRole('heading', { name: 'System status', exact: true })).toBeVisible();
+  await openV5Route(adminPage, 'administration');
+  await adminPage.getByRole('button', { name: 'System status', exact: true }).click();
+  await expect(adminPage.getByRole('heading', { name: 'Redacted technical response', exact: true })).toBeVisible();
 
   await Promise.all([ownerPage.close(), adminPage.close()]);
 });
@@ -1836,30 +1830,31 @@ for (const [accessId, experience, route, _workspace, deepRoute, deepRouteHeading
   });
 }
 
-test('System Owner changes governed operational scope without losing identity or workspace routing', async ({
+test('System Owner retains the authorized shell while changing authenticated routes', async ({
   page,
 }) => {
   await signInV5(page, 'LOCAL.OWNER');
 
-  await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Administrator');
+  await expect(page.locator('[data-command-panel]')).toHaveAttribute('aria-label', 'Current workspace: Operations overview');
+  await expect(page.getByRole('link', { name: 'Local System Owner — go to profile' })).toBeVisible();
   await openV5Route(page, 'request-center');
-  await expect(page.locator('[aria-label="Current route"]')).toContainText('Food committee');
-  await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Administrator');
+  await expect(page.locator('[data-command-panel]')).toHaveAttribute('aria-label', 'Current workspace: Internal Request Hub');
+  await expect(page.getByRole('link', { name: 'Local System Owner — go to profile' })).toBeVisible();
 });
 
 test('System Owner opens and refreshes every real workspace without impersonation', async ({ page }) => {
   await signInV5(page, 'LOCAL.OWNER');
 
   for (const [route, label] of [
-    ['overview', 'Good work starts with the next clear action.'],
+    ['overview', 'Operations overview'],
     ['events', 'Events'],
-    ['request-center', 'Request Center'],
+    ['request-center', 'Internal Request Hub'],
     ['inventory', 'Inventory'],
     ['procurement', 'Procurement'],
   ]) {
     await openV5Route(page, route);
-    await expect(page.locator('[aria-label="Current route"]')).toContainText(label);
-    await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Administrator');
+    await expect(page.locator('[data-command-panel]')).toHaveAttribute('aria-label', `Current workspace: ${label}`);
+    await expect(page.getByRole('link', { name: 'Local System Owner — go to profile' })).toBeVisible();
     await page.reload();
   await expect(page.locator('.auth-shell')).toBeVisible();
     await expect(page.locator('#main-content')).toBeVisible();
@@ -1953,16 +1948,14 @@ test('Materials queue projects canonical deliverables and fails closed across co
   }
 });
 
-test('Administrator reaches Access Management when the legacy reference endpoint is unavailable', async ({
+test('Administrator reaches the current authorized account-access directory', async ({
   page,
 }) => {
   await signInV5(page, 'LOCAL.ADMIN');
   await openV5Route(page, 'administration');
-  await expect(page.getByRole('heading', { name: 'Accounts and Access', exact: true })).toBeVisible();
-  const accessOperations = page.locator('[data-v5-admin-parity="access"]');
-  await expect(accessOperations).toBeVisible();
-  await expect(accessOperations).toContainText('Account and access operations');
-  await expect(accessOperations.getByLabel('Action', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Assigned identity and access', exact: true })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Authorized account records' })).toBeVisible();
+  await expect(page.getByRole('form', { name: 'Search authorized account directory' })).toBeVisible();
 });
 
 test('starter activation rotates into a normal session and logout revokes it', async ({ page }) => {
@@ -2315,9 +2308,9 @@ test('System Owner assigns effective workspace policy and direct routes fail clo
     });
 
     await openV5Route(page, 'procurement');
-    await expect(page).toHaveURL(/#\/materials\.overview$/u);
-    await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Food Committee');
-    await expect(page.getByRole('heading', { name: 'You do not have access to this area' })).toBeVisible();
+    await expect(page).toHaveURL(/#\/route\/procurement$/u);
+    await expect(page.getByRole('heading', { name: 'Staff sign in', exact: true })).toBeVisible();
+    await expect(page.getByRole('alert')).toContainText('not authorized to open that workspace');
   } finally {
     await Promise.all([owner.dispose(), admin.dispose()]);
   }

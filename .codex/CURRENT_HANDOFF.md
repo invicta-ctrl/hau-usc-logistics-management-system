@@ -33,7 +33,11 @@ STARTING_HEAD_AND_UPSTREAM: 89d8627b899df7bb586c5542f4ee2a6c9131ffb2
 BLOCKER: Final H1 Worker/frontend reruns are pending after authorized event/procurement adoption; partial exact-4173 inspection is not the complete eight-width matrix. Inventory bulk and event focused evidence are green.
 RESUME_COMMANDS: git status --short; verify remote parity; read the current pointer and accepted matrix; reconcile the recorded Worker/frontend failures against accepted scope before authorizing any further H1 gate. Do not rerun the already-green focused inventory-bulk case without a new evidence need.
 PROHIBITED_ACTIONS: archive_extraction;8787_reuse_or_termination;provider_or_Playground_or_D1_or_R2_or_Production_action;fake_success_or_wildcard_mocks;legacy_route_aliases;exact_4173_gate_weakening.
-NEXT_EXACT_ACTION: COMMIT_AND_PUSH_THIS_VERIFIED_ADMINISTRATION_RESET_PACKET, THEN RUN_THE_FRESH_FULL_LOCAL_WORKER_H1_SUITE_ON_8788_REUSE_FALSE_TO_CLASSIFY_REMAINING_SEMANTIC_SELECTOR_FAILURES; DO_NOT_CREATE_H1_RECEIPT
+NEXT_EXACT_ACTION: RUN_THE_REMAINING_H1_FULL_FRONTEND_BROWSER_AND_ACCESSIBILITY_GATES, INCLUDING_THE_REQUIRED_RESPONSIVE_MATRIX; DO_NOT_CREATE_H1_RECEIPT
+
+## Published Worker repair evidence — 2026-09-08
+
+Administration reset packet commit `6c703f8fb3b12dcf307549ec6ad6932461ad9e4d` (tree `c50c58b820cff071fefc972e1368f64ea69b6d85) is pushed with verified origin parity. The fresh 8788/reuse=false local Worker suite passes 62/62. A frontend-only repair now retains the existing server-issued workspace projection and fail-closes a capability-eligible route outside a populated authorized workspace list. No backend/auth/provider/Production contract changed. Frontend units 42/42 and build pass; lint has 0 errors and 2 inherited warnings; `git diff --check` passes. Port 8787 PID 29528 remains untouched. H1 remains unaccepted.
 
 ## Administration reset packet evidence — 2026-09-08
 
