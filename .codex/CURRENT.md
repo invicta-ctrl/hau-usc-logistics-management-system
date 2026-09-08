@@ -10,10 +10,10 @@ TREE: GIT_TREE (resolve after this single checkpoint commit)
 UPSTREAM: origin/reconcile/playground-fbr001-claude-frontend (owner-authorized publication; verify remote HEAD before resuming)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1c
+ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1e
 REQUIRED_MODEL: MAEOS_V1_A1_TERRA_HIGH_WRITER (owner-started local Astra A1 task)
 WRITER_LOCK: FBR001_FRONTEND_ADOPTION_A1_ACTIVE
-WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1b (interrupted before commit; no lock retained) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1c; same branch/worktree, HEAD and origin both 21be94558e19cfc1b04b7f3a38c022c46d903827; expected procurement/current-record dirty state preserved. Owner explicitly continued the same MAEOS-v1-A1 Terra lane; this is a lock transfer, not model fallback.
+WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1d (usage limit; no commit; parent-reviewed uncommitted administration/search work preserved) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1e; same branch/worktree, verified HEAD/origin 88b8f9f2039e3ad2b8ccf6c50ba8cd840e14a248; this is a lock transfer within the owner-started MAEOS-v1-A1 Terra lane, not model fallback.
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 INTERRUPTED_CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
@@ -25,7 +25,11 @@ PRODUCTION_DEPLOYMENT: FORBIDDEN
 STARTING_HEAD_AND_UPSTREAM: 89d8627b899df7bb586c5542f4ee2a6c9131ffb2
 BLOCKER: Final H1 Worker/frontend suites at fc5c8dc predate the event repair and remain unaccepted; rerun final H1 gates after all authorized frontend adoption is settled. Partial exact-4173 inspection exists, but the eight-width matrix is incomplete.
 HANDOFF_STATUS: IN_PROGRESS
-NEXT_EXACT_ACTION: COMMIT_AND_PUSH_VERIFIED_PROCUREMENT_COMMAND_ADOPTION, THEN PROCEED WITH BOUNDED ADMINISTRATION ONE-TIME RESET-PASSWORD FRONTEND ADOPTION; DO_NOT_CREATE_H1_RECEIPT
+NEXT_EXACT_ACTION: COMMIT_AND_PUSH_THIS_VERIFIED_ADMINISTRATION_RESET_PACKET, THEN RUN_THE_FRESH_FULL_LOCAL_WORKER_H1_SUITE_ON_8788_REUSE_FALSE_TO_CLASSIFY_REMAINING_SEMANTIC_SELECTOR_FAILURES; DO_NOT_CREATE_H1_RECEIPT
+## Verified administration reset packet — 2026-09-08
+The bounded frontend/harness adoption adds the existing governed one-time account temporary-password reset command while preserving backend contracts and read-only projections. Search 503 keeps the loaded account page visible with an inline retry; a search 401/403 fails closed by clearing account and staff directory projections, selections, reset projection, and activity before both views become denied. The one-time credential remains transient in the open panel and is cleared on dismissal or navigation. Playwright traces and screenshots are disabled for the local Worker credential suite.
+
+VALIDATION: adapter 37/37 PASS; focused frontend-390 administration 6/6 PASS; build PASS; lint 0 errors with 2 inherited warnings; `git diff --check` PASS; and the fresh 8788/reuse=false one-time reset Worker journey PASS 1/1. Port 8788 is free after teardown; port 8787 PID 29528 remains untouched. H1 remains not accepted; final full local Worker and frontend/browser/accessibility gates remain required.
 
 ## Owner-authorized frontend blocker repair - 2026-09-07
 

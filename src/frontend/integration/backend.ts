@@ -34,6 +34,39 @@ export type FrontendAdminAccountDirectory = {
   items: FrontendAdminAccount[];
 };
 
+/** The public account report omits account identifiers and revision tokens; only the private reset projection retains them as runtime command keys. */
+export type FrontendAdminResetAccount = {
+  accountId: string;
+  revision: string;
+  accessId: string;
+};
+
+export type FrontendAdminAccountDirectoryLoad = {
+  directory: FrontendAdminAccountDirectory;
+  resetProjection: FrontendAdminResetAccount[];
+};
+
+export type FrontendAdminResetTemporaryPasswordCommand = {
+  accountId: string;
+  expectedRevision: string;
+  currentAccessId: string;
+  confirmCurrentAccessId: string;
+  reason: string;
+  clientRequestId: string;
+};
+
+export type FrontendAdminResetTemporaryPasswordReceipt = {
+  reset: true;
+  status: 'STARTER';
+  sessionsRevoked: true;
+  replayed: boolean;
+  credentialUnavailable: boolean;
+  accountId: string;
+  revision: string;
+  correlationId: string;
+  credential: { accessId: string; temporaryPassword: string; generatedAt: string; status: string } | null;
+};
+
 export type FrontendStaffDirectoryItem = {
   /** Opaque runtime-only key. It must never be rendered or copied into the DOM. */
   opaquePersonId: string;
@@ -1349,12 +1382,14 @@ export class FrontendBackend {
   }
 
   /**
-   * FI-10: read only the existing access-admin account directory. Raw account
-   * identifiers and revision tokens deliberately do not cross this projection.
+   * FI-10: read only the existing access-admin account directory. Account
+   * identifiers and revision tokens do not cross the public report projection.
+   * A separate private reset projection retains only the command keys it needs.
    */
-  async adminAccountDirectory(signal?: AbortSignal): Promise<FrontendAdminAccountDirectory> {
+  async adminAccountDirectoryLoad(query = '', signal?: AbortSignal): Promise<FrontendAdminAccountDirectoryLoad> {
+    const normalizedQuery = asString(query);
     const payload = await this.request('/api/admin/access/directory', {
-      body: { page: 1, pageSize: 25, status: 'ALL' },
+      body: { page: 1, pageSize: 25, status: 'ALL', ...(normalizedQuery ? { query: normalizedQuery } : {}) },
       csrf: true,
       signal,
     });
@@ -1362,18 +1397,76 @@ export class FrontendBackend {
       incomplete('The account directory response did not match the supported access-admin contract.');
     }
     const pagination = asRecord(payload.pagination);
+    const items = records(payload.items);
     return {
-      page: requiredNumber(payload.page ?? pagination.page, 'account directory page'),
-      pageSize: requiredNumber(payload.pageSize ?? pagination.pageSize, 'account directory pageSize'),
-      total: requiredNumber(payload.total ?? pagination.total, 'account directory total'),
-      items: records(payload.items).map((row) => ({
-        accessId: requiredString(row.accessId, 'account directory accessId'),
-        displayName: requiredString(row.displayName, 'account directory displayName'),
-        roleId: requiredString(row.roleId, 'account directory roleId'),
-        status: requiredString(row.status, 'account directory status'),
-        firstLoginPending: row.firstLoginPending === true,
-        locked: row.locked === true,
+      directory: {
+        page: requiredNumber(payload.page ?? pagination.page, 'account directory page'),
+        pageSize: requiredNumber(payload.pageSize ?? pagination.pageSize, 'account directory pageSize'),
+        total: requiredNumber(payload.total ?? pagination.total, 'account directory total'),
+        items: items.map((row) => ({
+          accessId: requiredString(row.accessId, 'account directory accessId'),
+          displayName: requiredString(row.displayName, 'account directory displayName'),
+          roleId: requiredString(row.roleId, 'account directory roleId'),
+          status: requiredString(row.status, 'account directory status'),
+          firstLoginPending: row.firstLoginPending === true,
+          locked: row.locked === true,
+        })),
+      },
+      resetProjection: items.map((row) => ({
+        accountId: requiredString(row.accountId, 'account reset accountId'),
+        revision: requiredString(row.revision, 'account reset revision'),
+        accessId: requiredString(row.accessId, 'account reset accessId'),
       })),
+    };
+  }
+
+  async adminAccountDirectory(signal?: AbortSignal): Promise<FrontendAdminAccountDirectory> {
+    return (await this.adminAccountDirectoryLoad('', signal)).directory;
+  }
+
+  async resetAdminTemporaryPassword(
+    command: FrontendAdminResetTemporaryPasswordCommand,
+  ): Promise<FrontendAdminResetTemporaryPasswordReceipt> {
+    const payload = await this.request('/api/admin/access/reset-password', { body: command, csrf: true });
+    if (payload.reset !== true || asString(payload.status) !== 'STARTER' || payload.sessionsRevoked !== true) {
+      incomplete('The temporary-password reset response was incomplete.');
+    }
+    const credentialRecord = payload.credential;
+    const credential = credentialRecord == null
+      ? null
+      : (() => {
+          const value = asRecord(credentialRecord);
+          return {
+            accessId: requiredString(value.accessId, 'temporary credential accessId'),
+            temporaryPassword: requiredString(value.temporaryPassword, 'temporary credential password'),
+            generatedAt: requiredString(value.generatedAt, 'temporary credential generatedAt'),
+            status: (() => {
+              const status = requiredString(value.status, 'temporary credential status');
+              if (status !== 'STARTER') incomplete('The temporary credential did not return STARTER status.');
+              return status;
+            })(),
+          };
+        })();
+    if ((credential && payload.credentialUnavailable === true) || (!credential && payload.credentialUnavailable !== true)) {
+      incomplete('The temporary-password reset response had an impossible credential receipt.');
+    }
+    const accountId = requiredString(payload.accountId, 'temporary-password reset accountId');
+    if (accountId !== command.accountId) {
+      incomplete('The temporary-password reset response was returned for a different account.');
+    }
+    if (credential && credential.accessId !== command.currentAccessId) {
+      incomplete('The temporary-password reset response credential did not match the selected access ID.');
+    }
+    return {
+      reset: true,
+      status: 'STARTER',
+      sessionsRevoked: true,
+      replayed: payload.replayed === true,
+      credentialUnavailable: payload.credentialUnavailable === true,
+      accountId,
+      revision: requiredString(payload.revision, 'temporary-password reset revision'),
+      correlationId: requiredString(payload.correlationId, 'temporary-password reset correlationId'),
+      credential,
     };
   }
 

@@ -10,8 +10,8 @@ PARENT_BASE_SHA: 47e55d71eadcdbab2d5eced8c16baf95e3ae781d
 UPSTREAM: origin/reconcile/playground-fbr001-claude-frontend (owner-authorized publication; verify remote HEAD before resuming)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1c
-WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1b (interrupted before commit; no lock retained) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1c; same branch/worktree, verified HEAD/origin 21be94558e19cfc1b04b7f3a38c022c46d903827, expected dirty procurement work preserved. Owner explicitly continued the same MAEOS-v1-A1 Terra lane; this is a lock transfer, not model fallback.
+ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1e
+WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1d (usage limit; no commit; parent-reviewed uncommitted administration/search work preserved) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1e; same branch/worktree, verified HEAD/origin 88b8f9f2039e3ad2b8ccf6c50ba8cd840e14a248; this is a lock transfer within the owner-started MAEOS-v1-A1 Terra lane, not model fallback.
 HANDOFF_STATUS: IN_PROGRESS
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
@@ -33,7 +33,11 @@ STARTING_HEAD_AND_UPSTREAM: 89d8627b899df7bb586c5542f4ee2a6c9131ffb2
 BLOCKER: Final H1 Worker/frontend reruns are pending after authorized event/procurement adoption; partial exact-4173 inspection is not the complete eight-width matrix. Inventory bulk and event focused evidence are green.
 RESUME_COMMANDS: git status --short; verify remote parity; read the current pointer and accepted matrix; reconcile the recorded Worker/frontend failures against accepted scope before authorizing any further H1 gate. Do not rerun the already-green focused inventory-bulk case without a new evidence need.
 PROHIBITED_ACTIONS: archive_extraction;8787_reuse_or_termination;provider_or_Playground_or_D1_or_R2_or_Production_action;fake_success_or_wildcard_mocks;legacy_route_aliases;exact_4173_gate_weakening.
-NEXT_EXACT_ACTION: COMMIT_AND_PUSH_VERIFIED_PROCUREMENT_COMMAND_ADOPTION, THEN PROCEED WITH BOUNDED ADMINISTRATION ONE-TIME RESET-PASSWORD FRONTEND ADOPTION; DO_NOT_CREATE_H1_RECEIPT
+NEXT_EXACT_ACTION: COMMIT_AND_PUSH_THIS_VERIFIED_ADMINISTRATION_RESET_PACKET, THEN RUN_THE_FRESH_FULL_LOCAL_WORKER_H1_SUITE_ON_8788_REUSE_FALSE_TO_CLASSIFY_REMAINING_SEMANTIC_SELECTOR_FAILURES; DO_NOT_CREATE_H1_RECEIPT
+
+## Administration reset packet evidence — 2026-09-08
+
+The packet adopts the existing `access.admin` one-time reset command in frontend-only scope. A non-auth directory-search failure keeps the loaded account page and offers inline retry; a 401/403 clears all cached account/staff/reset/activity projections and denies both sections. The credential is transient in the open panel and local Worker Playwright traces/screenshots are disabled. PASS: adapter 37/37; focused frontend-390 administration 6/6; build; fresh 8788/reuse=false one-time reset Worker journey 1/1; and `git diff --check`. Lint has 0 errors and 2 inherited warnings. 8788 is free; 8787 PID 29528 is untouched. H1 remains not accepted.
 
 ## Owner-authorized frontend blocker repair - 2026-09-07
 

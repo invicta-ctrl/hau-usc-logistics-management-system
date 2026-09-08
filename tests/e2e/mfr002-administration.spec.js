@@ -58,31 +58,80 @@ async function installAdministrationRuntime(page, state, { directoryUnavailable 
   );
   await page.route('**/api/admin/access/directory', (route) => {
     state.accountCalls += 1;
-    return fulfill(route, {
-      ok: true,
-      pagination: { page: 1, pageSize: 25, total: 2, totalPages: 1 },
-      items: [
-        {
-          accountId: 'ACC-RAW-NOT-RENDERED',
-          revision: 'REV-NOT-RENDERED',
-          accessId: 'ADMIN.U08',
-          displayName: 'Authorized administrator',
-          roleId: 'SYSTEM_ADMIN',
+    const query = JSON.parse(route.request().postData() || '{}').query || '';
+    state.accountQueries ??= [];
+    state.accountQueries.push(query);
+    if (query && state.failNextAccountSearchStatus) {
+      const status = state.failNextAccountSearchStatus;
+      state.failNextAccountSearchStatus = null;
+      return fulfill(route, { code: 'DIRECTORY_UNAVAILABLE', message: 'Synthetic authorized directory search failure.' }, status);
+    }
+    if (state.failNextResetRefresh) {
+      state.failNextResetRefresh = false;
+      return fulfill(route, { code: 'DIRECTORY_UNAVAILABLE', message: 'Synthetic current directory failure.' }, 503);
+    }
+    const items = query === 'DOL_2026'
+      ? [{
+          accountId: 'ACC-DOL-2026-NOT-RENDERED',
+          revision: 'REV-DOL-2026-NOT-RENDERED',
+          accessId: 'DOL_2026',
+          displayName: 'Department of Logistics',
+          roleId: 'REQUESTER',
           status: 'ACTIVE',
           firstLoginPending: false,
           locked: false,
-        },
-        {
-          accountId: 'ACC-PENDING-NOT-RENDERED',
-          revision: 'REV-PENDING-NOT-RENDERED',
-          accessId: 'OPS.PENDING',
-          displayName: 'Pending operator',
-          roleId: 'DOL_STAFF',
-          status: 'ACTIVE',
-          firstLoginPending: true,
-          locked: false,
-        },
-      ],
+        }]
+      : [
+          {
+            accountId: 'ACC-RAW-NOT-RENDERED',
+            revision: 'REV-NOT-RENDERED',
+            accessId: 'ADMIN.U08',
+            displayName: 'Authorized administrator',
+            roleId: 'SYSTEM_ADMIN',
+            status: 'ACTIVE',
+            firstLoginPending: false,
+            locked: false,
+          },
+          {
+            accountId: 'ACC-PENDING-NOT-RENDERED',
+            revision: 'REV-PENDING-NOT-RENDERED',
+            accessId: 'OPS.PENDING',
+            displayName: 'Pending operator',
+            roleId: 'DOL_STAFF',
+            status: 'ACTIVE',
+            firstLoginPending: true,
+            locked: false,
+          },
+        ];
+    return fulfill(route, {
+      ok: true,
+      pagination: { page: 1, pageSize: 25, total: items.length, totalPages: 1 },
+      items,
+    });
+  });
+  await page.route('**/api/admin/access/reset-password', (route) => {
+    const command = JSON.parse(route.request().postData() || '{}');
+    state.resetCommands ??= [];
+    state.resetCommands.push(command);
+    if (state.unknownFirstReset) {
+      state.unknownFirstReset = false;
+      return fulfill(route, { code: 'RESET_UNAVAILABLE', message: 'Synthetic unconfirmed reset.' }, 503);
+    }
+    state.failNextResetRefresh = true;
+    return fulfill(route, {
+      reset: true,
+      status: 'STARTER',
+      sessionsRevoked: true,
+      replayed: false,
+      accountId: command.accountId,
+      revision: 'REV-RESET-REFRESHED',
+      correlationId: 'COR-RESET-U08',
+      credential: {
+        accessId: command.currentAccessId,
+        temporaryPassword: 'synthetic-one-time-value',
+        generatedAt: '2026-09-08T00:00:00.000Z',
+        status: 'STARTER',
+      },
     });
   });
   await page.route('**/api/admin/staff-directory', (route) => {
@@ -227,4 +276,102 @@ test('MFR-002 U08 keeps Accounts usable when the Staff source is unavailable', a
   await expect(page.locator('[data-administration-account-record]')).toHaveCount(2);
   expectStrictModeBoundedRead(state.accountCalls);
   expectStrictModeBoundedRead(state.directoryCalls);
+});
+
+test('MFR-002 U08 explicitly searches the authorized directory before selecting an account outside its loaded page', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'frontend-390', 'One responsive search proof is sufficient.');
+  const state = { accountCalls: 0, directoryCalls: 0, activityCalls: 0 };
+  await installAdministrationRuntime(page, state);
+  await signInAndOpenAdministration(page);
+
+  const workspace = page.locator('[data-fi10-administration="true"]');
+  const search = workspace.getByRole('form', { name: 'Search authorized account directory' });
+  await search.getByLabel('Search authorized account directory').fill('  DOL_2026  ');
+  await search.getByRole('button', { name: 'Search authorized directory' }).click();
+  await expect(workspace.locator('[data-administration-account-record]')).toHaveCount(1);
+  await expect(workspace).toContainText('Department of Logistics');
+  expect(state.accountQueries).toContain('DOL_2026');
+  await workspace.getByRole('button', { name: /DOL_2026/u }).click();
+  await expect(workspace.getByRole('dialog')).toContainText('Department of Logistics');
+  await expect(page.locator('body')).not.toContainText('ACC-DOL-2026-NOT-RENDERED');
+  await expect(page.locator('body')).not.toContainText('REV-DOL-2026-NOT-RENDERED');
+});
+
+test('MFR-002 U08 keeps loaded account records available when an authorized directory search fails', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'frontend-390', 'One responsive search failure proof is sufficient.');
+  const state = { accountCalls: 0, directoryCalls: 0, activityCalls: 0, failNextAccountSearchStatus: 503 };
+  await installAdministrationRuntime(page, state);
+  await signInAndOpenAdministration(page);
+
+  const workspace = page.locator('[data-fi10-administration="true"]');
+  const search = workspace.getByRole('form', { name: 'Search authorized account directory' });
+  await expect(workspace.locator('[data-administration-account-record]')).toHaveCount(2);
+  await search.getByLabel('Search authorized account directory').fill('DOL_2026');
+  await search.getByRole('button', { name: 'Search authorized directory' }).click();
+  await expect(workspace.getByRole('alert')).toContainText('could not be completed');
+  await expect(workspace.locator('[data-administration-account-record]')).toHaveCount(2);
+  await expect(search.getByLabel('Search authorized account directory')).toHaveValue('DOL_2026');
+  await expect(search.getByRole('button', { name: 'Search authorized directory' })).toBeEnabled();
+
+  await search.getByRole('button', { name: 'Search authorized directory' }).click();
+  await expect(workspace.locator('[data-administration-account-record]')).toHaveCount(1);
+  await expect(workspace).toContainText('Department of Logistics');
+});
+
+test('MFR-002 U08 fails closed when an explicit directory search is forbidden', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'frontend-390', 'One responsive authorization proof is sufficient.');
+  const state = { accountCalls: 0, directoryCalls: 0, activityCalls: 0, failNextAccountSearchStatus: 403 };
+  await installAdministrationRuntime(page, state);
+  await signInAndOpenAdministration(page);
+
+  const workspace = page.locator('[data-fi10-administration="true"]');
+  const search = workspace.getByRole('form', { name: 'Search authorized account directory' });
+  await expect(workspace.locator('[data-administration-account-record]')).toHaveCount(2);
+  await search.getByLabel('Search authorized account directory').fill('DOL_2026');
+  await search.getByRole('button', { name: 'Search authorized directory' }).click();
+  await expect(page.getByRole('heading', { name: 'Access administration is not available to your account' })).toBeVisible();
+  await expect(workspace.locator('[data-administration-account-record]')).toHaveCount(0);
+  await selectAdministrationTab(page, 'Staff directory');
+  await expect(page.getByRole('heading', { name: 'Access administration is not available to your account' })).toBeVisible();
+  await expect(workspace.locator('[data-administration-staff-open]')).toHaveCount(0);
+});
+
+test('MFR-002 U08 keeps a temporary-password reset immutable until its current directory refreshes', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'frontend-390', 'The focused reset-state proof runs once at the mobile target.');
+  const state = { accountCalls: 0, directoryCalls: 0, activityCalls: 0, unknownFirstReset: true };
+  await installAdministrationRuntime(page, state);
+  await signInAndOpenAdministration(page);
+  await page.setViewportSize({ width: 320, height: 844 });
+  await expect.poll(() => page.evaluate(() => window.matchMedia('(max-width: 59.99rem)').matches)).toBe(true);
+
+  const workspace = page.locator('[data-fi10-administration="true"]');
+  await workspace.locator('[data-administration-account-open]').first().click();
+  const inspector = workspace.getByRole('dialog');
+  const resetForm = inspector.getByRole('form', { name: 'Reset selected account temporary password' });
+  await expect(resetForm).toBeVisible();
+  await resetForm.getByLabel('Current access ID', { exact: true }).fill('ADMIN.U08');
+  await resetForm.getByLabel('Confirm current access ID', { exact: true }).fill('ADMIN.U08');
+  await resetForm.getByLabel('Reset reason').fill('Recover the governed administrator test credential.');
+  await resetForm.getByRole('button', { name: 'Reset selected account password' }).click();
+
+  await expect(inspector.getByRole('status')).toContainText('did not confirm this reset');
+  await expect(inspector.getByRole('button', { name: 'Back to records' })).toBeDisabled();
+  await expect(workspace.locator('[data-administration-account-open]').nth(1)).toBeDisabled();
+  await expect(workspace.getByLabel('Administration section', { exact: true })).toBeDisabled();
+  await inspector.getByRole('button', { name: 'Retry captured reset' }).click();
+  await expect(inspector.getByText(/reset was recorded, but the current account directory could not be refreshed/u)).toBeVisible();
+  expect(state.resetCommands).toHaveLength(2);
+  expect(state.resetCommands[1]).toEqual(state.resetCommands[0]);
+  await expect(workspace.locator('[data-administration-account-open]').nth(1)).toBeDisabled();
+  await inspector.getByRole('button', { name: 'Clear credential' }).click();
+  await expect(inspector.getByLabel('One-time temporary credential')).toHaveCount(0);
+  await expect(inspector.getByRole('button', { name: 'Reload current account directory' })).toBeVisible();
+  await expect(inspector.getByRole('button', { name: 'Back to records' })).toBeDisabled();
+  await inspector.getByRole('button', { name: 'Reload current account directory' }).click();
+  await expect(inspector.getByText('The current account directory was refreshed after the reset.', { exact: true })).toBeVisible();
+  await inspector.getByRole('button', { name: 'Dismiss reset result' }).click();
+  await expect(resetForm).toBeVisible();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+  ).toBeLessThanOrEqual(1);
 });

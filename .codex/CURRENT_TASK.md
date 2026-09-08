@@ -10,8 +10,8 @@ INTERRUPTED_CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md
 AUTHORITY: Earl H1 checkpoint instruction -> AGENTS.md -> .agents/PROJECT_POLICY.md -> accepted FBR-001 spec -> current Worker/API/auth/domain/privacy contracts.
 REQUIRED_MODEL: MAEOS_V1_A1_TERRA_HIGH_WRITER (owner-started local Astra A1 task)
-ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1c
-WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1b (interrupted before commit; no lock retained) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1c; same branch/worktree, verified HEAD/origin 21be94558e19cfc1b04b7f3a38c022c46d903827, expected dirty procurement work preserved. Owner explicitly continued the same MAEOS-v1-A1 Terra lane; this is a lock transfer, not model fallback.
+ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1e
+WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1d (usage limit; no commit; parent-reviewed uncommitted administration/search work preserved) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1e; same branch/worktree, verified HEAD/origin 88b8f9f2039e3ad2b8ccf6c50ba8cd840e14a248; this is a lock transfer within the owner-started MAEOS-v1-A1 Terra lane, not model fallback.
 RISK: HIGH; FRONTEND_ACCEPTANCE; LOCAL_WORKER; PRODUCTION_FORBIDDEN
 SCOPE: PHASE_H1_ONLY
 IN_SCOPE: reproduce/classify the one fresh local-Worker residual, evidence-only repair if required and authorized by the accepted spec, final local Worker/frontend/browser/accessibility matrix, exact H1 receipt only when all required local evidence is green.
@@ -21,7 +21,9 @@ VERIFICATION: exact sequence in the interrupted checkpoint, including fresh 8788
 STOP_CONDITIONS: conflicting writer; unknown dirty residue; required product/backend/schema/auth semantic expansion; provider action; Production crossover; secret/private data; failed verification that cannot form safe evidence.
 STATUS: H1_IN_PROGRESS_NOT_ACCEPTED
 HANDOFF_STATUS: IN_PROGRESS
-NEXT_EXACT_ACTION: COMMIT_AND_PUSH_VERIFIED_PROCUREMENT_COMMAND_ADOPTION, THEN PROCEED WITH BOUNDED ADMINISTRATION ONE-TIME RESET-PASSWORD FRONTEND ADOPTION; DO_NOT_CREATE_H1_RECEIPT
+NEXT_EXACT_ACTION: COMMIT_AND_PUSH_THIS_VERIFIED_ADMINISTRATION_RESET_PACKET, THEN RUN_THE_FRESH_FULL_LOCAL_WORKER_H1_SUITE_ON_8788_REUSE_FALSE_TO_CLASSIFY_REMAINING_SEMANTIC_SELECTOR_FAILURES; DO_NOT_CREATE_H1_RECEIPT
+
+ADMINISTRATION_PACKET_EVIDENCE: one-time reset adopts the existing access.admin command only. A search 503 preserves loaded account records with inline retry; 401/403 clear account/staff/reset/activity projections and deny both sections. Credential display is transient and local Worker Playwright traces/screenshots are disabled. Adapter 37/37 PASS; frontend-390 administration 6/6 PASS; build PASS; lint 0 errors/2 inherited warnings; fresh 8788/reuse=false Worker reset journey 1/1 PASS; `git diff --check` PASS. Port 8788 is free and 8787 PID 29528 remains untouched. H1 is not accepted.
 
 ## Owner-authorized frontend blocker repair - 2026-09-07
 

@@ -13,7 +13,7 @@ const privateRoot = await mkdtemp(path.join(tmpdir(), 'hau-usc-local-worker-'));
 const state = path.join(privateRoot, 'state');
 const seed = path.join(privateRoot, 'seed.sql');
 const assets = path.join(privateRoot, 'assets');
-const shared = { cwd: repoRoot, stdio: 'inherit', windowsHide: true };
+const shared = { cwd: repoRoot, stdio: ['ignore', 'inherit', 'inherit'], windowsHide: true };
 
 execFileSync(process.execPath, [vite, 'build', '--mode', 'staging', '--outDir', assets], shared);
 execFileSync(

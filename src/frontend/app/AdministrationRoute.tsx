@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   FrontendApiError,
   frontendBackend,
   type FrontendAdminAccount,
+  type FrontendAdminAccountDirectoryLoad,
+  type FrontendAdminResetAccount,
   type FrontendBrandAssetSlot,
   type FrontendReferenceLink,
   type FrontendStaffActivityHistory,
@@ -155,6 +157,10 @@ export default function AdministrationRoute({
   const [accountState, setAccountState] = useState<Fi10LoadState>(inspection ? "ready" : "loading");
   const [directoryState, setDirectoryState] = useState<Fi10LoadState>(inspection ? "ready" : "loading");
   const [accounts, setAccounts] = useState<FrontendAdminAccount[]>(inspection ? previewAccounts : []);
+  const [resetProjection, setResetProjection] = useState<FrontendAdminResetAccount[]>([]);
+  const [accountDirectoryQuery, setAccountDirectoryQuery] = useState("");
+  const [accountSearchBusy, setAccountSearchBusy] = useState(false);
+  const [accountCommandLocked, setAccountCommandLocked] = useState(false);
   const [directory, setDirectory] = useState<FrontendStaffDirectoryItem[]>(
     inspection ? previewDirectory : [],
   );
@@ -176,6 +182,8 @@ export default function AdministrationRoute({
   const [resetBusy, setResetBusy] = useState(false);
   const [resetNotice, setResetNotice] = useState("");
   const [fi11ReloadKey, setFi11ReloadKey] = useState(0);
+  const accountDirectoryRequest = useRef(0);
+  const accountSearchRequest = useRef(0);
   const hasCapability = (capability: string) => inspection || capabilities.includes(capability);
   const visibleTabs: AdminTab[] = inspection
     ? administrationTabs
@@ -188,6 +196,60 @@ export default function AdministrationRoute({
         ...(hasCapability("system.admin") ? (["System status"] as Fi11Tab[]) : []),
       ];
   const visibleTabsKey = visibleTabs.join("|");
+  const applyAccountDirectory = useCallback((accountResult: FrontendAdminAccountDirectoryLoad) => {
+    setAccounts(accountResult.directory.items);
+    setResetProjection(accountResult.resetProjection);
+    setSelectedAccount(
+      (current) =>
+        accountResult.directory.items.find((account) => account.accessId === current?.accessId) ??
+        accountResult.directory.items[0] ??
+        null,
+    );
+  }, []);
+  const loadAccountDirectory = useCallback(async (query: string, signal?: AbortSignal) => {
+    const request = ++accountDirectoryRequest.current;
+    const normalizedQuery = query.trim();
+    let accountResult: FrontendAdminAccountDirectoryLoad;
+    try {
+      accountResult = await frontendBackend.adminAccountDirectoryLoad(normalizedQuery, signal);
+    } catch (error) {
+      if (signal?.aborted || request !== accountDirectoryRequest.current) return false;
+      throw error;
+    }
+    if (signal?.aborted || request !== accountDirectoryRequest.current) return false;
+    applyAccountDirectory(accountResult);
+    setAccountDirectoryQuery(normalizedQuery);
+    return true;
+  }, [applyAccountDirectory]);
+  const refreshAccounts = useCallback(async () => {
+    const applied = await loadAccountDirectory(accountDirectoryQuery);
+    if (applied) setAccountState("ready");
+  }, [accountDirectoryQuery, loadAccountDirectory]);
+  const searchAccounts = useCallback(async (query: string) => {
+    const request = ++accountSearchRequest.current;
+    setAccountSearchBusy(true);
+    try {
+      const applied = await loadAccountDirectory(query);
+      if (!applied) return;
+    } catch (error) {
+      if (request !== accountSearchRequest.current) return;
+      if (error instanceof FrontendApiError && [401, 403].includes(error.status)) {
+        setAccounts([]);
+        setResetProjection([]);
+        setSelectedAccount(null);
+        setDirectory([]);
+        setSelectedStaff(null);
+        setActivity(null);
+        setActivityState("selection");
+        setAccountState("denied");
+        setDirectoryState("denied");
+        return;
+      }
+      throw error;
+    } finally {
+      if (request === accountSearchRequest.current) setAccountSearchBusy(false);
+    }
+  }, [loadAccountDirectory]);
 
   useEffect(() => {
     if (visibleTabs.includes(tab)) return;
@@ -211,17 +273,9 @@ export default function AdministrationRoute({
     const abort = new AbortController();
     setAccountState("loading");
     setDirectoryState("loading");
-    void frontendBackend
-      .adminAccountDirectory(abort.signal)
-      .then((accountResult) => {
-        if (abort.signal.aborted) return;
-        setAccounts(accountResult.items);
-        setSelectedAccount(
-          (current) =>
-            accountResult.items.find((account) => account.accessId === current?.accessId) ??
-            accountResult.items[0] ??
-            null,
-        );
+    void loadAccountDirectory('', abort.signal)
+      .then((applied) => {
+        if (!applied) return;
         setAccountState("ready");
       })
       .catch((error: unknown) => {
@@ -248,7 +302,7 @@ export default function AdministrationRoute({
         setDirectoryState(error instanceof FrontendApiError && [401, 403].includes(error.status) ? "denied" : "unavailable");
       });
     return () => abort.abort();
-  }, [accessAllowed, inspection, reloadKey]);
+  }, [accessAllowed, inspection, loadAccountDirectory, reloadKey]);
 
   useEffect(() => {
     if (inspection || tab !== "Activity" || !selectedStaff) {
@@ -478,12 +532,20 @@ export default function AdministrationRoute({
       <AdministrationRecordsPanel
         tab={tab}
         accounts={accounts}
+        resetProjection={resetProjection}
         directory={directory}
         selectedAccount={selectedAccount}
         selectedStaff={selectedStaff}
         activity={inspection ? null : activity}
         activityState={inspection ? "selection" : activityState}
         inspection={inspection}
+        canResetTemporaryPassword={accessAllowed && !inspection}
+        accountDirectoryQuery={accountDirectoryQuery}
+        accountSearchBusy={accountSearchBusy}
+        onResetTemporaryPassword={(command) => frontendBackend.resetAdminTemporaryPassword(command)}
+        onRefreshAccounts={refreshAccounts}
+        onSearchAccounts={searchAccounts}
+        onAccountCommandLockChange={setAccountCommandLocked}
         onSelectAccount={setSelectedAccount}
         onSelectStaff={setSelectedStaff}
         onReviewActivity={reviewStaffActivity}
@@ -533,6 +595,7 @@ export default function AdministrationRoute({
             key={item}
             type="button"
             aria-current={tab === item ? "page" : undefined}
+            disabled={accountCommandLocked}
             onClick={() => setTab(item)}
           >
             {item}
@@ -544,6 +607,7 @@ export default function AdministrationRoute({
         value={tab}
         aria-label="Administration section"
         data-administration-modal-background
+        disabled={accountCommandLocked}
         onChange={(event) => setTab(event.target.value as AdminTab)}
       >
         {visibleTabs.map((item) => (

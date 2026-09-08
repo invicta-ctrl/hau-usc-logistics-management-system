@@ -822,6 +822,192 @@ describe('Figma frontend backend adapter', () => {
     ]);
   });
 
+  it('keeps access-reset command keys outside the account report and binds the existing reset contract', async () => {
+    const resetCommand = {
+      accountId: 'ACC-DOL-2026',
+      expectedRevision: '3:2026-09-08T00:00:00.000Z',
+      currentAccessId: 'DOL_2026',
+      confirmCurrentAccessId: 'DOL_2026',
+      reason: 'Reissue the governed department credential.',
+      clientRequestId: 'adapter-admin-reset-0001',
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        response({
+          state: 'AUTHENTICATED',
+          csrfToken: 'csrf-access-admin',
+          user: {
+            accountId: 'ACC-ADMIN',
+            displayName: 'Access Administrator',
+            authorization: {
+              active: true,
+              mappingStatus: 'MAPPED',
+              roleId: 'ADMINISTRATOR',
+              capabilities: ['access.admin'],
+            },
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          ok: true,
+          page: 1,
+          pageSize: 25,
+          total: 1,
+          items: [
+            {
+              accountId: resetCommand.accountId,
+              revision: resetCommand.expectedRevision,
+              accessId: 'DOL_2026',
+              displayName: 'Department of Logistics',
+              roleId: 'REQUESTER',
+              status: 'ACTIVE',
+              firstLoginPending: false,
+              locked: false,
+            },
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          reset: true,
+          status: 'STARTER',
+          sessionsRevoked: true,
+          replayed: false,
+          accountId: resetCommand.accountId,
+          revision: '4:2026-09-08T00:00:01.000Z',
+          correlationId: 'COR-ADMIN-RESET',
+          credential: {
+            accessId: 'DOL_2026',
+            temporaryPassword: 'synthetic-one-time-value',
+            generatedAt: '2026-09-08T00:00:01.000Z',
+            status: 'STARTER',
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          reset: true,
+          status: 'STARTER',
+          sessionsRevoked: true,
+          replayed: true,
+          credentialUnavailable: true,
+          accountId: resetCommand.accountId,
+          revision: '4:2026-09-08T00:00:01.000Z',
+          correlationId: 'COR-ADMIN-RESET',
+        }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    const backend = new FrontendBackend();
+
+    await backend.session();
+    const loaded = await backend.adminAccountDirectoryLoad();
+    expect(loaded.directory.items).toEqual([
+      {
+        accessId: 'DOL_2026',
+        displayName: 'Department of Logistics',
+        roleId: 'REQUESTER',
+        status: 'ACTIVE',
+        firstLoginPending: false,
+        locked: false,
+      },
+    ]);
+    expect(loaded.resetProjection).toEqual([
+      { accountId: resetCommand.accountId, revision: resetCommand.expectedRevision, accessId: 'DOL_2026' },
+    ]);
+    await expect(backend.resetAdminTemporaryPassword(resetCommand)).resolves.toMatchObject({
+      reset: true,
+      status: 'STARTER',
+      sessionsRevoked: true,
+      accountId: resetCommand.accountId,
+      credential: { accessId: 'DOL_2026', temporaryPassword: 'synthetic-one-time-value' },
+    });
+    await expect(backend.resetAdminTemporaryPassword(resetCommand)).resolves.toMatchObject({
+      reset: true,
+      status: 'STARTER',
+      sessionsRevoked: true,
+      replayed: true,
+      credentialUnavailable: true,
+      credential: null,
+    });
+    expect(fetchMock.mock.calls.slice(1)).toEqual([
+      [
+        '/api/admin/access/directory',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ 'x-csrf-token': 'csrf-access-admin' }),
+          body: JSON.stringify({ page: 1, pageSize: 25, status: 'ALL' }),
+        }),
+      ],
+      [
+        '/api/admin/access/reset-password',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ 'x-csrf-token': 'csrf-access-admin' }),
+          body: JSON.stringify(resetCommand),
+        }),
+      ],
+      [
+        '/api/admin/access/reset-password',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ 'x-csrf-token': 'csrf-access-admin' }),
+          body: JSON.stringify(resetCommand),
+        }),
+      ],
+    ]);
+  });
+
+  it('submits a trimmed explicit access-directory query without exposing reset keys in the report', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        response({
+          state: 'AUTHENTICATED',
+          csrfToken: 'csrf-access-search',
+          user: {
+            accountId: 'ACC-ADMIN',
+            displayName: 'Access Administrator',
+            authorization: { active: true, mappingStatus: 'MAPPED', roleId: 'ADMINISTRATOR', capabilities: ['access.admin'] },
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          ok: true,
+          page: 1,
+          pageSize: 25,
+          total: 1,
+          items: [{
+            accountId: 'ACC-DOL-2026',
+            revision: '3:2026-09-08T00:00:00.000Z',
+            accessId: 'DOL_2026',
+            displayName: 'Department of Logistics',
+            roleId: 'REQUESTER',
+            status: 'ACTIVE',
+            firstLoginPending: false,
+            locked: false,
+          }],
+        }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const backend = new FrontendBackend();
+    await backend.session();
+    const result = await backend.adminAccountDirectoryLoad('  DOL_2026  ');
+
+    expect(result.directory.items).toEqual([expect.objectContaining({ accessId: 'DOL_2026' })]);
+    expect(fetchMock.mock.calls[1]).toEqual([
+      '/api/admin/access/directory',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({ 'x-csrf-token': 'csrf-access-search' }),
+        body: JSON.stringify({ page: 1, pageSize: 25, status: 'ALL', query: 'DOL_2026' }),
+      }),
+    ]);
+  });
+
   it('binds release and restock operations to the existing CSRF-protected Worker commands', async () => {
     const fetchMock = vi
       .fn()

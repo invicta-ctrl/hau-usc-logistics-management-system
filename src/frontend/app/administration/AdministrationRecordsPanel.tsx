@@ -1,10 +1,14 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type {
   FrontendAdminAccount,
+  FrontendAdminResetAccount,
+  FrontendAdminResetTemporaryPasswordCommand,
+  FrontendAdminResetTemporaryPasswordReceipt,
   FrontendStaffActivityHistory,
   FrontendStaffDirectoryItem,
 } from '../../integration/backend';
 import { useDialogFocusTrap } from '../hooks/useDialogFocusTrap';
+import { TemporaryPasswordResetPanel } from './TemporaryPasswordResetPanel';
 import {
   accountStateLabel,
   dateLabel,
@@ -22,12 +26,20 @@ export type ActivityLoadState = Fi10LoadState | 'selection';
 type AdministrationRecordsPanelProps = {
   tab: Fi10Tab;
   accounts: readonly FrontendAdminAccount[];
+  resetProjection: readonly FrontendAdminResetAccount[];
   directory: readonly FrontendStaffDirectoryItem[];
   selectedAccount: FrontendAdminAccount | null;
   selectedStaff: FrontendStaffDirectoryItem | null;
   activity: FrontendStaffActivityHistory | null;
   activityState: ActivityLoadState;
   inspection: boolean;
+  canResetTemporaryPassword: boolean;
+  accountDirectoryQuery: string;
+  accountSearchBusy: boolean;
+  onResetTemporaryPassword: (command: FrontendAdminResetTemporaryPasswordCommand) => Promise<FrontendAdminResetTemporaryPasswordReceipt>;
+  onRefreshAccounts: () => Promise<void>;
+  onSearchAccounts: (query: string) => Promise<void>;
+  onAccountCommandLockChange: (locked: boolean) => void;
   onSelectAccount: (account: FrontendAdminAccount) => void;
   onSelectStaff: (staff: FrontendStaffDirectoryItem) => void;
   onReviewActivity: (staff: FrontendStaffDirectoryItem) => void;
@@ -101,7 +113,21 @@ function SearchField({
   );
 }
 
-function AccountInspector({ account }: { account: FrontendAdminAccount | null }) {
+function AccountInspector({
+  account,
+  resetAccount,
+  canResetTemporaryPassword,
+  onResetTemporaryPassword,
+  onRefreshAccounts,
+  onLockChange,
+}: {
+  account: FrontendAdminAccount | null;
+  resetAccount: FrontendAdminResetAccount | null;
+  canResetTemporaryPassword: boolean;
+  onResetTemporaryPassword: (command: FrontendAdminResetTemporaryPasswordCommand) => Promise<FrontendAdminResetTemporaryPasswordReceipt>;
+  onRefreshAccounts: () => Promise<void>;
+  onLockChange: (locked: boolean) => void;
+}) {
   return (
     <>
       <p className="eye">Read-only account record</p>
@@ -136,6 +162,13 @@ function AccountInspector({ account }: { account: FrontendAdminAccount | null })
           Access, role, approval, and account-state changes remain in their assigned authorized workflows.
         </p>
       </section>
+      <TemporaryPasswordResetPanel
+        account={resetAccount}
+        enabled={canResetTemporaryPassword}
+        onReset={onResetTemporaryPassword}
+        onRefresh={onRefreshAccounts}
+        onLockChange={onLockChange}
+      />
     </>
   );
 }
@@ -305,12 +338,20 @@ function ActivityPanel({
 export function AdministrationRecordsPanel({
   tab,
   accounts,
+  resetProjection,
   directory,
   selectedAccount,
   selectedStaff,
   activity,
   activityState,
   inspection,
+  canResetTemporaryPassword,
+  accountDirectoryQuery,
+  accountSearchBusy,
+  onResetTemporaryPassword,
+  onRefreshAccounts,
+  onSearchAccounts,
+  onAccountCommandLockChange,
   onSelectAccount,
   onSelectStaff,
   onReviewActivity,
@@ -320,7 +361,22 @@ export function AdministrationRecordsPanel({
   const inspectorRef = useRef<HTMLElement>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [accountQuery, setAccountQuery] = useState('');
+  const [accountDirectorySearch, setAccountDirectorySearch] = useState(accountDirectoryQuery);
+  const [accountDirectorySearchError, setAccountDirectorySearchError] = useState('');
   const [staffQuery, setStaffQuery] = useState('');
+  const [accountCommandLocked, setAccountCommandLocked] = useState(false);
+  const handleAccountCommandLockChange = useCallback((locked: boolean) => {
+    setAccountCommandLocked(locked);
+    onAccountCommandLockChange(locked);
+  }, [onAccountCommandLockChange]);
+  const submitAccountDirectorySearch = useCallback(async () => {
+    setAccountDirectorySearchError('');
+    try {
+      await onSearchAccounts(accountDirectorySearch);
+    } catch {
+      setAccountDirectorySearchError('The authorized account directory search could not be completed. Retry the same search.');
+    }
+  }, [accountDirectorySearch, onSearchAccounts]);
   const filteredAccounts = useMemo(
     () => filterAdministrationAccounts(accounts, accountQuery),
     [accountQuery, accounts],
@@ -330,6 +386,8 @@ export function AdministrationRecordsPanel({
     [directory, staffQuery],
   );
   const activeStaff = selectedStaff ?? directory[0] ?? null;
+  const activeAccount = selectedAccount ?? accounts[0] ?? null;
+  const activeResetAccount = resetProjection.find((account) => account.accessId === activeAccount?.accessId) ?? null;
   const showInspector = !isMobile || inspectorOpen;
 
   useDialogFocusTrap({
@@ -347,10 +405,14 @@ export function AdministrationRecordsPanel({
   }, [isMobile]);
 
   useEffect(() => {
+    setAccountDirectorySearch(accountDirectoryQuery);
+  }, [accountDirectoryQuery]);
+
+  useEffect(() => {
     if (!isMobile || !inspectorOpen) return;
     const previousOverflow = document.body.style.overflow;
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setInspectorOpen(false);
+      if (event.key === 'Escape' && !accountCommandLocked) setInspectorOpen(false);
     };
     document.body.style.overflow = 'hidden';
     document.addEventListener('keydown', handleEscape);
@@ -358,7 +420,7 @@ export function AdministrationRecordsPanel({
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [inspectorOpen, isMobile]);
+  }, [accountCommandLocked, inspectorOpen, isMobile]);
 
   if (tab === 'Activity') {
     return (
@@ -376,6 +438,7 @@ export function AdministrationRecordsPanel({
   const query = isAccountTab ? accountQuery : staffQuery;
   const shown = isAccountTab ? filteredAccounts.length : filteredStaff.length;
   const total = isAccountTab ? accounts.length : directory.length;
+  const accountSearchLocked = accountCommandLocked || accountSearchBusy;
 
   return (
     <div className="administration-records">
@@ -397,6 +460,39 @@ export function AdministrationRecordsPanel({
           shown={shown}
           total={total}
         />
+        {isAccountTab && !inspection ? (
+          <>
+            <form
+              className="administration-records-search"
+              aria-label="Search authorized account directory"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void submitAccountDirectorySearch();
+              }}
+            >
+              <label>
+                <span>Search authorized account directory</span>
+                <input
+                  type="search"
+                  value={accountDirectorySearch}
+                  onChange={(event) => {
+                    setAccountDirectorySearch(event.target.value);
+                    setAccountDirectorySearchError('');
+                  }}
+                  placeholder="Find an access ID outside this loaded page"
+                  autoComplete="off"
+                  disabled={accountSearchLocked}
+                />
+              </label>
+              <button type="submit" disabled={accountSearchLocked}>Search authorized directory</button>
+            </form>
+            {accountDirectorySearchError ? (
+              <p role="alert" className="administration-records-note">
+                {accountDirectorySearchError}
+              </p>
+            ) : null}
+          </>
+        ) : null}
         {total === 0 ? (
           <p className="administration-records-note">
             {isAccountTab
@@ -419,6 +515,7 @@ export function AdministrationRecordsPanel({
                   type="button"
                   data-administration-account-open
                   aria-pressed={selectedAccount?.accessId === account.accessId}
+                  disabled={accountCommandLocked}
                   onClick={() => {
                     onSelectAccount(account);
                     if (isMobile) setInspectorOpen(true);
@@ -476,13 +573,21 @@ export function AdministrationRecordsPanel({
               className="administration-records-inspector__back"
               type="button"
               data-dialog-initial-focus
+              disabled={accountCommandLocked}
               onClick={() => setInspectorOpen(false)}
             >
               Back to records
             </button>
           ) : null}
           {isAccountTab ? (
-            <AccountInspector account={selectedAccount ?? accounts[0] ?? null} />
+            <AccountInspector
+              account={activeAccount}
+              resetAccount={activeResetAccount}
+              canResetTemporaryPassword={canResetTemporaryPassword && !inspection}
+              onResetTemporaryPassword={onResetTemporaryPassword}
+              onRefreshAccounts={onRefreshAccounts}
+              onLockChange={handleAccountCommandLockChange}
+            />
           ) : (
             <StaffInspector staff={activeStaff} onReviewActivity={onReviewActivity} />
           )}

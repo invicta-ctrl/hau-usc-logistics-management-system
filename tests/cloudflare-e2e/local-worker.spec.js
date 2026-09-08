@@ -2755,7 +2755,7 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
     });
     expect(reset.status()).toBe(200);
     const resetResult = await reset.json();
-    expect(resetResult.credential.temporaryPassword).toMatch(/^Hau!9/u);
+    expect(/^Hau!9/u.test(String(resetResult.credential.temporaryPassword))).toBe(true);
     expect(
       (
         await anonymous.post('/api/auth/login', {
@@ -2776,63 +2776,64 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
   }
 });
 
-test('Administrator UI routes a one-time department reset through the current V5 access surface', async ({
+test('Administrator UI routes a one-time department reset through the canonical access record', async ({
   page,
 }) => {
+  const setupAdmin = await apiRequest.newContext({ baseURL: localWorkerBaseURL() });
+  try {
+    const setupCsrf = await login(setupAdmin, 'LOCAL.ADMIN');
+    const seed = await setupAdmin.post('/api/admin/access/seed-departments', {
+      headers: { 'x-csrf-token': setupCsrf },
+      data: {
+        confirmed: true,
+        reason: 'Prepare the canonical department account for the isolated administrator UI journey.',
+      },
+    });
+    expect(seed.status()).toBe(200);
+  } finally {
+    await setupAdmin.dispose();
+  }
+
   await signInV5(page, 'LOCAL.ADMIN');
   const initialDirectoryResponsePromise = page.waitForResponse(
     (response) =>
       response.request().method() === 'POST' &&
-      new URL(response.url()).pathname === '/api/admin/access/directory' &&
-      response.request().postDataJSON()?.limit === 100 &&
-      response.request().postDataJSON()?.offset === 0,
+        new URL(response.url()).pathname === '/api/admin/access/directory' &&
+        response.request().postDataJSON()?.page === 1 &&
+        response.request().postDataJSON()?.pageSize === 25,
   );
   await openV5Route(page, 'administration');
   const initialDirectoryResponse = await initialDirectoryResponsePromise;
   expect(initialDirectoryResponse.status()).toBe(200);
-  await expect(page.getByRole('heading', { name: 'Accounts and Access', exact: true })).toBeVisible();
-
-  const access = page.locator('[data-v5-admin-parity="access"]');
-  const accessForm = page.locator('form[data-v5-admin-form="access"]');
-  await expect(access).toContainText('Account and access operations');
-  await expect(accessForm).toBeVisible();
-  await accessForm.getByLabel('Action', { exact: true }).selectOption('LIST');
-  await accessForm.getByLabel('Search').fill('DOL_2026');
-  const directoryResponsePromise = page.waitForResponse(
+  await expect(page.getByRole('heading', { name: 'Authorized records and system boundaries', exact: true })).toBeVisible();
+  const access = page.locator('[data-fi10-administration="true"]');
+  await expect(access).toContainText('Assigned identity and access');
+  const directorySearchResponsePromise = page.waitForResponse(
     (response) =>
       response.request().method() === 'POST' &&
       new URL(response.url()).pathname === '/api/admin/access/directory' &&
+      response.request().postDataJSON()?.page === 1 &&
+      response.request().postDataJSON()?.pageSize === 25 &&
       response.request().postDataJSON()?.query === 'DOL_2026',
   );
-  const directoryRefreshPromise = page.waitForResponse(
-    (response) =>
-      response.request().method() === 'POST' &&
-      new URL(response.url()).pathname === '/api/admin/access/directory' &&
-      response.request().postDataJSON()?.limit === 100,
-  );
-  await accessForm.getByRole('button', { name: 'Run access action' }).click();
-  const directoryResponse = await directoryResponsePromise;
-  expect(directoryResponse.status()).toBe(200);
-  const departmentAccount = (await directoryResponse.json()).items.find(
-    (entry) => entry.accessId === 'DOL_2026',
-  );
+  const directorySearch = page.getByRole('form', { name: 'Search authorized account directory' });
+  await directorySearch.getByLabel('Search authorized account directory').fill('DOL_2026');
+  await directorySearch.getByRole('button', { name: 'Search authorized directory' }).click();
+  const directorySearchResponse = await directorySearchResponsePromise;
+  expect(directorySearchResponse.status()).toBe(200);
+  const directorySearchResult = await directorySearchResponse.json();
+  const departmentAccount = directorySearchResult.items.find((entry) => entry.accessId === 'DOL_2026');
   expect(departmentAccount).toMatchObject({
     accessId: 'DOL_2026',
     departmentId: 'USC-DEPT-DOL',
     departmentDisplayName: 'Department of Logistics',
   });
-  await directoryRefreshPromise;
-
-  await expect(accessForm).toBeVisible();
-  await accessForm.getByLabel('Action', { exact: true }).selectOption('RESET_PASSWORD');
-  await accessForm.getByLabel('Account ID').fill(departmentAccount.accountId);
-  await accessForm.getByLabel('Current access ID', { exact: true }).fill('DOL_2026');
-  await accessForm.getByLabel('Confirm current access ID', { exact: true }).fill('DOL_2026');
-  await accessForm.getByLabel('Expected revision').fill(departmentAccount.revision);
-  await accessForm.getByLabel('Safe retry key').fill('department-reset-password-ui-0001');
-  await accessForm
-    .getByLabel('Reason')
-    .fill('Verify the governed one-time department credential reset through V5.');
+  await page.getByRole('button', { name: /DOL_2026/u }).click();
+  const resetForm = page.getByRole('form', { name: 'Reset selected account temporary password' });
+  await expect(resetForm).toBeVisible();
+  await resetForm.getByLabel('Current access ID', { exact: true }).fill('DOL_2026');
+  await resetForm.getByLabel('Confirm current access ID', { exact: true }).fill('DOL_2026');
+  await resetForm.getByLabel('Reset reason').fill('Verify the governed one-time department credential reset through the canonical access record.');
   const resetResponsePromise = page.waitForResponse(
     (response) =>
       response.request().method() === 'POST' &&
@@ -2842,9 +2843,11 @@ test('Administrator UI routes a one-time department reset through the current V5
     (response) =>
       response.request().method() === 'POST' &&
       new URL(response.url()).pathname === '/api/admin/access/directory' &&
-      response.request().postDataJSON()?.limit === 100,
+      response.request().postDataJSON()?.page === 1 &&
+      response.request().postDataJSON()?.pageSize === 25 &&
+      response.request().postDataJSON()?.query === 'DOL_2026',
   );
-  await accessForm.getByRole('button', { name: 'Run access action' }).click();
+  await resetForm.getByRole('button', { name: 'Reset selected account password' }).click();
   const resetResponse = await resetResponsePromise;
   expect(resetResponse.status()).toBe(200);
   const resetResult = await resetResponse.json();
@@ -2859,10 +2862,11 @@ test('Administrator UI routes a one-time department reset through the current V5
       department: 'Department of Logistics',
     },
   });
-  expect(resetResult.credential.temporaryPassword).toMatch(/^Hau!9/u);
+  expect(/^Hau!9/u.test(String(resetResult.credential.temporaryPassword))).toBe(true);
   await resetRefreshPromise;
-  await expect(page.locator('[data-v5-admin-parity="access"]')).toBeVisible();
-  await expect(page.locator('form[data-v5-admin-form="access"]')).toBeVisible();
+  await expect(page.getByText('The current account directory was refreshed after the reset.', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Dismiss and clear credential' }).click();
+  await expect(resetForm).toBeVisible();
 });
 
 test('requester portals keep request and lending records self-scoped', async () => {

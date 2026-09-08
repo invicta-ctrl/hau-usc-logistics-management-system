@@ -14,8 +14,10 @@ export default defineConfig({
     baseURL: process.env.HAU_CLOUDFLARE_BASE_URL || localWorkerBaseURL,
     browserName: 'chromium',
     viewport: { width: 390, height: 844 },
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
+    // This local suite includes one-time credential presentation. Never persist
+    // a credential in a Playwright trace or screenshot, even on a failed run.
+    trace: 'off',
+    screenshot: 'off',
   },
   webServer: {
     command: 'node scripts/start-local-worker-acceptance.mjs',
