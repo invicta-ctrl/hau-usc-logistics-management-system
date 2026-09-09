@@ -10,8 +10,8 @@ PARENT_BASE_SHA: 47e55d71eadcdbab2d5eced8c16baf95e3ae781d
 UPSTREAM: origin/reconcile/playground-fbr001-claude-frontend (owner-authorized publication; verify remote HEAD before resuming)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1e
-WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1d (usage limit; no commit; parent-reviewed uncommitted administration/search work preserved) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1e; same branch/worktree, verified HEAD/origin 88b8f9f2039e3ad2b8ccf6c50ba8cd840e14a248; this is a lock transfer within the owner-started MAEOS-v1-A1 Terra lane, not model fallback.
+ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1g
+WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1e (usage limit after publishing `02308bcaa174b27a904f2bc4106269537dc6995f`; bounded six-failure frontend repair preserved uncommitted) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1f (usage limit after final frontend suite evidence; no commit) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1g; same branch/worktree, verified HEAD/origin `02308bcaa174b27a904f2bc4106269537dc6995f`; this is a lock transfer within the owner-started MAEOS-v1-A1 Terra lane, not model fallback.
 HANDOFF_STATUS: IN_PROGRESS
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
@@ -34,6 +34,14 @@ BLOCKER: Final H1 Worker/frontend reruns are pending after authorized event/proc
 RESUME_COMMANDS: git status --short; verify remote parity; read the current pointer and accepted matrix; reconcile the recorded Worker/frontend failures against accepted scope before authorizing any further H1 gate. Do not rerun the already-green focused inventory-bulk case without a new evidence need.
 PROHIBITED_ACTIONS: archive_extraction;8787_reuse_or_termination;provider_or_Playground_or_D1_or_R2_or_Production_action;fake_success_or_wildcard_mocks;legacy_route_aliases;exact_4173_gate_weakening.
 NEXT_EXACT_ACTION: RUN_THE_REMAINING_H1_FULL_FRONTEND_BROWSER_AND_ACCESSIBILITY_GATES, INCLUDING_THE_REQUIRED_RESPONSIVE_MATRIX; DO_NOT_CREATE_H1_RECEIPT
+
+## A1g publication validation — 2026-09-09
+
+The inherited frontend-only repair was reviewed after a clean `02308bcaa174b27a904f2bc4106269537dc6995f`/origin handshake. Current-byte verification: `npm.cmd run test:frontend` 42/42 PASS; `npm.cmd run build` PASS; `npm.cmd run lint` 0 errors with 2 inherited warnings; `git diff --check` PASS. Final full frontend evidence remains 426 passed, 149 skipped, 0 failed on isolated 4174; source has not changed since that run. H1 remains unaccepted; next is the exact manual eight-width Light/Dark/System, reduced-motion, keyboard/focus, overflow, functional-state, console, and WCAG 2.2 AA matrix. Port 8787 PID 29528 remains untouched; Production remains forbidden.
+
+## A1f frontend suite checkpoint — 2026-09-09
+
+Starting HEAD and origin were `02308bcaa174b27a904f2bc4106269537dc6995f`. This packet keeps the inherited FI-07/U08/P18/FI-04 fixes, repairs public initial-focus behavior under React StrictMode by comparing route keys, and warms the actual anonymous public route before the parallel Playwright responsive projects start. It does not mock routes or change frontend/backend contracts. Final isolated frontend evidence on 4174 is 426 passed, 149 skipped (9.0m); focused responsive regressions passed at 320/390/768/1440 and fresh 4175/4176. Frontend units are 42/42 passed; application build passed; lint has zero errors and two inherited warnings; `git diff --check` passed. 8787 PID 29528 was not touched. H1 is still not accepted: the required manual 320/375/390/414/768/1024/1440/1920 Light/Dark/System, reduced-motion, keyboard/focus, overflow, functional-state, console, and WCAG 2.2 AA browser matrix remains the next gate.
 
 ## Published Worker repair evidence — 2026-09-08
 

@@ -10,10 +10,10 @@ TREE: GIT_TREE (resolve after this single checkpoint commit)
 UPSTREAM: origin/reconcile/playground-fbr001-claude-frontend (owner-authorized publication; verify remote HEAD before resuming)
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-reconciliation
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1e
+ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1g
 REQUIRED_MODEL: MAEOS_V1_A1_TERRA_HIGH_WRITER (owner-started local Astra A1 task)
 WRITER_LOCK: FBR001_FRONTEND_ADOPTION_A1_ACTIVE
-WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1d (usage limit; no commit; parent-reviewed uncommitted administration/search work preserved) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1e; same branch/worktree, verified HEAD/origin 88b8f9f2039e3ad2b8ccf6c50ba8cd840e14a248; this is a lock transfer within the owner-started MAEOS-v1-A1 Terra lane, not model fallback.
+WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1e (usage limit after publishing `02308bcaa174b27a904f2bc4106269537dc6995f`; bounded six-failure frontend repair preserved uncommitted) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1f (usage limit after final frontend suite evidence; no commit) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1g; same branch/worktree, verified HEAD/origin `02308bcaa174b27a904f2bc4106269537dc6995f`; this is a lock transfer within the owner-started MAEOS-v1-A1 Terra lane, not model fallback.
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 INTERRUPTED_CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
@@ -26,6 +26,18 @@ STARTING_HEAD_AND_UPSTREAM: 89d8627b899df7bb586c5542f4ee2a6c9131ffb2
 BLOCKER: Final H1 Worker/frontend suites at fc5c8dc predate the event repair and remain unaccepted; rerun final H1 gates after all authorized frontend adoption is settled. Partial exact-4173 inspection exists, but the eight-width matrix is incomplete.
 HANDOFF_STATUS: IN_PROGRESS
 NEXT_EXACT_ACTION: RUN_THE_REMAINING_H1_FULL_FRONTEND_BROWSER_AND_ACCESSIBILITY_GATES, INCLUDING_THE_REQUIRED_RESPONSIVE_MATRIX; DO_NOT_CREATE_H1_RECEIPT
+
+## A1g publication validation — 2026-09-09
+
+The inherited frontend-only repair was reviewed after a clean `02308bcaa174b27a904f2bc4106269537dc6995f`/origin handshake. Current-byte verification: `npm.cmd run test:frontend` 42/42 PASS; `npm.cmd run build` PASS; `npm.cmd run lint` 0 errors with 2 inherited warnings; `git diff --check` PASS. Final full frontend evidence remains 426 passed, 149 skipped, 0 failed on isolated 4174; source has not changed since that run. H1 remains unaccepted; next is the exact manual eight-width Light/Dark/System, reduced-motion, keyboard/focus, overflow, functional-state, console, and WCAG 2.2 AA matrix. Port 8787 PID 29528 remains untouched; Production remains forbidden.
+
+## A1f frontend acceptance repair and verification — 2026-09-09
+
+The published starting point was `02308bcaa174b27a904f2bc4106269537dc6995f` with origin parity. A bounded frontend-only repair preserved the inherited FI-07 queue focus, U08 scoped-heading, and P18/FI-04 authenticated-shell readiness fixes. `useRouteFocus` now records the previous route key, so React StrictMode cannot consume a public initial-route exemption and schedule an unintended main focus. The frontend Playwright configuration now runs a real anonymous public-route warmup before responsive workers begin; it waits for the unchanged real landing heading and does not weaken any test assertion or production route behavior.
+
+Evidence: focused inherited cases at 320/390/768/1440: 14 passed, 2 skipped (27.2s); focused FVR-001 keyboard/reflow at 390/1440: 2 passed (27.2s); landing race regression at 4175 and 4176: 15 passed, 2 skipped (34.0s and 37.3s). Final isolated `npm.cmd run test:e2e:frontend` on 4174: 426 passed, 149 skipped (9.0m), no failures. `npm.cmd run test:frontend`: 42/42 passed. Application build passed. Lint passed with 0 errors and 2 pre-existing unused-variable warnings in `src/server/public-request-service.js` and `tests/cloudflare-e2e/local-worker.spec.js`. `git diff --check` passed. Port 8787 PID 29528 remains untouched; no provider, Playground, D1/R2, deployment, or Production action occurred.
+
+H1 remains not accepted: complete the recorded manual eight-width 320/375/390/414/768/1024/1440/1920 browser matrix for Light/Dark/System, reduced motion, keyboard/focus, overflow, functional states, console, and WCAG 2.2 AA before creating a receipt.
 ## Published administration and Worker repair evidence — 2026-09-08
 
 Published `6c703f8fb3b12dcf307549ec6ad6932461ad9e4d` (`fix(frontend): add governed account credential reset`) at tree `c50c58b820cff071fefc972e1368f64ea69b6d85`; origin parity was verified. The subsequent fresh local Worker acceptance on port 8788 with reuse disabled passed 62/62. The repair keeps the existing server-issued `authorization.workspaceIds` in the frontend session projection and uses it to narrow a capability-eligible route whenever that projection is populated. A food-only account therefore reaches the signed-in denial state instead of rendering Procurement; Worker authorization remains authoritative.

@@ -10,8 +10,8 @@ INTERRUPTED_CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md
 AUTHORITY: Earl H1 checkpoint instruction -> AGENTS.md -> .agents/PROJECT_POLICY.md -> accepted FBR-001 spec -> current Worker/API/auth/domain/privacy contracts.
 REQUIRED_MODEL: MAEOS_V1_A1_TERRA_HIGH_WRITER (owner-started local Astra A1 task)
-ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1e
-WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1d (usage limit; no commit; parent-reviewed uncommitted administration/search work preserved) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1e; same branch/worktree, verified HEAD/origin 88b8f9f2039e3ad2b8ccf6c50ba8cd840e14a248; this is a lock transfer within the owner-started MAEOS-v1-A1 Terra lane, not model fallback.
+ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1g
+WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1e (usage limit after publishing `02308bcaa174b27a904f2bc4106269537dc6995f`; bounded six-failure frontend repair preserved uncommitted) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1f (usage limit after final frontend suite evidence; no commit) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1g; same branch/worktree, verified HEAD/origin `02308bcaa174b27a904f2bc4106269537dc6995f`; this is a lock transfer within the owner-started MAEOS-v1-A1 Terra lane, not model fallback.
 RISK: HIGH; FRONTEND_ACCEPTANCE; LOCAL_WORKER; PRODUCTION_FORBIDDEN
 SCOPE: PHASE_H1_ONLY
 IN_SCOPE: reproduce/classify the one fresh local-Worker residual, evidence-only repair if required and authorized by the accepted spec, final local Worker/frontend/browser/accessibility matrix, exact H1 receipt only when all required local evidence is green.
@@ -22,6 +22,14 @@ STOP_CONDITIONS: conflicting writer; unknown dirty residue; required product/bac
 STATUS: H1_IN_PROGRESS_NOT_ACCEPTED
 HANDOFF_STATUS: IN_PROGRESS
 NEXT_EXACT_ACTION: RUN_THE_REMAINING_H1_FULL_FRONTEND_BROWSER_AND_ACCESSIBILITY_GATES, INCLUDING_THE_REQUIRED_RESPONSIVE_MATRIX; DO_NOT_CREATE_H1_RECEIPT
+
+## A1g publication validation — 2026-09-09
+
+The inherited frontend-only repair was reviewed after a clean `02308bcaa174b27a904f2bc4106269537dc6995f`/origin handshake. Current-byte verification: `npm.cmd run test:frontend` 42/42 PASS; `npm.cmd run build` PASS; `npm.cmd run lint` 0 errors with 2 inherited warnings; `git diff --check` PASS. Final full frontend evidence remains 426 passed, 149 skipped, 0 failed on isolated 4174; source has not changed since that run. H1 remains unaccepted; next is the exact manual eight-width Light/Dark/System, reduced-motion, keyboard/focus, overflow, functional-state, console, and WCAG 2.2 AA matrix. Port 8787 PID 29528 remains untouched; Production remains forbidden.
+
+## A1f verification update — 2026-09-09
+
+The bounded frontend repair preserves adopted route semantics: previous-route tracking prevents StrictMode from focusing public content on initial mount, and a global setup warms the real anonymous public route before parallel responsive tests. Final frontend suite on isolated 4174: 426 passed, 149 skipped (9.0m). Focused inheritance/keyboard/landing regressions passed at 320/390/768/1440 and fresh 4175/4176. Frontend units: 42/42 passed; build passed; lint 0 errors with 2 inherited warnings; `git diff --check` passed. No backend/auth/schema/provider/Production action and 8787 PID 29528 was preserved. H1 remains unaccepted pending the exact manual eight-width browser/accessibility matrix.
 
 WORKER_REPAIR_EVIDENCE: published administration packet `6c703f8fb3b12dcf307549ec6ad6932461ad9e4d` (tree `c50c58b820cff071fefc972e1368f64ea69b6d85) has verified origin parity. Fresh 8788/reuse=false Worker acceptance passes 62/62. The frontend now retains the existing server-issued workspace projection and fail-closes a capability-eligible route outside a populated authorized workspace list; no backend/auth contract changed. Frontend units 42/42 and application build pass; lint has 0 errors and 2 inherited warnings; `git diff --check` passes. Port 8787 PID 29528 remains untouched. H1 remains unaccepted.
 

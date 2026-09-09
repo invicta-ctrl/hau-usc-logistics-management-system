@@ -5,6 +5,7 @@ const localPreviewPort = process.env.HAU_FRONTEND_E2E_PORT ?? '4174';
 const localPreviewUrl = `http://127.0.0.1:${localPreviewPort}`;
 
 export default defineConfig({
+  globalSetup: './tests/e2e/frontend-warmup.global-setup.js',
   testDir: './tests/e2e',
   testMatch: [
     'frontend-cutover.spec.js',

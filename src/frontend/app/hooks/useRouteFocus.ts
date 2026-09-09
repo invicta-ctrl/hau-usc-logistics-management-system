@@ -16,17 +16,18 @@ export function useRouteFocus({
   enabled?: boolean;
   focusOnMount?: boolean;
 }) {
-  const initialRoute = useRef(true);
+  const previousRouteKey = useRef<string | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
     document.title = `${label} · HAU-USC Logistics`;
 
-    if (initialRoute.current && !focusOnMount) {
-      initialRoute.current = false;
+    const isInitialRoute = previousRouteKey.current === null;
+    const routeChanged = previousRouteKey.current !== routeKey;
+    previousRouteKey.current = routeKey;
+    if ((!routeChanged && !focusOnMount) || (isInitialRoute && !focusOnMount)) {
       return;
     }
-    initialRoute.current = false;
 
     let focusFrame = 0;
     const routeFrame = requestAnimationFrame(() => {

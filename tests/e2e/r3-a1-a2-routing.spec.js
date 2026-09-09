@@ -1397,6 +1397,7 @@ test('P18 Profile persists theme family separately from Light, Dark, and System 
   await page.goto('/');
   await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
+  await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
   await page.evaluate(() => {
     window.location.hash = '#/route/profile';
   });
@@ -1464,6 +1465,7 @@ test('FI-04 profile surfaces a failed profile response and retries only after th
   await page.goto('/');
   await page.getByRole('link', { name: 'Staff sign in' }).first().click();
   await signIn(page, 'dol.staff');
+  await expect(page.getByRole('banner', { name: 'Workspace command bar' })).toBeVisible();
   await page.evaluate(() => {
     window.location.hash = '#/route/profile';
   });

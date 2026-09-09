@@ -160,7 +160,7 @@ test('MFR-002 U08 keeps independently empty event collections truthful', async (
   ).toBeVisible();
   const context = page.locator('[data-fi11-events="true"] details');
   await context.locator('summary').click();
-  await expect(page.getByText('Council assembly', { exact: true })).toBeVisible();
+  await expect(context.getByRole('heading', { name: 'Council assembly', exact: true })).toBeVisible();
   await expect(page.getByText('No event days are loaded in this bounded view.')).toBeVisible();
   await expect(page.getByText('Nothing was inferred from another event collection.')).toHaveCount(2);
 });

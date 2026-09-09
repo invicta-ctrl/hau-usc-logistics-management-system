@@ -760,6 +760,8 @@ export function InternalLendingHub({
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const inspectorRef = useRef<HTMLElement | null>(null);
   const queueFallbackRef = useRef<HTMLInputElement | null>(null);
+  const queueFocusTargetRef = useRef<string | null | undefined>(undefined);
+  const [queueFocusRequest, setQueueFocusRequest] = useState(0);
   const selectedRef = useRef<FrontendLendingTicket | null>(selected);
   const dialogRef = useRef<DialogKind>(dialog);
   const [now, setNow] = useState(Date.now());
@@ -784,8 +786,18 @@ export function InternalLendingHub({
   }, []);
 
   const restoreQueueFocus = useCallback((ticketId?: string) => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
+    queueFocusTargetRef.current = ticketId ?? null;
+    setQueueFocusRequest((value) => value + 1);
+  }, []);
+
+  useEffect(() => {
+    if (!queueFocusRequest || selected || dialog) return;
+    const ticketId = queueFocusTargetRef.current;
+    if (ticketId === undefined) return;
+    queueFocusTargetRef.current = undefined;
+    let secondFrame = 0;
+    const firstFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => {
         const matches = ticketId
           ? Array.from(document.querySelectorAll<HTMLButtonElement>('[data-ticket-trigger="' + ticketId + '"]'))
           : [];
@@ -793,12 +805,14 @@ export function InternalLendingHub({
         const cachedTrigger = ticketId ? triggerRefs.current[ticketId] : null;
         const connectedCachedTrigger =
           cachedTrigger?.isConnected && cachedTrigger.offsetParent !== null ? cachedTrigger : null;
-        (visible ?? connectedCachedTrigger ?? queueFallbackRef.current)?.focus({
-          preventScroll: true,
-        });
+        (visible ?? connectedCachedTrigger ?? queueFallbackRef.current)?.focus({ preventScroll: true });
       });
     });
-  }, []);
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      if (secondFrame) cancelAnimationFrame(secondFrame);
+    };
+  }, [dialog, queueFocusRequest, selected]);
 
   const clearSelection = useCallback(
     (ticketId?: string, restoreFocus = true) => {
