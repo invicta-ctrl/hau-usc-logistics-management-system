@@ -1,11 +1,12 @@
-# Current Bounded Task — FBR-001 Phase H1 interrupted checkpoint
+# Current Bounded Task — FBR-001 Phase H2 isolated Playground preflight pending
 
 INTENT: FRONTEND_INTEGRATION_AND_ACCEPTANCE
 MODE: EXECUTE
-OBJECTIVE: Resume and complete only FBR-001 Phase H1 local browser, accessibility, and local-Worker acceptance from the preserved checkpoint; H2, Playground preflight, deployment, and Production remain gated.
+OBJECTIVE: H1 local acceptance is complete. Begin only the separately gated Phase H2 isolated Playground preflight after reading its authority; deployment and Production remain forbidden.
 TARGET: reconcile/playground-fbr001-claude-frontend repository checkout and the H1 acceptance evidence.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
+H1_RECEIPT: .codex/FBR001_PHASE_H1_LOCAL_ACCEPTANCE_RECEIPT.md
 INTERRUPTED_CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md
 AUTHORITY: Earl H1 checkpoint instruction -> AGENTS.md -> .agents/PROJECT_POLICY.md -> accepted FBR-001 spec -> current Worker/API/auth/domain/privacy contracts.
@@ -13,15 +14,15 @@ REQUIRED_MODEL: MAEOS_V1_A1_TERRA_HIGH_WRITER (owner-started local Astra A1 task
 ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1g
 WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1e (usage limit after publishing `02308bcaa174b27a904f2bc4106269537dc6995f`; bounded six-failure frontend repair preserved uncommitted) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1f (usage limit after final frontend suite evidence; no commit) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1g; same branch/worktree, verified HEAD/origin `02308bcaa174b27a904f2bc4106269537dc6995f`; this is a lock transfer within the owner-started MAEOS-v1-A1 Terra lane, not model fallback.
 RISK: HIGH; FRONTEND_ACCEPTANCE; LOCAL_WORKER; PRODUCTION_FORBIDDEN
-SCOPE: PHASE_H1_ONLY
-IN_SCOPE: reproduce/classify the one fresh local-Worker residual, evidence-only repair if required and authorized by the accepted spec, final local Worker/frontend/browser/accessibility matrix, exact H1 receipt only when all required local evidence is green.
-OUT_OF_SCOPE: H2; deployment; Playground/provider/D1/R2/Google/Figma/Production writes; schema/migration; capability widening; backend/auth/security/privacy semantic expansion; main or historical-worktree mutation; archive extraction; 8787 reuse or termination.
-DELIVERABLES: final H1 local acceptance evidence and `.codex/FBR001_PHASE_H1_LOCAL_ACCEPTANCE_RECEIPT.md` only when all gates pass; otherwise a truthful updated interrupted handoff.
-VERIFICATION: exact sequence in the interrupted checkpoint, including fresh 8788 local Worker, final frontend/browser matrix, deterministic checks, handoff verifier, and diff check.
+SCOPE: PHASE_H2_PREFLIGHT_ONLY
+IN_SCOPE: read-only H2 isolation authority and the bounded isolated Playground preflight it explicitly allows; retain the H1 receipt as the acceptance baseline.
+OUT_OF_SCOPE: deployment; Production; provider/D1/R2/Google/Figma writes; schema/migration; capability widening; backend/auth/security/privacy semantic expansion; main or historical-worktree mutation; archive extraction; 8787 reuse or termination.
+DELIVERABLES: separately verified H2 preflight evidence only when its authority and isolation checks pass; otherwise a truthful H2 pending handoff.
+VERIFICATION: exact H2 authority, isolation, and preflight sequence; do not reuse H1 evidence as deployment authority.
 STOP_CONDITIONS: conflicting writer; unknown dirty residue; required product/backend/schema/auth semantic expansion; provider action; Production crossover; secret/private data; failed verification that cannot form safe evidence.
-STATUS: H1_IN_PROGRESS_NOT_ACCEPTED
-HANDOFF_STATUS: IN_PROGRESS
-NEXT_EXACT_ACTION: STOP_H1_AT_THE_VERIFIED_LOCAL_WORKER_CLEAN_CONSOLE_BLOCKER; DO_NOT_CREATE_H1_RECEIPT_OR_START_H2
+STATUS: H1_LOCAL_ACCEPTED_H2_PENDING
+HANDOFF_STATUS: H2_PENDING_SEPARATE_PREFLIGHT
+NEXT_EXACT_ACTION: READ_THE_H2_ISOLATION_AUTHORITY_AND_PERFORM_ONLY_ITS_SEPARATE_PREFLIGHT; NO_DEPLOYMENT_OR_PRODUCTION_ACTION
 
 ## A1g publication validation — 2026-09-09
 

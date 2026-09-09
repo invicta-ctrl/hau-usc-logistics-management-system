@@ -1,4 +1,4 @@
-# Current Environment Handoff — FBR-001 Phase H1 interrupted checkpoint
+# Current Environment Handoff — FBR-001 Phase H2 isolated Playground preflight pending
 
 PROGRAM: FBR-001
 FROM: owner-started local Astra A1 orchestration
@@ -12,28 +12,29 @@ WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/fbr001-claude-frontend-
 WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: TERRA_HIGH:/root/fbr001_finish_frontend_a1g
 WRITER_TRANSFER: TERRA_HIGH:/root/fbr001_finish_frontend_a1e (usage limit after publishing `02308bcaa174b27a904f2bc4106269537dc6995f`; bounded six-failure frontend repair preserved uncommitted) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1f (usage limit after final frontend suite evidence; no commit) -> TERRA_HIGH:/root/fbr001_finish_frontend_a1g; same branch/worktree, verified HEAD/origin `02308bcaa174b27a904f2bc4106269537dc6995f`; this is a lock transfer within the owner-started MAEOS-v1-A1 Terra lane, not model fallback.
-HANDOFF_STATUS: IN_PROGRESS
+HANDOFF_STATUS: H2_PENDING_SEPARATE_PREFLIGHT
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/accepted/2026-09-01-fbr001-claude-frontend-backend-reconciliation.md
 CHECKPOINT: .codex/FBR001_PHASE_H1_INTERRUPTED_CHECKPOINT.md
 
-STATUS: H1_IN_PROGRESS_NOT_ACCEPTED. This checkpoint preserves a verification and accepted-scope reconciliation blocker. No H1 acceptance receipt exists. H2, Playground preflight, deployment, and Production are forbidden until H1 has final green evidence.
+STATUS: H1_LOCAL_ACCEPTED_H2_PENDING. H1 receipt: `.codex/FBR001_PHASE_H1_LOCAL_ACCEPTANCE_RECEIPT.md`. H2 is a separate isolated Playground preflight; deployment and Production remain forbidden.
 
-COMPLETED: H1 code/test harness edits and durable interrupted checkpoint records are preserved. H1 acceptance is not complete.
-VALIDATION: Event focused evidence is PASS: adapter 34/34; fresh 8788/reuse=false Worker event grep 4/4; frontend-390 command-context recovery 1/1. Procurement focused evidence is PASS: adapter 35/35; fresh 8788/reuse=false Worker procurement grep 1/1 in 41.9 seconds; frontend-390 supply fixture 4/4 in 16.8 seconds; and reviewed 390/1440 screenshots have horizontal overflow at most one pixel. The last full Worker/frontend suites (50 passed / 9 failed; 416 passed / 121 skipped / 3 failed) ran at fc5c8dc before event/procurement adoption and are not current final H1 evidence. Partial exact-4173 inspection exists; the eight-width matrix remains incomplete. H1 remains not accepted.
+COMPLETED: H1 local acceptance is complete and recorded in `.codex/FBR001_PHASE_H1_LOCAL_ACCEPTANCE_RECEIPT.md`. H2 remains pending a separate isolated Playground preflight.
+VALIDATION: Final H1 receipt evidence is green: fresh Worker 62/62, final frontend 426 passed/149 skipped/0 failed, completed browser matrix, and fresh console-clean 8788 proof. Event and procurement focused evidence below is historical provenance.
 - Historical intermediate: `npm.cmd exec vitest run tests/unit/frontend-backend-adapter.test.js tests/unit/local-worker-port.test.js` — PASS, 2 files / 41 tests (32 adapter; 9 port resolver).
 - `npm.cmd run build` — PASS, including fixture-boundary and foundation checks.
 - `git diff --check` — PASS before checkpoint documentation edit; rerun after final staging.
 
-KNOWN_RESIDUAL: The full Worker/frontend suite results at fc5c8dc (50 passed / 9 failed and 416 passed / 121 skipped / 3 failed) predate the event repair and cannot serve as final H1 evidence. Partial exact-4173 inspection is recorded in the checkpoint; the manual eight-width/browser/accessibility matrix remains incomplete. The owner authorized accepted Scope 4 event/procurement command adoption. Do not call H1 accepted.
+HISTORICAL_RESIDUAL_RESOLVED: The pre-final fc5c8dc Worker/frontend results and incomplete browser matrix were superseded by final H1 green evidence. The console residual was resolved by deterministic local-only R2 seeding; do not reinterpret this as remote R2 or deployment authority.
 
 EXTERNAL_ACTIONS: owner authorized Git publication of this checkpoint and handoff to the named continuation branch. Verify remote parity; no provider, deployment, or Production action.
 STARTING_HEAD_AND_UPSTREAM: 89d8627b899df7bb586c5542f4ee2a6c9131ffb2
-BLOCKER: Fresh 8788/reuse=false local Worker public browser inspection reaches the required fallback but logs a real `/brand/usc-logo` 404. The manual eight-width matrix and deterministic H1 gates are otherwise green; no frontend-only repair can remove a server asset 404 without suppression or server/asset scope.
-RESUME_COMMANDS: git status --short; verify remote parity; read the current pointer and accepted matrix; reconcile the recorded Worker/frontend failures against accepted scope before authorizing any further H1 gate. Do not rerun the already-green focused inventory-bulk case without a new evidence need.
-PROHIBITED_ACTIONS: archive_extraction;8787_reuse_or_termination;provider_or_Playground_or_D1_or_R2_or_Production_action;fake_success_or_wildcard_mocks;legacy_route_aliases;exact_4173_gate_weakening.
-NEXT_EXACT_ACTION: STOP_H1_AT_THE_VERIFIED_LOCAL_WORKER_CLEAN_CONSOLE_BLOCKER; DO_NOT_CREATE_H1_RECEIPT_OR_START_H2
+BLOCKER: NONE; H1 local acceptance is green. H2 requires separate isolation authority before any preflight.
+H1_RESULT: Local acceptance complete. The fresh 8788/reuse=false browser is console-clean after deterministic disposable local R2 seeding. See `.codex/FBR001_PHASE_H1_LOCAL_ACCEPTANCE_RECEIPT.md`.
+RESUME_COMMANDS: git status --short; verify remote parity; read the H1 receipt, current pointer, accepted specification, and exact H2 isolation authority before any H2 preflight. Do not rerun green H1 checks without a new evidence need.
+PROHIBITED_ACTIONS: archive_extraction;8787_reuse_or_termination;provider_or_D1_or_R2_or_Production_action;fake_success_or_wildcard_mocks;legacy_route_aliases;exact_4173_gate_weakening;any_Playground_mutation_or_deployment_without_the_separate_H2_gate.
+NEXT_EXACT_ACTION: READ_THE_H2_ISOLATION_AUTHORITY_AND_PERFORM_ONLY_ITS_SEPARATE_PREFLIGHT; NO_DEPLOYMENT_OR_PRODUCTION_ACTION
 
 ## A1g publication validation — 2026-09-09
 

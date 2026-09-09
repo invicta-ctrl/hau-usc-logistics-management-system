@@ -1,8 +1,8 @@
-# Current Work Pointer — FBR-001 Phase H1 interrupted checkpoint
+# Current Work Pointer — FBR-001 Phase H2 isolated Playground preflight pending
 
 PROGRAM: FBR-001 Claude Frontend Baseline Adoption + Backend Reconciliation + Playground Functional Parity
-MILESTONE: PHASE_H1_LOCAL_BROWSER_ACCESSIBILITY_AND_WORKER_ACCEPTANCE
-STATUS: H1_IN_PROGRESS_INTERRUPTED_CHECKPOINT_NOT_ACCEPTED
+MILESTONE: PHASE_H2_ISOLATED_PLAYGROUND_PREFLIGHT
+STATUS: H1_LOCAL_ACCEPTED_H2_PENDING
 BRANCH: reconcile/playground-fbr001-claude-frontend
 HEAD: GIT_HEAD
 PARENT_BASE_SHA: 47e55d71eadcdbab2d5eced8c16baf95e3ae781d
@@ -23,9 +23,11 @@ PARITY_MATRIX: docs/frontend/FBR001_FRONTEND_FUNCTIONAL_PARITY_MATRIX.md
 FUNCTIONAL_AUTHORITY: Playground@7f483d2d + Worker/API/auth/domain/privacy/capability/D1/R2/audit/ledger/custody contracts; schema 32; migration 0032
 PRODUCTION_DEPLOYMENT: FORBIDDEN
 STARTING_HEAD_AND_UPSTREAM: 89d8627b899df7bb586c5542f4ee2a6c9131ffb2
-BLOCKER: Fresh 8788/reuse=false local Worker public browser inspection reaches the required fallback but logs a real `/brand/usc-logo` 404. The manual eight-width matrix and deterministic H1 gates are otherwise green; no frontend-only repair can remove a server asset 404 without suppression or server/asset scope.
-HANDOFF_STATUS: IN_PROGRESS
-NEXT_EXACT_ACTION: STOP_H1_AT_THE_VERIFIED_LOCAL_WORKER_CLEAN_CONSOLE_BLOCKER; DO_NOT_CREATE_H1_RECEIPT_OR_START_H2
+H1_RECEIPT: .codex/FBR001_PHASE_H1_LOCAL_ACCEPTANCE_RECEIPT.md
+BLOCKER: NONE; H1 local acceptance is green. H2 requires separate isolation authority before any preflight.
+H1_RESULT: ACCEPTED_LOCAL_ONLY; fresh 8788/reuse=false console proof is clean after deterministic local R2 seeding.
+HANDOFF_STATUS: H2_PENDING_SEPARATE_PREFLIGHT
+NEXT_EXACT_ACTION: READ_THE_H2_ISOLATION_AUTHORITY_AND_PERFORM_ONLY_ITS_SEPARATE_PREFLIGHT; NO_DEPLOYMENT_OR_PRODUCTION_ACTION
 
 ## A1g publication validation — 2026-09-09
 

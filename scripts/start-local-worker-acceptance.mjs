@@ -3,6 +3,7 @@ import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { seedLocalBrandAssets } from './local-worker-brand-seed.mjs';
 import { resolveLocalWorkerPort } from './local-worker-port.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -31,6 +32,7 @@ execFileSync(
   [wrangler, 'd1', 'execute', 'DB', '--local', '--persist-to', state, '--file', seed],
   shared,
 );
+await seedLocalBrandAssets({ repoRoot, state, privateRoot, wrangler });
 
 const worker = spawn(
   process.execPath,
