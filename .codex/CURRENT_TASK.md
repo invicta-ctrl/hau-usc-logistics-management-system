@@ -21,11 +21,11 @@ VERIFICATION: exact sequence in the interrupted checkpoint, including fresh 8788
 STOP_CONDITIONS: conflicting writer; unknown dirty residue; required product/backend/schema/auth semantic expansion; provider action; Production crossover; secret/private data; failed verification that cannot form safe evidence.
 STATUS: H1_IN_PROGRESS_NOT_ACCEPTED
 HANDOFF_STATUS: IN_PROGRESS
-NEXT_EXACT_ACTION: RUN_THE_REMAINING_H1_FULL_FRONTEND_BROWSER_AND_ACCESSIBILITY_GATES, INCLUDING_THE_REQUIRED_RESPONSIVE_MATRIX; DO_NOT_CREATE_H1_RECEIPT
+NEXT_EXACT_ACTION: STOP_H1_AT_THE_VERIFIED_LOCAL_WORKER_CLEAN_CONSOLE_BLOCKER; DO_NOT_CREATE_H1_RECEIPT_OR_START_H2
 
 ## A1g publication validation — 2026-09-09
 
-The inherited frontend-only repair was reviewed after a clean `02308bcaa174b27a904f2bc4106269537dc6995f`/origin handshake. Current-byte verification: `npm.cmd run test:frontend` 42/42 PASS; `npm.cmd run build` PASS; `npm.cmd run lint` 0 errors with 2 inherited warnings; `git diff --check` PASS. Final full frontend evidence remains 426 passed, 149 skipped, 0 failed on isolated 4174; source has not changed since that run. H1 remains unaccepted; next is the exact manual eight-width Light/Dark/System, reduced-motion, keyboard/focus, overflow, functional-state, console, and WCAG 2.2 AA matrix. Port 8787 PID 29528 remains untouched; Production remains forbidden.
+The inherited frontend-only repair was reviewed after a clean `02308bcaa174b27a904f2bc4106269537dc6995f`/origin handshake. Current-byte verification: `npm.cmd run test:frontend` 42/42 PASS; `npm.cmd run build` PASS; `npm.cmd run lint` 0 errors with 2 inherited warnings; `git diff --check` PASS. Final full frontend evidence remains 426 passed, 149 skipped, 0 failed on isolated 4174 before the later record-only update. The manual browser matrix passed at 320/375/390/414/768/1024/1440/1920 for Light/Dark/System, reduced motion (`0s`), keyboard skip-focus/hash navigation, semantic regions, and no positive overflow; `npm.cmd run design:contrast` passed 66/66; deploy artifact, Cloudflare dry-run, governance, and handoff verification passed. A fresh 8788/reuse=false local Worker browser then exposed a real `GET /brand/usc-logo` 404 in the console. The existing frontend fallback renders `USC`, but the error cannot be removed without server/asset action or suppression; both are outside H1 frontend scope. H1 remains unaccepted and blocked; no H1 receipt or H2 action. Port 8787 is preserved but externally changed to PID 21456; Production remains forbidden.
 
 ## A1f verification update — 2026-09-09
 

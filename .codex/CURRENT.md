@@ -23,13 +23,13 @@ PARITY_MATRIX: docs/frontend/FBR001_FRONTEND_FUNCTIONAL_PARITY_MATRIX.md
 FUNCTIONAL_AUTHORITY: Playground@7f483d2d + Worker/API/auth/domain/privacy/capability/D1/R2/audit/ledger/custody contracts; schema 32; migration 0032
 PRODUCTION_DEPLOYMENT: FORBIDDEN
 STARTING_HEAD_AND_UPSTREAM: 89d8627b899df7bb586c5542f4ee2a6c9131ffb2
-BLOCKER: Final H1 Worker/frontend suites at fc5c8dc predate the event repair and remain unaccepted; rerun final H1 gates after all authorized frontend adoption is settled. Partial exact-4173 inspection exists, but the eight-width matrix is incomplete.
+BLOCKER: Fresh 8788/reuse=false local Worker public browser inspection reaches the required fallback but logs a real `/brand/usc-logo` 404. The manual eight-width matrix and deterministic H1 gates are otherwise green; no frontend-only repair can remove a server asset 404 without suppression or server/asset scope.
 HANDOFF_STATUS: IN_PROGRESS
-NEXT_EXACT_ACTION: RUN_THE_REMAINING_H1_FULL_FRONTEND_BROWSER_AND_ACCESSIBILITY_GATES, INCLUDING_THE_REQUIRED_RESPONSIVE_MATRIX; DO_NOT_CREATE_H1_RECEIPT
+NEXT_EXACT_ACTION: STOP_H1_AT_THE_VERIFIED_LOCAL_WORKER_CLEAN_CONSOLE_BLOCKER; DO_NOT_CREATE_H1_RECEIPT_OR_START_H2
 
 ## A1g publication validation — 2026-09-09
 
-The inherited frontend-only repair was reviewed after a clean `02308bcaa174b27a904f2bc4106269537dc6995f`/origin handshake. Current-byte verification: `npm.cmd run test:frontend` 42/42 PASS; `npm.cmd run build` PASS; `npm.cmd run lint` 0 errors with 2 inherited warnings; `git diff --check` PASS. Final full frontend evidence remains 426 passed, 149 skipped, 0 failed on isolated 4174; source has not changed since that run. H1 remains unaccepted; next is the exact manual eight-width Light/Dark/System, reduced-motion, keyboard/focus, overflow, functional-state, console, and WCAG 2.2 AA matrix. Port 8787 PID 29528 remains untouched; Production remains forbidden.
+The inherited frontend-only repair was reviewed after a clean `02308bcaa174b27a904f2bc4106269537dc6995f`/origin handshake. Current-byte verification: `npm.cmd run test:frontend` 42/42 PASS; `npm.cmd run build` PASS; `npm.cmd run lint` 0 errors with 2 inherited warnings; `git diff --check` PASS. Final full frontend evidence remains 426 passed, 149 skipped, 0 failed on isolated 4174 before the later record-only update. The manual browser matrix passed at 320/375/390/414/768/1024/1440/1920 for Light/Dark/System, reduced motion (`0s`), keyboard skip-focus/hash navigation, semantic regions, and no positive overflow; `npm.cmd run design:contrast` passed 66/66; deploy artifact, Cloudflare dry-run, governance, and handoff verification passed. A fresh 8788/reuse=false local Worker browser then exposed a real `GET /brand/usc-logo` 404 in the console. The existing frontend fallback renders `USC`, but the error cannot be removed without server/asset action or suppression; both are outside H1 frontend scope. H1 remains unaccepted and blocked; no H1 receipt or H2 action. Port 8787 is preserved but externally changed to PID 21456; Production remains forbidden.
 
 ## A1f frontend acceptance repair and verification — 2026-09-09
 
@@ -47,7 +47,7 @@ VALIDATION: frontend units 42/42 PASS; application build PASS; lint 0 errors wit
 ## Verified administration reset packet — 2026-09-08
 The bounded frontend/harness adoption adds the existing governed one-time account temporary-password reset command while preserving backend contracts and read-only projections. Search 503 keeps the loaded account page visible with an inline retry; a search 401/403 fails closed by clearing account and staff directory projections, selections, reset projection, and activity before both views become denied. The one-time credential remains transient in the open panel and is cleared on dismissal or navigation. Playwright traces and screenshots are disabled for the local Worker credential suite.
 
-VALIDATION: adapter 37/37 PASS; focused frontend-390 administration 6/6 PASS; build PASS; lint 0 errors with 2 inherited warnings; `git diff --check` PASS; and the fresh 8788/reuse=false one-time reset Worker journey PASS 1/1. Port 8788 is free after teardown; port 8787 PID 29528 remains untouched. H1 remains not accepted; final full local Worker and frontend/browser/accessibility gates remain required.
+ADMINISTRATION_RESET_VALIDATION: adapter 37/37 PASS; focused frontend-390 administration 6/6 PASS; build PASS; lint 0 errors with 2 inherited warnings; `git diff --check` PASS; and the fresh 8788/reuse=false one-time reset Worker journey PASS 1/1. Port 8788 is free after teardown; port 8787 PID 29528 remains untouched. H1 remains not accepted; final full local Worker and frontend/browser/accessibility gates remain required.
 
 ## Owner-authorized frontend blocker repair - 2026-09-07
 
